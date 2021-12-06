@@ -1,8 +1,5 @@
 ﻿using System;
 using SimChA.DataTypes;
 
-Console.WriteLine("Hello, World!");
-
+Console.WriteLine("SimChA 0.0.1");
 var cellList = new CellList();
-
-Console.WriteLine(cellList);

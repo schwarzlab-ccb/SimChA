@@ -7,7 +7,7 @@ namespace SimChA.DataTypes
 {
     public class Chromosome
     {
-        private List<Region> _regions;
+        private readonly List<Region> _regions;
 
         public int Length => _regions.Sum(r => r.Length);
         
