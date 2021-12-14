@@ -7,7 +7,12 @@ public class Chromosome
     public List<Region> Regions { get; }
 
     public int Length => Regions.Sum(r => r.Length);
-        
+
+    public Chromosome(IEnumerable<Region> regions)
+    {
+        Regions = regions.Where(r => r.Length > 0).ToList();
+    }
+    
     public Chromosome(Region initialRegion)
     {
         Regions = new List<Region> { initialRegion };

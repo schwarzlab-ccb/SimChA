@@ -4,28 +4,27 @@ namespace SimChA.Simulation;
 
 public static class ChrMutations
 {
-    public static void DeleteRegion(Chromosome chr, int start, int end)
+    public static Chromosome DeleteRegion(Chromosome chr, int start, int end)
     {
+        var newRegions = new List<Region>();
         int seekPos = 0;
-        for (int i = 0; i < chr.Regions.Count; i++)
+        foreach (var region in chr.Regions)
         {
-            var region = chr.Regions[i];
             if (start > seekPos + region.Length) // region before start
             {
-                continue;
+                newRegions.Add(region);
             }
-            if (end > seekPos + region.Length) // end outside of region
+            else if (end > seekPos + region.Length) // end outside of region
             {
                 var newRegion = region;
-                newRegion.End = region.End + start - seekPos - region.Length; 
-                chr.Regions[i] = newRegion;
+                newRegion.End = region.End + start - seekPos - region.Length;
+                newRegions.Add(newRegion);
             }
             else if (start < seekPos) // start before the region
             {
                 var newRegion = region;
                 newRegion.Start = region.Start - seekPos + end;
-                chr.Regions[i] = newRegion;
-                break;
+                newRegions.Add(newRegion);
             }
             else
             {
@@ -33,11 +32,11 @@ public static class ChrMutations
                 firstRegion.End = region.End + start - seekPos - region.Length; 
                 var secondRegion = region;
                 secondRegion.Start = region.Start - seekPos + end;
-                chr.Regions[i] = firstRegion;
-                chr.Regions.Insert(i + 1, secondRegion);
-                break;
+                newRegions.Add(firstRegion);
+                newRegions.Add(secondRegion);
             }
             seekPos += region.Length;
         }
+        return new Chromosome(newRegions);
     }
 }

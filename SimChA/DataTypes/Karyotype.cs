@@ -4,20 +4,38 @@ namespace SimChA.DataTypes;
 
 public class Karyotype
 {
-    public List<Chromosome> Chromosomes { get; }
+    private LinkedList<Chromosome> Chromosomes { get; }
 
     public Karyotype()
     {
-        Chromosomes = ReferenceGenome.Genotype.Select(region => new Chromosome(region)).ToList();
+        var reference = ReferenceGenome.Genotype.Select(region => new Chromosome(region));
+        Chromosomes = new LinkedList<Chromosome>(reference);
     }
     
     public Karyotype(Karyotype other)
     {
-        Chromosomes = new List<Chromosome>(other.Chromosomes);
+        Chromosomes = new LinkedList<Chromosome>(other.Chromosomes);
     }
 
-    public void AddChromosome(Chromosome c)
+    public void AddChr(Chromosome chr)
     {
-        Chromosomes.Add(c);
+        Chromosomes.AddLast(chr);
+    }
+
+    public void RemoveChr(Chromosome chr)
+    {
+        Chromosomes.Remove(chr);
+    }
+
+    public Chromosome RandomChr()
+    {
+        return Chromosomes.Shuffle().First();
+    }
+
+    public Chromosome PopRandomChr()
+    {
+        var chr = RandomChr();
+        Chromosomes.Remove(chr);
+        return chr;
     }
 }

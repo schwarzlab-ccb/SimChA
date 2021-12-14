@@ -56,16 +56,11 @@ public class Simulator
 
    private void ApplyTailDeletion(Karyotype karyotype)
    {
-      var randomChromosome = karyotype.Chromosomes.Shuffle().First();
-      int chromLength = randomChromosome.Length;
-      int deletionLength = _random.Next(0, chromLength);
-      if (_random.CoinFlip())
-      {
-         ChrMutations.DeleteRegion(randomChromosome, 0, deletionLength);
-      }
-      else
-      {
-         ChrMutations.DeleteRegion(randomChromosome, chromLength - deletionLength, chromLength);
-      }
+      var randomChromosome = karyotype.PopRandomChr();
+      int chrLength = randomChromosome.Length;
+      int deletionLength = _random.Next(0, chrLength);
+      (int start, int end) = _random.CoinFlip() ? (0, deletionLength) : (chrLength - deletionLength, chrLength);
+      var newChr = ChrMutations.DeleteRegion(randomChromosome, start, end);
+      karyotype.AddChr(newChr);
    }
 }
