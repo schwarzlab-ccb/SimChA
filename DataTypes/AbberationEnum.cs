@@ -1,15 +1,15 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-namespace SimChA.DataTypes
+namespace SimChA.DataTypes;
+
+public enum AbberationEnum
 {
-    public enum AbberationEnum
-    {
-        Missegregation,
-        Duplication,
-        Chromothripsis,
-        Translocation,
-        Deletion,
-        Inversion,
-        BreakageFusionBridge
-    }
+    Missegregation,
+    Duplication,
+    Chromothripsis,
+    Translocation,
+    InternalDeletion,
+    Inversion,
+    BreakageFusionBridge,
+    TailDeletion
 }

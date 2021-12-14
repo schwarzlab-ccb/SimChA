@@ -18,4 +18,14 @@ public class SubClone
         TotalCount = AliveCount = 1;
         MutationRate = DivisionRate = 1f;
     }
+
+    public SubClone(SubClone other, int cloneId)
+    {
+        CloneId = cloneId;
+        ParentId = other.CloneId;
+        Karyotype = new Karyotype(other.Karyotype);
+        TotalCount = AliveCount = 1;
+        MutationRate = other.MutationRate; 
+        DivisionRate = other.DivisionRate; 
+    }
 }
