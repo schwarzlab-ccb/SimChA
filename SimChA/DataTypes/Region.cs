@@ -9,7 +9,7 @@ public struct Region
     public int End; // Zero-index one beding the last base
     public bool Forward; // True if the region is placed in the forward direction, false otherwises
 
-    public int Length => Start - End;
+    public int Length => End - Start;
 
     public Region(int start, int end, ChromID chromId, bool forward = true)
     {
@@ -18,4 +18,9 @@ public struct Region
         ChromId = chromId;
         Forward = forward;
     }
+
+    private string DirString => Forward ? "+" : "-";
+
+    public override string ToString() 
+        => $"{ChromId}{DirString}[{Start}:{End})";
 }

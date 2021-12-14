@@ -1,14 +1,14 @@
 ﻿using MathNet.Numerics.Distributions;
 using SimChA.DataTypes;
 
-namespace SimChA;
+namespace SimChA.Simulation;
 
-public class Simulation
+public class Simulator
 {
    private CloneList _cloneList;
    private Random _random;
 
-   public Simulation()
+   public Simulator()
    {
       _cloneList = new CloneList();
       _random = new Random();
@@ -61,11 +61,11 @@ public class Simulation
       int deletionLength = _random.Next(0, chromLength);
       if (_random.CoinFlip())
       {
-         randomChromosome.DeleteRegion(0, deletionLength);
+         ChrMutations.DeleteRegion(randomChromosome, 0, deletionLength);
       }
       else
       {
-         randomChromosome.DeleteRegion(chromLength - deletionLength, chromLength);
+         ChrMutations.DeleteRegion(randomChromosome, chromLength - deletionLength, chromLength);
       }
    }
 }
