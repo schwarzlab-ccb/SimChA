@@ -1,10 +1,12 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using SimChA.Simulation;
+
 namespace SimChA.DataTypes;
 
 public class Chromosome
 {
-    public List<Region> Regions { get; }
+    private List<Region> Regions { get; set; }
 
     public int Length => Regions.Sum(r => r.Length);
 
@@ -25,4 +27,9 @@ public class Chromosome
 
     public override string ToString() 
         => "[" + string.Join(",", Regions.Select(r => r.ToString())) + "]";
+
+    public void DeleteRange(int start, int end)
+    {
+        Regions = ChrMutations.DeleteRange(Regions, start, end);
+    }
 }

@@ -1,10 +1,14 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using SimChA.Simulation;
+
 namespace SimChA.DataTypes;
 
 public class Karyotype
 {
     private LinkedList<Chromosome> Chromosomes { get; }
+
+    private readonly Random _random = new();
 
     public Karyotype()
     {
@@ -17,25 +21,17 @@ public class Karyotype
         Chromosomes = new LinkedList<Chromosome>(other.Chromosomes);
     }
 
-    public void AddChr(Chromosome chr)
-    {
-        Chromosomes.AddLast(chr);
-    }
-
-    public void RemoveChr(Chromosome chr)
-    {
-        Chromosomes.Remove(chr);
-    }
-
-    public Chromosome RandomChr()
+    private Chromosome RandomChr()
     {
         return Chromosomes.Shuffle().First();
     }
 
-    public Chromosome PopRandomChr()
+    public void ApplyTailDeletion()
     {
-        var chr = RandomChr();
-        Chromosomes.Remove(chr);
-        return chr;
+        var randomChromosome = RandomChr();
+        int chrLength = randomChromosome.Length;
+        int deletionLength = _random.Next(0, chrLength);
+        (int start, int end) = _random.CoinFlip() ? (0, deletionLength) : (chrLength - deletionLength, chrLength);
+        randomChromosome.DeleteRange(start, end);
     }
 }

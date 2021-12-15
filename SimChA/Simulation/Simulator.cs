@@ -5,13 +5,11 @@ namespace SimChA.Simulation;
 
 public class Simulator
 {
-   private CloneList _cloneList;
-   private Random _random;
+   private readonly CloneList _cloneList;
 
    public Simulator()
    {
       _cloneList = new CloneList();
-      _random = new Random();
    }
 
    public void Step()
@@ -40,10 +38,17 @@ public class Simulator
             switch (abberation)
             {
                case AbberationEnum.TailDeletion:
-                  ApplyTailDeletion(newSubClone.Karyotype);
+                  newSubClone.Karyotype.ApplyTailDeletion();
                   break;
+               case AbberationEnum.Missegregation:
+               case AbberationEnum.Duplication:
+               case AbberationEnum.Chromothripsis:
+               case AbberationEnum.Translocation:
+               case AbberationEnum.InternalDeletion:
+               case AbberationEnum.Inversion:
+               case AbberationEnum.BreakageFusionBridge:
                default:
-                  break;
+                  throw new ArgumentOutOfRangeException();
             }
          }
       }
@@ -52,15 +57,5 @@ public class Simulator
    private AbberationEnum SelectMutation()
    {
       return AbberationEnum.TailDeletion;
-   }
-
-   private void ApplyTailDeletion(Karyotype karyotype)
-   {
-      var randomChromosome = karyotype.PopRandomChr();
-      int chrLength = randomChromosome.Length;
-      int deletionLength = _random.Next(0, chrLength);
-      (int start, int end) = _random.CoinFlip() ? (0, deletionLength) : (chrLength - deletionLength, chrLength);
-      var newChr = ChrMutations.DeleteRegion(randomChromosome, start, end);
-      karyotype.AddChr(newChr);
    }
 }
