@@ -104,18 +104,27 @@ public static class ReferenceGenome
         }
     };
 
-    private static IEnumerable<Region> CreateHaplotype(bool isHaplotypeOne)
-        => Enum.GetValues<ChromNum>()
-            .Select(num
-                => new Region(0, ChromosomeLengthMap[num] + 1, new ChromID(num, isHaplotypeOne))
-            );
+    private static IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
+    {
+        var nonGender = Enum.GetValues<ChromNum>().Take(22);
+        var sexChr = (isFirstHaplotype | isFemale) ? ChromNum.chrX : ChromNum.chrY;
+        var all = nonGender.Concat(new[] { sexChr });
+        return all.Select(num => new Region(0, ChromosomeLengthMap[num] + 1, new ChromID(num, isFirstHaplotype)));
+    }
+
 
     static ReferenceGenome()
     {
-        var haplotypeOne = CreateHaplotype(true);
-        var haplotypeTwo = CreateHaplotype(false);
-        Genotype = haplotypeOne.Concat(haplotypeTwo).ToArray();
+        var haplotypeOneF = CreateHaplotype(true, true);
+        var haplotypeTwoF = CreateHaplotype(false, true);
+        GenotypeF = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
+        var haplotypeOneM = CreateHaplotype(true, false);
+        var haplotypeTwoM = CreateHaplotype(false, false);
+        GenotypeM = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
     }
 
-    public static Region[] Genotype { get; }
+    private static Region[] GenotypeM { get; }
+    private static Region[] GenotypeF { get; }
+
+    public static Region[] GetGenotype(bool isFemale) => isFemale ? GenotypeF : GenotypeM;
 }

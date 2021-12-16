@@ -10,9 +10,9 @@ public class Karyotype
 
     private readonly Random _random = new();
 
-    public Karyotype()
+    public Karyotype(bool isFemale)
     {
-        var reference = ReferenceGenome.Genotype.Select(region => new Chromosome(region));
+        var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
         Chromosomes = new LinkedList<Chromosome>(reference);
     }
     
@@ -33,5 +33,10 @@ public class Karyotype
         int deletionLength = _random.Next(0, chrLength);
         (int start, int end) = _random.CoinFlip() ? (0, deletionLength) : (chrLength - deletionLength, chrLength);
         randomChromosome.DeleteRange(start, end);
+    }
+
+    public override string ToString()
+    {
+        return "[\n\n" + string.Join(",\n\t", Chromosomes) + "]\n";
     }
 }

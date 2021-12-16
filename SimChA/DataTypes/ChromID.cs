@@ -15,7 +15,7 @@ public struct ChromID
 
     public override string ToString()
     {
-        string parentIdentifier = Parent ? "M" : "P";
+        string parentIdentifier = Parent ? "H1" : "H2";
         return $"({ChromNum.ToString()},{parentIdentifier})";
     }
 }

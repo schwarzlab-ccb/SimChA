@@ -5,57 +5,70 @@ namespace SimChA.Simulation;
 
 public class Simulator
 {
-   private readonly CloneList _cloneList;
+    public List<SubClone> Clones { get; }
+    public SimParams SimParams { get; }
 
-   public Simulator()
-   {
-      _cloneList = new CloneList();
-   }
+    public Simulator(SimParams simParams)
+    {
+        var firstClone = new SubClone(0, -1, simParams.DivisionRate, simParams.MutationRate,
+            new Karyotype(simParams.IsFemale));
+        Clones = new List<SubClone> { firstClone };
+        SimParams = simParams;
+    }
 
-   public void Step()
-   {
-      DivideAndMutate();
-      Kill();
-   }
+    public void Step()
+    {
+        DivideAndMutate();
+        // Kill();
+    }
 
-   private void Kill()
-   {
-      throw new NotImplementedException();
-   }
+    private void Kill()
+    {
+        throw new NotImplementedException();
+    }
 
-   private void DivideAndMutate()
-   {
-      int cloneCount = _cloneList.Clones.Count;
-      for (int i = 0; i < cloneCount; i++)
-      {
-         var originalClone = _cloneList.Clones[i];
-         int newCellsCount = Binomial.Sample(originalClone.DivisionRate, originalClone.AliveCount);
-         int newMutantCount = Binomial.Sample(originalClone.MutationRate, newCellsCount); // The existing cells will not mutate
-         for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
-         {
-            var newSubClone = new SubClone(originalClone, _cloneList.Clones.Count);
-            var abberation = SelectMutation();
-            switch (abberation)
+    private void DivideAndMutate()
+    {
+        int cloneCount = Clones.Count;
+        for (int i = 0; i < cloneCount; i++)
+        {
+            var originalClone = Clones[i];
+            int newCellsCount = Binomial.Sample(originalClone.DivisionRate, originalClone.AliveCount);
+            int newMutantCount =
+                Binomial.Sample(originalClone.MutationRate, newCellsCount); // The existing cells will not mutate
+            for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
-               case AbberationEnum.TailDeletion:
-                  newSubClone.Karyotype.ApplyTailDeletion();
-                  break;
-               case AbberationEnum.Missegregation:
-               case AbberationEnum.Duplication:
-               case AbberationEnum.Chromothripsis:
-               case AbberationEnum.Translocation:
-               case AbberationEnum.InternalDeletion:
-               case AbberationEnum.Inversion:
-               case AbberationEnum.BreakageFusionBridge:
-               default:
-                  throw new ArgumentOutOfRangeException();
+                var newSubClone = new SubClone(originalClone, Clones.Count);
+                var abberation = SelectMutation();
+                ApplyMutation(newSubClone.Karyotype, abberation);
+                Clones.Add(newSubClone);
             }
-         }
-      }
-   }
 
-   private AbberationEnum SelectMutation()
-   {
-      return AbberationEnum.TailDeletion;
-   }
+            originalClone.AliveCount += newCellsCount - newMutantCount;
+        }
+    }
+
+    private AbberationEnum SelectMutation()
+    {
+        return AbberationEnum.TailDeletion;
+    }
+
+    private void ApplyMutation(Karyotype karyotype, AbberationEnum abberation)
+    {
+        switch (abberation)
+        {
+            case AbberationEnum.TailDeletion:
+                karyotype.ApplyTailDeletion();
+                break;
+            case AbberationEnum.Missegregation:
+            case AbberationEnum.Duplication:
+            case AbberationEnum.Chromothripsis:
+            case AbberationEnum.Translocation:
+            case AbberationEnum.InternalDeletion:
+            case AbberationEnum.Inversion:
+            case AbberationEnum.BreakageFusionBridge:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
 }

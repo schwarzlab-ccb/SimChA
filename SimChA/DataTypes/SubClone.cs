@@ -7,16 +7,17 @@ public class SubClone
     public int CloneId;
     public int ParentId;
     public Karyotype Karyotype;
-    public float MutationRate;
     public float DivisionRate;
+    public float MutationRate;
 
-    public SubClone(int cloneId, int parentId, Karyotype karyotype) 
+    public SubClone(int cloneId, int parentId,  float divisionRate,float mutationRate, Karyotype karyotype) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         Karyotype = karyotype;
+        DivisionRate = divisionRate;
+        MutationRate = mutationRate;
         TotalCount = AliveCount = 1;
-        MutationRate = DivisionRate = 1f;
     }
 
     public SubClone(SubClone other, int cloneId)
