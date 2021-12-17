@@ -18,30 +18,42 @@ public class TestMutations
     public void TestDeletion()
     {
         var cRegion = ReferenceGenome.GetGenotype(true)[0];
-        var chr1 = new Chromosome(cRegion);
+        var regions = new List<Region> {cRegion};
         // Start and end within a region
-        chr1.DeleteRange(1000, 2000);
-        Console.WriteLine(chr1);
-        Assert.AreEqual(cRegion.Length - 1000, chr1.Length);
+        regions = ChrMutations.DeleteRange(regions, 1000, 2000);
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(cRegion.Length - 1000, Chromosome.Length(regions));
         // Start and end within a region (out of two)
-        chr1.DeleteRange(2000, 4000);
-        Console.WriteLine(chr1);
-        Assert.AreEqual(cRegion.Length - 3000, chr1.Length);
+        regions = ChrMutations.DeleteRange(regions, 2000, 4000);
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(cRegion.Length - 3000, Chromosome.Length(regions));
         // Two neighbouring regions
-        chr1.DeleteRange(1500, 2500);
-        Console.WriteLine(chr1);
-        Assert.AreEqual(cRegion.Length - 4000, chr1.Length);
+        regions = ChrMutations.DeleteRange(regions, 1500, 2500);
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(cRegion.Length - 4000, Chromosome.Length(regions));
         // Cut region out
-        chr1.DeleteRange(500, 2500);
-        Console.WriteLine(chr1);
-        Assert.AreEqual(cRegion.Length - 6000, chr1.Length);
+        regions = ChrMutations.DeleteRange(regions, 500, 2500);
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(cRegion.Length - 6000, Chromosome.Length(regions));
         // Remove region from front
-        chr1.DeleteRange(0, 500);
-        Console.WriteLine(chr1);
-        Assert.AreEqual(cRegion.Length - 6500, chr1.Length);
+        regions = ChrMutations.DeleteRange(regions, 0, 500);
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(cRegion.Length - 6500, Chromosome.Length(regions));
         // oversized range selection
-        chr1.DeleteRange(-1000, cRegion.Length);
-        Console.WriteLine(chr1);
-        Assert.AreEqual(0, chr1.Length);
+        regions = ChrMutations.DeleteRange(regions, -1000, cRegion.Length);
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(0, Chromosome.Length(regions));
+    }
+    
+    [Test]
+    public void TestCopy()
+    {
+        var cRegion = ReferenceGenome.GetGenotype(true)[0];
+        var regions = new List<Region> {cRegion};
+        regions = ChrMutations.DeleteRange(regions, 1000, 2000);
+        regions = ChrMutations.DeleteRange(regions, 4000, 5000);
+        var regCopy = ChrMutations.CopyRange(regions, 500, 3500);
+        Console.WriteLine(Chromosome.ToString(regCopy));
+        
     }
 }

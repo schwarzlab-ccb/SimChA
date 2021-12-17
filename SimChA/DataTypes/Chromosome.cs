@@ -6,30 +6,40 @@ namespace SimChA.DataTypes;
 
 public class Chromosome
 {
-    private List<Region> Regions { get; set; }
+    private List<Region> _regions;
 
-    public int Length => Regions.Sum(r => r.Length);
+    public Chromosome(Region initialRegion)
+    {
+        _regions = new List<Region> {initialRegion};
+    }
 
     public Chromosome(IEnumerable<Region> regions)
     {
-        Regions = regions.Where(r => r.Length > 0).ToList();
-    }
-    
-    public Chromosome(Region initialRegion)
-    {
-        Regions = new List<Region> { initialRegion };
-    }
-    
-    public Chromosome(Chromosome other)
-    {
-        Regions = new List<Region>(other.Regions);
+        _regions = regions.Where(r => r.Length > 0).ToList();
     }
 
-    public override string ToString() 
-        => "[" + string.Join(",", Regions.Select(r => r.ToString())) + "]";
+    public Chromosome(Chromosome other)
+    {
+        _regions = new List<Region>(other._regions);
+    }
+
+    public int Length() => Length(_regions);
+
+    public static int Length(List<Region> regions) => regions.Sum(r => r.Length);
+
+
+    public static string ToString(List<Region> regions)
+        => "[" + string.Join(",", regions.Select(r => r.ToString())) + "]";
+
+    public override string ToString() => ToString(_regions);
 
     public void DeleteRange(int start, int end)
     {
-        Regions = ChrMutations.DeleteRange(Regions, start, end);
+        _regions = ChrMutations.DeleteRange(_regions, start, end);
+    }
+
+    public void DuplicateRange(int start, int end)
+    {
+        var newRegions = ChrMutations.CopyRange(_regions, start, end);
     }
 }
