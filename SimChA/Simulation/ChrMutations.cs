@@ -18,11 +18,11 @@ public static class ChrMutations
         int seekPos = 0;
         foreach (var region in regions)
         {
-            if (start > seekPos + region.Length) // region before start
+            if (start >= seekPos + region.Length) // region before start
             {
                 AddIfNotEmpty(newRegions, region);
             }
-            else if (end < seekPos) // region after end
+            else if (end <= seekPos) // region after end
             {
                 AddIfNotEmpty(newRegions, region);
             }
@@ -59,10 +59,10 @@ public static class ChrMutations
         int seekPos = 0;
         foreach (var region in regions)
         {
-            if (start > seekPos + region.Length) // region before start
+            if (start >= seekPos + region.Length) // region before start
             {
             }
-            else if (end < seekPos) // region after end
+            else if (end <= seekPos) // region after end
             {
                 break;
             }
@@ -75,7 +75,7 @@ public static class ChrMutations
             else if (start < seekPos) // start before the region
             {
                 var newRegion = region;
-                newRegion.End = region.End + seekPos - end;
+                newRegion.End = region.End + seekPos - end + 1;
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
@@ -87,42 +87,46 @@ public static class ChrMutations
         return newRegions;
     }
 
-    // TODO
     public static (List<Region>, List<Region>) SplitRegions(List<Region> regions, int pos)
     {
         var newRegions = new List<Region>();
         int seekPos = 0;
+        var beforeRegions = new List<Region>();
+        var afterRegions = new List<Region>();
         foreach (var region in regions)
         {
+            if (pos > seekPos + region.Length) // region before pos
+            {
+                AddIfNotEmpty(beforeRegions, region);
+            }
+            else if (pos <= seekPos) // region after pos
+            {
+                AddIfNotEmpty(afterRegions, region);
+            }
+            else // split inside the region
+            {
+                var firstPart = region;
+                firstPart.End -= pos - seekPos;
+                AddIfNotEmpty(beforeRegions, firstPart);
+                var secondPart = region;
+                secondPart.Start += pos - seekPos;
+                AddIfNotEmpty(afterRegions, secondPart);
+            }
             seekPos += region.Length;
         }
         return (newRegions, newRegions);
     }
     
-    // TODO
     public static List<Region> InvertRegions(List<Region> regions)
     {
-        var newRegions = new List<Region>();
-        int seekPos = 0;
-        foreach (var region in regions)
-        {
-            seekPos += region.Length;
-        }
+        var newRegions = new List<Region>(regions);
+        newRegions.Reverse();
+        newRegions.ForEach(r => r.Forward = false);
         return newRegions;
     }
     
-    // TODO
     public static List<Region> ConcatRegions(IEnumerable<List<Region>> listOfRegions)
     {
-        var newRegions = new List<Region>();
-        int seekPos = 0;
-        foreach (var regions in listOfRegions)
-        {
-            foreach (var region in regions)
-            {
-                seekPos += region.Length;
-            }
-        }
-        return newRegions;
+        return listOfRegions.SelectMany(x => x).ToList();
     }
 }

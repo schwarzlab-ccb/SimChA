@@ -1,16 +1,21 @@
-﻿using MathNet.Numerics.Distributions;
-using SimChA.DataTypes;
+﻿using SimChA.DataTypes;
 using SimChA.Simulation;
 
 Console.WriteLine("SimChA 0.0.1");
 
-var simParams = new SimParams { DivisionRate = .1f, MutationRate = 0.01f, IsFemale = true};
-simParams.AbberationRates[AbberationEnum.InternalDeletion] = 100f;
+var simParams = new SimParams
+{
+    DivisionRate = .1f, MutationRate = 0.01f, IsFemale = true,
+    AbberationRates = { [AbberationEnum.InternalDeletion] = 100f }
+};
+
 var simulator = new Simulator(simParams);
-for (int i = 0; i < 150; i++)
+const int simSteps = 150;
+for (int i = 0; i < simSteps; i++)
 {
     simulator.Step();
 }
+
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 Console.WriteLine($"SubClone count {simulator.Clones.Count}");
 Console.WriteLine($"Last Karyotype: {simulator.Clones.Last().Karyotype}");

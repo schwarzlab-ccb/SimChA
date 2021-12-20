@@ -13,12 +13,12 @@ public class TestMutations
     public void Setup()
     {
     }
-    
+
     [Test]
     public void TestDeletion()
     {
         var cRegion = ReferenceGenome.GetGenotype(true)[0];
-        var regions = new List<Region> {cRegion};
+        var regions = new List<Region> { cRegion };
         // Start and end within a region
         regions = ChrMutations.DeleteRange(regions, 1000, 2000);
         Console.WriteLine(Chromosome.ToString(regions));
@@ -44,16 +44,53 @@ public class TestMutations
         Console.WriteLine(Chromosome.ToString(regions));
         Assert.AreEqual(0, Chromosome.Length(regions));
     }
-    
+
+    [Test]
+    public void TestDeletionUnitLength()
+    {
+        var cRegion = ReferenceGenome.GetGenotype(true)[0];
+        var regions = new List<Region>
+        {
+            cRegion with { Start = 0, End = 1 }, 
+            cRegion with { Start = 1, End = 2 }, 
+            cRegion with { Start = 2, End = 3 }, 
+            cRegion with { Start = 3, End = 4 }, 
+        };
+        var res = new List<Region>
+        {
+            cRegion with { Start = 0, End = 1 }, 
+            cRegion with { Start = 3, End = 4 }
+        };
+        Assert.AreEqual(res, ChrMutations.DeleteRange(regions, 1, 3));
+    }
+
     [Test]
     public void TestCopy()
     {
         var cRegion = ReferenceGenome.GetGenotype(true)[0];
-        var regions = new List<Region> {cRegion};
+        var regions = new List<Region> { cRegion };
         regions = ChrMutations.DeleteRange(regions, 1000, 2000);
         regions = ChrMutations.DeleteRange(regions, 4000, 5000);
         var regCopy = ChrMutations.CopyRange(regions, 500, 3500);
         Console.WriteLine(Chromosome.ToString(regCopy));
-        
+    }
+    
+    [Test]
+    public void TestCopyUnitLength()
+    {
+        var cRegion = ReferenceGenome.GetGenotype(true)[0];
+        var regions = new List<Region>
+        {
+            cRegion with { Start = 0, End = 1 }, 
+            cRegion with { Start = 1, End = 2 }, 
+            cRegion with { Start = 2, End = 3 }, 
+            cRegion with { Start = 3, End = 4 }, 
+        };
+        var res = new List<Region>
+        {
+            cRegion with { Start = 1, End = 2 }, 
+            cRegion with { Start = 2, End = 3 }
+        };
+        Assert.AreEqual(res, ChrMutations.CopyRange(regions, 1, 3));
     }
 }
