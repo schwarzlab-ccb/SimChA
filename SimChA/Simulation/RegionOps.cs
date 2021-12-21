@@ -2,7 +2,7 @@
 
 namespace SimChA.Simulation;
 
-public static class ChrMutations
+public static class RegionOps
 {
     private static void AddIfNotEmpty(ICollection<Region> regions, Region region)
     {
@@ -128,5 +128,10 @@ public static class ChrMutations
     public static List<Region> ConcatRegions(IEnumerable<List<Region>> listOfRegions)
     {
         return listOfRegions.SelectMany(x => x).ToList();
+    }
+    
+    public static List<Region> ConcatRegions(IEnumerable<Region> first, IEnumerable<Region> second)
+    {
+        return first.Concat(second).ToList();
     }
 }
