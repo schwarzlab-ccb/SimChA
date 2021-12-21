@@ -75,7 +75,7 @@ public static class RegionOps
             else if (start < seekPos) // start before the region
             {
                 var newRegion = region;
-                newRegion.End = region.End + seekPos - end + 1;
+                newRegion.End = region.Start + (end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
@@ -89,7 +89,6 @@ public static class RegionOps
 
     public static (List<Region>, List<Region>) SplitRegions(List<Region> regions, int pos)
     {
-        var newRegions = new List<Region>();
         int seekPos = 0;
         var beforeRegions = new List<Region>();
         var afterRegions = new List<Region>();
@@ -106,7 +105,7 @@ public static class RegionOps
             else // split inside the region
             {
                 var firstPart = region;
-                firstPart.End -= pos - seekPos;
+                firstPart.End = firstPart.Start + pos - seekPos;
                 AddIfNotEmpty(beforeRegions, firstPart);
                 var secondPart = region;
                 secondPart.Start += pos - seekPos;
@@ -114,18 +113,15 @@ public static class RegionOps
             }
             seekPos += region.Length;
         }
-        return (newRegions, newRegions);
+        return (beforeRegions, afterRegions);
     }
     
-    public static List<Region> InvertRegions(List<Region> regions)
+    public static List<Region> InvertRegions(IEnumerable<Region> regions)
     {
-        var newRegions = new List<Region>(regions);
-        newRegions.Reverse();
-        newRegions.ForEach(r => r.Forward = false);
-        return newRegions;
+        return regions.Select(r => r with { Forward = false }).Reverse().ToList(); 
     }
     
-    public static List<Region> ConcatRegions(IEnumerable<List<Region>> listOfRegions)
+    public static List<Region> ConcatRegions(IEnumerable<IEnumerable<Region>> listOfRegions)
     {
         return listOfRegions.SelectMany(x => x).ToList();
     }
