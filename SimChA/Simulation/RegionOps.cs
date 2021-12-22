@@ -80,7 +80,10 @@ public static class RegionOps
             }
             else // Both coordinates inside of the region
             {
-                AddIfNotEmpty(newRegions, region);
+                var newRegion = region;
+                newRegion.Start = region.Start + start - seekPos;
+                newRegion.End = newRegion.Start + end - start;
+                AddIfNotEmpty(newRegions, newRegion);
             }
             seekPos += region.Length;
         }

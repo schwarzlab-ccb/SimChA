@@ -31,7 +31,8 @@ public class Chromosome
     public static string ToString(List<Region> regions)
         => "[" + string.Join(",", regions.Select(r => r.ToString())) + "]";
 
-    public override string ToString() => ToString(_regions);
+    public override string ToString() 
+        => ToString(_regions);
 
     public void DeleteRange(int start, int end)
     {
@@ -86,14 +87,16 @@ public class Chromosome
 
     public void ScatterAndGather(List<int> locs, int count)
     {
-        var newRegions = new List<List<Region>>();
+        var newRegions = new List<List<Region>> { RegionOps.CopyRange(_regions, 0, locs[0]) };
         for (int i = 0; i < locs.Count - 1; i++)
         {
             int start = locs[i];
-            int end = locs[i + 1] + 1;
+            int end = locs[i + 1];
             var copy = RegionOps.CopyRange(_regions, start, end);
             newRegions.Add(copy);
         }
+        newRegions.Add(RegionOps.CopyRange(_regions, locs.Last(), Length(_regions)));
+        
         var keptRegions = newRegions.Shuffle().Take(count);
         _regions = RegionOps.ConcatRegions(keptRegions);
     }

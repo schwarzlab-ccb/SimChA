@@ -94,14 +94,19 @@ public class Karyotype
                 return this;
 
             case AbberationEnum.Chromothripsis:
-                int shardCount = _random.Next(0, (int)Math.Pow(firstChr.Length(), 1 / 3f)); // Needs better estimation
-                var positions = 
-                    Enumerable.Range(0, shardCount)
-                    .Select(i => _random.Next(1, firstChr.Length() - 1))
-                    .Distinct().ToList();
-                positions.Sort();
-                int count = _random.Next(positions.Count / 2, positions.Count);
-                firstChr.ScatterAndGather(positions, count);
+                if (firstChr.Length() > 1)
+                {
+                    int shardCount =
+                        _random.Next(1, (int)Math.Pow(firstChr.Length(), 1 / 3f)); // Needs better estimation
+                    var positions =
+                        Enumerable.Range(0, shardCount)
+                            .Select(i => _random.Next(1, firstChr.Length() - 1))
+                            .Distinct().ToList();
+                    positions.Sort();
+                    int count = _random.Next(1, positions.Count);
+                    firstChr.ScatterAndGather(positions, count);
+                }
+
                 return this;
 
             default:

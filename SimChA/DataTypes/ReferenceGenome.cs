@@ -109,7 +109,7 @@ public static class ReferenceGenome
         var nonGender = Enum.GetValues<ChromNum>().Take(22);
         var sexChr = (isFirstHaplotype | isFemale) ? ChromNum.chrX : ChromNum.chrY;
         var all = nonGender.Concat(new[] { sexChr });
-        return all.Select(num => new Region(0, ChromosomeLengthMap[num] + 1, new ChromID(num, isFirstHaplotype)));
+        return all.Select(num => GetRegion(num, isFirstHaplotype));
     }
 
 
@@ -127,4 +127,7 @@ public static class ReferenceGenome
     private static Region[] GenotypeF { get; }
 
     public static Region[] GetGenotype(bool isFemale) => isFemale ? GenotypeF : GenotypeM;
+
+    public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true)
+        => new Region(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));
 }

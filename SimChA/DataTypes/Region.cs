@@ -21,6 +21,5 @@ public struct Region
 
     private string DirString => Forward ? "+" : "-";
 
-    public override string ToString() 
-        => $"{ChromId}{DirString}[{Start}:{End})";
+    public override string ToString() => $"{ChromId}{DirString}[{Start}:{End})";
 }

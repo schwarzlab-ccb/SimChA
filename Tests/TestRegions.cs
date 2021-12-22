@@ -69,9 +69,14 @@ public class TestRegions
     public void TestCopy()
     {
         var regions = new List<Region> { _cRegion };
+        // Start and end within a region
+        var regCopy = RegionOps.CopyRange(regions, 500, 3500);
+        Console.WriteLine(Chromosome.ToString(regCopy));
+        Assert.AreEqual(3000, Chromosome.Length(regCopy));
+        // Copy across regions
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         regions = RegionOps.DeleteRange(regions, 4000, 5000);
-        var regCopy = RegionOps.CopyRange(regions, 500, 3500);
+        regCopy = RegionOps.CopyRange(regions, 500, 3500);
         Console.WriteLine(Chromosome.ToString(regCopy));
         Assert.AreEqual(3000, Chromosome.Length(regCopy));
     }
@@ -133,5 +138,8 @@ public class TestRegions
         regions = RegionOps.ConcatRegions(regions, regions);
         Console.WriteLine(Chromosome.ToString(regions));
         Assert.AreEqual(_cRegion.Length * 2, Chromosome.Length(regions));
+        regions = RegionOps.ConcatRegions(new[] {regions, regions });
+        Console.WriteLine(Chromosome.ToString(regions));
+        Assert.AreEqual(_cRegion.Length * 4, Chromosome.Length(regions));
     }
 }
