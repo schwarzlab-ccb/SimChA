@@ -22,6 +22,15 @@ public class Karyotype
     {
         Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
     }
+    
+    // Specifically used in to remove a chromosome lost during division (mis-segregation / BFB)
+    public Karyotype(Karyotype other, Chromosome removed)
+    {
+        Chromosomes = other.Chromosomes
+            .Where(ch => ch != removed)
+            .Select(ch => new Chromosome(ch))
+            .ToList();
+    }
 
     public void Clean()
     {
@@ -40,7 +49,7 @@ public class Karyotype
 
     public override string ToString()
     {
-        return "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n";
+        return Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
     }
 
     private (int start, int end) GetGammaFraction(Chromosome chr)
@@ -64,12 +73,11 @@ public class Karyotype
                 return this;
 
             case AbberationEnum.Missegregation:
-                var misKaryotype = new Karyotype(this);
+                var misKaryotype = new Karyotype(this, firstChr);
                 Chromosomes.Add(firstChr);
-                misKaryotype.Chromosomes.Remove(firstChr);
                 return misKaryotype;
 
-            case AbberationEnum.Repetition:
+            case AbberationEnum.InternalDuplication:
                 (int dupStart, int dupEnd) = GetGammaFraction(firstChr);
                 firstChr.DuplicateRange(dupStart, dupEnd);
                 return this;
@@ -92,12 +100,16 @@ public class Karyotype
                 (int invStart, int invEnd) = GetGammaFraction(firstChr);
                 firstChr.InvertRange(invStart, invEnd);
                 return this;
+            
+            case AbberationEnum.Duplication:
+                var baseKaryotype = new Karyotype(this);
+                Chromosomes.Add(firstChr);
+                return baseKaryotype;
 
             case AbberationEnum.BreakageFusionBridge:
-                var loseKaryotype = new Karyotype(this);
+                var loseKaryotype = new Karyotype(this, firstChr);
                 int breakagePos = _random.Next(0, firstChr.Length());
                 firstChr.Bridge(breakagePos, _random.CoinFlip());
-                loseKaryotype.Chromosomes.Remove(firstChr);
                 return loseKaryotype;
 
             case AbberationEnum.Chromothripsis:

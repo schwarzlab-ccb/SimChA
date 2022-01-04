@@ -18,19 +18,28 @@ public class TestKaryotype
     [Test]
     public void TestMissegration()
     {
-        var _kar2 = _kar.ApplyAbberation(AbberationEnum.Missegregation);
+        var res = _kar.ApplyAbberation(AbberationEnum.Missegregation);
         Assert.AreEqual(47, _kar.ChromCount);
-        Assert.AreEqual(45, _kar2.ChromCount);
+        Assert.AreEqual(45, res.ChromCount);
     }
 
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 46; i++)
         {
-            _kar.ApplyAbberation(AbberationEnum.InternalDeletion);
+            _kar = _kar.ApplyAbberation(AbberationEnum.Missegregation);
+            _kar.Clean();
         }
-        _kar.Clean();
-        Console.Write(_kar);
+        Console.WriteLine(_kar);
+        Assert.AreEqual("[]", _kar.ToString());
+    }
+    
+    [Test]
+    public void TestDuplication()
+    {
+        var res = _kar.ApplyAbberation(AbberationEnum.Duplication);
+        Assert.AreEqual(47, _kar.ChromCount);
+        Assert.AreEqual(46, res.ChromCount);
     }
 }

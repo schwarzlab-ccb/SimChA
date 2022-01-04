@@ -19,12 +19,13 @@ var simParams = new SimParams
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,
-        [AbberationEnum.Repetition] = 50f,
+        [AbberationEnum.InternalDuplication] = 50f,
         [AbberationEnum.Translocation] = 20f,
         [AbberationEnum.TailDeletion] = 15f,
         [AbberationEnum.BreakageFusionBridge] = 10f,
         [AbberationEnum.Inversion] = 10f,
         [AbberationEnum.Missegregation] = 5f,
+        [AbberationEnum.Duplication] = 5f,
         [AbberationEnum.Chromothripsis] = 1f
     }
 };

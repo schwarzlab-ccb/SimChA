@@ -45,7 +45,7 @@ public class TestChromosomes
     }
 
     [Test]
-    public void TestDuplicate()
+    public void TestReplication()
     {
         int length = _chr1.Length() + 900;
         _chr1.DuplicateRange(100, 1000);
