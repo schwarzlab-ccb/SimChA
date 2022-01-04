@@ -13,7 +13,7 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = .1f, 
+    DivisionRate = 0.01f, 
     MutationRate = 0.01f, 
     IsFemale = true,
     AbberationRates =

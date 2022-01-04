@@ -25,7 +25,7 @@ public class Karyotype
 
     public void Clean()
     {
-        // Chromosomes.RemoveAll(c => c.Length() <= 0);
+        Chromosomes.RemoveAll(c => c.Length() <= 0);
     }
 
     private Chromosome RandomChr()
@@ -46,7 +46,7 @@ public class Karyotype
     private (int start, int end) GetGammaFraction(Chromosome chr)
     {
         double fraction = Math.Clamp(Gamma.Sample(_random, 1, 1) / 10, 0, 1);
-        int segLength = (int)(fraction * chr.Length());
+        int segLength = (int) (fraction * chr.Length());
         int start = DiscreteUniform.Sample(_random, 0, chr.Length() - segLength);
         int end = start + segLength + 1;
         return (start, end);
@@ -101,18 +101,15 @@ public class Karyotype
                 return loseKaryotype;
 
             case AbberationEnum.Chromothripsis:
-                if (firstChr.Length() > 1)
-                {
-                    int shardCount =
-                        _random.Next(1, (int)Math.Pow(firstChr.Length(), 1 / 3f)); // Needs better estimation
-                    var positions =
-                        Enumerable.Range(0, shardCount)
-                            .Select(i => _random.Next(1, firstChr.Length() - 1))
-                            .Distinct().ToList();
-                    positions.Sort();
-                    int count = _random.Next(1, positions.Count);
-                    firstChr.ScatterAndGather(positions, count);
-                }
+                int shardCount =
+                    _random.Next(1, (int) Math.Pow(firstChr.Length(), 1 / 3f)); // Needs better estimation
+                var positions =
+                    Enumerable.Range(0, shardCount)
+                        .Select(i => _random.Next(1, firstChr.Length() - 1))
+                        .Distinct().ToList();
+                positions.Sort();
+                int count = _random.Next(1, positions.Count);
+                firstChr.ScatterAndGather(positions, count);
 
                 return this;
 
