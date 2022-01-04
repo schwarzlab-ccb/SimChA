@@ -10,4 +10,6 @@ public static class Extensions
     
     public static bool CoinFlip(this Random random)
         => random.Next(0, 2) == 0;
+    
+    
 }

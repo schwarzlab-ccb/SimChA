@@ -6,19 +6,26 @@ namespace SimChA.DataTypes;
 
 public class Karyotype
 {
-    private LinkedList<Chromosome> Chromosomes { get; }
+    private List<Chromosome> Chromosomes { get; set; }
+
+    public int ChromCount => Chromosomes.Count;
 
     private readonly Random _random = new();
 
     public Karyotype(bool isFemale)
     {
         var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
-        Chromosomes = new LinkedList<Chromosome>(reference);
+        Chromosomes = new List<Chromosome>(reference);
     }
 
     public Karyotype(Karyotype other)
     {
-        Chromosomes = new LinkedList<Chromosome>(other.Chromosomes);
+        Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
+    }
+
+    public void Clean()
+    {
+        // Chromosomes.RemoveAll(c => c.Length() <= 0);
     }
 
     private Chromosome RandomChr()
@@ -33,7 +40,7 @@ public class Karyotype
 
     public override string ToString()
     {
-        return "[\n\t" + string.Join(",\n\t", Chromosomes) + "]\n";
+        return "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n";
     }
 
     private (int start, int end) GetGammaFraction(Chromosome chr)
@@ -58,11 +65,11 @@ public class Karyotype
 
             case AbberationEnum.Missegregation:
                 var misKaryotype = new Karyotype(this);
-                Chromosomes.AddLast(firstChr);
+                Chromosomes.Add(firstChr);
                 misKaryotype.Chromosomes.Remove(firstChr);
                 return misKaryotype;
 
-            case AbberationEnum.Duplication:
+            case AbberationEnum.Repetition:
                 (int dupStart, int dupEnd) = GetGammaFraction(firstChr);
                 firstChr.DuplicateRange(dupStart, dupEnd);
                 return this;
@@ -91,7 +98,7 @@ public class Karyotype
                 int breakagePos = _random.Next(0, firstChr.Length());
                 firstChr.Bridge(breakagePos, _random.CoinFlip());
                 loseKaryotype.Chromosomes.Remove(firstChr);
-                return this;
+                return loseKaryotype;
 
             case AbberationEnum.Chromothripsis:
                 if (firstChr.Length() > 1)

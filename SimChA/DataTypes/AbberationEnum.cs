@@ -5,7 +5,7 @@ namespace SimChA.DataTypes;
 public enum AbberationEnum
 {
     Missegregation,
-    Duplication,
+    Repetition,
     Chromothripsis,
     Translocation,
     InternalDeletion,

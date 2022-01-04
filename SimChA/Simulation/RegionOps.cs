@@ -26,6 +26,10 @@ public static class RegionOps
             {
                 AddIfNotEmpty(newRegions, region);
             }
+            else if (start < seekPos && end > seekPos + region.Length) // Whole region inside deletion
+            {
+                
+            }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
                 var newRegion = region;
@@ -65,6 +69,10 @@ public static class RegionOps
             else if (end <= seekPos) // region after end
             {
                 break;
+            }
+            else if (start < seekPos && end > seekPos + region.Length) // Whole region inside copy
+            {
+                AddIfNotEmpty(newRegions, region);
             }
             else if (end > seekPos + region.Length) // end outside of region
             {

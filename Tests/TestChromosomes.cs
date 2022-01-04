@@ -1,6 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using SimChA.DataTypes;
