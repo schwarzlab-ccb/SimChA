@@ -50,7 +50,7 @@ public class Karyotype
     private (int start, int end) GetGammaFraction(Chromosome chr)
     {
         double fraction = Math.Clamp(Gamma.Sample(_random, 1, 1) / 10, 0, 1);
-        int segLength = (int) (fraction * chr.Length());
+        int segLength = Math.Min((int) (fraction * chr.Length()), chr.Length() - 1);
         int start = DiscreteUniform.Sample(_random, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);

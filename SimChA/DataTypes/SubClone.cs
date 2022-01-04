@@ -29,4 +29,9 @@ public class SubClone
         MutationRate = other.MutationRate; 
         DivisionRate = other.DivisionRate; 
     }
+
+    public override string ToString()
+    {
+        return $"ID:{CloneId}, Parent:{ParentId}, Cells: {AliveCount}, Karyotype: {Karyotype}";
+    }
 }

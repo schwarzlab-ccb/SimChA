@@ -41,12 +41,13 @@ while (simulator.Clones.Count < stopCount)
 
 Console.WriteLine("Finished");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
-Console.WriteLine($"SubClone count {simulator.Clones.Count}");
+int cutOffCount = simulator.Clones.Count(subClone => subClone.AliveCount >= options.Value.CutOff);
+Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOffCount}");
 
 string fullPath = Path.Combine(Path.GetFullPath(options.Value.OutputPath));
 Console.WriteLine($"Writing to file {fullPath}");
 using var outputFile = new StreamWriter(fullPath);
 foreach (var subClone in simulator.Clones.Where(subClone => subClone.AliveCount >= options.Value.CutOff))
 {
-    outputFile.Write($"{subClone.CloneId}: {subClone.Karyotype}");
+    outputFile.Write(subClone);
 }
