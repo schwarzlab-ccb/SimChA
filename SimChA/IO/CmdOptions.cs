@@ -12,4 +12,7 @@ public class CmdOptions
     
     [Option('O', "output", Required = false, Default = "SimChA.out", HelpText = "The path to the output file.")]
     public string OutputPath { get; set; }
+    
+    [Option('D', "dotGraph", Required = false, Default = "SimChA.dot", HelpText = "The path to the DOT graph output file.")]
+    public string DotPath { get; set; }
 }
