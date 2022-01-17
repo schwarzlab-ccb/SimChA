@@ -10,6 +10,6 @@ public class CmdOptions
     [Option('c', "cutoff", Required = false, Default = 100, HelpText = "The minimum number of cells to be written to output.")]
     public int CutOff { get; set; }
     
-    [Option('O', "output", Required = false, Default = "SimChA.out", HelpText = "The path to the output file.")]
+    [Option('O', "output", Required = false, Default = ".", HelpText = "The path to the output files.")]
     public string OutputPath { get; set; }
 }

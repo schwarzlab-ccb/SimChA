@@ -1,5 +1,5 @@
 # SimCha specific files
-SimChA/SimChA.out
+SimChA/*.out
 
 
 ## Ignore Visual Studio temporary files, build results, and

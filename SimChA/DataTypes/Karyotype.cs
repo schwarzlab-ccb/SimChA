@@ -11,16 +11,19 @@ public class Karyotype
     public int ChromCount => Chromosomes.Count;
 
     private readonly Random _random = new();
+    public bool IsFemale;
 
     public Karyotype(bool isFemale)
     {
         var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
         Chromosomes = new List<Chromosome>(reference);
+        IsFemale = isFemale;
     }
 
     public Karyotype(Karyotype other)
     {
         Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
+        IsFemale = other.IsFemale;
     }
     
     // Specifically used in to remove a chromosome lost during division (mis-segregation / BFB)
@@ -30,7 +33,19 @@ public class Karyotype
             .Where(ch => ch != removed)
             .Select(ch => new Chromosome(ch))
             .ToList();
+        IsFemale = other.IsFemale;
     }
+
+    public List<Region> GetAllRegions()
+    {
+        var regions = new List<Region>();
+        foreach (var chrom in Chromosomes)
+        {
+            regions.AddRange(chrom.GetAllRegions());
+        }
+        return regions;
+    }
+
     private Chromosome RandomChr()
     {
         return Chromosomes.Shuffle().First();
