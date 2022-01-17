@@ -5,8 +5,8 @@ public class CopyNumbers
     public List<Region> AllRegions;
     public bool IsFemale;
     public IEnumerable<ChromNum> ReferenceChromosomes;
-    private List<Region> _segmentation;
-    private List<(int, int)> _copynumbers;
+    private List<Region> _segmentation = new List<Region>();
+    private List<(int, int)> _copynumbers = new List<(int, int)>();
 
     public CopyNumbers(Karyotype karyotype)
     {
@@ -15,17 +15,16 @@ public class CopyNumbers
         ReferenceChromosomes = ReferenceGenome.GetChromosomes(IsFemale);
 
         // minimum consistent segmentation
-        _segmentation = CalcSegmentation();
+        CalcSegmentation();
 
         // Counting
-        _copynumbers = CalcCopyNumbers();
+        CalcCopyNumbers();
 
         // TODO: Merge neighboring segments that have the same copy numbers
     }
 
-    private List<Region> CalcSegmentation()
+    private void CalcSegmentation()
     {
-        var finalRegions = new List<Region>();
         foreach (var curRefChrom in ReferenceChromosomes)
         {
             var curRegions = AllRegions.Where(region => region.ChromId.ChromNum == curRefChrom).ToList();
@@ -36,23 +35,20 @@ public class CopyNumbers
 
             for (int i = 0; i < segmentBoundaries.Count() - 1; i++)
             {
-                finalRegions.Add(new Region(segmentBoundaries[i], segmentBoundaries[i + 1], new ChromID(curRefChrom, true)));
+                _segmentation.Add(new Region(segmentBoundaries[i], segmentBoundaries[i + 1], new ChromID(curRefChrom, true)));
             }
 
         }
-
-        return finalRegions;
     }
 
-    private List<(int, int)> CalcCopyNumbers()
+    private void CalcCopyNumbers()
     {
-        var copynumbers = new List<(int, int)>();
         foreach (var segment in _segmentation)
         {
             var curRegions = AllRegions.Where(region => region.ChromId.ChromNum == segment.ChromId.ChromNum);
             var copynumberH1 = curRegions.Where(r => r.ChromId.Parent && segment.IsInside(r)).Count();
             var copynumberH2 = curRegions.Where(r => !r.ChromId.Parent && segment.IsInside(r)).Count();
-            copynumbers.Add((copynumberH1, copynumberH2));
+            _copynumbers.Add((copynumberH1, copynumberH2));
 
             // Console.WriteLine($"{segment}");
             // foreach (var r in curRegions)
@@ -61,8 +57,6 @@ public class CopyNumbers
             // }
             // Console.WriteLine($"\t{curRegions.Count()} - {copynumberH1} / {copynumberH2}");
         }
-
-        return copynumbers;
     }
 
     public override string ToString()
