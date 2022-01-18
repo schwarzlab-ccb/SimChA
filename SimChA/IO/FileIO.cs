@@ -1,8 +1,9 @@
-﻿using SimChA.DataTypes;
+﻿using SimChA.Computation;
+using SimChA.DataTypes;
 
 namespace SimChA.IO;
 
-public class Files
+public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
     private const string SUBCLONES_FILENAME = "subclones.txt";
@@ -10,7 +11,7 @@ public class Files
 
     private string OutFolder { get; }
 
-    public Files(string outFolder)
+    public FileIO(string outFolder)
     {
         OutFolder = outFolder;
         Directory.CreateDirectory(outFolder);
@@ -55,8 +56,8 @@ public class Files
         outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
         foreach (var subClone in subClones.Where(sc => sc.AliveCount > cutOff))
         {
-            var copynumbers = new CopyNumbers(subClone.Karyotype);
-            outputFile.Write(copynumbers.ToTSV(subClone.CloneId.ToString(), false));
+            var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
+            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false));
         }
     }
 }

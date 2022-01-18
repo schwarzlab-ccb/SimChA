@@ -112,7 +112,6 @@ public static class ReferenceGenome
         return all.Select(num => GetRegion(num, isFirstHaplotype));
     }
 
-
     static ReferenceGenome()
     {
         var haplotypeOneF = CreateHaplotype(true, true);
@@ -126,8 +125,8 @@ public static class ReferenceGenome
     private static Region[] GenotypeM { get; }
     private static Region[] GenotypeF { get; }
 
-    public static Region[] GetGenotype(bool isFemale) => isFemale ? GenotypeF : GenotypeM;
-
+    public static Region[] GetGenotype(bool isFemale) 
+        => isFemale ? GenotypeF : GenotypeM;
 
     public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
         => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);

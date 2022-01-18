@@ -46,7 +46,7 @@ Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutO
 
 try
 {
-    var files = new Files(options.Value.OutputPath);
+    var files = new FileIO(options.Value.OutputPath);
     files.WriteSubClones(simulator.Clones, options.Value.CutOff);
     files.WriteParentGraph(simulator.Clones, options.Value.CutOff);
     files.WriteCopyNumbers(simulator.Clones, options.Value.CutOff);
