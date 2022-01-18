@@ -35,7 +35,8 @@ public static class CopyNumbers
                 var cn = new CopyNumber
                 {
                     Segment = seg,
-                    CNH1 = curRegions.Count(r => r.ChromId.Parent && seg.IsInside(r)),
+                    // -1 because we add the reference region to curRegions above
+                    CNH1 = curRegions.Count(r => r.ChromId.Parent && seg.IsInside(r)) - 1,
                     CNH2 = curRegions.Count(r => !r.ChromId.Parent && seg.IsInside(r))
                 };
                 result.Add(cn);
