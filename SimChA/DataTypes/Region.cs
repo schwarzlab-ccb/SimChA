@@ -19,6 +19,8 @@ public struct Region
         Forward = forward;
     }
 
+    public bool IsInside(Region other) => Start >= other.Start && End <= other.End;
+
     private string DirString => Forward ? "+" : "-";
 
     public override string ToString() => $"{ChromId}{DirString}[{Start}:{End})";

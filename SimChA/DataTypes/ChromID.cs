@@ -13,6 +13,8 @@ public struct ChromID
         Parent = parent;
     }
 
+    public bool Equals(ChromID other) => ChromNum == other.ChromNum && Parent == other.Parent;
+
     public override string ToString()
     {
         string parentIdentifier = Parent ? "H1" : "H2";

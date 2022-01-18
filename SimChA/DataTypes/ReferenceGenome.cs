@@ -128,6 +128,10 @@ public static class ReferenceGenome
 
     public static Region[] GetGenotype(bool isFemale) => isFemale ? GenotypeF : GenotypeM;
 
+
+    public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
+        => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);
+
     public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true)
         => new Region(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));
 }

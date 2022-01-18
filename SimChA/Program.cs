@@ -44,13 +44,14 @@ Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 int cutOffCount = simulator.Clones.Count(subClone => subClone.AliveCount >= options.Value.CutOff);
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOffCount}");
 
-string outPath = Path.Combine(Path.GetFullPath(options.Value.OutputPath));
-Console.WriteLine($"Writing to file {outPath}");
-using var outputFile = new StreamWriter(outPath);
-foreach (var subClone in simulator.Clones.Where(subClone => subClone.AliveCount >= options.Value.CutOff))
+try
 {
-    outputFile.Write(subClone);
+    var files = new Files(options.Value.OutputPath);
+    files.WriteSubClones(simulator.Clones, options.Value.CutOff);
+    files.WriteParentGraph(simulator.Clones, options.Value.CutOff);
+    files.WriteCopyNumbers(simulator.Clones, options.Value.CutOff);
+} 
+catch (Exception e) 
+{
+    Console.Write($"Failed to write to disk with error: {e.Message}");
 }
-
-string dotPath = Path.Combine(Path.GetFullPath(options.Value.DotPath));
-DotGraph.WriteGraph(dotPath, simulator.Clones);

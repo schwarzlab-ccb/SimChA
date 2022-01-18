@@ -34,6 +34,12 @@ public class Chromosome
     public override string ToString() 
         => ToString(_regions);
 
+    public List<Region> GetAllRegions() 
+        => _regions.ToList();
+
+    public List<Region> GetRegions(ChromID chromID) 
+        => _regions.Where(r => r.ChromId.Equals(chromID)).ToList();
+
     public void DeleteRange(int start, int end)
     {
         _regions = RegionOps.DeleteRange(_regions, start, end);
