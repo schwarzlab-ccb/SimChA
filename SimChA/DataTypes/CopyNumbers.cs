@@ -70,9 +70,9 @@ public class CopyNumbers
     }
 
 
-    public string ToTSV(bool isFirst = true)
+    public string ToTSV(bool printHeader = true)
     {
-        var outputString = isFirst ? "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
+        var outputString = printHeader ? "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
         for (int i = 0; i < _segmentation.Count(); i++)
         {
             string[] curLine = { _segmentation[i].ChromId.ChromNum.ToString(), _segmentation[i].Start.ToString(), _segmentation[i].End.ToString(), _copynumbers[i].Item1.ToString(), _copynumbers[i].Item2.ToString() };
@@ -91,5 +91,11 @@ public class CopyNumbers
         }
         return outputString;
     }
+
+    public List<Region> GetAllSegments()
+        => _segmentation.ToList();
+
+    public List<(int, int)> GetAllCopyNumbers()
+        => _copynumbers.ToList();
 
 }

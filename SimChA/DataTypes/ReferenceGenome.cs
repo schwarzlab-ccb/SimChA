@@ -128,10 +128,24 @@ public static class ReferenceGenome
 
     public static Region[] GetGenotype(bool isFemale) => isFemale ? GenotypeF : GenotypeM;
 
+    public static long TotalLength(bool isFemale)
+        => GetChromosomes(isFemale).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
 
     public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
         => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);
 
     public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true)
         => new Region(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));
+
+    public static long ChromosomeAbsoluteStart(ChromNum chromNum) 
+    {
+        var ReferenceChromosomes = Enum.GetValues<ChromNum>();
+        long sum = 0;
+        foreach (var c in ReferenceChromosomes)
+        {
+            if (c == chromNum) break;
+            sum += ReferenceGenome.ChromosomeLengthMap[c];
+        }
+        return sum;
+    }
 }
