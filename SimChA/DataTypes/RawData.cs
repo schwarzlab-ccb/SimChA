@@ -13,7 +13,7 @@ public class RawDataSingleSubclone
     private float _baferror = 0.1F;
     private float _readstd = 2f;
     private int _readdepth = 10;
-    private SNPs _snps;
+    private List<SNP> _snps;
     private int nrSNPs;
 
     public RawDataSingleSubclone(List<CopyNumber> copyNumbers, bool isFemale, float purity, float ploidy, int nrSNPsInitial = 100)
@@ -23,8 +23,8 @@ public class RawDataSingleSubclone
         _ploidy = ploidy;
 
         // Create SNPs
-        _snps = new SNPs(isFemale, nrSNPsInitial);
-        nrSNPs = _snps.Length;
+        _snps = SNPs.CalculateSNPs(isFemale, nrSNPsInitial);
+        nrSNPs = _snps.Count;
 
         _baf = new float[nrSNPs];
         _logr = new float[nrSNPs];
@@ -33,11 +33,10 @@ public class RawDataSingleSubclone
     public void CalcRawData()
     {
         int curSegmentId = 0;
-        var snps = _snps.AllSNPs();
-        for (int i = 0; i < _snps.Length; i++)
+        for (int i = 0; i < _snps.Count; i++)
         {
             curSegmentId = _copynumbers.FindIndex(curSegmentId, cn => 
-                ReferenceGenome.ChromosomeAbsoluteStart(cn.Segment.ChromId.ChromNum + cn.Segment.End) < snps[i].AbsPos);
+                ReferenceGenome.ChromosomeAbsoluteStart(cn.Segment.ChromId.ChromNum + cn.Segment.End) < _snps[i].AbsPos);
 
             if (_copynumbers[curSegmentId].CNH1 + _copynumbers[curSegmentId].CNH2 <= 0) 
                 continue;
@@ -46,7 +45,7 @@ public class RawDataSingleSubclone
             int readsH2 = (int)Math.Round(Math.Max(0, Normal.Sample(_copynumbers[curSegmentId].CNH2 * _readdepth, _readstd)));
 
             _logr[i] = (float)Math.Log2((readsH1 + readsH2) / (2f * _readdepth));
-            _baf[i] = snps[i].Heterozygous && readsH1+readsH2 > 0 ? (float) readsH2 / (readsH1 + readsH2) : -1;
+            _baf[i] = _snps[i].Heterozygous && readsH1+readsH2 > 0 ? (float) readsH2 / (readsH1 + readsH2) : -1;
             
             // TODO: Extra noise for logr and baf
         }
@@ -57,19 +56,17 @@ public class RawDataSingleSubclone
     
     public string BAFToTSV(bool printHeader = false)
     {
-        var snps = _snps.AllSNPs();
         var outputString = GetFirstLine(printHeader, "BAF");
         for (int i = 0; i < nrSNPs; i++) {
-            outputString += $"snpID\t{snps[i].Chrom}\t{snps[i].Pos}\t{_baf[i]}\n";
+            outputString += $"snpID\t{_snps[i].Chrom}\t{_snps[i].Pos}\t{_baf[i]}\n";
         }
         return outputString;
     }
     public string logRToTSV(bool printHeader = false)
     {
-        var snps = _snps.AllSNPs();
         var outputString = GetFirstLine(printHeader, "logR");
         for (int i = 0; i < nrSNPs; i++) {
-            outputString += $"snpID\t{snps[i].Chrom}\t{snps[i].Pos}\t{_logr[i]}\n";
+            outputString += $"snpID\t{_snps[i].Chrom}\t{_snps[i].Pos}\t{_logr[i]}\n";
         }
         return outputString;
     }

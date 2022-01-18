@@ -104,6 +104,8 @@ public static class ReferenceGenome
         }
     };
 
+    public static readonly Dictionary<ChromNum, long> ChromosomeStartMap;
+
     private static IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
     {
         var nonGender = Enum.GetValues<ChromNum>().Take(22);
@@ -111,7 +113,6 @@ public static class ReferenceGenome
         var all = nonGender.Concat(new[] { sexChr });
         return all.Select(num => GetRegion(num, isFirstHaplotype));
     }
-
 
     static ReferenceGenome()
     {
@@ -121,6 +122,9 @@ public static class ReferenceGenome
         var haplotypeOneM = CreateHaplotype(true, false);
         var haplotypeTwoM = CreateHaplotype(false, false);
         GenotypeM = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
+
+        long start = 0;
+        // ChromosomeStartMap = ChromosomeLengthMap.ToDictionary<ChromNum, long>(pair => pair.Key, pair => { start += pair.Value; });
     }
 
     private static Region[] GenotypeM { get; }
