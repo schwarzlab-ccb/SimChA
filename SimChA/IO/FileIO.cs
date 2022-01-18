@@ -6,8 +6,10 @@ namespace SimChA.IO;
 public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
-    private const string SUBCLONES_FILENAME = "subclones.txt";
+    private const string SUBCLONES_FILENAME = "subclones.out";
     private const string COPYNUMBERS_FILENAME = "copynumbers.out";
+    private const string BAF_FILENAME = "baf.out";
+    private const string LOGR_FILENAME = "logr.out";
 
     private string OutFolder { get; }
 
@@ -57,7 +59,20 @@ public class FileIO
         foreach (var subClone in subClones.Where(sc => sc.AliveCount > cutOff))
         {
             var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false));
+            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
         }
+    }
+
+    public void WriteRawData(List<SNPData> rawData)
+    {
+        string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), BAF_FILENAME);
+        Console.WriteLine($"Writing BAF to file {outPathBAF}");
+        using var outputFileBAF = new StreamWriter(outPathBAF);
+        outputFileBAF.Write(RawData.PrintBAF(rawData) + "\n");
+
+        string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), LOGR_FILENAME);
+        Console.WriteLine($"Writing LogR to file {outPathLogR}");
+        using var outputFileLogR = new StreamWriter(outPathLogR);
+        outputFileLogR.Write(RawData.PrintLogR(rawData) + "\n");
     }
 }

@@ -8,8 +8,9 @@ public struct SNP
     public Nucleotides Ref;
     public Nucleotides Alt;
     public bool Heterozygous;
+    public int Id;
 
-    public SNP(ChromNum chrom, int pos, bool heterozygous, Nucleotides re, Nucleotides alt)
+    public SNP(ChromNum chrom, int pos, bool heterozygous, int id, Nucleotides re, Nucleotides alt)
     {
         Chrom = chrom;
         Pos = pos;
@@ -17,8 +18,9 @@ public struct SNP
         Ref = re;
         Alt = alt;
         Heterozygous = heterozygous;
+        Id = id;
     }
-    public SNP(ChromNum chrom, int pos, bool heterozygous)
+    public SNP(ChromNum chrom, int pos, bool heterozygous, int id)
     {
         Chrom = chrom;
         Pos = pos;
@@ -26,6 +28,7 @@ public struct SNP
         Ref = Nucleotides.A;
         Alt = Nucleotides.G;
         Heterozygous = heterozygous;
+        Id = id;
     }
 
     public override string ToString()
