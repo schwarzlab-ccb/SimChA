@@ -20,12 +20,13 @@ public static class CopyNumbers
         foreach (var curRefChrom in refChroms)
         {
             var curRegions = allRegs.Where(region => region.ChromId.ChromNum == curRefChrom).ToList();
-            curRegions.Add(ReferenceGenome.GetRegion(curRefChrom));
+            var curRegionsWithReference = curRegions.Append(ReferenceGenome.GetRegion(curRefChrom));
 
-            var segmentBoundaries = curRegions
+            var segmentBoundaries = curRegionsWithReference
                 .Select(r => r.Start)
-                .Concat(curRegions.Select(r => r.End))
-                .Distinct().ToList();
+                .Concat(curRegionsWithReference.Select(r => r.End))
+                .Distinct()
+                .ToList();
             segmentBoundaries.Sort();
 
             var chromId = new ChromID(curRefChrom, true);
@@ -35,8 +36,7 @@ public static class CopyNumbers
                 var cn = new CopyNumber
                 {
                     Segment = seg,
-                    // -1 because we add the reference region to curRegions above
-                    CNH1 = curRegions.Count(r => r.ChromId.Parent && seg.IsInside(r)) - 1,
+                    CNH1 = curRegions.Count(r => r.ChromId.Parent && seg.IsInside(r)),
                     CNH2 = curRegions.Count(r => !r.ChromId.Parent && seg.IsInside(r))
                 };
                 result.Add(cn);
