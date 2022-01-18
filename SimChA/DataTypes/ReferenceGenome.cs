@@ -110,7 +110,7 @@ public static class ReferenceGenome
     {
         var nonGender = Enum.GetValues<ChromNum>().Take(22);
         var sexChr = (isFirstHaplotype | isFemale) ? ChromNum.chrX : ChromNum.chrY;
-        var all = nonGender.Concat(new[] { sexChr });
+        var all = nonGender.Concat(new[] {sexChr});
         return all.Select(num => GetRegion(num, isFirstHaplotype));
     }
 
@@ -123,22 +123,22 @@ public static class ReferenceGenome
         var haplotypeTwoM = CreateHaplotype(false, false);
         GenotypeM = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
 
-        long start = 0;
+        long start = -ChromosomeLengthMap.First().Value; // Has to be subtracted, otherwise ends are computed
         ChromosomeStartMap = ChromosomeLengthMap.ToDictionary(pair => pair.Key, pair => start += pair.Value);
     }
 
     private static Region[] GenotypeM { get; }
     private static Region[] GenotypeF { get; }
 
-    public static Region[] GetGenotype(bool isFemale) 
+    public static Region[] GetGenotype(bool isFemale)
         => isFemale ? GenotypeF : GenotypeM;
 
     public static long TotalLength(bool isFemale)
-        => GetChromosomes(isFemale).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
+        => GetChromosomes(isFemale).Select(chrom => (long) ChromosomeLengthMap[chrom]).Sum();
 
     public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
         => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);
 
-    public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true) => 
+    public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true) =>
         new(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));
-    }
+}
