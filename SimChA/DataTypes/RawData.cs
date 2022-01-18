@@ -36,7 +36,7 @@ public class RawDataSingleSubclone
         for (int i = 0; i < _snps.Count; i++)
         {
             curSegmentId = _copynumbers.FindIndex(curSegmentId, cn => 
-                ReferenceGenome.ChromosomeAbsoluteStart(cn.Segment.ChromId.ChromNum + cn.Segment.End) < _snps[i].AbsPos);
+                ReferenceGenome.ChromosomeStartMap[cn.Segment.ChromId.ChromNum] + cn.Segment.End < _snps[i].AbsPos);
 
             if (_copynumbers[curSegmentId].CNH1 + _copynumbers[curSegmentId].CNH2 <= 0) 
                 continue;

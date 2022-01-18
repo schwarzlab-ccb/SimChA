@@ -13,7 +13,7 @@ public struct SNP
     {
         Chrom = chrom;
         Pos = pos;
-        AbsPos = ReferenceGenome.ChromosomeAbsoluteStart(chrom) + pos;
+        AbsPos = ReferenceGenome.ChromosomeStartMap[chrom] + pos;
         Ref = re;
         Alt = alt;
         Heterozygous = heterozygous;
@@ -22,7 +22,7 @@ public struct SNP
     {
         Chrom = chrom;
         Pos = pos;
-        AbsPos = ReferenceGenome.ChromosomeAbsoluteStart(chrom) + pos;
+        AbsPos = ReferenceGenome.ChromosomeStartMap[chrom] + pos;
         Ref = Nucleotides.A;
         Alt = Nucleotides.G;
         Heterozygous = heterozygous;

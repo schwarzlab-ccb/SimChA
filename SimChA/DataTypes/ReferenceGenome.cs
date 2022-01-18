@@ -124,7 +124,7 @@ public static class ReferenceGenome
         GenotypeM = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
 
         long start = 0;
-        // ChromosomeStartMap = ChromosomeLengthMap.ToDictionary<ChromNum, long>(pair => pair.Key, pair => { start += pair.Value; });
+        ChromosomeStartMap = ChromosomeLengthMap.ToDictionary(pair => pair.Key, pair => start += pair.Value);
     }
 
     private static Region[] GenotypeM { get; }
@@ -141,16 +141,4 @@ public static class ReferenceGenome
 
     public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true) => 
         new(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));
-
-    public static long ChromosomeAbsoluteStart(ChromNum chromNum) 
-    {
-        var ReferenceChromosomes = Enum.GetValues<ChromNum>();
-        long sum = 0;
-        foreach (var c in ReferenceChromosomes)
-        {
-            if (c == chromNum) break;
-            sum += ChromosomeLengthMap[c];
-        }
-        return sum;
     }
-}
