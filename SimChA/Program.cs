@@ -1,6 +1,7 @@
 ﻿using SimChA.DataTypes;
 using SimChA.Simulation;
 using CommandLine;
+using SimChA.Computation;
 using SimChA.IO;
 
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
@@ -40,6 +41,7 @@ while (simulator.Clones.Count < stopCount)
 }
 
 Console.WriteLine("Finished");
+Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 int cutOffCount = simulator.Clones.Count(subClone => subClone.AliveCount >= options.Value.CutOff);
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOffCount}");
@@ -55,3 +57,22 @@ catch (Exception e)
 {
     Console.Write($"Failed to write to disk with error: {e.Message}");
 }
+
+var exampleSubClone = simulator.Clones.Where(subClone => subClone.AliveCount >= options.Value.CutOff).Last();
+var rawData = new RawDataSingleSubclone(
+    CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype), 
+    exampleSubClone.Karyotype.IsFemale, 
+    1.0f, 
+    2.0f);
+rawData.CalcRawData();
+
+string fullPathBAF = Path.Combine(Path.GetFullPath(options.Value.OutputPath), "SimCha_BAF.out");
+Console.WriteLine($"Writing BAF for Subclone {exampleSubClone.CloneId} to file {fullPathBAF}");
+using var outputFileBAF = new StreamWriter(fullPathBAF);
+outputFileBAF.Write(rawData.BAFToTSV(true));
+
+string fullPathlogR = Path.Combine(Path.GetFullPath(options.Value.OutputPath), "SimCha_logR.out");
+Console.WriteLine($"Writing logR for Subclone {exampleSubClone.CloneId} to file {fullPathlogR}");
+using var outputFilelogR = new StreamWriter(fullPathlogR);
+outputFilelogR.Write(rawData.logRToTSV(true));
+
