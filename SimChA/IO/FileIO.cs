@@ -19,44 +19,45 @@ public class FileIO
         Directory.CreateDirectory(outFolder);
     }
     
-    public void WriteSubClones(IEnumerable<SubClone> subClones, int cutOff)
+    public void WriteSubClones(IEnumerable<SubClone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
         Console.WriteLine($"Writing subclones to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         
-        foreach (var subClone in subClones.Where(subClone => subClone.AliveCount >= cutOff))
+        foreach (var subClone in subClones)
         {
             outputFile.Write(subClone);
         }
     }
     
-    public void WriteParentGraph(IEnumerable<SubClone> subClones, int cutOff)
+    public void WriteParentTree(ParentTree tree)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), DOT_FILENAME);
         Console.WriteLine($"Writing parent graph to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
+
         
         outputFile.WriteLine("Digraph SimChA {");
-        foreach (var subClone in subClones.Where(sc => sc.AliveCount > cutOff))
+        foreach (var node in tree.Nodes)
         {
-            outputFile.WriteLine($"\t{subClone.CloneId} [label=\"{subClone.AliveCount}\"];");
-            if (subClone.ParentId >= 0)
-            {
-                outputFile.WriteLine($"\t{subClone.ParentId} -> {subClone.CloneId};");
-            }
+            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Size}\"];");
+        }
+        foreach (var edge in tree.Edges)
+        {
+            outputFile.WriteLine($"\t{edge.SourceId} -> {edge.TargetId} [label=\"{edge.Distance}\"];");
         }
         outputFile.WriteLine("}");
     }
 
-    public void WriteCopyNumbers(IEnumerable<SubClone> subClones, int cutOff)
+    public void WriteCopyNumbers(IEnumerable<SubClone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing CopyNumbers to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         
         outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
-        foreach (var subClone in subClones.Where(sc => sc.AliveCount > cutOff))
+        foreach (var subClone in subClones)
         {
             var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
             outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");

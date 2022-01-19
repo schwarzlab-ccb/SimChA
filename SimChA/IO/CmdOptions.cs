@@ -4,7 +4,7 @@ namespace SimChA.IO;
 
 public class CmdOptions
 {
-    [Option('s', "stopcount", Required = false, Default = 1000, HelpText = "The simulation stops when \"s\" clones are created.")]
+    [Option('s', "stopcount", Required = false, Default = 1_000_000, HelpText = "The simulation stops when \"s\" clones are created.")]
     public int StopCount { get; set; }
     
     [Option('c', "cutoff", Required = false, Default = 1, HelpText = "The minimum number of cells to be written to output.")]

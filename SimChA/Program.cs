@@ -31,46 +31,51 @@ var simParams = new SimParams
     }
 };
 
+var maleParam = simParams with { IsFemale = false }; 
+
 var simulator = new Simulator(simParams);
-int stopCount = options.Value.StopCount;
 int stepNo = 1;
-while (simulator.Clones.Count < stopCount)
+long pop = CellSampling.PopulationSize(simulator.Clones);
+do
 {
-    Console.WriteLine($"Sim step {stepNo++:D3}, clones: {simulator.Clones.Count}");
+    Console.WriteLine($"Sim step {stepNo++:D3}, clones: {simulator.Clones.Count}, cells: {pop}");
     simulator.Step();
-}
+    pop = CellSampling.PopulationSize(simulator.Clones);
+} while (pop < options.Value.StopCount);
 
 Console.WriteLine("Finished");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
-int cutOffCount = simulator.Clones.Count(subClone => subClone.AliveCount >= options.Value.CutOff);
-Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOffCount}");
 // var sample = CellSampling.SampleCells(simulator.Clones, 10000);
-var sample = simulator.Clones;
+var cutOff = simulator.Clones.Where(sc => sc.AliveCount >= options.Value.CutOff).ToList();
+Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOff.Count}");
+var sample = CellSampling.SampleCells(cutOff, 1000).ToList();
+var parentMap = TreeBuilder.CreateParentMap(simulator.Clones);
+var parentTree = TreeBuilder.BuildTree(parentMap, sample);
 try
 {
     var files = new FileIO(options.Value.OutputPath);
-    files.WriteSubClones(sample, options.Value.CutOff);
-    files.WriteParentGraph(sample, options.Value.CutOff);
-    files.WriteCopyNumbers(sample, options.Value.CutOff);
+    files.WriteSubClones(sample);
+    files.WriteParentTree(parentTree);
+    files.WriteCopyNumbers(sample);
 } 
 catch (Exception e) 
 {
     Console.Write($"Failed to write to disk with error: {e.Message}");
 }
-
-// snps are shared between all subclones and therefore are created separately
-var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
-var exampleSubClone = simulator.Clones.Last(subClone => subClone.AliveCount >= options.Value.CutOff);
-var copyNumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
-var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps);
-
-try
-{
-    var files = new FileIO(options.Value.OutputPath);
-    files.WriteRawData(rawdata);
-}
-catch (Exception e)
-{
-    Console.Write($"Failed to write to disk with error: {e.Message}");
-}
+//
+// // snps are shared between all subclones and therefore are created separately
+// var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
+// var exampleSubClone = cutOff.Last();
+// var copyNumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
+// var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps);
+//
+// try
+// {
+//     var files = new FileIO(options.Value.OutputPath);
+//     files.WriteRawData(rawdata);
+// }
+// catch (Exception e)
+// {
+//     Console.Write($"Failed to write to disk with error: {e.Message}");
+// }

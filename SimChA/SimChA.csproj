@@ -14,8 +14,4 @@
     <PackageReference Include="MathNet.Numerics" Version="5.0.0-alpha03" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Graphing" />
-  </ItemGroup>
-
 </Project>

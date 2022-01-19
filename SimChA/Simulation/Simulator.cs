@@ -41,6 +41,8 @@ public class Simulator
                 var newSubClone = originalClone.CreateChild(Clones.Count);
                 var abberation = SelectMutation();
                 newSubClone.Karyotype.ApplyAbberation(abberation);
+                double inc = 1.2;
+                newSubClone.DivisionRate = Math.Clamp(newSubClone.DivisionRate * inc, 0, 1);
                 if (newSubClone.Karyotype.ChromCount > 23)
                 {
                     Clones.Add(newSubClone);
