@@ -1,4 +1,4 @@
-// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
+﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using MathNet.Numerics.Distributions;
 using SimChA.DataTypes;
@@ -131,6 +131,10 @@ public class Karyotype
                 positions.Sort();
                 int count = _random.Next(1, positions.Count);
                 chr1.ScatterAndGather(positions, count);
+                return this;
+
+            case AbberationEnum.WholeGenomeDoubling:
+                Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
                 return this;
 
             default:

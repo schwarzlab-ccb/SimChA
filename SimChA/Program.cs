@@ -14,8 +14,8 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = 0.01f, 
-    MutationRate = 0.01f, 
+    DivisionRate = 0.01f,
+    MutationRate = 0.01f,
     IsFemale = true,
     AbberationRates =
     {
@@ -27,7 +27,8 @@ var simParams = new SimParams
         [AbberationEnum.Inversion] = 10f,
         [AbberationEnum.Missegregation] = 5f,
         [AbberationEnum.Duplication] = 5f,
-        [AbberationEnum.Chromothripsis] = 1f
+        [AbberationEnum.Chromothripsis] = 1f,
+        [AbberationEnum.WholeGenomeDoubling] = 1f
     }
 };
 
