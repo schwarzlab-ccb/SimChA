@@ -60,7 +60,7 @@ catch (Exception e)
 
 // snps are shared between all subclones and therefore are created separately
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
-var exampleSubClone = simulator.Clones.Where(subClone => subClone.AliveCount >= options.Value.CutOff).Last();
+var exampleSubClone = simulator.Clones.Last(subClone => subClone.AliveCount >= options.Value.CutOff);
 var copyNumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
 var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps);
 
