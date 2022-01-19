@@ -45,6 +45,13 @@ public static class CopyNumbers
         return result;
     }
 
+    public static float CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
+    {
+        long totalLength = ReferenceGenome.TotalLength(isFemale);
+        float ploidy = copyNumbers.Select(c => (float)(c.Segment.End - c.Segment.Start) * (c.CNH1 + c.CNH2) / totalLength).Sum();
+
+        return ploidy;
+    }
     private static string FirstLine(bool withSample, bool isFirst)
         => isFirst ? (withSample ? "sample_id\t" : "") + "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
 

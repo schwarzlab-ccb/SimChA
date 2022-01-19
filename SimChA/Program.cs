@@ -55,14 +55,14 @@ try
 } 
 catch (Exception e) 
 {
-    Console.Write($"Failed to write to disk with error: {e.Message}");
+    Console.WriteLine($"Failed to write to disk with error: {e.Message}");
 }
 
 // snps are shared between all subclones and therefore are created separately
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
 var exampleSubClone = simulator.Clones.Where(subClone => subClone.AliveCount >= options.Value.CutOff).Last();
-var copyNumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
-var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps);
+var copynumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
+var rawdata = RawData.CalcSingleSubclone(copynumbers, snps, simParams.IsFemale);
 
 try
 {
