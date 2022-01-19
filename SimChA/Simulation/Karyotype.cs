@@ -1,4 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
+// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using MathNet.Numerics.Distributions;
 using SimChA.DataTypes;
@@ -117,7 +117,7 @@ public class Karyotype
             
             case AbberationEnum.Duplication:
                 var baseKaryotype = new Karyotype(this);
-                Chromosomes.Add(chr1);
+                Chromosomes.Add(new Chromosome(chr1));
                 return baseKaryotype;
 
             case AbberationEnum.BreakageFusionBridge:
