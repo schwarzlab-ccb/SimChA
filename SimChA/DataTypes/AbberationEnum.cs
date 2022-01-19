@@ -12,5 +12,6 @@ public enum AbberationEnum
     Inversion,
     BreakageFusionBridge,
     TailDeletion,
-    Duplication
+    Duplication,
+    WholeGenomeDoubling
 }

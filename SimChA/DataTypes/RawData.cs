@@ -6,12 +6,12 @@ using MathNet.Numerics.Distributions;
 public static class RawData
 {
     public static List<SNPData> CalcSingleSubclone(
-        List<CopyNumber> copyNumbers, List<SNP> snps, float purity = 1f, float baferror = 0.1F,
-        float readstd = 2f, int readdepth = 10)
+        List<CopyNumber> copyNumbers, List<SNP> snps, bool isfemale, float purity = 1f, float baferror = 0.1F,
+        float readstd = 2f, int readdepth = 10, float gamma = 1f)
     {
-        // TODO: implement purity
         var result = new List<SNPData>();
         int curSegmentId = 0;
+        float tumorPloidy = CopyNumbers.CalcPloidy(copyNumbers, isfemale);
         foreach (var snp in snps)
         {
             curSegmentId = copyNumbers.FindIndex(curSegmentId, cn =>
@@ -20,14 +20,16 @@ public static class RawData
             if (copyNumbers[curSegmentId].CNH1 + copyNumbers[curSegmentId].CNH2 <= 0)
                 continue;
 
-            int readsH1 = (int)Math.Round(Math.Max(0, Normal.Sample(copyNumbers[curSegmentId].CNH1 * readdepth, readstd)));
-            int readsH2 = (int)Math.Round(Math.Max(0, Normal.Sample(copyNumbers[curSegmentId].CNH2 * readdepth, readstd)));
+            int readsNormal = (int)Math.Round(Math.Max(0, Normal.Sample(2 * readdepth, readstd)));
+            int readsH1 = (int)Math.Round(Math.Max(0,
+                Normal.Sample(copyNumbers[curSegmentId].CNH1 * readdepth, readstd)));
+            int readsH2 = (int)Math.Round(Math.Max(0,
+                Normal.Sample(copyNumbers[curSegmentId].CNH2 * readdepth, readstd)));
 
-            float logr = (float)Math.Log2((readsH1 + readsH2) / (2f * readdepth));
-            float baf = snp.Heterozygous && readsH1 + readsH2 > 0 ? (float)readsH2 / (readsH1 + readsH2) : -1;
+            float logr = gamma * (float)Math.Log2((1 - purity) * readdepth * 2 + purity * (readsH1 + readsH2) / (readdepth * 2 * (1 - purity) + readdepth * purity * tumorPloidy));
+            float baf = snp.Heterozygous && readsH1 + readsH2 > 0 ? (float)(((1 - purity) * readsNormal + purity * readsH2) / ((1 - purity) * 2 * readsNormal + purity * (readsH1 + readsH2))) : -1;
 
             result.Add(new SNPData(snp, logr, baf));
-
             // TODO: Extra noise for logr and baf
         }
         return result;

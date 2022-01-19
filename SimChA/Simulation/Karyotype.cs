@@ -117,7 +117,7 @@ public class Karyotype
             
             case AbberationEnum.Duplication:
                 var baseKaryotype = new Karyotype(this);
-                Chromosomes.Add(chr1);
+                Chromosomes.Add(new Chromosome(chr1));
                 return baseKaryotype;
 
             case AbberationEnum.BreakageFusionBridge:
@@ -131,6 +131,10 @@ public class Karyotype
                 positions.Sort();
                 int count = _random.Next(1, positions.Count);
                 chr1.ScatterAndGather(positions, count);
+                return this;
+
+            case AbberationEnum.WholeGenomeDoubling:
+                Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
                 return this;
 
             default:
