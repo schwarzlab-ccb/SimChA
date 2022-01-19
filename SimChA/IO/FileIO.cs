@@ -18,7 +18,7 @@ public class FileIO
         OutFolder = outFolder;
         Directory.CreateDirectory(outFolder);
     }
-    
+
     public void WriteSubClones(IEnumerable<SubClone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
@@ -64,14 +64,47 @@ public class FileIO
         }
     }
 
-    public void WriteRawData(List<SNPData> rawData)
+    public void WriteRawData(IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
     {
+        var outputbaf = new List<string>();
+        outputbaf.Add("\tchrom\tpos");
+
+        foreach (var snp in snps)
+        {
+            outputbaf.Add($"{snp.Id}\t{snp.Chrom}\t{snp.Pos}");
+        }
+        var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
+        foreach (var subClone in subClones)
+        {
+            var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
+            var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps, isFemale);
+            outputbaf[0] += $"\t{subClone.CloneId}";
+            outputlogr[0] += $"\t{subClone.CloneId}";
+            for (int i = 0; i < rawdata.Count(); i++)
+            {
+                outputbaf[i + 1] += $"\t{rawdata[i].Baf}";
+                outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
+            }
+        }
+
         string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), BAF_FILENAME);
+        Console.WriteLine($"Writing BAF to file {outPathBAF}");
+        using var outputFileBAF = new StreamWriter(outPathBAF);
+        outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
+
+        string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), LOGR_FILENAME);
+        Console.WriteLine($"Writing LogR to file {outPathLogR}");
+        using var outputFileLogR = new StreamWriter(outPathLogR);
+        outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
+    }
+    public void WriteRawData(List<SNPData> rawData, int subcloneId)
+    {
+        string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), $"{subcloneId}_{BAF_FILENAME}");
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
         using var outputFileBAF = new StreamWriter(outPathBAF);
         outputFileBAF.Write(RawData.PrintBAF(rawData) + "\n");
 
-        string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), LOGR_FILENAME);
+        string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), $"{subcloneId}_{LOGR_FILENAME}");
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
         outputFileLogR.Write(RawData.PrintLogR(rawData) + "\n");

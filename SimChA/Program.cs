@@ -49,6 +49,8 @@ Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 var cutOff = simulator.Clones.Where(sc => sc.AliveCount >= options.Value.CutOff).ToList();
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOff.Count}");
 var sample = CellSampling.SampleCells(cutOff, 1000).ToList();
+// snps are shared between all subclones and therefore are created only once
+var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
 var parentMap = TreeBuilder.CreateParentMap(simulator.Clones);
 var parentTree = TreeBuilder.BuildTree(parentMap, sample);
 try
@@ -57,24 +59,9 @@ try
     files.WriteSubClones(sample);
     files.WriteParentTree(parentTree);
     files.WriteCopyNumbers(sample);
+    files.WriteRawData(sample, snps, simParams.IsFemale);
 } 
 catch (Exception e) 
 {
     Console.WriteLine($"Failed to write to disk with error: {e.Message}");
-}
-
-// snps are shared between all subclones and therefore are created separately
-var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
-var exampleSubClone = simulator.Clones.Last(subClone => subClone.AliveCount >= options.Value.CutOff);
-var copyNumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
-var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps, simParams.IsFemale);
-
-try
-{
-    var files = new FileIO(options.Value.OutputPath);
-    files.WriteRawData(rawdata);
-}
-catch (Exception e)
-{
-    Console.Write($"Failed to write to disk with error: {e.Message}");
 }
