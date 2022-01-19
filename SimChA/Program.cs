@@ -14,7 +14,7 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = 0.01f, 
+    DivisionRate = 0.1f, 
     MutationRate = 0.01f, 
     IsFemale = true,
     AbberationRates =
@@ -45,13 +45,14 @@ Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 int cutOffCount = simulator.Clones.Count(subClone => subClone.AliveCount >= options.Value.CutOff);
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOffCount}");
-
+// var sample = CellSampling.SampleCells(simulator.Clones, 10000);
+var sample = simulator.Clones;
 try
 {
     var files = new FileIO(options.Value.OutputPath);
-    files.WriteSubClones(simulator.Clones, options.Value.CutOff);
-    files.WriteParentGraph(simulator.Clones, options.Value.CutOff);
-    files.WriteCopyNumbers(simulator.Clones, options.Value.CutOff);
+    files.WriteSubClones(sample, options.Value.CutOff);
+    files.WriteParentGraph(sample, options.Value.CutOff);
+    files.WriteCopyNumbers(sample, options.Value.CutOff);
 } 
 catch (Exception e) 
 {

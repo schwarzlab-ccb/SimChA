@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace Tests;
 
