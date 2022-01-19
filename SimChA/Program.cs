@@ -45,13 +45,14 @@ Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 int cutOffCount = simulator.Clones.Count(subClone => subClone.AliveCount >= options.Value.CutOff);
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: {cutOffCount}");
-
+// var sample = CellSampling.SampleCells(simulator.Clones, 10000);
+var sample = simulator.Clones;
 try
 {
     var files = new FileIO(options.Value.OutputPath);
-    files.WriteSubClones(simulator.Clones, options.Value.CutOff);
-    files.WriteParentGraph(simulator.Clones, options.Value.CutOff);
-    files.WriteCopyNumbers(simulator.Clones, options.Value.CutOff);
+    files.WriteSubClones(sample, options.Value.CutOff);
+    files.WriteParentGraph(sample, options.Value.CutOff);
+    files.WriteCopyNumbers(sample, options.Value.CutOff);
 } 
 catch (Exception e) 
 {
@@ -60,9 +61,9 @@ catch (Exception e)
 
 // snps are shared between all subclones and therefore are created separately
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
-var exampleSubClone = simulator.Clones.Where(subClone => subClone.AliveCount >= options.Value.CutOff).Last();
-var copynumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
-var rawdata = RawData.CalcSingleSubclone(copynumbers, snps, simParams.IsFemale);
+var exampleSubClone = simulator.Clones.Last(subClone => subClone.AliveCount >= options.Value.CutOff);
+var copyNumbers = CopyNumbers.CalcCopyNumbers(exampleSubClone.Karyotype);
+var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps, simParams.IsFemale);
 
 try
 {

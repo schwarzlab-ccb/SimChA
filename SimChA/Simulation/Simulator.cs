@@ -34,17 +34,15 @@ public class Simulator
         {
             var originalClone = Clones[i];
             int newCellsCount = Binomial.Sample(originalClone.DivisionRate, originalClone.AliveCount);
-            int newMutantCount =
-                Binomial.Sample(originalClone.MutationRate, newCellsCount); // The existing cells will not mutate
+            // The existing cells will not mutate
+            int newMutantCount = Binomial.Sample(originalClone.MutationRate, newCellsCount); 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
-                var newSubClone = new SubClone(originalClone, Clones.Count);
+                var newSubClone = originalClone.CreateChild(Clones.Count);
                 var abberation = SelectMutation();
                 newSubClone.Karyotype.ApplyAbberation(abberation);
                 if (newSubClone.Karyotype.ChromCount > 23)
                 {
-                    newSubClone.DivisionRate += 0.02;
-                    newSubClone.MutationRate += 0.02;
                     Clones.Add(newSubClone);
                 }
             }

@@ -1,11 +1,13 @@
-﻿namespace SimChA.DataTypes;
+﻿using SimChA.Simulation;
+
+namespace SimChA.DataTypes;
 
 public class SubClone
 {
-    public int TotalCount;
-    public int AliveCount;
     public int CloneId;
     public int ParentId;
+    public int TotalCount;
+    public int AliveCount;
     public Karyotype Karyotype;
     public double DivisionRate;
     public double MutationRate;
@@ -20,15 +22,26 @@ public class SubClone
         TotalCount = AliveCount = 1;
     }
 
-    public SubClone(SubClone other, int cloneId)
+    public SubClone(SubClone other)
     {
-        CloneId = cloneId;
+        CloneId = other.CloneId;
         ParentId = other.CloneId;
-        Karyotype = new Karyotype(other.Karyotype);
-        TotalCount = AliveCount = 1;
+        TotalCount = other.TotalCount;
+        AliveCount = other.AliveCount;
+        Karyotype = other.Karyotype;
         MutationRate = other.MutationRate; 
         DivisionRate = other.DivisionRate; 
     }
+
+    public SubClone CreateChild(int newId) 
+        => new(this)
+        {
+            CloneId = newId,
+            ParentId = CloneId,
+            TotalCount = 1,
+            AliveCount = 1,
+            Karyotype = new Karyotype(Karyotype)
+        };
 
     public override string ToString()
     {

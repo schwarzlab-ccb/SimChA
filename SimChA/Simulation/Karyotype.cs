@@ -1,8 +1,9 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using MathNet.Numerics.Distributions;
+using SimChA.DataTypes;
 
-namespace SimChA.DataTypes;
+namespace SimChA.Simulation;
 
 public class Karyotype
 {
@@ -72,11 +73,9 @@ public class Karyotype
     }
 
     // Get two positions within the chromosome (boundaries are excluded)
-    private int GetUniformPosition(Chromosome chr)
-    {
-        return _random.Next(1, chr.Length() - 1);
-    }
-    
+    private int GetUniformPos(Chromosome chr) 
+        => _random.Next(1, chr.Length() - 1);
+
     public Karyotype ApplyAbberation(AbberationEnum abberation)
     {
         var selectChrs = RandomChrs(2);
@@ -84,7 +83,7 @@ public class Karyotype
         switch (abberation)
         {
             case AbberationEnum.TailDeletion:
-                chr1.Split(GetUniformPosition(chr1), _random.CoinFlip());
+                chr1.Split(GetUniformPos(chr1), _random.CoinFlip());
                 return this;
 
             case AbberationEnum.Missegregation:
@@ -105,7 +104,7 @@ public class Karyotype
             case AbberationEnum.Translocation:
                 var splits
                     = selectChrs.Select(chr
-                        => chr.Split(GetUniformPosition(chr), _random.CoinFlip())
+                        => chr.Split(GetUniformPos(chr), _random.CoinFlip())
                     ).ToList();
                 selectChrs[0].Join(splits[1], _random.CoinFlip());
                 selectChrs[1].Join(splits[0], _random.CoinFlip());
@@ -123,15 +122,12 @@ public class Karyotype
 
             case AbberationEnum.BreakageFusionBridge:
                 var loseKaryotype = new Karyotype(this, chr1);
-                chr1.Bridge(GetUniformPosition(chr1), _random.CoinFlip());
+                chr1.Bridge(GetUniformPos(chr1), _random.CoinFlip());
                 return loseKaryotype;
 
             case AbberationEnum.Chromothripsis:
                 int shardCount = _random.Next(1, (int) Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
-                var positions =
-                    Enumerable.Range(0, shardCount)
-                        .Select(_ => GetUniformPosition(chr1))
-                        .Distinct().ToList();
+                var positions = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr1)).Distinct().ToList();
                 positions.Sort();
                 int count = _random.Next(1, positions.Count);
                 chr1.ScatterAndGather(positions, count);
