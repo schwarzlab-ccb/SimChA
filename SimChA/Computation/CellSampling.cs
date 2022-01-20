@@ -9,6 +9,8 @@ public static class CellSampling
 {
     public static List<SubClone> SampleCells(List<SubClone> population, long sampleSize)
     {
+        throw new NotImplementedException();
+
         Random rnd = new();
         List<SubClone> sample = new();
             
@@ -22,8 +24,7 @@ public static class CellSampling
             {
                 sample.Add(new SubClone(subClone)
                 {
-                    AliveCount = sampled,
-                    TotalCount = sampled
+                     
                 });
             }
         }

@@ -4,43 +4,45 @@ namespace SimChA.DataTypes;
 
 public class SubClone
 {
+    public int FirstGen;
     public int CloneId;
     public int ParentId;
-    public int TotalCount;
-    public int AliveCount;
+    public int AliveCount => Generations.Sum(pair => pair.Value);
     public Karyotype Karyotype;
     public double DivisionRate;
     public double MutationRate;
+    public Dictionary<int, int> Generations;
 
-    public SubClone(int cloneId, int parentId,  double divisionRate,double mutationRate, Karyotype karyotype) 
+    public SubClone(int cloneId, int parentId, int generation, double divisionRate, double mutationRate, Karyotype karyotype) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         Karyotype = karyotype;
         DivisionRate = divisionRate;
         MutationRate = mutationRate;
-        TotalCount = AliveCount = 1;
+        FirstGen = generation;
+        Generations = new Dictionary<int, int> { { FirstGen, 1 } };
     }
 
     public SubClone(SubClone other)
     {
         CloneId = other.CloneId;
         ParentId = other.CloneId;
-        TotalCount = other.TotalCount;
-        AliveCount = other.AliveCount;
         Karyotype = other.Karyotype;
         MutationRate = other.MutationRate; 
-        DivisionRate = other.DivisionRate; 
+        DivisionRate = other.DivisionRate;
+        Generations = other.Generations;
+        FirstGen = other.FirstGen;
     }
 
-    public SubClone CreateChild(int newId) 
+    public SubClone CreateChild(int newId, int generation) 
         => new(this)
         {
+            FirstGen = generation,
             CloneId = newId,
             ParentId = CloneId,
-            TotalCount = 1,
-            AliveCount = 1,
-            Karyotype = new Karyotype(Karyotype)
+            Karyotype = new Karyotype(Karyotype),
+            Generations = new Dictionary<int, int> { { generation, 1 } }
         };
 
     public override string ToString()

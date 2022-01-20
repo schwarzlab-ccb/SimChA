@@ -7,6 +7,7 @@ public struct SimParams
     public bool IsFemale;
     public double DivisionRate;
     public double MutationRate;
+    public float FitnessInc;
 
     public readonly Dictionary<AbberationEnum, double> AbberationRates =
         Enum.GetValues<AbberationEnum>().ToDictionary(a => a, a => 1.0);

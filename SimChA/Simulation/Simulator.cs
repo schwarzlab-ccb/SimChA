@@ -8,16 +8,20 @@ public class Simulator
     public List<SubClone> Clones { get; }
     public SimParams SimParams { get; }
 
+    private int _generation;
+
     public Simulator(SimParams simParams)
     {
+        _generation = 0;
         var initKaryotype = new Karyotype(simParams.IsFemale);
-        var firstClone = new SubClone(0, -1, simParams.DivisionRate, simParams.MutationRate, initKaryotype);
+        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, initKaryotype);
         Clones = new List<SubClone> { firstClone };
         SimParams = simParams;
     }
 
     public void Step()
     {
+        _generation++;
         DivideAndMutate();
         // Kill();
     }
@@ -38,18 +42,16 @@ public class Simulator
             int newMutantCount = Binomial.Sample(originalClone.MutationRate, newCellsCount); 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
-                var newSubClone = originalClone.CreateChild(Clones.Count);
+                var newSubClone = originalClone.CreateChild(Clones.Count, _generation);
                 var abberation = SelectMutation();
                 newSubClone.Karyotype.ApplyAbberation(abberation);
-                double inc = 1.2;
-                newSubClone.DivisionRate = Math.Clamp(newSubClone.DivisionRate * inc, 0, 1);
+                newSubClone.DivisionRate = Math.Clamp(newSubClone.DivisionRate * SimParams.FitnessInc, 0, 1);
                 if (newSubClone.Karyotype.ChromCount > 23)
                 {
                     Clones.Add(newSubClone);
                 }
             }
-
-            originalClone.AliveCount += newCellsCount - newMutantCount;
+            originalClone.Generations[_generation] = newCellsCount - newMutantCount;
         }
     }
 
