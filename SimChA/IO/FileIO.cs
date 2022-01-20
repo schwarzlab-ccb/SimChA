@@ -86,7 +86,7 @@ public class FileIO
         adjFile.WriteLine("Parent,Identity");
         foreach (var subClone in subClones)
         {
-            popFile.WriteLine($"{subClone.ParentId},{subClone.CloneId}");
+            adjFile.WriteLine($"{subClone.ParentId},{subClone.CloneId}");
         }
     }
 
