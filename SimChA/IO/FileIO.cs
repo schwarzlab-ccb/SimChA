@@ -10,6 +10,8 @@ public class FileIO
     private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
+    private const string POPULATIONS_DF_FILENAME = "populations.csv";
+    private const string ADJACENCY_DF_FILENAME = "adjacency.csv";
 
     private string OutFolder { get; }
 
@@ -64,6 +66,30 @@ public class FileIO
         }
     }
 
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones)
+    {   
+        string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
+        string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
+        Console.WriteLine($"Writing population to file {popPath}, adjacency to file {adjPath}");
+        
+        using var popFile = new StreamWriter(popPath);
+        popFile.WriteLine("Generation,Identity,Population");
+        foreach (var subClone in subClones)
+        {
+            foreach (var pair in subClone.Generations)
+            {
+                popFile.WriteLine($"{pair.Key},{subClone.CloneId},{pair.Value}");
+            }
+        }
+        
+        using var adjFile = new StreamWriter(adjPath);
+        adjFile.WriteLine("Parent,Identity");
+        foreach (var subClone in subClones)
+        {
+            adjFile.WriteLine($"{subClone.ParentId},{subClone.CloneId}");
+        }
+    }
+
     public void WriteRawData(IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
     {
         var outputbaf = new List<string>();
@@ -80,7 +106,7 @@ public class FileIO
             var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps, isFemale);
             outputbaf[0] += $"\t{subClone.CloneId}";
             outputlogr[0] += $"\t{subClone.CloneId}";
-            for (int i = 0; i < rawdata.Count(); i++)
+            for (int i = 0; i < rawdata.Count; i++)
             {
                 outputbaf[i + 1] += $"\t{rawdata[i].Baf}";
                 outputlogr[i + 1] += $"\t{rawdata[i].LogR}";

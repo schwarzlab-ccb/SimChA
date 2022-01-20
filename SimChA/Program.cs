@@ -17,6 +17,7 @@ var simParams = new SimParams
     DivisionRate = 0.01f,
     MutationRate = 0.01f,
     IsFemale = true,
+    FitnessInc = 1.25f,
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,
@@ -46,9 +47,9 @@ Console.WriteLine("Finished");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 // var sample = CellSampling.SampleCells(simulator.Clones, 10000);
-var cutOff = simulator.Clones.Where(sc => sc.AliveCount >= options.Value.CutOff).ToList();
-Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff ({options.Value.CutOff}): {cutOff.Count}");
-var sample = CellSampling.SampleCells(cutOff, 1000).ToList();
+float cutOff = pop * options.Value.CutOff;
+var sample = simulator.Clones.Where(sc => sc.AliveCount >= cutOff).ToList();
+Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
 var parentMap = TreeBuilder.CreateParentMap(simulator.Clones);
@@ -60,6 +61,7 @@ try
     files.WriteParentTree(parentTree);
     files.WriteCopyNumbers(sample);
     files.WriteRawData(sample, snps, simParams.IsFemale);
+    files.WriteMullerDataFrames(sample);
 } 
 catch (Exception e) 
 {

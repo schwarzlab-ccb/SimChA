@@ -37,15 +37,4 @@ public class TestSimulation
         };
         _sim = new Simulator(_simParams);
     }
-
-    [Test]
-    public void TestSampling()
-    {
-        while (_sim.Clones.Count < 100)
-        {
-            _sim.Step();
-        }
-        var sampleCells = CellSampling.SampleCells(_sim.Clones, 1000);
-        Console.WriteLine($"Pop size: {CellSampling.PopulationSize(sampleCells)}");
-    }
 }
