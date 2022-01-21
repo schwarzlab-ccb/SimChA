@@ -14,10 +14,12 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = 0.01f,
+    DivisionRate = 0.02f,
     MutationRate = 0.01f,
+    DeathRate = 0.01f,
     IsFemale = true,
-    FitnessInc = 1.25f,
+    FitnessInc = 1f,
+    InitialPop = 100,
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,
@@ -41,7 +43,7 @@ do
     Console.WriteLine($"Sim step {stepNo++:D3}, clones: {simulator.Clones.Count}, cells: {pop}");
     simulator.Step();
     pop = CellSampling.PopulationSize(simulator.Clones);
-} while (pop < options.Value.StopCount);
+} while (pop < options.Value.StopCount && pop > 0);
 
 Console.WriteLine("Finished");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");

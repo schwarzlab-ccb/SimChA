@@ -7,13 +7,13 @@ public class SubClone
     public int FirstGen;
     public int CloneId;
     public int ParentId;
-    public int AliveCount => Generations.Sum(pair => pair.Value);
+    public int AliveCount => Generations.Last().Value;
     public Karyotype Karyotype;
     public double DivisionRate;
     public double MutationRate;
     public Dictionary<int, int> Generations;
 
-    public SubClone(int cloneId, int parentId, int generation, double divisionRate, double mutationRate, Karyotype karyotype) 
+    public SubClone(int cloneId, int parentId, int generation, double divisionRate, double mutationRate, Karyotype karyotype, int popSize = 1) 
     {
         CloneId = cloneId;
         ParentId = parentId;
@@ -21,7 +21,7 @@ public class SubClone
         DivisionRate = divisionRate;
         MutationRate = mutationRate;
         FirstGen = generation;
-        Generations = new Dictionary<int, int> { { FirstGen, 1 } };
+        Generations = new Dictionary<int, int> { { FirstGen, popSize } };
     }
 
     public SubClone(SubClone other)

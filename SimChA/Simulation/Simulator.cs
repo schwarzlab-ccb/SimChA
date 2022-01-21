@@ -13,8 +13,8 @@ public class Simulator
     public Simulator(SimParams simParams)
     {
         _generation = 0;
-        var initKaryotype = new Karyotype(simParams.IsFemale);
-        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, initKaryotype);
+        var refKaryotype = new Karyotype(simParams.IsFemale);
+        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, refKaryotype, simParams.InitialPop);
         Clones = new List<SubClone> { firstClone };
         SimParams = simParams;
     }
@@ -22,50 +22,57 @@ public class Simulator
     public void Step()
     {
         _generation++;
+        Kill();
         DivideAndMutate();
-        // Kill();
     }
 
     private void Kill()
     {
-        throw new NotImplementedException();
+        foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
+        {
+            int currentPop = subClone.Generations[_generation - 1];
+            int deadCount = Binomial.Sample(SimParams.DeathRate, currentPop);
+            subClone.Generations[_generation] = currentPop - deadCount;
+        }
     }
+
+    private bool IsViable(Karyotype kar) => kar.ChromCount > 23;
 
     private void DivideAndMutate()
     {
-        int cloneCount = Clones.Count;
-        for (int i = 0; i < cloneCount; i++)
+        List<SubClone> newClones = new();
+        foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
-            var originalClone = Clones[i];
-            int newCellsCount = Binomial.Sample(originalClone.DivisionRate, originalClone.AliveCount);
+            int newCellsCount = Binomial.Sample(subClone.DivisionRate, subClone.AliveCount);
             // The existing cells will not mutate
-            int newMutantCount = Binomial.Sample(originalClone.MutationRate, newCellsCount); 
+            int newMutantCount = Binomial.Sample(subClone.MutationRate, newCellsCount); 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
-                var newSubClone = originalClone.CreateChild(Clones.Count, _generation);
+                var childClone = subClone.CreateChild(Clones.Count + newClones.Count, _generation);
                 var abberation = SelectMutation();
-                newSubClone.Karyotype.ApplyAbberation(abberation);
-                newSubClone.DivisionRate = Math.Clamp(newSubClone.DivisionRate * SimParams.FitnessInc, 0, 1);
-                if (newSubClone.Karyotype.ChromCount > 23)
-                {
-                    Clones.Add(newSubClone);
-                }
+                childClone.Karyotype.ApplyAbberation(abberation);
+                if (!IsViable(childClone.Karyotype)) 
+                    continue;
+                
+                childClone.DivisionRate = Math.Clamp(childClone.DivisionRate * SimParams.FitnessInc, 0, 1);
+                newClones.Add(childClone);
             }
-            originalClone.Generations[_generation] = newCellsCount - newMutantCount;
+            subClone.Generations[_generation] += newCellsCount - newMutantCount;
         }
+        Clones.AddRange(newClones);
     }
 
     private AbberationEnum SelectMutation()
     {
         double ratesSum = SimParams.RatesSum;
         double sample = ContinuousUniform.Sample(0, ratesSum);
-        foreach (var rate in SimParams.AbberationRates)
+        foreach ((var abb, double rate) in SimParams.AbberationRates)
         {
-            if (sample <= rate.Value) 
+            if (sample <= rate) 
             {
-                return rate.Key;
+                return abb;
             }
-            sample -= rate.Value;
+            sample -= rate;
         }
         // In case float-point calculations would cause jumping out of the loop
         return SimParams.AbberationRates.Last().Key;
