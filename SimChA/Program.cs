@@ -14,11 +14,11 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = 0.02f,
-    MutationRate = 0.01f,
-    DeathRate = 0.01f,
+    DivisionRate = 0.01f,
+    MutationRate = 0.1f,
+    DeathRate = 0.0f,
     IsFemale = true,
-    FitnessInc = 1f,
+    FitnessInc = 1.5f,
     InitialPop = 100,
     AbberationRates =
     {
@@ -51,7 +51,7 @@ Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 // var sample = CellSampling.SampleCells(simulator.Clones, 10000);
 float cutOff = pop * options.Value.CutOff;
 var sample = simulator.Clones.Where(sc => sc.AliveCount >= cutOff).ToList();
-Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
+Console.WriteLine($"SubClone count {simulator.Clones.Count()}. Above cutoff: { sample.Count }");
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
 var parentMap = TreeBuilder.CreateParentMap(simulator.Clones);
