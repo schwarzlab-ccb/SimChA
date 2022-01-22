@@ -48,14 +48,13 @@ do
 Console.WriteLine("Finished");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
-// var sample = CellSampling.SampleCells(simulator.Clones, 10000);
-float cutOff = pop * options.Value.CutOff;
-var sample = simulator.Clones.Where(sc => sc.AliveCount >= cutOff).ToList();
-Console.WriteLine($"SubClone count {simulator.Clones.Count()}. Above cutoff: { sample.Count }");
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
-var parentMap = TreeBuilder.CreateParentMap(simulator.Clones);
-var parentTree = TreeBuilder.BuildTree(parentMap, sample);
+float cutOff = pop * options.Value.CutOff;
+var parentTree = TreeBuilder.BuildTreeWithAncestors(simulator.Clones, cutOff);
+var treeNodes = parentTree.Nodes.Select(n => n.Id).ToList();
+var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+Console.WriteLine($"SubClone count {simulator.Clones.Count()}. Above cutoff: { sample.Count }");
 try
 {
     var files = new FileIO(options.Value.OutputPath);
