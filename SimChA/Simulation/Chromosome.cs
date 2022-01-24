@@ -90,7 +90,7 @@ public class Chromosome
         }
     }
 
-    public void ScatterAndGather(List<int> locs, int count)
+    public void ScatterAndGather(List<int> locs, int count, Random rnd)
     {
         var newRegions = new List<List<Region>> { RegionOps.CopyRange(_regions, 0, locs[0]) };
         for (int i = 0; i < locs.Count - 1; i++)
@@ -102,7 +102,7 @@ public class Chromosome
         }
         newRegions.Add(RegionOps.CopyRange(_regions, locs.Last(), Length(_regions)));
         
-        var keptRegions = newRegions.Shuffle().Take(count);
+        var keptRegions = newRegions.Shuffle(rnd).Take(count);
         _regions = RegionOps.ConcatRegions(keptRegions);
     }
 }

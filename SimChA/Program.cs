@@ -18,7 +18,7 @@ var simParams = new SimParams
     MutationRate = 0.1f,
     DeathRate = 0.0f,
     IsFemale = true,
-    FitnessInc = 1.1f,
+    FitnessInc = 1.25f,
     InitialPop = 100,
     AbberationRates =
     {
@@ -35,7 +35,7 @@ var simParams = new SimParams
     }
 };
 
-var simulator = new Simulator(simParams);
+var simulator = new Simulator(simParams, options.Value.Seed);
 int stepNo = 1;
 long pop = CellSampling.PopulationSize(simulator.Clones);
 do

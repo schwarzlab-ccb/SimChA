@@ -10,10 +10,13 @@ public class Simulator
 
     private int _generation;
 
-    public Simulator(SimParams simParams)
+    private Random Rnd { get; }
+
+    public Simulator(SimParams simParams, int seed)
     {
         _generation = 0;
-        var refKaryotype = new Karyotype(simParams.IsFemale);
+        Rnd = new Random(seed);
+        var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, refKaryotype, simParams.InitialPop);
         Clones = new List<SubClone> { firstClone };
         SimParams = simParams;
@@ -31,7 +34,7 @@ public class Simulator
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
             int currentPop = subClone.Generations[^1];
-            int deadCount = Binomial.Sample(SimParams.DeathRate, currentPop);
+            int deadCount = Binomial.Sample(Rnd, SimParams.DeathRate, currentPop);
             subClone.Generations.Add(currentPop - deadCount);
         }
     }
@@ -43,9 +46,9 @@ public class Simulator
         List<SubClone> newClones = new();
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
-            int newCellsCount = Binomial.Sample(subClone.DivisionRate, subClone.AliveCount);
+            int newCellsCount = Binomial.Sample(Rnd, subClone.DivisionRate, subClone.AliveCount);
             // The existing cells will not mutate
-            int newMutantCount = Binomial.Sample(subClone.MutationRate, newCellsCount); 
+            int newMutantCount = Binomial.Sample(Rnd, subClone.MutationRate, newCellsCount); 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
                 var childClone = subClone.CreateChild(Clones.Count + newClones.Count, _generation);
@@ -65,7 +68,7 @@ public class Simulator
     private AbberationEnum SelectMutation()
     {
         double ratesSum = SimParams.RatesSum;
-        double sample = ContinuousUniform.Sample(0, ratesSum);
+        double sample = ContinuousUniform.Sample(Rnd, 0, ratesSum);
         foreach ((var abb, double rate) in SimParams.AbberationRates)
         {
             if (sample <= rate) 

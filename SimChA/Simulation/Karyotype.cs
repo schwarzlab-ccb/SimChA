@@ -11,20 +11,23 @@ public class Karyotype
 
     public int ChromCount => Chromosomes.Count;
 
-    private readonly Random _random = new();
+    private Random Rnd { get; }
+    
     public bool IsFemale;
 
-    public Karyotype(bool isFemale)
+    public Karyotype(bool isFemale, Random random)
     {
         var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
         Chromosomes = new List<Chromosome>(reference);
         IsFemale = isFemale;
+        Rnd = random;
     }
 
     public Karyotype(Karyotype other)
     {
         Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
         IsFemale = other.IsFemale;
+        Rnd = other.Rnd;
     }
     
     // Specifically used in to remove a chromosome lost during division (mis-segregation / BFB)
@@ -35,6 +38,7 @@ public class Karyotype
             .Select(ch => new Chromosome(ch))
             .ToList();
         IsFemale = other.IsFemale;
+        Rnd = other.Rnd;
     }
 
     public List<Region> GetAllRegions()
@@ -49,12 +53,12 @@ public class Karyotype
 
     private Chromosome RandomChr()
     {
-        return Chromosomes.Shuffle().First();
+        return Chromosomes.Shuffle(Rnd).First();
     }
 
     private List<Chromosome> RandomChrs(int count)
     {
-        return Chromosomes.Shuffle().Take(count).ToList();
+        return Chromosomes.Shuffle(Rnd).Take(count).ToList();
     }
 
     public override string ToString()
@@ -65,16 +69,16 @@ public class Karyotype
     // Get two positions within the chromosome (boundaries are excluded)
     private (int start, int end) GetGammaFraction(Chromosome chr)
     {
-        double fraction = Math.Clamp(Gamma.Sample(_random, 1, 1) / 10, 0, 1);
+        double fraction = Math.Clamp(Gamma.Sample(Rnd, 1, 1) / 10, 0, 1);
         int segLength = Math.Min((int) (fraction * chr.Length()), chr.Length() - 1);
-        int start = DiscreteUniform.Sample(_random, 1, chr.Length() - segLength);
+        int start = DiscreteUniform.Sample(Rnd, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
     }
 
     // Get two positions within the chromosome (boundaries are excluded)
     private int GetUniformPos(Chromosome chr) 
-        => _random.Next(1, chr.Length() - 1);
+        => Rnd.Next(1, chr.Length() - 1);
 
     public Karyotype ApplyAbberation(AbberationEnum abberation)
     {
@@ -83,7 +87,7 @@ public class Karyotype
         switch (abberation)
         {
             case AbberationEnum.TailDeletion:
-                chr1.Split(GetUniformPos(chr1), _random.CoinFlip());
+                chr1.Split(GetUniformPos(chr1), Rnd.CoinFlip());
                 return this;
 
             case AbberationEnum.Missegregation:
@@ -104,10 +108,10 @@ public class Karyotype
             case AbberationEnum.Translocation:
                 var splits
                     = selectChrs.Select(chr
-                        => chr.Split(GetUniformPos(chr), _random.CoinFlip())
+                        => chr.Split(GetUniformPos(chr), Rnd.CoinFlip())
                     ).ToList();
-                selectChrs[0].Join(splits[1], _random.CoinFlip());
-                selectChrs[1].Join(splits[0], _random.CoinFlip());
+                selectChrs[0].Join(splits[1], Rnd.CoinFlip());
+                selectChrs[1].Join(splits[0], Rnd.CoinFlip());
                 return this;
 
             case AbberationEnum.Inversion:
@@ -122,15 +126,15 @@ public class Karyotype
 
             case AbberationEnum.BreakageFusionBridge:
                 var loseKaryotype = new Karyotype(this, chr1);
-                chr1.Bridge(GetUniformPos(chr1), _random.CoinFlip());
+                chr1.Bridge(GetUniformPos(chr1), Rnd.CoinFlip());
                 return loseKaryotype;
 
             case AbberationEnum.Chromothripsis:
-                int shardCount = _random.Next(1, (int) Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
+                int shardCount = Rnd.Next(1, (int) Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
                 var positions = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr1)).Distinct().ToList();
                 positions.Sort();
-                int count = _random.Next(1, positions.Count);
-                chr1.ScatterAndGather(positions, count);
+                int count = Rnd.Next(1, positions.Count);
+                chr1.ScatterAndGather(positions, count, Rnd);
                 return this;
 
             case AbberationEnum.WholeGenomeDoubling:

@@ -13,7 +13,7 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        _kar = new Karyotype(false);
+        _kar = new Karyotype(false, new Random(0));
     }
 
     [Test]

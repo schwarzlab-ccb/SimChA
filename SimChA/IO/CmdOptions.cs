@@ -4,7 +4,7 @@ namespace SimChA.IO;
 
 public class CmdOptions
 {
-    [Option('s', "stopcount", Required = false, Default = 1_000_000, HelpText = "The simulation stops when \"s\" clones are created.")]
+    [Option('p', "popSize", Required = false, Default = 1_000_000, HelpText = "The simulation stops when \"p\" clones are created.")]
     public int StopCount { get; set; }
     
     [Option('c', "cutoff", Required = false, Default = 0, HelpText = "Minimal fraction of a subclone to be considered for an output.")]
@@ -15,4 +15,7 @@ public class CmdOptions
     
     [Option('D', "dotGraph", Required = false, Default = "SimChA.dot", HelpText = "The path to the DOT graph output file.")]
     public string DotPath { get; set; }
+    
+    [Option('s', "seed", Required = false, Default = 0, HelpText = "Random seed.")]
+    public int Seed { get; set; }
 }
