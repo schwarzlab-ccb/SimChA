@@ -18,7 +18,7 @@ var simParams = new SimParams
     MutationRate = 0.1f,
     DeathRate = 0.0f,
     IsFemale = true,
-    FitnessInc = 1.25f,
+    FitnessInc = 1.3f,
     InitialPop = 100,
     AbberationRates =
     {
@@ -61,9 +61,9 @@ try
     var files = new FileIO(options.Value.OutputPath);
     files.WriteSubClones(sample);
     files.WriteParentTree(parentTree);
+    files.WriteMullerDataFrames(sample, parentTree);
     files.WriteCopyNumbers(sample);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
-    files.WriteMullerDataFrames(sample);
 } 
 catch (Exception e) 
 {

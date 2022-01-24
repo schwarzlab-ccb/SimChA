@@ -11,7 +11,7 @@ public class FileIO
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string POPULATIONS_DF_FILENAME = "populations.csv";
-    private const string ADJACENCY_DF_FILENAME = "adjacency.csv";
+    private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
 
     private string OutFolder { get; }
 
@@ -66,7 +66,7 @@ public class FileIO
         }
     }
 
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones)
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {   
         string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
@@ -84,9 +84,9 @@ public class FileIO
         
         using var adjFile = new StreamWriter(adjPath);
         adjFile.WriteLine("Parent,Identity");
-        foreach (var subClone in subClones)
+        foreach (var edge in tree.Edges)
         {
-            adjFile.WriteLine($"{subClone.ParentId},{subClone.CloneId}");
+            adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
         }
     }
 
