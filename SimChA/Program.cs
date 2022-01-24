@@ -14,12 +14,12 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = 0.01f,
-    MutationRate = 0.1f,
+    DivisionRate = 0.005f,
+    MutationRate = 0.01f,
     DeathRate = 0.0f,
     IsFemale = true,
-    FitnessInc = 1.3f,
-    InitialPop = 100,
+    FitnessInc = 1.5f,
+    InitialPop = 50,
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,

@@ -73,17 +73,18 @@ public class FileIO
         Console.WriteLine($"Writing population to file {popPath}, adjacency to file {adjPath}");
         
         using var popFile = new StreamWriter(popPath);
-        popFile.WriteLine("Generation,Identity,Population");
+        popFile.WriteLine("Id,Gen,Pop");
         foreach (var subClone in subClones)
         {
             for (int i = 0; i < subClone.Generations.Count; i++)
             {
-                popFile.WriteLine($"{subClone.FirstGen + i},{subClone.CloneId},{subClone.Generations[i]}");
+                popFile.WriteLine($"{subClone.CloneId},{subClone.FirstGen + i},{subClone.Generations[i]}");
             }
         }
         
         using var adjFile = new StreamWriter(adjPath);
-        adjFile.WriteLine("Parent,Identity");
+        adjFile.WriteLine("ParentId,ChildId");
+        
         foreach (var edge in tree.Edges)
         {
             adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
