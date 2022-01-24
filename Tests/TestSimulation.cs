@@ -36,7 +36,7 @@ public class TestSimulation
                 [AbberationEnum.Chromothripsis] = 1f
             }
         };
-        _sim = new Simulator(_simParams, 0);
+        _sim = new Simulator(_simParams, new Random(0));
     }
 
     [Test]

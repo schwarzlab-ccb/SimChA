@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using MathNet.Numerics.Random;
 
 namespace SimChA.IO;
 
@@ -16,6 +17,6 @@ public class CmdOptions
     [Option('D', "dotGraph", Required = false, Default = "SimChA.dot", HelpText = "The path to the DOT graph output file.")]
     public string DotPath { get; set; }
     
-    [Option('s', "seed", Required = false, Default = 0, HelpText = "Random seed.")]
+    [Option('s', "seed", Required = false, Default = -1, HelpText = "Random seed. If not specified, one is selected at random.")]
     public int Seed { get; set; }
 }

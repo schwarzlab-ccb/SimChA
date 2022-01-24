@@ -35,7 +35,8 @@ var simParams = new SimParams
     }
 };
 
-var simulator = new Simulator(simParams, options.Value.Seed);
+var random = options.Value.Seed >= 0 ? new Random(options.Value.Seed) : new Random();
+var simulator = new Simulator(simParams, random);
 int stepNo = 1;
 long pop = CellSampling.PopulationSize(simulator.Clones);
 do
@@ -61,7 +62,7 @@ try
     files.WriteSubClones(sample);
     files.WriteParentTree(parentTree);
     files.WriteCopyNumbers(sample);
-    files.WriteRawData(new Random(options.Value.Seed), sample, snps, simParams.IsFemale);
+    files.WriteRawData(random, sample, snps, simParams.IsFemale);
     files.WriteMullerDataFrames(sample);
 } 
 catch (Exception e) 

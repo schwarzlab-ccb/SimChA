@@ -12,14 +12,13 @@ public class Simulator
 
     private Random Rnd { get; }
 
-    public Simulator(SimParams simParams, int seed)
+    public Simulator(SimParams simParams, Random rnd)
     {
-        _generation = 0;
-        Rnd = new Random(seed);
+        SimParams = simParams;
+        Rnd = rnd;
         var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, refKaryotype, simParams.InitialPop);
         Clones = new List<SubClone> { firstClone };
-        SimParams = simParams;
     }
 
     public void Step()
