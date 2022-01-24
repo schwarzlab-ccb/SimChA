@@ -11,6 +11,7 @@ public static class CellSampling
     {
         throw new NotImplementedException();
 
+        // If re-implemented this should be seeded
         Random rnd = new();
         List<SubClone> sample = new();
             

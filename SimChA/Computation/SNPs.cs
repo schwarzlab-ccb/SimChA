@@ -4,12 +4,11 @@ namespace SimChA.Computation;
 
 public static class SNPs
 {
-    public static List<SNP> CreateSNPs(bool isFemale, int nrsnps, float hetrate = 1f)
+    public static List<SNP> CreateSNPs(Random random, bool isFemale, int nrsnps, float hetrate = 1f)
     {
         List<SNP> snps = new();
         var referenceChromosomes = ReferenceGenome.GetChromosomes(isFemale);
         long totGenomeLength = ReferenceGenome.TotalLength(isFemale);
-        Random random = new();
 
         int curid = 0;
         foreach (var chrom in referenceChromosomes)

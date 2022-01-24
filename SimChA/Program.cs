@@ -1,4 +1,4 @@
-﻿using SimChA.DataTypes;
+using SimChA.DataTypes;
 using SimChA.Simulation;
 using CommandLine;
 using SimChA.Computation;
@@ -51,7 +51,7 @@ Console.WriteLine("Finished");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 // snps are shared between all subclones and therefore are created only once
-var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
+var snps = SNPs.CreateSNPs(random, simParams.IsFemale, 100);
 float cutOff = pop * options.Value.CutOff;
 var parentTree = TreeBuilder.BuildTreeWithAncestors(simulator.Clones, cutOff);
 var treeNodes = parentTree.Nodes.Select(n => n.Id).ToList();
