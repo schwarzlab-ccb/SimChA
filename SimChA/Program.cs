@@ -1,4 +1,4 @@
-using SimChA.DataTypes;
+﻿using SimChA.DataTypes;
 using SimChA.Simulation;
 using CommandLine;
 using SimChA.Computation;
@@ -36,7 +36,8 @@ var simParams = new SimParams
     }
 };
 
-var random = options.Value.Seed >= 0 ? new Random(options.Value.Seed) : new Random();
+var seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
+var random = new Random(seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 1;
 long pop = CellSampling.PopulationSize(simulator.Clones);
@@ -48,6 +49,7 @@ do
 } while (pop < options.Value.StopCount && pop > 0);
 
 Console.WriteLine("Finished");
+Console.WriteLine($"Seed used was {seed}");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 // snps are shared between all subclones and therefore are created only once
