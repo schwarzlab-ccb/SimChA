@@ -16,6 +16,7 @@ var simParams = new SimParams
 {
     DivisionRate = 0.01f,
     MutationRate = 0.1f,
+    DriverToPassengerRate = 0.5f,
     DeathRate = 0.0f,
     IsFemale = true,
     FitnessInc = 1.25f,

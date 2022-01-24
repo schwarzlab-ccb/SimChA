@@ -11,15 +11,17 @@ public class SubClone
     public Karyotype Karyotype;
     public double DivisionRate;
     public double MutationRate;
+    public double DriverToPassengerRate;
     public List<int> Generations;
 
-    public SubClone(int cloneId, int parentId, int generation, double divisionRate, double mutationRate, Karyotype karyotype, int popSize = 1) 
+    public SubClone(int cloneId, int parentId, int generation, double divisionRate, double mutationRate, double driverToPassengerRate, Karyotype karyotype, int popSize = 1) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         Karyotype = karyotype;
         DivisionRate = divisionRate;
         MutationRate = mutationRate;
+        DriverToPassengerRate = driverToPassengerRate;
         FirstGen = generation;
         Generations = new List<int> { popSize };
     }
@@ -29,7 +31,8 @@ public class SubClone
         CloneId = other.CloneId;
         ParentId = other.CloneId;
         Karyotype = other.Karyotype;
-        MutationRate = other.MutationRate; 
+        MutationRate = other.MutationRate;
+        DriverToPassengerRate = other.DriverToPassengerRate;
         DivisionRate = other.DivisionRate;
         Generations = other.Generations;
         FirstGen = other.FirstGen;

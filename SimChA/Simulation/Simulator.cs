@@ -17,7 +17,7 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
         var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, refKaryotype, simParams.InitialPop);
+        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, simParams.DriverToPassengerRate, refKaryotype, simParams.InitialPop);
         Clones = new List<SubClone> { firstClone };
     }
 
@@ -56,7 +56,10 @@ public class Simulator
                 if (!IsViable(childClone.Karyotype)) 
                     continue;
                 
-                childClone.DivisionRate = Math.Clamp(childClone.DivisionRate * SimParams.FitnessInc, 0, 1);
+                if (Rnd.NextDouble() < subClone.DriverToPassengerRate)
+                {
+                    childClone.DivisionRate = Math.Clamp(childClone.DivisionRate * SimParams.FitnessInc, 0, 1);
+                }
                 newClones.Add(childClone);
             }
             subClone.Generations[^1] += newCellsCount - newMutantCount;

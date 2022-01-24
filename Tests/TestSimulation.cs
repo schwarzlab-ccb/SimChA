@@ -21,7 +21,8 @@ public class TestSimulation
         _simParams = new SimParams
         {
             DivisionRate = 0.1f, 
-            MutationRate = 0.01f, 
+            MutationRate = 0.01f,
+            DriverToPassengerRate = 1f, 
             IsFemale = true,
             AbberationRates =
             {
