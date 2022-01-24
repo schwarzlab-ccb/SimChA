@@ -48,7 +48,6 @@ do
 Console.WriteLine("Finished");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
-Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPs.CreateSNPs(simParams.IsFemale, 100);
 float cutOff = pop * options.Value.CutOff;
