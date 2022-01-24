@@ -76,9 +76,9 @@ public class FileIO
         popFile.WriteLine("Generation,Identity,Population");
         foreach (var subClone in subClones)
         {
-            foreach (var pair in subClone.Generations)
+            for (int i = 0; i < subClone.Generations.Count; i++)
             {
-                popFile.WriteLine($"{pair.Key},{subClone.CloneId},{pair.Value}");
+                popFile.WriteLine($"{subClone.FirstGen + i},{subClone.CloneId},{subClone.Generations[i]}");
             }
         }
         

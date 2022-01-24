@@ -30,9 +30,9 @@ public class Simulator
     {
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
-            int currentPop = subClone.Generations[_generation - 1];
+            int currentPop = subClone.Generations[^1];
             int deadCount = Binomial.Sample(SimParams.DeathRate, currentPop);
-            subClone.Generations[_generation] = currentPop - deadCount;
+            subClone.Generations.Add(currentPop - deadCount);
         }
     }
 
@@ -57,7 +57,7 @@ public class Simulator
                 childClone.DivisionRate = Math.Clamp(childClone.DivisionRate * SimParams.FitnessInc, 0, 1);
                 newClones.Add(childClone);
             }
-            subClone.Generations[_generation] += newCellsCount - newMutantCount;
+            subClone.Generations[^1] += newCellsCount - newMutantCount;
         }
         Clones.AddRange(newClones);
     }
