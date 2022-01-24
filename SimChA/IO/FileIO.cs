@@ -11,7 +11,7 @@ public class FileIO
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string POPULATIONS_DF_FILENAME = "populations.csv";
-    private const string ADJACENCY_DF_FILENAME = "adjacency.csv";
+    private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
 
     private string OutFolder { get; }
 
@@ -66,27 +66,28 @@ public class FileIO
         }
     }
 
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones)
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {   
         string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
         Console.WriteLine($"Writing population to file {popPath}, adjacency to file {adjPath}");
         
         using var popFile = new StreamWriter(popPath);
-        popFile.WriteLine("Generation,Identity,Population");
+        popFile.WriteLine("Id,Gen,Pop");
         foreach (var subClone in subClones)
         {
             for (int i = 0; i < subClone.Generations.Count; i++)
             {
-                popFile.WriteLine($"{subClone.FirstGen + i},{subClone.CloneId},{subClone.Generations[i]}");
+                popFile.WriteLine($"{subClone.CloneId},{subClone.FirstGen + i},{subClone.Generations[i]}");
             }
         }
         
         using var adjFile = new StreamWriter(adjPath);
-        adjFile.WriteLine("Parent,Identity");
-        foreach (var subClone in subClones)
+        adjFile.WriteLine("ParentId,ChildId");
+        
+        foreach (var edge in tree.Edges)
         {
-            adjFile.WriteLine($"{subClone.ParentId},{subClone.CloneId}");
+            adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
         }
     }
 

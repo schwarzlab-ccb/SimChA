@@ -19,8 +19,8 @@ var simParams = new SimParams
     DriverToPassengerRate = 0.5f,
     DeathRate = 0.0f,
     IsFemale = true,
-    FitnessInc = 1.25f,
-    InitialPop = 100,
+    FitnessInc = 1.5f,
+    InitialPop = 50,
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,
@@ -64,9 +64,9 @@ try
     var files = new FileIO(options.Value.OutputPath);
     files.WriteSubClones(sample);
     files.WriteParentTree(parentTree);
+    files.WriteMullerDataFrames(sample, parentTree);
     files.WriteCopyNumbers(sample);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
-    files.WriteMullerDataFrames(sample);
 } 
 catch (Exception e) 
 {
