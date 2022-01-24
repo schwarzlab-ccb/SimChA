@@ -54,14 +54,14 @@ float cutOff = pop * options.Value.CutOff;
 var parentTree = TreeBuilder.BuildTreeWithAncestors(simulator.Clones, cutOff);
 var treeNodes = parentTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
-Console.WriteLine($"SubClone count {simulator.Clones.Count()}. Above cutoff: { sample.Count }");
+Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
 try
 {
     var files = new FileIO(options.Value.OutputPath);
     files.WriteSubClones(sample);
     files.WriteParentTree(parentTree);
     files.WriteCopyNumbers(sample);
-    files.WriteRawData(sample, snps, simParams.IsFemale);
+    files.WriteRawData(new Random(options.Value.Seed), sample, snps, simParams.IsFemale);
     files.WriteMullerDataFrames(sample);
 } 
 catch (Exception e) 

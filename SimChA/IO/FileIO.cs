@@ -90,7 +90,7 @@ public class FileIO
         }
     }
 
-    public void WriteRawData(IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
+    public void WriteRawData(Random rnd, IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
     {
         var outputbaf = new List<string>();
         outputbaf.Add("\tchrom\tpos");
@@ -103,7 +103,7 @@ public class FileIO
         foreach (var subClone in subClones)
         {
             var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-            var rawdata = RawData.CalcSingleSubclone(copyNumbers, snps, isFemale);
+            var rawdata = RawData.CalcSingleSubclone(rnd, copyNumbers, snps, isFemale);
             outputbaf[0] += $"\t{subClone.CloneId}";
             outputlogr[0] += $"\t{subClone.CloneId}";
             for (int i = 0; i < rawdata.Count; i++)

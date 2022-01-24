@@ -1,13 +1,21 @@
 using SimChA.Computation;
 
 namespace SimChA.DataTypes;
+
 using MathNet.Numerics.Distributions;
 
 public static class RawData
 {
     public static List<SNPData> CalcSingleSubclone(
-        List<CopyNumber> copyNumbers, List<SNP> snps, bool isfemale, float purity = 1f, float baferror = 0.1F,
-        float readstd = 2f, int readdepth = 10, float gamma = 1f)
+        Random rnd,
+        List<CopyNumber> copyNumbers,
+        List<SNP> snps,
+        bool isfemale,
+        float purity = 1f,
+        float baferror = 0.1f,
+        float readstd = 2f,
+        int readdepth = 10,
+        float gamma = 1f)
     {
         var result = new List<SNPData>();
         int curSegmentId = 0;
@@ -20,18 +28,27 @@ public static class RawData
             if (copyNumbers[curSegmentId].CNH1 + copyNumbers[curSegmentId].CNH2 <= 0)
                 continue;
 
-            int readsNormal = (int)Math.Round(Math.Max(0, Normal.Sample(2 * readdepth, readstd)));
+            int readsNormal = (int)Math.Round(Math.Max(0, 
+                Normal.Sample(2 * readdepth, readstd)));
             int readsH1 = (int)Math.Round(Math.Max(0,
-                Normal.Sample(copyNumbers[curSegmentId].CNH1 * readdepth, readstd)));
+                Normal.Sample(rnd, copyNumbers[curSegmentId].CNH1 * readdepth, readstd)));
             int readsH2 = (int)Math.Round(Math.Max(0,
-                Normal.Sample(copyNumbers[curSegmentId].CNH2 * readdepth, readstd)));
+                Normal.Sample(rnd, copyNumbers[curSegmentId].CNH2 * readdepth, readstd)));
 
-            float logr = gamma * (float)Math.Log2((1 - purity) * readdepth * 2 + purity * (readsH1 + readsH2) / (readdepth * 2 * (1 - purity) + readdepth * purity * tumorPloidy));
-            float baf = snp.Heterozygous && readsH1 + readsH2 > 0 ? (float)(((1 - purity) * readsNormal + purity * readsH2) / ((1 - purity) * 2 * readsNormal + purity * (readsH1 + readsH2))) : -1;
+            float compPurity = 1f - purity;
+            int readsTotal = readsH1 + readsH2;
+            float r = (2 * compPurity * readdepth + purity * readsTotal) / 
+                      (2 * compPurity * readdepth + readdepth * purity * tumorPloidy);
+            float logr = gamma * (float)Math.Log2(r);
+            float baf = snp.Heterozygous && readsTotal > 0
+                ? (compPurity * readsNormal + purity * readsH2) /
+                  (2 * compPurity * readsNormal + purity * readsTotal)
+                : -1;
 
             result.Add(new SNPData(snp, logr, baf));
             // TODO: Extra noise for logr and baf
         }
+
         return result;
     }
 

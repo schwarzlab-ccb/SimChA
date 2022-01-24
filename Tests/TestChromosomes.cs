@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using SimChA.DataTypes;
@@ -65,7 +66,7 @@ public class TestChromosomes
     public void TestScatterAndGather()
     {
         int length = _chr1.Length();
-        _chr1.ScatterAndGather(new List<int>{1000, 2000, 3000}, 4);
+        _chr1.ScatterAndGather(new List<int>{1000, 2000, 3000}, 4, new Random(0));
         Assert.AreEqual(length, _chr1.Length());
     }
 }
