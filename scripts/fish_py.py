@@ -1,22 +1,18 @@
 #!/usr/bin/env python 
 
-import os
 import argparse
-import logging
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import math
-from PIL import Image
-from matplotlib import cm
 import random
 import sys
-import cv2
+
+import numpy as np
+import pandas as pd
+from PIL import Image
+from matplotlib import cm
 
 eps = sys.float_info.epsilon
 
 
-# Take from https://stackoverflow.com/questions/3160699/python-progress-bar
+# Taken from https://stackoverflow.com/questions/3160699/python-progress-bar
 def progressbar(it, prefix="", size=60, file=sys.stdout):
     count = len(it)
 
@@ -92,9 +88,16 @@ def rec_descend(tree, pop_dict, cloneId):
     return res
 
 
-def get_image_pixels(tree, rootId, pop_df, gen_count, col_map, breath, max_pop, normalize=True):
+def pixels_to_img(img_pixels, res):
+    px_array = np.array(img_pixels, dtype=np.uint8)
+    new_image = Image.fromarray(px_array).transpose(Image.ROTATE_270).transpose(Image.FLIP_LEFT_RIGHT)
+    resized = new_image.resize(res)
+    return resized
+
+
+def get_image_pixels(tree, rootId, pop_df, col_map, max_pop, breath, first_gen, last_gen, normalize = True):
     img_pixels = []
-    for i in progressbar(range(gen_count), "Converting generation: "):
+    for i in progressbar(range(first_gen, last_gen + 1), "Converting generation: "):
         pop_dict = get_pop_dict(pop_df, i, max_pop, normalize)
         if len(pop_dict) > 0:
             id_rows = rec_descend(tree, pop_dict, rootId if normalize else -1)
@@ -106,18 +109,8 @@ def get_image_pixels(tree, rootId, pop_df, gen_count, col_map, breath, max_pop, 
     return img_pixels
 
 
-def pixels_to_img(img_pixels, res):
-    px_array = np.array(img_pixels, dtype=np.uint8)
-    resized = cv2.resize(px_array, [res[1], res[0]])  # Switch coordintaes as it's before the rotation
-    new_image = Image.fromarray(resized).transpose(Image.ROTATE_270).transpose(Image.FLIP_LEFT_RIGHT)
-    return new_image
-
-
-def plot_fish(populations_df, parent_df, res, scale_up=1):
-    pop_sizes = populations_df[["Gen", "Pop"]].groupby("Gen", as_index=False).sum()
-    gen_count = pop_sizes["Gen"].max() + 1
-    max_pop = pop_sizes["Pop"].max()
-    print(f"Gens: {gen_count}, Max Pop {max_pop}")
+def plot_fish(populations_df, parent_df, first_gen, last_gen, res, scale_up=1):
+    max_pop = populations_df[["Gen", "Pop"]].groupby("Gen", as_index=False).sum().max()
 
     parents = parent_df["ParentId"].unique()
     children = parent_df["ChildId"].unique()
@@ -134,7 +127,8 @@ def plot_fish(populations_df, parent_df, res, scale_up=1):
     col_map = {ids[i]: np.array(list(map(lambda x: (int)(x * 255), cols[i]))) for i in range(len(ids))}
     col_map[-1] = np.ones(4)  # Root is white
 
-    img_pixels = get_image_pixels(tree, rootId, populations_df, gen_count, col_map, res[1] * scale_up, max_pop, True)
+    breadth = res[1] * scale_up
+    img_pixels = get_image_pixels(tree, rootId, populations_df, col_map, max_pop, breadth, first_gen, last_gen, True)
     image = pixels_to_img(img_pixels, res)
     return image
 
@@ -147,9 +141,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     res = [2160, 1080]
-    random.seed(3)
 
     populations_df = pd.read_csv(args.populations)
     parent_df = pd.read_csv(args.parent_tree)
-    img = plot_fish(populations_df, parent_df, res)
+    last_gen = populations_df["Gen"].max()
+    img = plot_fish(populations_df, parent_df, 0, last_gen, res)
     img.save(args.output)
