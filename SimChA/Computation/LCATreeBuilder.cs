@@ -41,7 +41,7 @@ public static class LCATreeBuilder
     // Construct a parent tree with lowest common ancestor (LCA) for each pair of children
     public static ParentTree Builtree(List<SubClone> allSubClones, List<SubClone> selection)
     {
-        var parentMap = TreeBuilder.CreateParentMap(allSubClones);
+        var parentMap = ConnectedTreeBuilder.CreateParentMap(allSubClones);
         var internalNodes = FindInternalNodes(parentMap, selection);
 
         List<TreeNode> nodes = new();

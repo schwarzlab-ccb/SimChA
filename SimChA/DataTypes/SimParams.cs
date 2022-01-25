@@ -6,8 +6,9 @@ public struct SimParams
 {
     public bool IsFemale;
     public double DivisionRate;
+    public double DivisionSlowDown;
     public double MutationRate;
-    public double DriverToPassengerRate;
+    public double DriverProb;
     public double DeathRate;
     public double FitnessInc;
     public int InitialPop;

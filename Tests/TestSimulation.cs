@@ -22,7 +22,7 @@ public class TestSimulation
         {
             DivisionRate = 0.1f, 
             MutationRate = 0.01f,
-            DriverToPassengerRate = 1f, 
+            DriverProb = 1f, 
             IsFemale = true,
             AbberationRates =
             {
