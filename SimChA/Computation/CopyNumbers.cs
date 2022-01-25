@@ -15,22 +15,20 @@ public static class CopyNumbers
     }
     
     // Minimum consistent segmentation
-    private static List<CopyNumber> CalcSegmentation(IReadOnlyCollection<Region> allRegs, IEnumerable<ChromNum> refChroms)
+    private static List<CopyNumber> CalcSegmentation(IList<Region> allRegs, IEnumerable<ChromNum> refChroms)
     {
         var result = new List<CopyNumber>();
-        foreach (var curRefChrom in refChroms)
+        foreach (var refChrom in refChroms)
         {
-            var curRegions = allRegs.Where(region => region.ChromId.ChromNum == curRefChrom).ToList();
-            var curRegionsWithReference = curRegions.Append(ReferenceGenome.GetRegion(curRefChrom));
+            var curRegions = allRegs.Where(region => region.ChromId.ChromNum == refChrom).ToList();
+            var curRegionsWithReference = curRegions.Append(ReferenceGenome.GetRegion(refChrom)).ToList();
 
-            var segmentBoundaries = curRegionsWithReference
-                .Select(r => r.Start)
-                .Concat(curRegionsWithReference.Select(r => r.End))
-                .Distinct()
-                .ToList();
+            var starts = curRegionsWithReference.Select(r => r.Start);
+            var ends = curRegionsWithReference.Select(r => r.End);
+            var segmentBoundaries = starts.Concat(ends).Distinct().ToList();
             segmentBoundaries.Sort();
 
-            var chromId = new ChromID(curRefChrom, true);
+            var chromId = new ChromID(refChrom, true);
             for (int i = 0; i < segmentBoundaries.Count - 1; i++)
             {
                 var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], chromId);
@@ -49,7 +47,9 @@ public static class CopyNumbers
     public static float CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
     {
         long totalLength = ReferenceGenome.TotalLength(isFemale);
-        float ploidy = copyNumbers.Select(c => (float)(c.Segment.End - c.Segment.Start) * (c.CNH1 + c.CNH2) / totalLength).Sum();
+        float ploidy = copyNumbers
+            .Select(c => (float)(c.Segment.End - c.Segment.Start) * (c.CNH1 + c.CNH2) / totalLength)
+            .Sum();
 
         return ploidy;
     }

@@ -2,7 +2,7 @@
 
 namespace SimChA.Computation;
 
-public static class SNPs
+public static class SNPBuilder
 {
     public static List<SNP> CreateSNPs(Random random, bool isFemale, int nrsnps, float hetrate = 1f)
     {
@@ -10,16 +10,18 @@ public static class SNPs
         var referenceChromosomes = ReferenceGenome.GetChromosomes(isFemale);
         long totGenomeLength = ReferenceGenome.TotalLength(isFemale);
 
-        int curid = 0;
+        int snpId = 0;
         foreach (var chrom in referenceChromosomes)
         {
-            int curChromLength = ReferenceGenome.ChromosomeLengthMap[chrom];
-            int nrChromSnps = (int) Math.Floor((double) nrsnps * curChromLength / totGenomeLength);
+            int chromLength = ReferenceGenome.ChromosomeLengthMap[chrom];
+            int nrChromSnps = (int) Math.Floor((double) nrsnps * chromLength / totGenomeLength);
             for (int i = 0; i < nrChromSnps; i++)
             {
-                snps.Add(new SNP(chrom, random.Next(1, curChromLength - 1), random.NextDouble() < hetrate, curid));
-                curid++;
+                int pos = random.Next(1, chromLength - 1);
+                bool isHet = random.NextDouble() < hetrate;
+                snps.Add(new SNP(chrom, pos, isHet, snpId));
             }
+            snpId += nrChromSnps;
         }
 
         snps = snps.OrderBy(snp => snp.AbsPos).ToList();

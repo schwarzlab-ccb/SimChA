@@ -1,12 +1,11 @@
-using SimChA.Computation;
-
-namespace SimChA.DataTypes;
-
 using MathNet.Numerics.Distributions;
+using SimChA.DataTypes;
 
-public static class RawData
+namespace SimChA.Computation;
+
+public static class SNPMetrics
 {
-    public static List<SNPData> CalcSingleSubclone(
+    public static List<SNPData> CalcSingleSubClone(
         Random rnd,
         List<CopyNumber> copyNumbers,
         List<SNP> snps,

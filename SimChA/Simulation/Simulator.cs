@@ -56,7 +56,7 @@ public class Simulator
                 if (!IsViable(childClone.Karyotype)) 
                     continue;
                 
-                if (Rnd.NextDouble() < subClone.DriverToPassengerRate)
+                if (Rnd.NextDouble() < subClone.DriverProb)
                 {
                     childClone.DivisionRate = Math.Clamp(childClone.DivisionRate * SimParams.FitnessInc, 0, 1);
                 }

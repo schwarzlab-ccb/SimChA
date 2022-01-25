@@ -8,7 +8,7 @@ var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
     Console.WriteLine("Exiting");
-    o.ToList().ForEach(Console.Write);
+    o.ToList().ForEach(Console.Write); // Write out errors
     Environment.Exit(0);
 });
 
@@ -36,14 +36,14 @@ var simParams = new SimParams
     }
 };
 
-var seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
+int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
 var random = new Random(seed);
 var simulator = new Simulator(simParams, random);
-int stepNo = 1;
+int stepNo = 0;
 long pop = CellSampling.PopulationSize(simulator.Clones);
 do
 {
-    Console.WriteLine($"Sim step {stepNo++:D3}, clones: {simulator.Clones.Count}, cells: {pop}");
+    Console.WriteLine($"Sim step {++stepNo:D3}, clones: {simulator.Clones.Count}, cells: {pop}");
     simulator.Step();
     pop = CellSampling.PopulationSize(simulator.Clones);
 } while (pop < options.Value.StopCount && pop > 0);
@@ -52,13 +52,16 @@ Console.WriteLine("Finished");
 Console.WriteLine($"Seed used was {seed}");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
 Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
+
 // snps are shared between all subclones and therefore are created only once
-var snps = SNPs.CreateSNPs(random, simParams.IsFemale, 100);
+var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100);
 float cutOff = pop * options.Value.CutOff;
-var parentTree = TreeBuilder.BuildTreeWithAncestors(simulator.Clones, cutOff);
+var aboveCutOff = simulator.Clones.Where(sc => sc.AliveCount >= cutOff).ToList();
+var parentTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
 var treeNodes = parentTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
+
 try
 {
     var files = new FileIO(options.Value.OutputPath);

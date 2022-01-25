@@ -104,7 +104,7 @@ public class FileIO
         foreach (var subClone in subClones)
         {
             var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-            var rawdata = RawData.CalcSingleSubclone(rnd, copyNumbers, snps, isFemale);
+            var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers, snps, isFemale);
             outputbaf[0] += $"\t{subClone.CloneId}";
             outputlogr[0] += $"\t{subClone.CloneId}";
             for (int i = 0; i < rawdata.Count; i++)
@@ -129,11 +129,11 @@ public class FileIO
         string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), $"{subcloneId}_{BAF_FILENAME}");
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
         using var outputFileBAF = new StreamWriter(outPathBAF);
-        outputFileBAF.Write(RawData.PrintBAF(rawData) + "\n");
+        outputFileBAF.Write(SNPMetrics.PrintBAF(rawData) + "\n");
 
         string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), $"{subcloneId}_{LOGR_FILENAME}");
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
-        outputFileLogR.Write(RawData.PrintLogR(rawData) + "\n");
+        outputFileLogR.Write(SNPMetrics.PrintLogR(rawData) + "\n");
     }
 }
