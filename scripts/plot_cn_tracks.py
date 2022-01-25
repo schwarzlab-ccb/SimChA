@@ -25,12 +25,12 @@ if __name__ == "__main__":
     if args.input_folder is not None:
         input_folder = args.input_folder
     else:
-        input_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '../SimChA/out'))
+        input_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '../out'))
 
     if args.output_folder is not None:
         output_folder = args.output_folder
     else:
-        output_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '../SimChA/out'))
+        output_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '../out'))
 
     # load copynumbers
     copynumbers = pd.read_csv(os.path.join(input_folder, 'copynumbers.out'), sep='\t', index_col=0)
