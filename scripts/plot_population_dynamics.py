@@ -12,7 +12,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_folder", type=str, default=None, required=False)
     parser.add_argument("-o", "--output_folder", type=str, default=None, required=False)
-    parser.add_argument("--log", action="store_true", dest="log")
     args = parser.parse_args()
 
     if args.input_folder is not None:
