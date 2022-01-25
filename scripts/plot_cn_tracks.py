@@ -22,10 +22,14 @@ if __name__ == "__main__":
     parser.add_argument("--fraction", action="store_true", dest="fraction")
     args = parser.parse_args()
 
-    if args.input_folder is None:
+    if args.input_folder is not None:
+        input_folder = args.input_folder
+    else:
         input_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '../SimChA/out'))
 
-    if args.output_folder is None:
+    if args.output_folder is not None:
+        output_folder = args.output_folder
+    else:
         output_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '../SimChA/out'))
 
     # load copynumbers
