@@ -14,13 +14,14 @@ options.WithNotParsed(o =>
 
 var simParams = new SimParams
 {
-    DivisionRate = 0.01f,
-    MutationRate = 0.1f,
-    DriverToPassengerRate = 0.5f,
-    DeathRate = 0.0f,
     IsFemale = true,
-    FitnessInc = 1.5f,
-    InitialPop = 50,
+    DivisionRate = 0.025f,
+    MutationRate = 0.1f,
+    DivisionSlowDown = 0.001f,
+    DriverProb = 0.1f,
+    DeathRate = 0.01f,
+    FitnessInc = 1.2f,
+    InitialPop = 100,
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,
@@ -56,9 +57,10 @@ Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100);
 float cutOff = pop * options.Value.CutOff;
-var aboveCutOff = simulator.Clones.Where(sc => sc.AliveCount >= cutOff).ToList();
-var parentTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
-var treeNodes = parentTree.Nodes.Select(n => n.Id).ToList();
+var aboveCutOff = simulator.Clones.Where(sc => sc.MaxPopulation() >= cutOff).ToList();
+var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
+var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
+var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
 
@@ -66,8 +68,8 @@ try
 {
     var files = new FileIO(options.Value.OutputPath);
     files.WriteSubClones(sample);
-    files.WriteParentTree(parentTree);
-    files.WriteMullerDataFrames(sample, parentTree);
+    files.WriteParentTree(lcaTree);
+    files.WriteMullerDataFrames(aboveCutOff, connectedTree);
     files.WriteCopyNumbers(sample);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
 } 

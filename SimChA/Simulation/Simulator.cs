@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics.Distributions;
+using SimChA.Computation;
 using SimChA.DataTypes;
 
 namespace SimChA.Simulation;
@@ -10,6 +11,8 @@ public class Simulator
 
     private int _generation;
 
+    private double slowDownRate;
+    
     private Random Rnd { get; }
 
     public Simulator(SimParams simParams, Random rnd)
@@ -17,13 +20,16 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
         var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, simParams.DriverToPassengerRate, refKaryotype, simParams.InitialPop);
+        var firstClone = new SubClone(0, -1, _generation, simParams.DivisionRate, simParams.MutationRate, simParams.DriverProb, refKaryotype, simParams.InitialPop);
         Clones = new List<SubClone> { firstClone };
     }
 
     public void Step()
     {
         _generation++;
+
+        slowDownRate = Math.Pow(CellSampling.PopulationSize(Clones), 1/3f) * SimParams.DivisionSlowDown;
+        
         Kill();
         DivideAndMutate();
     }
@@ -45,7 +51,12 @@ public class Simulator
         List<SubClone> newClones = new();
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
-            int newCellsCount = Binomial.Sample(Rnd, subClone.DivisionRate, subClone.AliveCount);
+            double divRate = subClone.DivisionRate - slowDownRate;
+            if (divRate < 0)
+            {
+                continue;
+            }
+            int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
             // The existing cells will not mutate
             int newMutantCount = Binomial.Sample(Rnd, subClone.MutationRate, newCellsCount); 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)

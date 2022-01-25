@@ -4,7 +4,7 @@ using SimChA.DataTypes;
 
 namespace SimChA.Computation;
 
-public static class TreeBuilder
+public static class ConnectedTreeBuilder
 {
     public static Dictionary<int, int> CreateParentMap(IEnumerable<SubClone> subClones)
         => subClones.ToDictionary(sc => sc.CloneId, sc => sc.ParentId);
@@ -26,7 +26,7 @@ public static class TreeBuilder
     // Construct a parent tree with each child being either parent of a present predecessor, or -1 if none exists.
     public static ParentTree BuildTree(List<SubClone> allSubClones, List<SubClone> selection)
     {
-        var parentMap = TreeBuilder.CreateParentMap(allSubClones);
+        var parentMap = CreateParentMap(allSubClones);
         List<TreeNode> nodes = new();
         List<TreeEdge> edges = new();
         int rootId = -1;

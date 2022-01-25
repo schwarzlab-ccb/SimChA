@@ -52,4 +52,7 @@ public class SubClone
     {
         return $"ID:{CloneId}, Parent:{ParentId}, Cells: {AliveCount}, Karyotype: {Karyotype}";
     }
+
+    public int MaxPopulation()
+        => Generations.Max();
 }
