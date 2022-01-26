@@ -55,4 +55,7 @@ public class SubClone
 
     public int MaxPopulation()
         => Generations.Max();
+
+    public int PopAtGeneration(int gen) 
+        => gen < FirstGen || gen >= FirstGen + Generations.Count ? -1 : Generations[gen - FirstGen];
 }

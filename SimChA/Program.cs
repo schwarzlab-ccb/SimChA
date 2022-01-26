@@ -1,4 +1,5 @@
-﻿using SimChA.DataTypes;
+﻿using System.Collections;
+using SimChA.DataTypes;
 using SimChA.Simulation;
 using CommandLine;
 using SimChA.Computation;
@@ -41,13 +42,13 @@ int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
 var random = new Random(seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 0;
-long pop = CellSampling.PopulationSize(simulator.Clones);
+var popSizes = new List<long> { CellSampling.PopulationSize(simulator.Clones) };
 do
 {
-    Console.WriteLine($"Sim step {++stepNo:D3}, clones: {simulator.Clones.Count}, cells: {pop}");
+    Console.WriteLine($"Sim step {++stepNo:D3}, clones: {simulator.Clones.Count}, cells: { popSizes[^1] }");
     simulator.Step();
-    pop = CellSampling.PopulationSize(simulator.Clones);
-} while (pop < options.Value.StopCount && pop > 0);
+    popSizes.Add(CellSampling.PopulationSize(simulator.Clones));
+} while (popSizes[^1] < options.Value.StopCount && popSizes[^1] > 0);
 
 Console.WriteLine("Finished");
 Console.WriteLine($"Seed used was {seed}");
@@ -56,8 +57,10 @@ Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
 
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100);
-float cutOff = pop * options.Value.CutOff;
-var aboveCutOff = simulator.Clones.Where(sc => sc.MaxPopulation() >= cutOff).ToList();
+var cutOff = popSizes.Select(l => (long) Math.Ceiling(l * options.Value.CutOff)).ToList();
+var aboveCutOff = simulator.Clones.Where(sc 
+    => Enumerable.Range(sc.FirstGen, popSizes.Count - sc.FirstGen).Any(g => cutOff[g] <= sc.PopAtGeneration(g))
+    ).ToList();
 var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
