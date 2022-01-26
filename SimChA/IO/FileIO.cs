@@ -48,7 +48,6 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), DOT_FILENAME);
         Console.WriteLine($"Writing parent graph to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-
         
         outputFile.WriteLine("Digraph SimChA {");
         foreach (var node in tree.Nodes)
