@@ -105,4 +105,4 @@ if __name__ == "__main__":
     plot_chrom_boundaries(cn_axes[0], print_chrom=True, outside=True)
 
     # save
-    fig.savefig(os.path.join(input_folder, 'copy_numbers.pdf'))
+    fig.savefig(os.path.join(input_folder, 'copy_numbers.png'))

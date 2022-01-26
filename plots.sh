@@ -1,5 +1,5 @@
 echo "Plotting Parent Graph"
-dot -Tjpg out/parent_graph.dot > out/parent_tree.jpg
+dot -Tpng out/parent_graph.dot > out/parent_tree.png
 echo "Plotting Fish Plot"
 python3 scripts/fish_py.py out/populations.csv out/parent_tree.csv out/fish.png
 echo "Plotting CN Tracks"
