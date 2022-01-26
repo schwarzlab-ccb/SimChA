@@ -1,4 +1,8 @@
+echo "Plotting Parent Graph"
 dot -Tjpg out/parent_graph.dot > out/parent_tree.jpg
+echo "Plotting Fish Plot"
 python3 scripts/fish_py.py out/populations.csv out/parent_tree.csv out/fish.png
+echo "Plotting CN Tracks"
 python3 scripts/plot_cn_tracks.py --input_folder out --output_folder out --fraction
-python3 scripts/plot_population_dynamics.py --input_folder out --output_folder out --log
+echo "Plotting Population Dynamics"
+python3 scripts/plot_population_dynamics.py --input_folder out --output_folder out
