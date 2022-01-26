@@ -18,7 +18,17 @@ public class FileIO
     public FileIO(string outFolder)
     {
         OutFolder = outFolder;
-        Directory.CreateDirectory(outFolder);
+        if (Directory.Exists(outFolder))
+        {
+            foreach (FileInfo file in new DirectoryInfo(outFolder).GetFiles())
+            {
+                file.Delete();
+            }
+        }
+        else
+        {
+            Directory.CreateDirectory(outFolder);
+        }
     }
 
     public void WriteSubClones(IEnumerable<SubClone> subClones)
