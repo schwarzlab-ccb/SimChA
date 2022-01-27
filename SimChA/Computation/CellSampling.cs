@@ -35,4 +35,10 @@ public static class CellSampling
 
     public static long PopulationSize(IEnumerable<SubClone> population)
         => population.Sum(sc => sc.AliveCount);
+    
+    public static long PopulationSize(IEnumerable<IEnumerable<SubClone>> populations)
+        => populations.Sum(PopulationSize);
+
+    public static IEnumerable<SubClone> Flatten(IEnumerable<IEnumerable<SubClone>> populations) 
+        => populations.SelectMany(x => x);
 }

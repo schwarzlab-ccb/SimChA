@@ -161,5 +161,5 @@ if __name__ == '__main__':
         err = f"Specified first generation {first_gen} must be before the last generation {last_gen}."
         raise Exception(err)
 
-    img = plot_fish(populations_df, parent_df, 0, last_gen, res)
+    img = plot_fish(populations_df, parent_df, first_gen, last_gen, res)
     img.save(args.output)

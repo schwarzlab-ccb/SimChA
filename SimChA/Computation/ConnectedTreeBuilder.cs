@@ -24,7 +24,7 @@ public static class ConnectedTreeBuilder
     }
     
     // Construct a parent tree with each child being either parent of a present predecessor, or -1 if none exists.
-    public static ParentTree BuildTree(List<SubClone> allSubClones, List<SubClone> selection)
+    public static ParentTree BuildTree(IEnumerable<SubClone> allSubClones, List<SubClone> selection)
     {
         var parentMap = CreateParentMap(allSubClones);
         List<TreeNode> nodes = new();

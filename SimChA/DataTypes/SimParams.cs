@@ -10,6 +10,7 @@ public struct SimParams
     public double MutationRate;
     public double DriverProb;
     public double DeathRate;
+    public double SplitRate;
     public double FitnessInc;
     public int InitialPop;
 

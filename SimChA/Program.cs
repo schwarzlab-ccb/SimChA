@@ -17,10 +17,11 @@ var simParams = new SimParams
 {
     IsFemale = true,
     DivisionRate = 0.025f,
-    MutationRate = 0.1f,
-    DivisionSlowDown = 0.001f,
+    MutationRate = 0.01f,
     DriverProb = 0.1f,
     DeathRate = 0.01f,
+    SplitRate = 0.0005f,
+    DivisionSlowDown = 0.005,
     FitnessInc = 1.2f,
     InitialPop = 100,
     AbberationRates =
@@ -42,30 +43,33 @@ int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
 var random = new Random(seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 0;
-var popSizes = new List<long> { CellSampling.PopulationSize(simulator.Clones) };
+var popSizes = new List<long> { CellSampling.PopulationSize(simulator.Populations) };
 do
 {
-    Console.WriteLine($"Sim step {++stepNo:D3}, clones: {simulator.Clones.Count}, cells: { popSizes[^1] }");
+    Console.WriteLine($"Sim step {++stepNo:D3}, " +
+                      $"populations: {simulator.Populations.Count}, " +
+                      $"subclones: {simulator.FlatPops.Count()}, " +
+                      $"cells: { popSizes[^1] }");
     simulator.Step();
-    popSizes.Add(CellSampling.PopulationSize(simulator.Clones));
+    popSizes.Add(CellSampling.PopulationSize(simulator.Populations));
 } while (popSizes[^1] < options.Value.StopCount && popSizes[^1] > 0);
 
 Console.WriteLine("Finished");
 Console.WriteLine($"Seed used was {seed}");
 Console.WriteLine($"Total length is {ReferenceGenome.TotalLength(true)}");
-Console.WriteLine($"Cell count {simulator.Clones.Sum(c => c.AliveCount)}");
+Console.WriteLine($"Cell count {popSizes[^1]}");
 
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100);
 var cutOff = popSizes.Select(l => (long) Math.Ceiling(l * options.Value.CutOff)).ToList();
-var aboveCutOff = simulator.Clones.Where(sc 
+var aboveCutOff = simulator.FlatPops.Where(sc 
     => Enumerable.Range(sc.FirstGen, popSizes.Count - sc.FirstGen).Any(g => cutOff[g] <= sc.PopAtGeneration(g))
     ).ToList();
-var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
-var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
+var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
+var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
-var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
-Console.WriteLine($"SubClone count {simulator.Clones.Count}. Above cutoff: { sample.Count }");
+var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+Console.WriteLine($"SubClone count {simulator.Populations.Count}. Above cutoff: { sample.Count }");
 
 try
 {
