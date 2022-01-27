@@ -1,4 +1,5 @@
-﻿using SimChA.Computation;
+﻿using System.Globalization;
+using SimChA.Computation;
 using SimChA.DataTypes;
 
 namespace SimChA.IO;
@@ -17,6 +18,7 @@ public class FileIO
 
     public FileIO(string outFolder)
     {
+        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
         OutFolder = outFolder;
         if (Directory.Exists(outFolder))
         {
@@ -52,7 +54,8 @@ public class FileIO
         outputFile.WriteLine("Digraph SimChA {");
         foreach (var node in tree.Nodes)
         {
-            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Size}\"];");
+            double size = Math.Round(.5 * (1 + Math.Log10(1 + node.Size)), 2);
+            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Id}:{node.Size}\", width={size}, height={size*.6}];");
         }
         foreach (var edge in tree.Edges)
         {
@@ -75,7 +78,7 @@ public class FileIO
         }
     }
 
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree, int firstGlobalGen)
     {   
         string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
@@ -85,9 +88,10 @@ public class FileIO
         popFile.WriteLine("Id,Gen,Pop");
         foreach (var subClone in subClones)
         {
-            for (int i = 0; i < subClone.Generations.Count; i++)
+            int skip = Math.Max(0, firstGlobalGen - subClone.FirstGen);
+            for (int i = skip; i < subClone.AliveCells.Count; i++)
             {
-                popFile.WriteLine($"{subClone.CloneId},{subClone.FirstGen + i},{subClone.Generations[i]}");
+                popFile.WriteLine($"{subClone.CloneId},{subClone.FirstGen + i},{subClone.AliveCells[i]}");
             }
         }
         

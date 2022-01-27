@@ -39,7 +39,7 @@ public static class LCATreeBuilder
     }
     
     // Construct a parent tree with lowest common ancestor (LCA) for each pair of children
-    public static ParentTree Builtree(IEnumerable<SubClone> allSubClones, List<SubClone> selection)
+    public static ParentTree Builtree(IEnumerable<SubClone> allSubClones, List<SubClone> selection, int firstGlobalGen)
     {
         var parentMap = ConnectedTreeBuilder.CreateParentMap(allSubClones);
         var internalNodes = FindInternalNodes(parentMap, selection);
@@ -49,7 +49,7 @@ public static class LCATreeBuilder
 
         foreach (var subClone in selection)
         {
-            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.AliveCount });
+            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.TotalCount });
             edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
         }
         foreach (int internalNode in internalNodes)

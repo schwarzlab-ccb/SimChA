@@ -138,7 +138,7 @@ if __name__ == '__main__':
     parser.add_argument("populations", type=str, help="A CSV file with the header \"Id,Gen,Pop\".")
     parser.add_argument("parent_tree", type=str, help="A CSV file with the header \"ParentId,ChildId\".")
     parser.add_argument("output", type=str, help="Output image filepath. The format must support alpha channels.")
-    parser.add_argument("-F", "--first", dest="first_gen", type=int, help="The generation to start plotting from.", default=0)
+    parser.add_argument("-F", "--first", dest="first_gen", type=int, help="The generation to start plotting from.")
     parser.add_argument("-L", "--last", dest="last_gen", type=int, help="The generation to end the plotting at.")
     parser.add_argument("-W", "--width", dest="width", type=int, help="Output image width", default=2160)
     parser.add_argument("-H", "--height", dest="height", type=int, help="Output image height", default=1080)
@@ -149,16 +149,14 @@ if __name__ == '__main__':
     populations_df = pd.read_csv(args.populations)
     parent_df = pd.read_csv(args.parent_tree)
 
-    max_gen = populations_df["Gen"].max()
-    first_gen = args.first_gen
-    last_gen = args.last_gen if args.last_gen else max_gen
+    min_gen = populations_df["Gen"].min()
+    first_gen = max(min_gen, args.first_gen) if args.first_gen else min_gen
 
-    if last_gen > max_gen:
-        err = f"Specified last generation {last_gen} is after the end of data."
-        raise Exception(err)
+    max_gen = populations_df["Gen"].max()
+    last_gen = min(args.last_gen, max_gen) if args.last_gen else max_gen
 
     if first_gen >= last_gen:
-        err = f"Specified first generation {first_gen} must be before the last generation {last_gen}."
+        err = f"First generation {first_gen} must be before the last generation {last_gen}."
         raise Exception(err)
 
     img = plot_fish(populations_df, parent_df, first_gen, last_gen, res)

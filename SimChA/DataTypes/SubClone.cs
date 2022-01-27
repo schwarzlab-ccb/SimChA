@@ -4,26 +4,28 @@ namespace SimChA.DataTypes;
 
 public class SubClone
 {
-    public int FirstGen;
-    public int CloneId;
-    public int ParentId;
-    public int AliveCount => Generations.Last();
-    public Karyotype Karyotype;
-    public double DivisionRate;
-    public double MutationRate;
-    public double DriverProb;
-    public List<int> Generations;
+    public int FirstGen { get; private init; }
+    public int CloneId { get; private init; }
+    public int ParentId { get; private init; }
+    public Karyotype Karyotype { get; private init; }
+    public double DivisionRate { get; private init; }
+    public List<int> AliveCells { get; private init; }
+    public List<int> DeadCells { get; private init; }
+    
+    
+    public int AliveCount => AliveCells.Last();
+    public int DeadCount => DeadCells.Last();
+    public int TotalCount => AliveCount + DeadCount;
 
-    public SubClone(int cloneId, int parentId, int generation, double divisionRate, double mutationRate, double driverProb, Karyotype karyotype, int popSize = 1) 
+    public SubClone(int cloneId, int parentId, int generation, double divisionRate, Karyotype karyotype, int popSize = 1) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         Karyotype = karyotype;
         DivisionRate = divisionRate;
-        MutationRate = mutationRate;
-        DriverProb = driverProb;
         FirstGen = generation;
-        Generations = new List<int> { popSize };
+        AliveCells = new List<int> { popSize };
+        DeadCells = new List<int> { 0 };
     }
 
     public SubClone(SubClone other)
@@ -31,31 +33,32 @@ public class SubClone
         CloneId = other.CloneId;
         ParentId = other.CloneId;
         Karyotype = other.Karyotype;
-        MutationRate = other.MutationRate;
-        DriverProb = other.DriverProb;
         DivisionRate = other.DivisionRate;
-        Generations = other.Generations;
+        AliveCells = other.AliveCells;
+        DeadCells = other.DeadCells;
         FirstGen = other.FirstGen;
     }
 
-    public SubClone CreateChild(int newId, int generation) 
+    public SubClone CreateChild(int newId, int generation, double divRateChange) 
         => new(this)
         {
             FirstGen = generation,
             CloneId = newId,
             ParentId = CloneId,
             Karyotype = new Karyotype(Karyotype),
-            Generations = new List<int> { 1 }
+            AliveCells = new List<int> { 1 },
+            DeadCells = new List<int> { 0 },
+            DivisionRate = Math.Clamp(DivisionRate * divRateChange, 0, 1)
         };
 
     public override string ToString()
     {
-        return $"ID:{CloneId}, Parent:{ParentId}, Cells: {AliveCount}, Karyotype: {Karyotype}";
+        return $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Karyotype: {Karyotype}";
     }
 
     public int MaxPopulation()
-        => Generations.Max();
+        => AliveCells.Max();
 
     public int PopAtGeneration(int gen) 
-        => gen < FirstGen || gen >= FirstGen + Generations.Count ? -1 : Generations[gen - FirstGen];
+        => gen < FirstGen || gen >= FirstGen + AliveCells.Count ? -1 : AliveCells[gen - FirstGen];
 }

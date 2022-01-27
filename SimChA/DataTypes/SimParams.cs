@@ -12,6 +12,7 @@ public struct SimParams
     public double DeathRate;
     public double SplitRate;
     public double FitnessInc;
+    public int MaxGens;
     public int InitialPop;
 
     public readonly Dictionary<AbberationEnum, double> AbberationRates =
