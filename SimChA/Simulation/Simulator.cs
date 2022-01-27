@@ -12,7 +12,7 @@ public class Simulator
     public SimParams SimParams { get; }
 
     private int newId;
-    private int GetNewId() => newId++;
+    private int GetNewId() => ++newId;
 
     private int _generation;
 
@@ -25,8 +25,7 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
         var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(GetNewId(), -1, _generation, simParams.DivisionRate, refKaryotype,
-            simParams.InitialPop);
+        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, refKaryotype, SimParams.InitialPop);
         Populations = new List<List<SubClone>> { new() { firstClone } };
     }
 
@@ -48,7 +47,8 @@ public class Simulator
         }
     }
 
-    private bool IsViable(Karyotype kar) => kar.ChromCount > 23;
+    private bool IsViable(Karyotype kar) 
+        => kar.ChromCount > 23;
 
     private void DivideAndMutate()
     {
@@ -119,7 +119,6 @@ public class Simulator
             {
                 return abb;
             }
-
             sample -= rate;
         }
 

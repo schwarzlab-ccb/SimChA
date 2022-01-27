@@ -4,12 +4,12 @@ namespace SimChA.DataTypes;
 
 public class SubClone
 {
-    public int FirstGen { get; private init; }
-    public int CloneId { get; private init; }
-    public int ParentId { get; private init; }
-    public Karyotype Karyotype { get; private init; }
-    public double DivisionRate { get; private init; }
-    private List<(int, int)> Cells { get; init; } // (Alive,Dead)
+    public int FirstGen { get; }
+    public int CloneId { get; }
+    public int ParentId { get; }
+    public Karyotype Karyotype { get; }
+    public double DivisionRate { get; }
+    private List<(int, int)> Cells { get; } // (Alive,Dead)
 
     public int AliveCount => Cells.Last().Item1;
     public int DeadCount => Cells.Last().Item2;
@@ -20,14 +20,14 @@ public class SubClone
     {
         CloneId = cloneId;
         ParentId = parentId;
-        Karyotype = karyotype;
+        Karyotype = new Karyotype(karyotype);
         DivisionRate = Math.Clamp(divisionRate, 0, 1);
         FirstGen = generation;
         Cells = new List<(int, int)> { (popSize, 0) };
     }
     
     public SubClone CreateChild(int newId, int generation, double divRateChange)
-        => new(newId, CloneId, generation, DivisionRate * divRateChange, new Karyotype(Karyotype));
+        => new(newId, CloneId, generation, DivisionRate * divRateChange, Karyotype);
     
     public override string ToString() 
         => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Karyotype: {Karyotype}";
