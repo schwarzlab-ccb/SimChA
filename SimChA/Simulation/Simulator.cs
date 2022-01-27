@@ -41,11 +41,10 @@ public class Simulator
     {
         foreach (var subClone in FlatPops.Where(sc => sc.AliveCount > 0))
         {
-            int currentPop = subClone.AliveCells[^1];
-            int currentDead = subClone.DeadCells[^1];
+            int currentPop = subClone.AliveCount;
+            int currentDead = subClone.DeadCount;
             int deadCount = Binomial.Sample(Rnd, SimParams.DeathRate, currentPop);
-            subClone.AliveCells.Add(currentPop - deadCount);
-            subClone.DeadCells.Add(currentDead + deadCount);
+            subClone.NewGen(currentPop - deadCount, currentDead + deadCount);
         }
     }
 
@@ -100,7 +99,7 @@ public class Simulator
                     }
                 }
 
-                subClone.AliveCells[^1] += newCellsCount - splitCellsCount - newMutantCount;
+                subClone.AddNewCells(newCellsCount - splitCellsCount - newMutantCount);
             }
 
             pop.AddRange(newClones);

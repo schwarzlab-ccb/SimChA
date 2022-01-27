@@ -78,7 +78,7 @@ public class FileIO
         }
     }
 
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree, int firstGlobalGen)
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree, int firstGen, int lastGen)
     {   
         string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
@@ -88,10 +88,15 @@ public class FileIO
         popFile.WriteLine("Id,Gen,Pop");
         foreach (var subClone in subClones)
         {
-            int skip = Math.Max(0, firstGlobalGen - subClone.FirstGen);
-            for (int i = skip; i < subClone.AliveCells.Count; i++)
+            int start = Math.Max(firstGen, subClone.FirstGen);
+            int end = Math.Max(lastGen, subClone.LastGen);
+            for (int gen = start; gen < end ; gen++)
             {
-                popFile.WriteLine($"{subClone.CloneId},{subClone.FirstGen + i},{subClone.AliveCells[i]}");
+                int alive = subClone.AliveAtGen(gen);
+                if (alive > 0)
+                {
+                    popFile.WriteLine($"{subClone.CloneId},{gen},{alive}");
+                }
             }
         }
         

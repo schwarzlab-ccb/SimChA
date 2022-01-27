@@ -9,56 +9,35 @@ public class SubClone
     public int ParentId { get; private init; }
     public Karyotype Karyotype { get; private init; }
     public double DivisionRate { get; private init; }
-    public List<int> AliveCells { get; private init; }
-    public List<int> DeadCells { get; private init; }
-    
-    
-    public int AliveCount => AliveCells.Last();
-    public int DeadCount => DeadCells.Last();
-    public int TotalCount => AliveCount + DeadCount;
+    private List<(int, int)> Cells { get; init; } // (Alive,Dead)
 
+    public int AliveCount => Cells.Last().Item1;
+    public int DeadCount => Cells.Last().Item2;
+    public int TotalCount => AliveCount + DeadCount;
+    public int LastGen => FirstGen + Cells.Count;
+    
     public SubClone(int cloneId, int parentId, int generation, double divisionRate, Karyotype karyotype, int popSize = 1) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         Karyotype = karyotype;
-        DivisionRate = divisionRate;
+        DivisionRate = Math.Clamp(divisionRate, 0, 1);
         FirstGen = generation;
-        AliveCells = new List<int> { popSize };
-        DeadCells = new List<int> { 0 };
+        Cells = new List<(int, int)> { (popSize, 0) };
     }
+    
+    public SubClone CreateChild(int newId, int generation, double divRateChange)
+        => new(newId, CloneId, generation, DivisionRate * divRateChange, new Karyotype(Karyotype));
+    
+    public override string ToString() 
+        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Karyotype: {Karyotype}";
 
-    public SubClone(SubClone other)
-    {
-        CloneId = other.CloneId;
-        ParentId = other.CloneId;
-        Karyotype = other.Karyotype;
-        DivisionRate = other.DivisionRate;
-        AliveCells = other.AliveCells;
-        DeadCells = other.DeadCells;
-        FirstGen = other.FirstGen;
-    }
+    public int AliveAtGen(int gen)
+        => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Item1 : 0;
 
-    public SubClone CreateChild(int newId, int generation, double divRateChange) 
-        => new(this)
-        {
-            FirstGen = generation,
-            CloneId = newId,
-            ParentId = CloneId,
-            Karyotype = new Karyotype(Karyotype),
-            AliveCells = new List<int> { 1 },
-            DeadCells = new List<int> { 0 },
-            DivisionRate = Math.Clamp(DivisionRate * divRateChange, 0, 1)
-        };
+    public void NewGen(int genAlive, int genDead) 
+        => Cells.Add((genAlive, genDead));
 
-    public override string ToString()
-    {
-        return $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Karyotype: {Karyotype}";
-    }
-
-    public int MaxPopulation()
-        => AliveCells.Max();
-
-    public int PopAtGeneration(int gen) 
-        => gen < FirstGen || gen >= FirstGen + AliveCells.Count ? -1 : AliveCells[gen - FirstGen];
+    public void AddNewCells(int newAliveCount) 
+        => Cells[^1] = (Cells[^1].Item1 + newAliveCount, Cells[^1].Item2);
 }

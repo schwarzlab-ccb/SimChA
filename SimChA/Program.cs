@@ -23,7 +23,7 @@ var simParams = new SimParams
     DivisionSlowDown = 0.001f,
     FitnessInc = 1.2f,
     InitialPop = 100,
-    MaxGens = 1400,
+    MaxGens = 2080,
     AbberationRates =
     {
         [AbberationEnum.InternalDeletion] = 50f,
@@ -44,31 +44,28 @@ var random = new Random(seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 0;
 var popSizes = new List<(long, long)> { (CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)) };
+Console.WriteLine($"Sim with seed {seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 do
 {
-    Console.WriteLine($"Sim step {++stepNo:D3}, " +
+    Console.WriteLine($"Step: {++stepNo:D3}, " +
                       $"populations: {simulator.Populations.Count}, " +
-                      $"subclones: {simulator.FlatPops.Count()}, " +
+                      $"subClones: {simulator.FlatPops.Count()}, " +
                       $"cells: { popSizes.Last().Item1 }, " +
                       $"alive: { popSizes.Last().Item2 }");
     simulator.Step();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
 } while (popSizes.Last().Item1 < options.Value.StopCount && popSizes.Last().Item2 > 0);
 
-Console.WriteLine("Finished" + 
-    $"Seed used was {seed},\n" +
-    $"Total length is {ReferenceGenome.TotalLength(true)}\n" +
-    $"Total cell count {popSizes[^1]}\n" +
-    $"Alive cell count {popSizes[^1]}\n");
 
 // snps are shared between all subclones and therefore are created only once
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100);
 var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.Item2 * options.Value.CutOff)).ToList();
-int firstGlobalGen = popSizes.Count - simParams.MaxGens;
+int lastGen = popSizes.Count;
+int firstGen = lastGen - simParams.MaxGens;
 var aboveCutOff = simulator.FlatPops.Where(sc 
-    => Enumerable.Range(sc.FirstGen, popSizes.Count - sc.FirstGen).Any(g => cutOff[g] <= sc.PopAtGeneration(g))
+    => Enumerable.Range(sc.FirstGen, popSizes.Count - sc.FirstGen).Any(g => cutOff[g] <= sc.AliveAtGen(g))
     ).ToList();
-var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff, firstGlobalGen);
+var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff, firstGen);
 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
@@ -79,7 +76,7 @@ try
     var files = new FileIO(options.Value.OutputPath);
     files.WriteSubClones(sample);
     files.WriteParentTree(lcaTree);
-    files.WriteMullerDataFrames(aboveCutOff, connectedTree, firstGlobalGen);
+    files.WriteMullerDataFrames(aboveCutOff, connectedTree, firstGen, lastGen);
     files.WriteCopyNumbers(sample);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
 } 
