@@ -56,7 +56,7 @@ public class Simulator
         foreach (var pop in Populations)
         {
             List<SubClone> newClones = new();
-            slowDownRate = Math.Pow(CellSampling.PopulationSize(pop), 1 / 3f) * SimParams.DivisionSlowDown;
+            slowDownRate = Math.Log10(CellSampling.PopulationSize(pop)) * SimParams.DivisionSlowDown;
             
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {

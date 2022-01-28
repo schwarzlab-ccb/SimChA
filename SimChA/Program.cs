@@ -15,12 +15,12 @@ options.WithNotParsed(o =>
 var simParams = new SimParams
 {
     IsFemale = true,
-    DivisionRate = 0.025f,
+    DivisionRate = 0.01f,
     MutationRate = 0.01f,
-    DriverProb = 0.1f,
-    DeathRate = 0.01f,
-    SplitRate = 0.001f,
-    DivisionSlowDown = 0.001f,
+    DriverProb = 1f,
+    DeathRate = 0.0f,
+    SplitRate = 0.0f,
+    DivisionSlowDown = 0.002f,
     FitnessInc = 1.2f,
     InitialPop = 100,
     MaxGens = 2080,
