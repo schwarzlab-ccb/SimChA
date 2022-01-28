@@ -1,16 +1,20 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 
 import argparse
 import random
 import sys
+import math
+import logging
 
 import numpy as np
 import pandas as pd
 from PIL import Image
 from matplotlib import cm
 
+log = logging.getLogger()
+log.setLevel(logging.INFO)
 eps = sys.float_info.epsilon
-
+random.seed(3)
 
 # Taken from https://stackoverflow.com/questions/3160699/python-progress-bar
 def progressbar(it, prefix="", size=60, file=sys.stdout):
@@ -29,9 +33,9 @@ def progressbar(it, prefix="", size=60, file=sys.stdout):
     file.flush()
 
 
-def build_tree(parent_df, ids, rootId):
+def build_tree(par_df, ids, rootId):
     tree = {cloneId: list(children) for cloneId in ids if
-            len(children := parent_df.loc[parent_df["ParentId"] == cloneId, "ChildId"]) > 0}
+            len(children := par_df.loc[par_df["ParentId"] == cloneId, "ChildId"]) > 0}
     if -1 not in tree:
         tree[-1] = [rootId]
     return tree
@@ -61,30 +65,60 @@ def line_from_data(px_row_orig, width):
     return result
 
 
-def get_pop_dict(pops_df, gen, max_pop, normalize):
-    test_pop = pops_df[pops_df["Gen"] == gen]
-    pop_dict = {test_pop["Id"].iat[i]: test_pop["Pop"].iat[i] for i in range(len(test_pop))}
+# Interpolates between generations
+def get_count_at_gen(pops_df, first_step, last_step, step, clone_id):
+    cp_df = pops_df[pops_df["Id"] == clone_id]
+    match = cp_df[cp_df["Step"] == step]
+    if not match.empty:
+        return float(cp_df["Pop"][match.index])
+
+    l_neigh_i = cp_df[cp_df["Step"] < step]["Step"]
+    u_neigh_i = cp_df[cp_df["Step"] > step]["Step"]
+
+    if l_neigh_i.size > 0 and u_neigh_i.size > 0:
+        ind_min = l_neigh_i.idxmax()
+        ind_max = u_neigh_i.idxmin()
+        prev_gen, prev_pop = cp_df.loc[ind_min, ["Step", "Pop"]].tolist()
+        next_gen, next_pop = cp_df.loc[ind_max, ["Step", "Pop"]].tolist()
+    elif l_neigh_i.size > 0:
+        ind_min = l_neigh_i.idxmax()
+        prev_gen, prev_pop = cp_df.loc[ind_min, ["Step", "Pop"]].tolist()
+        next_gen, next_pop = last_step, 0
+    elif u_neigh_i.size > 0:
+        ind_max = u_neigh_i.idxmin()
+        prev_gen, prev_pop = first_step, 0
+        next_gen, next_pop = cp_df.loc[ind_max, ["Step", "Pop"]].tolist()
+    else:
+        return 0
+
+    pop = ((step - prev_gen) * next_pop + (next_gen - step) * prev_pop) / (next_gen - prev_gen)
+    log.debug(f"Id: {clone_id}, Step: {step}, Pop: {pop}")
+    return pop
+
+
+def get_pop_dict(pops_df, ids, fg, lg, gen, max_pop, normalize):
+    pop_dict = { cloneId: count for cloneId in ids if (count := get_count_at_gen(pops_df, fg, lg, gen, cloneId)) > 0 }
     if not normalize:
-        pop_count = pops_df[pops_df["Gen"] == gen]["Pop"].sum()
+        pop_count = sum(pop_dict.values())
         remainder = max_pop - pop_count
         pop_dict[-1] = remainder
     return pop_dict
 
 
-def rec_descend(tree, pop_dict, cloneId):
+def rec_descend(tree, pop_dict, clone_id):
     res = []
-    if cloneId in tree:
-        if cloneId in pop_dict:
-            pop = pop_dict[cloneId] / 2
-            res += [(pop, cloneId)]
-            for childId in tree[cloneId]:
+    if clone_id in tree:
+        if clone_id in pop_dict:
+            pop = pop_dict[clone_id] / 2
+            res += [(pop, clone_id)]
+            for childId in tree[clone_id]:
                 res += rec_descend(tree, pop_dict, childId)
-            res += [(pop, cloneId)]
+            res += [(pop, clone_id)]
         else:
-            for childId in tree[cloneId]:
+            for childId in tree[clone_id]:
                 res += rec_descend(tree, pop_dict, childId)
-    elif cloneId in pop_dict:
-        return [(pop_dict[cloneId], cloneId)]
+    elif clone_id in pop_dict:
+        return [(pop_dict[clone_id], clone_id)]
     return res
 
 
@@ -95,12 +129,12 @@ def pixels_to_img(img_pixels, res):
     return resized
 
 
-def get_image_pixels(tree, rootId, pop_df, col_map, max_pop, breath, first_gen, last_gen, normalize = True):
+def get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, breath, first_step, last_step, normalize=True):
     img_pixels = []
-    for i in progressbar(range(first_gen, last_gen + 1), "Converting generation: "):
-        pop_dict = get_pop_dict(pop_df, i, max_pop, normalize)
+    for step in progressbar(range(first_step, last_step), "Step: "):
+        pop_dict = get_pop_dict(pop_df, ids, first_step, last_step, step, max_pop, normalize)
         if len(pop_dict) > 0:
-            id_rows = rec_descend(tree, pop_dict, rootId if normalize else -1)
+            id_rows = rec_descend(tree, pop_dict, root_id if normalize else -1)
             pixel_row = [(id_row[0], col_map[id_row[1]]) for id_row in id_rows]
         else:
             pixel_row = [(-1, np.ones(4) * 127)]
@@ -109,26 +143,25 @@ def get_image_pixels(tree, rootId, pop_df, col_map, max_pop, breath, first_gen, 
     return img_pixels
 
 
-def plot_fish(populations_df, parent_df, first_gen, last_gen, res, scale_up=1):
-    max_pop = populations_df[["Gen", "Pop"]].groupby("Gen", as_index=False).sum().max()
+def plot_fish(pop_df, par_df, first_step, last_step, res):
+    max_pop = pop_df[["Gen", "Pop"]].groupby("Gen", as_index=False).sum().max()
 
-    parents = parent_df["ParentId"].unique()
-    children = parent_df["ChildId"].unique()
+    parents = par_df["ParentId"].unique()
+    children = par_df["ChildId"].unique()
     root_list = np.setdiff1d(parents, children)
     if len(root_list) != 1:
         raise Exception("Failed to determine root. There must be exactly one node with no parent in the parent tree.")
-    rootId = root_list[0]
-    ids = np.concatenate([[rootId], children])
-    tree = build_tree(parent_df, ids, rootId)
+    root_id = root_list[0]
+    ids = np.concatenate([[root_id], children])
+    tree = build_tree(par_df, ids, root_id)
 
     # Create Colors
     cols = cm.rainbow(np.linspace(0, 1, len(ids))).tolist()
     random.shuffle(cols)
-    col_map = {ids[i]: np.array(list(map(lambda x: (int)(x * 255), cols[i]))) for i in range(len(ids))}
+    col_map = {ids[i]: np.array(list(map(lambda x: int(x * 255), cols[i]))) for i in range(len(ids))}
     col_map[-1] = np.ones(4)  # Root is white
 
-    breadth = res[1] * scale_up
-    img_pixels = get_image_pixels(tree, rootId, populations_df, col_map, max_pop, breadth, first_gen, last_gen, True)
+    img_pixels = get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, res[1], first_step, last_step, True)
     image = pixels_to_img(img_pixels, res)
     return image
 
@@ -140,11 +173,11 @@ if __name__ == '__main__':
     parser.add_argument("output", type=str, help="Output image filepath. The format must support alpha channels.")
     parser.add_argument("-F", "--first", dest="first_gen", type=int, help="The generation to start plotting from.")
     parser.add_argument("-L", "--last", dest="last_gen", type=int, help="The generation to end the plotting at.")
-    parser.add_argument("-W", "--width", dest="width", type=int, help="Output image width", default=2160)
-    parser.add_argument("-H", "--height", dest="height", type=int, help="Output image height", default=1080)
+    parser.add_argument("-W", "--width", dest="width", type=int, help="Output image width", default=1280)
+    parser.add_argument("-H", "--height", dest="height", type=int, help="Output image height", default=720)
     args = parser.parse_args()
 
-    res = [args.width, args.height]
+    resolution = [args.width, args.height]
 
     populations_df = pd.read_csv(args.populations)
     parent_df = pd.read_csv(args.parent_tree)
@@ -159,5 +192,10 @@ if __name__ == '__main__':
         err = f"First generation {first_gen} must be before the last generation {last_gen}."
         raise Exception(err)
 
-    img = plot_fish(populations_df, parent_df, first_gen, last_gen, res)
+    gen_count = max_gen - min_gen
+    populations_df["Step"] = populations_df["Gen"] * resolution[0] / gen_count
+    first_step = int(populations_df["Step"].min())
+    last_step = int(populations_df["Step"].max())
+
+    img = plot_fish(populations_df, parent_df, first_step, last_step, resolution)
     img.save(args.output)
