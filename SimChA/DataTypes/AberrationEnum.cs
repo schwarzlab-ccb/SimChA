@@ -2,7 +2,7 @@
 
 namespace SimChA.DataTypes;
 
-public enum AbberationEnum
+public enum AberrationEnum
 {
     Missegregation,
     InternalDuplication,

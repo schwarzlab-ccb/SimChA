@@ -15,8 +15,8 @@ public struct SimParams
     public int MaxGens;
     public int InitialPop;
 
-    public readonly Dictionary<AbberationEnum, double> AbberationRates =
-        Enum.GetValues<AbberationEnum>().ToDictionary(a => a, a => 1.0);
+    public readonly Dictionary<AberrationEnum, double> AberrationRates =
+        Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
 
-    public double RatesSum => AbberationRates.Sum(ar => ar.Value);
+    public double RatesSum => AberrationRates.Sum(ar => ar.Value);
 }

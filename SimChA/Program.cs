@@ -24,18 +24,18 @@ var simParams = new SimParams
     FitnessInc = 1.2f,
     InitialPop = 100,
     MaxGens = 2080,
-    AbberationRates =
+    AberrationRates =
     {
-        [AbberationEnum.InternalDeletion] = 50f,
-        [AbberationEnum.InternalDuplication] = 50f,
-        [AbberationEnum.Translocation] = 20f,
-        [AbberationEnum.TailDeletion] = 15f,
-        [AbberationEnum.BreakageFusionBridge] = 10f,
-        [AbberationEnum.Inversion] = 10f,
-        [AbberationEnum.Missegregation] = 5f,
-        [AbberationEnum.Duplication] = 5f,
-        [AbberationEnum.Chromothripsis] = 1f,
-        [AbberationEnum.WholeGenomeDoubling] = 1f
+        [AberrationEnum.InternalDeletion] = 50f,
+        [AberrationEnum.InternalDuplication] = 50f,
+        [AberrationEnum.Translocation] = 20f,
+        [AberrationEnum.TailDeletion] = 15f,
+        [AberrationEnum.BreakageFusionBridge] = 10f,
+        [AberrationEnum.Inversion] = 10f,
+        [AberrationEnum.Missegregation] = 5f,
+        [AberrationEnum.Duplication] = 5f,
+        [AberrationEnum.Chromothripsis] = 1f,
+        [AberrationEnum.WholeGenomeDoubling] = 1f
     }
 };
 
@@ -57,8 +57,7 @@ do
 } while (popSizes.Last().Item1 < options.Value.StopCount && popSizes.Last().Item2 > 0);
 
 
-// snps are shared between all subclones and therefore are created only once
-var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100);
+
 var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.Item2 * options.Value.CutOff)).ToList();
 int lastGen = popSizes.Count;
 int firstGen = lastGen - simParams.MaxGens;
@@ -69,6 +68,7 @@ var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff, firstGen)
 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
 Console.WriteLine($"SubClone count {simulator.Populations.Count}. Above cutoff: { sample.Count }");
 
 try

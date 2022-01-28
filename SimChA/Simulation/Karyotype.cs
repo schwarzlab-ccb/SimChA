@@ -7,13 +7,13 @@ namespace SimChA.Simulation;
 
 public class Karyotype
 {
-    private List<Chromosome> Chromosomes { get; set; }
-
-    public int ChromCount => Chromosomes.Count;
+    private List<Chromosome> Chromosomes { get; }
 
     private Random Rnd { get; }
     
-    public bool IsFemale;
+    public bool IsFemale { get; }
+
+    public int ChromCount => Chromosomes.Count;
 
     public Karyotype(bool isFemale, Random random)
     {
@@ -80,32 +80,32 @@ public class Karyotype
     private int GetUniformPos(Chromosome chr) 
         => Rnd.Next(1, chr.Length() - 1);
 
-    public Karyotype ApplyAbberation(AbberationEnum abberation)
+    public Karyotype ApplyAbberation(AberrationEnum aberration)
     {
         var selectChrs = RandomChrs(2);
         var chr1 = selectChrs[0]; // just a shortcut
-        switch (abberation)
+        switch (aberration)
         {
-            case AbberationEnum.TailDeletion:
+            case AberrationEnum.TailDeletion:
                 chr1.Split(GetUniformPos(chr1), Rnd.CoinFlip());
                 return this;
 
-            case AbberationEnum.Missegregation:
+            case AberrationEnum.Missegregation:
                 var misKaryotype = new Karyotype(this, chr1);
                 Chromosomes.Add(chr1);
                 return misKaryotype;
 
-            case AbberationEnum.InternalDuplication:
+            case AberrationEnum.InternalDuplication:
                 (int dupStart, int dupEnd) = GetGammaFraction(chr1);
                 chr1.DuplicateRange(dupStart, dupEnd);
                 return this;
 
-            case AbberationEnum.InternalDeletion:
+            case AberrationEnum.InternalDeletion:
                 (int delStart, int delEnd) = GetGammaFraction(chr1);
                 chr1.DeleteRange(delStart, delEnd);
                 return this;
 
-            case AbberationEnum.Translocation:
+            case AberrationEnum.Translocation:
                 var splits
                     = selectChrs.Select(chr
                         => chr.Split(GetUniformPos(chr), Rnd.CoinFlip())
@@ -114,22 +114,22 @@ public class Karyotype
                 selectChrs[1].Join(splits[0], Rnd.CoinFlip());
                 return this;
 
-            case AbberationEnum.Inversion:
+            case AberrationEnum.Inversion:
                 (int invStart, int invEnd) = GetGammaFraction(chr1);
                 chr1.InvertRange(invStart, invEnd);
                 return this;
             
-            case AbberationEnum.Duplication:
+            case AberrationEnum.Duplication:
                 var baseKaryotype = new Karyotype(this);
                 Chromosomes.Add(new Chromosome(chr1));
                 return baseKaryotype;
 
-            case AbberationEnum.BreakageFusionBridge:
+            case AberrationEnum.BreakageFusionBridge:
                 var loseKaryotype = new Karyotype(this, chr1);
                 chr1.Bridge(GetUniformPos(chr1), Rnd.CoinFlip());
                 return loseKaryotype;
 
-            case AbberationEnum.Chromothripsis:
+            case AberrationEnum.Chromothripsis:
                 int shardCount = Rnd.Next(1, (int) Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
                 var positions = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr1)).Distinct().ToList();
                 positions.Sort();
@@ -137,7 +137,7 @@ public class Karyotype
                 chr1.ScatterAndGather(positions, count, Rnd);
                 return this;
 
-            case AbberationEnum.WholeGenomeDoubling:
+            case AberrationEnum.WholeGenomeDoubling:
                 Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
                 return this;
 

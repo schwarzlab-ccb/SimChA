@@ -24,17 +24,17 @@ public class TestSimulation
             MutationRate = 0.01f,
             DriverProb = 1f, 
             IsFemale = true,
-            AbberationRates =
+            AberrationRates =
             {
-                [AbberationEnum.InternalDeletion] = 50f,
-                [AbberationEnum.InternalDuplication] = 50f,
-                [AbberationEnum.Translocation] = 20f,
-                [AbberationEnum.TailDeletion] = 15f,
-                [AbberationEnum.BreakageFusionBridge] = 10f,
-                [AbberationEnum.Inversion] = 10f,
-                [AbberationEnum.Missegregation] = 5f,
-                [AbberationEnum.Duplication] = 5f,
-                [AbberationEnum.Chromothripsis] = 1f
+                [AberrationEnum.InternalDeletion] = 50f,
+                [AberrationEnum.InternalDuplication] = 50f,
+                [AberrationEnum.Translocation] = 20f,
+                [AberrationEnum.TailDeletion] = 15f,
+                [AberrationEnum.BreakageFusionBridge] = 10f,
+                [AberrationEnum.Inversion] = 10f,
+                [AberrationEnum.Missegregation] = 5f,
+                [AberrationEnum.Duplication] = 5f,
+                [AberrationEnum.Chromothripsis] = 1f
             }
         };
         _sim = new Simulator(_simParams, new Random(0));

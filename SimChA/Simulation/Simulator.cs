@@ -56,17 +56,19 @@ public class Simulator
         foreach (var pop in Populations)
         {
             List<SubClone> newClones = new();
+            slowDownRate = Math.Pow(CellSampling.PopulationSize(pop), 1 / 3f) * SimParams.DivisionSlowDown;
+            
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {
-                slowDownRate = Math.Pow(CellSampling.PopulationSize(pop), 1 / 3f) * SimParams.DivisionSlowDown;
+                // Create new cells
                 double divRate = subClone.DivisionRate - slowDownRate;
-                if (divRate < 0)
+                if (divRate < 0) // No growth at all
                 {
                     continue;
                 }
-
-                //  Cell division happens, split some of the cells
                 int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
+
+                //  From some of the cells, create new populations
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
                 for (int splitI = 0; splitI < splitCellsCount; splitI++)
                 {
@@ -81,14 +83,13 @@ public class Simulator
                 {
                     double divChange = Rnd.NextDouble() < SimParams.DriverProb ? SimParams.FitnessInc : 1f;
                     var childClone = subClone.CreateChild(GetNewId(), _generation, divChange);
-                    var abberation = SelectMutation();
-                    childClone.Karyotype.ApplyAbberation(abberation);
+                    var aberration = SelectMutation();
+                    childClone.Karyotype.ApplyAbberation(aberration);
                     if (!IsViable(childClone.Karyotype))
                     {
                         continue;
                     }
-
-                    // Split some of the mutatnts
+                    // Some of the mutations may create new populations
                     if (mutationI < splitMutantCount)
                     {
                         newPops.Add(childClone);
@@ -98,10 +99,8 @@ public class Simulator
                         newClones.Add(childClone);
                     }
                 }
-
                 subClone.AddNewCells(newCellsCount - splitCellsCount - newMutantCount);
             }
-
             pop.AddRange(newClones);
         }
 
@@ -109,11 +108,11 @@ public class Simulator
         Populations.AddRange(newPops.Select(sc => new List<SubClone> { sc }));
     }
 
-    private AbberationEnum SelectMutation()
+    private AberrationEnum SelectMutation()
     {
         double ratesSum = SimParams.RatesSum;
         double sample = ContinuousUniform.Sample(Rnd, 0, ratesSum);
-        foreach ((var abb, double rate) in SimParams.AbberationRates)
+        foreach ((var abb, double rate) in SimParams.AberrationRates)
         {
             if (sample <= rate)
             {
@@ -123,6 +122,6 @@ public class Simulator
         }
 
         // In case float-point calculations would cause jumping out of the loop
-        return SimParams.AbberationRates.Last().Key;
+        return SimParams.AberrationRates.Last().Key;
     }
 }

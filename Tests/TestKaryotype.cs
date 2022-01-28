@@ -19,7 +19,7 @@ public class TestKaryotype
     [Test]
     public void TestMissegration()
     {
-        var res = _kar.ApplyAbberation(AbberationEnum.Missegregation);
+        var res = _kar.ApplyAbberation(AberrationEnum.Missegregation);
         Assert.AreEqual(47, _kar.ChromCount);
         Assert.AreEqual(45, res.ChromCount);
     }
@@ -27,7 +27,7 @@ public class TestKaryotype
     [Test]
     public void TestDuplication()
     {
-        var res = _kar.ApplyAbberation(AbberationEnum.Duplication);
+        var res = _kar.ApplyAbberation(AberrationEnum.Duplication);
         Assert.AreEqual(47, _kar.ChromCount);
         Assert.AreEqual(46, res.ChromCount);
     }
@@ -35,7 +35,7 @@ public class TestKaryotype
     [Test]
     public void TestBFB()
     {
-        var res = _kar.ApplyAbberation(AbberationEnum.BreakageFusionBridge);
+        var res = _kar.ApplyAbberation(AberrationEnum.BreakageFusionBridge);
         Assert.AreEqual(46, _kar.ChromCount);
         Assert.AreEqual(45, res.ChromCount);
     }
@@ -45,7 +45,7 @@ public class TestKaryotype
     {
         for (int i = 0; i < 46; i++)
         {
-            _kar = _kar.ApplyAbberation(AbberationEnum.Missegregation);
+            _kar = _kar.ApplyAbberation(AberrationEnum.Missegregation);
         }
         Assert.AreEqual("[]", _kar.ToString());
     }
