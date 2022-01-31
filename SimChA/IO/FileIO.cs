@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
@@ -13,6 +14,7 @@ public class FileIO
     private const string LOGR_FILENAME = "logr.out";
     private const string POPULATIONS_DF_FILENAME = "populations.csv";
     private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
+    private const string SIM_PARAMS_FILENAME = "sim_params.json";
 
     private string OutFolder { get; }
 
@@ -22,7 +24,7 @@ public class FileIO
         OutFolder = outFolder;
         if (Directory.Exists(outFolder))
         {
-            foreach (FileInfo file in new DirectoryInfo(outFolder).GetFiles())
+            foreach (var file in new DirectoryInfo(outFolder).GetFiles())
             {
                 file.Delete();
             }
@@ -85,7 +87,7 @@ public class FileIO
         Console.WriteLine($"Writing population to file {popPath}, adjacency to file {adjPath}");
         
         using var popFile = new StreamWriter(popPath);
-        popFile.WriteLine("Id,Gen,Pop");
+        popFile.WriteLine("Id,Step,Pop");
         foreach (var subClone in subClones)
         {
             int start = Math.Max(firstGen, subClone.FirstGen);
@@ -153,5 +155,15 @@ public class FileIO
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
         outputFileLogR.Write(SNPMetrics.PrintLogR(rawData) + "\n");
+    }
+
+    public void WriteSimParams(SimParams simParams)
+    {
+        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
+        Console.WriteLine($"Writing simulation params to file {filePath}");
+        using var file = new StreamWriter(filePath);
+        var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
+        string jsonString = JsonSerializer.Serialize(simParams, options);
+        file.WriteLine(jsonString);
     }
 }

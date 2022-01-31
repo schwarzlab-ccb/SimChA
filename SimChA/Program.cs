@@ -12,18 +12,22 @@ options.WithNotParsed(o =>
     Environment.Exit(0);
 });
 
+int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
 var simParams = new SimParams
 {
+    Seed = seed,
+    PopLimit = options.Value.StopCount,
+    CutOff = options.Value.CutOff,
     IsFemale = true,
-    DivisionRate = 0.02f,
+    DivisionRate = 0.01f,
     MutationRate = 0.01f,
-    DriverProb = 0.1f,
-    DeathRate = 0.01f,
-    SplitRate = 0.001f,
-    DivisionSlowDown = 0.0025f,
-    FitnessInc = 1.2f,
+    DriverProb = 0.02f,
+    DeathRate = 0.0f,
+    SplitRate = 0.0f,
+    DivisionSlowDown = 0.0003f,
+    FitnessInc = 1.75f,
     InitialPop = 100,
-    MaxGens = 2080,
+    MaxGens = 20000,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -39,7 +43,6 @@ var simParams = new SimParams
     }
 };
 
-int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
 var random = new Random(seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 0;
@@ -54,11 +57,11 @@ do
                       $"alive: { popSizes.Last().Item2 }");
     simulator.Step();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
-} while (popSizes.Last().Item1 < options.Value.StopCount && popSizes.Last().Item2 > 0);
+} while (popSizes.Last().Item1 < simParams.PopLimit && popSizes.Last().Item2 > 0);
 
 
 
-var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.Item2 * options.Value.CutOff)).ToList();
+var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.Item2 * simParams.CutOff)).ToList();
 int lastGen = popSizes.Count;
 int firstGen = lastGen - simParams.MaxGens;
 var aboveCutOff = simulator.FlatPops.Where(sc 
@@ -74,6 +77,7 @@ Console.WriteLine($"SubClone count {simulator.Populations.Count}. Above cutoff: 
 try
 {
     var files = new FileIO(options.Value.OutputPath);
+    files.WriteSimParams(simParams);
     files.WriteSubClones(sample);
     files.WriteParentTree(lcaTree);
     files.WriteMullerDataFrames(aboveCutOff, connectedTree, firstGen, lastGen);

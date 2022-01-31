@@ -56,7 +56,7 @@ public class Simulator
         foreach (var pop in Populations)
         {
             List<SubClone> newClones = new();
-            slowDownRate = Math.Log10(CellSampling.PopulationSize(pop)) * SimParams.DivisionSlowDown;
+            slowDownRate = Math.Log(CellSampling.PopulationSize(pop)) * SimParams.DivisionSlowDown;
             
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {
@@ -110,7 +110,7 @@ public class Simulator
 
     private AberrationEnum SelectMutation()
     {
-        double ratesSum = SimParams.RatesSum;
+        double ratesSum = SimParams.SumRates();
         double sample = ContinuousUniform.Sample(Rnd, 0, ratesSum);
         foreach ((var abb, double rate) in SimParams.AberrationRates)
         {

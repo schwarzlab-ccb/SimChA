@@ -2,8 +2,12 @@
 
 namespace SimChA.DataTypes;
 
+[Serializable]
 public struct SimParams
 {
+    public int Seed;
+    public int PopLimit;
+    public float CutOff;
     public bool IsFemale;
     public double DivisionRate;
     public double DivisionSlowDown;
@@ -18,5 +22,5 @@ public struct SimParams
     public readonly Dictionary<AberrationEnum, double> AberrationRates =
         Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
 
-    public double RatesSum => AberrationRates.Sum(ar => ar.Value);
+    public double SumRates() => AberrationRates.Sum(ar => ar.Value);
 }
