@@ -43,12 +43,12 @@ if __name__ == "__main__":
     number_mutations = {clade.name.split('-')[0]: calc_number_mutations(
         tree, clade) for clade in tree.find_clades() if clade.name is not None}
 
-    generations = np.sort(np.unique(populations_df['Gen']))
+    generations = np.sort(np.unique(populations_df['Step']))
 
     mean_driver = np.zeros(len(generations))
     clonal_diversity = np.zeros(len(generations))
     for j, i in enumerate(generations):
-        cur_pop = populations_df.loc[populations_df['Gen']==i].copy()
+        cur_pop = populations_df.loc[populations_df['Step']==i].copy()
         cur_driver = cur_pop.apply(lambda x: number_mutations[str(x['Id'])], axis=1)
         mean_driver[j] = (cur_driver * cur_pop['Pop']).sum() / cur_pop['Pop'].sum()
 

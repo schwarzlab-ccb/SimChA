@@ -93,9 +93,10 @@ def get_count_at_step(pops_df, first_step, last_step, step, clone_id):
     return pop
 
 
-def get_pop_dict(pops_df, ids, fg, lg, step, max_pop, normalize):
-    pop_dict = {clone_id: count for clone_id in ids if (count := get_count_at_step(pops_df, fg, lg, step, clone_id)) > 0}
-    if not normalize:
+def get_pop_dict(pops_df, ids, fg, lg, step, max_pop, norm):
+    pop_dict = {clone_id: count for clone_id in ids if
+                (count := get_count_at_step(pops_df, fg, lg, step, clone_id)) > 0}
+    if not norm:
         pop_count = sum(pop_dict.values())
         remainder = max_pop - pop_count
         pop_dict[-1] = remainder
@@ -126,12 +127,12 @@ def pixels_to_img(img_pixels, res):
     return resized
 
 
-def get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, breath, first_step, last_step, normalize=True):
+def get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, breath, first_step, last_step, norm):
     img_pixels = []
     for step in progressbar(range(first_step, last_step + 1), "Step: "):
-        pop_dict = get_pop_dict(pop_df, ids, first_step, last_step, step, max_pop, normalize)
+        pop_dict = get_pop_dict(pop_df, ids, first_step, last_step, step, max_pop, norm)
         if len(pop_dict) > 0:
-            id_rows = rec_descend(tree, pop_dict, root_id if normalize else -1)
+            id_rows = rec_descend(tree, pop_dict, root_id if norm else -1)
             pixel_row = [(id_row[0], col_map[id_row[1]]) for id_row in id_rows]
         else:
             pixel_row = [(-1, np.ones(4) * 127)]
@@ -140,8 +141,8 @@ def get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, breath, first
     return img_pixels
 
 
-def plot_fish(pop_df, par_df, first_step, last_step, res):
-    max_pop = pop_df[["Step", "Pop"]].groupby("Step", as_index=False).sum().max()
+def plot_fish(pop_df, par_df, first_step, last_step, res, norm):
+    max_pop = int(pop_df[["Step", "Pop"]].groupby("Step", as_index=False).sum().max()["Pop"])
 
     parents = par_df["ParentId"].unique()
     children = par_df["ChildId"].unique()
@@ -158,12 +159,13 @@ def plot_fish(pop_df, par_df, first_step, last_step, res):
     col_map = {ids[i]: np.array(list(map(lambda x: int(x * 255), cols[i]))) for i in range(len(ids))}
     col_map[-1] = np.ones(4)  # Root is white
 
-    img_pixels = get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, res[1], first_step, last_step, True)
+    img_pixels = get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, res[1], first_step, last_step, norm)
     image = pixels_to_img(img_pixels, res)
     return image
 
 
 if __name__ == '__main__':
+    randint = random.randint(0, sys.maxsize)
     parser = argparse.ArgumentParser(description='Create a Fish (Muller) plot for the given evolutionary tree.')
     parser.add_argument("populations", type=str, help="A CSV file with the header \"Id,Step,Pop\".")
     parser.add_argument("parent_tree", type=str, help="A CSV file with the header \"ParentId,ChildId\".")
@@ -172,15 +174,17 @@ if __name__ == '__main__':
     parser.add_argument("-L", "--last", dest="last_step", type=int, help="The step to end the plotting at.")
     parser.add_argument("-W", "--width", dest="width", type=int, help="Output image width", default=1280)
     parser.add_argument("-H", "--height", dest="height", type=int, help="Output image height", default=720)
-    randint = random.randint(0, sys.maxsize)
     parser.add_argument("-S", "--seed", dest="seed", type=int, help="Seed for colors", default=randint)
-    parser.add_argument('-I', dest="interpolate", default=True, help='Turn off interpolation', action='store_false')
+    parser.add_argument('-r', dest="raw", default=False,
+                        help='Plot the individual steps rather than interpolated values', action='store_true')
+    parser.add_argument('-a', dest="absolute", default=False,
+                        help='Plot the populations in absolute numbers rather than normalized', action='store_true')
 
     args = parser.parse_args()
 
     resolution = [args.width, args.height]
     random.seed(args.seed)
-    print(f"Creating {args.width}*{args.height} fish plot file {args.output} with the seed {args.seed}")
+    print(f"Creating {args.width}*{args.height} Fish plot file {args.output} with the seed {args.seed}")
 
     pops_df = pd.read_csv(args.populations)
     parent_df = pd.read_csv(args.parent_tree)
@@ -195,9 +199,13 @@ if __name__ == '__main__':
         err = f"First step {fs} must be before the last step {ls}."
         raise Exception(err)
 
-    if args.interpolate:
+    pops_df = pops_df[(pops_df["Step"] >= fs) & (pops_df["Step"] <= ls)]
+
+    if not args.raw:
         step_count = max_step - min_step + 1
         pops_df["Step"] = pops_df["Step"] * resolution[0] / step_count
 
-    img = plot_fish(pops_df, parent_df, int(pops_df["Step"].min()), int(pops_df["Step"].max()), resolution)
+    normalize = not args.absolute
+
+    img = plot_fish(pops_df, parent_df, int(pops_df["Step"].min()), int(pops_df["Step"].max()), resolution, normalize)
     img.save(args.output)
