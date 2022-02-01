@@ -19,14 +19,14 @@ var simParams = new SimParams
     PopLimit = options.Value.StopCount,
     CutOff = options.Value.CutOff,
     IsFemale = true,
-    DivisionRate = 0.01f,
+    DivisionRate = 0.02f,
     MutationRate = 0.01f,
     DriverProb = 0.05f,
-    DeathRate = 0.0f,
+    DeathRate = 0.01f,
     SplitRate = 0.0f,
-    DivisionSlowDown = 0.0f,
+    DivisionSlowDown = 0.001f,
     FitnessInc = 1.5f,
-    InitialPop = 100,
+    InitialPop = 1000,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -68,7 +68,7 @@ var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutO
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
-Console.WriteLine($"SubClone count {simulator.Populations.Count}. Above cutoff: { sample.Count }");
+Console.WriteLine($"SubClone count {simulator.FlatPops.Count()}. Above cutoff: { sample.Count }");
 
 try
 {
