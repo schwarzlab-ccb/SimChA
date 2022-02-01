@@ -56,7 +56,7 @@ public class FileIO
         outputFile.WriteLine("Digraph SimChA {");
         foreach (var node in tree.Nodes)
         {
-            double size = Math.Round(.5 * (1 + Math.Log10(1 + node.Size)), 2);
+            double size = Math.Round(.25 * (1 + Math.Log(1 + node.Size)), 2);
             outputFile.WriteLine($"\t{node.Id} [label=\"{node.Id}:{node.Size}\", width={size}, height={size*.6}];");
         }
         foreach (var edge in tree.Edges)
