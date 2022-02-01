@@ -1,4 +1,5 @@
 import argparse
+import re
 
 
 def convert_dot_to_newick(input_file, output_file=None):
@@ -23,8 +24,9 @@ def convert_dot_to_newick(input_file, output_file=None):
         dotfile = f.readlines()
 
     nodes = [x.strip() for x in dotfile if "label" in x and "->" not in x]
-    nodes = {n.split(' ')[0]: n.split('label=')[1].replace(
-        '"', '').replace('];', '') for n in nodes}
+    nodes = [re.search('(.*) \[label=.*:(.*)"', n).groups() for n in nodes]
+    nodes = {k: v for (k, v) in nodes}
+
     edges = [x.strip() for x in dotfile if "label" in x and "->" in x]
 
     edges_start = [e.split('->')[0].strip() for e in edges]
