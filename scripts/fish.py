@@ -4,34 +4,36 @@ import argparse
 import random
 import sys
 import logging
+from timeit import default_timer as timer
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
 from PIL import Image
 from matplotlib import cm
 
-log = logging.getLogger()
+log = logging.getLogger("Fish.Py")
+logging.basicConfig()
 log.setLevel(logging.INFO)
 eps = sys.float_info.epsilon
 
 
 # Taken from https://stackoverflow.com/questions/3160699/python-progress-bar
-def progressbar(it, prefix="", size=60, file=sys.stdout):
+def progressbar(it, prefix="", size=60):
     count = len(it)
 
     def show(j):
         x = int(size * j / count)
-        file.write("%s[%s%s] %i/%i\r" % (prefix, "#" * x, "." * (size - x), j, count))
-        file.flush()
+        print("%s[%s%s] %i/%i" % (prefix, "#" * x, "." * (size - x), j, count), end='\r', flush=True)
 
     show(0)
     for i, item in enumerate(it):
         yield item
         show(i + 1)
-    file.write("\n")
-    file.flush()
+    print("\n")
 
 
+# A dict-based tree where for each parent there is a list of children
 def build_tree(par_df, ids, root_id):
     tree = {cid: list(children) for cid in ids if len(children := par_df.loc[par_df["ParentId"] == cid, "ChildId"]) > 0}
     if -1 not in tree:
@@ -39,9 +41,11 @@ def build_tree(par_df, ids, root_id):
     return tree
 
 
+# Converts populations to pixels - a color of pixel is a proportional mix of the contributing popluations
 def line_from_data(px_row_orig, width):
     result = []
     pop_total = sum(row_it[0] for row_it in px_row_orig)
+    # Calculate the fraction of population
     px_row = [[px_row_orig[i][0] * width / pop_total, px_row_orig[i][1]] for i in range(len(px_row_orig))]
     contribution = 1.0
     index = 0
@@ -59,11 +63,11 @@ def line_from_data(px_row_orig, width):
         else:
             index += 1
     if len(result) < width:
-        result.append(new_px + contribution * np.ones(4) * .5)  # Add gray to the last pixel if needed
+        result.append(new_px + 127*contribution*np.ones(4))  # Add a bit of gray to the last pixel if needed
     return result
 
 
-# Obtains the population by linear interpolation between previous and next know step
+# Obtains the population by linear interpolation between previous and next know step for the given clone_id
 def get_count_at_step(pops_df, first_step, last_step, step, clone_id):
     cp_df = pops_df[pops_df["Id"] == clone_id]
     match = cp_df[cp_df["Step"] == step]
@@ -93,6 +97,7 @@ def get_count_at_step(pops_df, first_step, last_step, step, clone_id):
     return pop
 
 
+# Population at step for each clone ind ids, if normalized the remainder is given to -1
 def get_pop_dict(pops_df, ids, fg, lg, step, max_pop, norm):
     pop_dict = {clone_id: count for clone_id in ids if
                 (count := get_count_at_step(pops_df, fg, lg, step, clone_id)) > 0}
@@ -103,6 +108,7 @@ def get_pop_dict(pops_df, ids, fg, lg, step, max_pop, norm):
     return pop_dict
 
 
+# Construct the list of the form [(id, pop_size),...] by inserting children's populations in the middle of parent's
 def rec_descend(tree, pop_dict, clone_id):
     res = []
     if clone_id in tree:
@@ -135,7 +141,7 @@ def get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, breath, first
             id_rows = rec_descend(tree, pop_dict, root_id if norm else -1)
             pixel_row = [(id_row[0], col_map[id_row[1]]) for id_row in id_rows]
         else:
-            pixel_row = [(-1, np.ones(4) * 127)]
+            pixel_row = [(-1, np.ones(4) * 127)]  # use gray if there's no population
         line_px = line_from_data(pixel_row, breath)
         img_pixels.append(line_px)
     return img_pixels
@@ -186,31 +192,34 @@ if __name__ == '__main__':
 
     resolution = [args.width, args.height]
     random.seed(args.seed)
-    print(f"Creating {args.width}*{args.height} Fish plot file {args.output} with the seed {args.seed}")
+    log.info(f"Creating {args.width}*{args.height} Fish plot file {args.output} with the seed {args.seed}")
 
-    pops_df = pd.read_csv(args.populations)
+    populations_df = pd.read_csv(args.populations)
     parent_df = pd.read_csv(args.parent_tree)
 
-    min_step = pops_df["Step"].min()
+    min_step = populations_df["Step"].min()
     fs = max(min_step, args.first_step) if args.first_step else min_step
 
-    max_step = pops_df["Step"].max()
+    max_step = populations_df["Step"].max()
     ls = min(args.last_step, max_step) if args.last_step else max_step
 
     if fs >= ls:
         err = f"First step {fs} must be before the last step {ls}."
         raise Exception(err)
 
-    pops_df = pops_df[(pops_df["Step"] >= fs) & (pops_df["Step"] <= ls)]
+    populations_df = populations_df[(populations_df["Step"] >= fs) & (populations_df["Step"] <= ls)]
 
     if not args.raw:
         step_count = max_step - min_step
         norm_step_count = resolution[0] - 1
-        pops_df["Step"] = pops_df["Step"] * norm_step_count / step_count
-        fs = int(pops_df["Step"].min())
+        populations_df["Step"] = populations_df["Step"] * norm_step_count / step_count
+        fs = int(populations_df["Step"].min())
         ls = fs + norm_step_count
 
     normalize = not args.absolute
-
-    img = plot_fish(pops_df, parent_df, fs, ls, resolution, normalize)
+    log.info("Start timer")
+    start = timer()
+    img = plot_fish(populations_df, parent_df, fs, ls, resolution, normalize)
+    end = timer()
+    log.info(timedelta(seconds=end-start))
     img.save(args.output)
