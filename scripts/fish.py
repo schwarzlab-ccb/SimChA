@@ -101,7 +101,10 @@ if __name__ == '__main__':
     plt.stackplot(np.arange(populations_df.shape[1]), populations_df, colors=colors)
 
     plt.xlim(first_step, last_step)
-    if not args.absolute:
+    if args.absolute:
+        plt.yscale('log')
+    else:
         plt.ylim(0, 1)
+
 
     plt.savefig(args.output)
