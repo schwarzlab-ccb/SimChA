@@ -63,7 +63,7 @@ def line_from_data(px_row_orig, width):
     return result
 
 
-# Interpolates between steps
+# Obtains the population by linear interpolation between previous and next know step
 def get_count_at_step(pops_df, first_step, last_step, step, clone_id):
     cp_df = pops_df[pops_df["Id"] == clone_id]
     match = cp_df[cp_df["Step"] == step]
@@ -144,6 +144,7 @@ def get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, breath, first
 def plot_fish(pop_df, par_df, first_step, last_step, res, norm):
     max_pop = int(pop_df[["Step", "Pop"]].groupby("Step", as_index=False).sum().max()["Pop"])
 
+    # Build the internal search tree
     parents = par_df["ParentId"].unique()
     children = par_df["ChildId"].unique()
     root_list = np.setdiff1d(parents, children)
@@ -159,6 +160,7 @@ def plot_fish(pop_df, par_df, first_step, last_step, res, norm):
     col_map = {ids[i]: np.array(list(map(lambda x: int(x * 255), cols[i]))) for i in range(len(ids))}
     col_map[-1] = np.ones(4)  # Root is white
 
+    # Convert
     img_pixels = get_image_pixels(tree, ids, root_id, pop_df, col_map, max_pop, res[1], first_step, last_step, norm)
     image = pixels_to_img(img_pixels, res)
     return image
@@ -202,10 +204,13 @@ if __name__ == '__main__':
     pops_df = pops_df[(pops_df["Step"] >= fs) & (pops_df["Step"] <= ls)]
 
     if not args.raw:
-        step_count = max_step - min_step + 1
-        pops_df["Step"] = pops_df["Step"] * resolution[0] / step_count
+        step_count = max_step - min_step
+        norm_step_count = resolution[0] - 1
+        pops_df["Step"] = pops_df["Step"] * norm_step_count / step_count
+        fs = int(pops_df["Step"].min())
+        ls = fs + norm_step_count
 
     normalize = not args.absolute
 
-    img = plot_fish(pops_df, parent_df, int(pops_df["Step"].min()), int(pops_df["Step"].max()), resolution, normalize)
+    img = plot_fish(pops_df, parent_df, fs, ls, resolution, normalize)
     img.save(args.output)
