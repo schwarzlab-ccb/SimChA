@@ -32,8 +32,8 @@ public class Simulator
     public void Step()
     {
         _generation++;
-        Kill();
         DivideAndMutate();
+        Kill();
     }
 
     private void Kill()
@@ -56,7 +56,7 @@ public class Simulator
         foreach (var pop in Populations)
         {
             List<SubClone> newClones = new();
-            slowDownRate = Math.Log(CellSampling.PopulationSize(pop)) * SimParams.DivisionSlowDown;
+            slowDownRate = Math.Pow(CellSampling.PopulationSize(pop), 1f / 3) * SimParams.DivisionSlowDown;
             
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {

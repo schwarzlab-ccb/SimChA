@@ -21,13 +21,12 @@ var simParams = new SimParams
     IsFemale = true,
     DivisionRate = 0.02f,
     MutationRate = 0.01f,
-    DriverProb = 0.1f,
+    DriverProb = 0.05f,
     DeathRate = 0.01f,
     SplitRate = 0.0f,
     DivisionSlowDown = 0.001f,
-    FitnessInc = 1.2f,
-    InitialPop = 100,
-    MaxGens = 20000,
+    FitnessInc = 1.5f,
+    InitialPop = 1000,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -62,17 +61,14 @@ do
 
 
 var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.Item2 * simParams.CutOff)).ToList();
-int lastGen = popSizes.Count;
-int firstGen = lastGen - simParams.MaxGens;
 var aboveCutOff = simulator.FlatPops.Where(sc 
-    => Enumerable.Range(sc.FirstGen, popSizes.Count - sc.FirstGen).Any(g => cutOff[g] <= sc.AliveAtGen(g))
-    ).ToList();
-var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff, firstGen);
+    => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
+var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
-Console.WriteLine($"SubClone count {simulator.Populations.Count}. Above cutoff: { sample.Count }");
+Console.WriteLine($"SubClone count {simulator.FlatPops.Count()}. Above cutoff: { sample.Count }");
 
 try
 {
@@ -80,7 +76,7 @@ try
     files.WriteSimParams(simParams);
     files.WriteSubClones(sample);
     files.WriteParentTree(lcaTree);
-    files.WriteMullerDataFrames(aboveCutOff, connectedTree, firstGen, lastGen);
+    files.WriteMullerDataFrames(aboveCutOff, connectedTree);
     files.WriteCopyNumbers(sample);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
 } 

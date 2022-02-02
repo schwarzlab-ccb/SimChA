@@ -1,5 +1,5 @@
 # Output files (anywhere)
-*out/
+out*/
 
 # Jupyter Notebooks
 .ipynb_checkpoints

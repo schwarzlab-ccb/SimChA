@@ -80,18 +80,18 @@ public class FileIO
         }
     }
 
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree, int firstGen, int lastGen)
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {   
         string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
         Console.WriteLine($"Writing population to file {popPath}, adjacency to file {adjPath}");
-        
+
         using var popFile = new StreamWriter(popPath);
         popFile.WriteLine("Id,Step,Pop");
         foreach (var subClone in subClones)
         {
-            int start = Math.Max(firstGen, subClone.FirstGen);
-            int end = Math.Max(lastGen, subClone.LastGen);
+            int start = subClone.FirstGen;
+            int end = subClone.LastGen;
             for (int gen = start; gen < end ; gen++)
             {
                 int alive = subClone.AliveAtGen(gen);
@@ -101,10 +101,10 @@ public class FileIO
                 }
             }
         }
-        
+
         using var adjFile = new StreamWriter(adjPath);
         adjFile.WriteLine("ParentId,ChildId");
-        
+
         foreach (var edge in tree.Edges)
         {
             adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
