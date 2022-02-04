@@ -92,14 +92,14 @@ if __name__ == '__main__':
                         help='Plot the populations in absolute numbers rather than normalized.')
     parser.add_argument("-i", "--infer-empty", dest='infer_empty', action="store_true", default=False,
                         help="Whether to infer empty entries.")
-    parser.add_argument("-D", "--smooth", type=float, default=None,
+    parser.add_argument("-S", "--smooth", type=float, default=None,
                         help="STDev for Gaussian convolutional filter. The higher the value "
                              "the smoother the resulting bands will be. Recommended is around 1.0.")
     parser.add_argument("-F", "--first", dest="first_step", type=int,
                         help="The step to start plotting from.")
     parser.add_argument("-L", "--last", dest="last_step", type=int,
                         help="The step to end the plotting at.")
-    parser.add_argument("-S", "--seed", dest="seed", type=int,
+    parser.add_argument("-R", "--seed", dest="seed", type=int,
                         help="Random seed for selection of colors.", default=randint)
     parser.add_argument("-W", "--width", dest="width", type=int, default=1920,
                         help="Output image width")
@@ -132,25 +132,26 @@ if __name__ == '__main__':
     else:
         pops_table = pops_table.fillna(0)
 
+    pops_sums = pops_table.sum(axis=0)
+    if args.absolute:
+        pop_max = pops_sums.max()
+        pops_rest = pop_max - pops_sums
+        pops_table.loc[-1] = pops_rest
+
     # Build parental relationship
     tree, ids, root_id = build_tree(args.parent_tree)
     samples = populations_df['Id'].unique()
-    ordering = create_ordering(tree, 0)
-    ordering = [x for x in ordering if x in samples]
+    ordering = create_ordering(tree, -1 if args.absolute else root_id)
+    ordering = [x for x in ordering if x in samples or x == -1 and args.absolute]
 
     pops_stack = pops_table.loc[ordering]
     val, count = np.unique(pops_stack.index, return_counts=True)
     doubles = val[count > 1]
     pops_stack.loc[doubles] = pops_stack.loc[doubles] / 2
 
-    if args.absolute:
-        pass
-        # pops_stack[pops_stack == 0] = 1
-        # pops_stack = np.log(pops_stack)
-    else:
-        pops_sum = pops_stack.sum(axis=0)
-        pops_sum[pops_sum == 0] = 1
-        pops_stack = pops_stack / pops_sum
+    pops_sum = pops_stack.sum(axis=0)
+    pops_sum[pops_sum == 0] = 1
+    pops_stack = pops_stack / pops_sum
 
     pops_stack = pops_stack.values
 
@@ -161,21 +162,20 @@ if __name__ == '__main__':
     colors = np.array(cm.rainbow(np.linspace(0, 1, len(ids))))
     np.random.shuffle(colors)
     colors = pd.DataFrame(colors, index=ids)
+    colors.loc[-1] = np.ones(4)
     colors.loc[root_id] = .5 * np.ones(4)
     colors = colors.loc[ordering].values
 
     # Plot
-    dpi = 100
-    plt.figure(figsize=(args.width // dpi, args.height // dpi))
+    dpi = (args.width + args.height) // 20
+    plt.figure(figsize=(args.width // dpi, args.height // dpi), dpi=dpi)
     steps = np.arange(first_step, last_step + 1)
     fish_plot(steps, pops_stack, colors=colors, aa=True, lw=1)
 
     plt.xlim(first_step, last_step)
-
-    if args.absolute:
-        plt.yscale('log')
-        # plt.ylim(0, pops_stack.sum(axis=0).max())
-    else:
-        plt.ylim(0, 1)
+    plt.ylim(0, 1)
+    label_text = np.abs(np.arange(-5, 6)) / 10
+    plt.yticks(np.arange(0, 11, step=1) / 10, (label_text * pop_max).astype(int) if args.absolute else label_text)
+    plt.xticks(np.arange(first_step, last_step + 1, step=(last_step - first_step) / 10).astype(int))
 
     plt.savefig(args.output)
