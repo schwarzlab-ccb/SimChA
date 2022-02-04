@@ -9,12 +9,10 @@ from matplotlib import cm
 from scipy.ndimage import gaussian_filter
 
 
-def stackplot(x, *args, ax=None, colors=None, labels=(), **kwargs):
-    '''Taken largely from the matplotlib implemenation except that the keywords `edgecolor` and 
-    `where` are provided to `fill_between`'''
-
+def fish_plot(x, *args, ax=None, colors=None, labels=(), **kwargs):
+    """Taken largely from the matplotlib implementation except that the keywords `edgecolor` and
+    `where` are provided to `fill_between`"""
     y = np.row_stack(args)
-
     labels = iter(labels)
 
     if ax is None:
@@ -47,6 +45,8 @@ def stackplot(x, *args, ax=None, colors=None, labels=(), **kwargs):
 
 
 def create_ordering(cur_tree, cur_clone):
+    """Recursively traverses the parent tree.
+    Build a list such that children are listed between two instances of parent."""
     res = []
     if cur_clone in cur_tree.keys():
         res += [cur_clone]
@@ -59,7 +59,7 @@ def create_ordering(cur_tree, cur_clone):
 
 
 def build_tree(parent_tree):
-    '''A dict-based tree where for each parent there is a list of children'''
+    """A dict-based tree where for each parent there is a list of children"""
     parent_df = pd.read_csv(parent_tree)
     parents = parent_df["ParentId"].unique()
     children = parent_df["ChildId"].unique()
@@ -79,26 +79,32 @@ def build_tree(parent_tree):
 
 
 if __name__ == '__main__':
-    randint = np.random.randint(0, 2**32 - 1)
-    parser = argparse.ArgumentParser(
-        description='Create a Fish (Muller) plot for the given evolutionary tree.')
-    parser.add_argument("populations", type=str, help="A CSV file with the header \"Id,Step,Pop\".")
+    randint = np.random.randint(0, 2**31 - 1)
+    parser = argparse.ArgumentParser(description='Create a Fish (Muller) plot '
+                                                 'for the given evolutionary tree.')
+    parser.add_argument("populations", type=str,
+                        help="A CSV file with the header \"Id,Step,Pop\".")
     parser.add_argument("parent_tree", type=str,
                         help="A CSV file with the header \"ParentId,ChildId\".")
     parser.add_argument("output", type=str,
                         help="Output image filepath. The format must support alpha channels.")
+    parser.add_argument('-a', '--absolute', dest="absolute", action="store_true", default=False,
+                        help='Plot the populations in absolute numbers rather than normalized.')
+    parser.add_argument("-i", "--infer-empty", dest='infer_empty', action="store_true", default=False,
+                        help="Whether to infer empty entries.")
+    parser.add_argument("-D", "--smooth", type=float, default=None,
+                        help="STDev for Gaussian convolutional filter. The higher the value "
+                             "the smoother the resulting bands will be. Recommended is around 1.0.")
     parser.add_argument("-F", "--first", dest="first_step", type=int,
                         help="The step to start plotting from.")
     parser.add_argument("-L", "--last", dest="last_step", type=int,
                         help="The step to end the plotting at.")
-    parser.add_argument("--smooth", type=int, default=None,
-                        help="STD for Gaussian smoothing")
-    parser.add_argument("--infer-empty", dest='infer_empty', action="store_true", default=False,
-                        help="Whether to infer empty entries")
     parser.add_argument("-S", "--seed", dest="seed", type=int,
-                        help="Seed for colors", default=randint)
-    parser.add_argument('-a', '--absolute', dest="absolute", action="store_true", default=False,
-                        help='Plot the populations in absolute numbers rather than normalized')
+                        help="Random seed for selection of colors.", default=randint)
+    parser.add_argument("-W", "--width", dest="width", type=int, default=1920,
+                        help="Output image width")
+    parser.add_argument("-H", "--height", dest="height", type=int, default=1080,
+                        help="Output image height")
 
     args = parser.parse_args()
 
@@ -115,51 +121,50 @@ if __name__ == '__main__':
 
     populations_df = populations_df.loc[(populations_df["Step"] >= first_step) &
                                         (populations_df["Step"] <= last_step)]
-    samples = populations_df['Id'].unique()
 
-    # parent tree
+    # populations dataframe processing
+    pops_table = populations_df.set_index(['Id', 'Step'])[['Pop']].unstack('Step')
+
+    if args.infer_empty:
+        pops_table[('Pop', 0)].fillna(0, inplace=True)
+        pops_table[('Pop', pops_table.shape[1] - 1)].fillna(0, inplace=True)
+        pops_table = pops_table.interpolate(axis=1)
+    else:
+        pops_table = pops_table.fillna(0)
+
+    # Build parental relationship
     tree, ids, root_id = build_tree(args.parent_tree)
-
+    samples = populations_df['Id'].unique()
     ordering = create_ordering(tree, 0)
     ordering = [x for x in ordering if x in samples]
 
-    # populations dataframe processing
-    populations_df = populations_df.set_index(['Id', 'Step'])[['Pop']].unstack('Step')
-
-    if args.infer_empty:
-        populations_df[('Pop', 0)] = populations_df[('Pop', 0)].fillna(0)
-        populations_df[('Pop', populations_df.shape[1] - 1)
-                    ] = populations_df[('Pop', populations_df.shape[1] - 1)].fillna(0)
-        populations_df = populations_df.interpolate(axis=1)
-    else:
-        populations_df = populations_df.fillna(0)
-
-    populations_df = populations_df.loc[ordering]
-    val, count = np.unique(populations_df.index, return_counts=True)
+    pops_stack = pops_table.loc[ordering]
+    val, count = np.unique(pops_stack.index, return_counts=True)
     doubles = val[count > 1]
-    populations_df.loc[doubles] = populations_df.loc[doubles] / 2
+    pops_stack.loc[doubles] = pops_stack.loc[doubles] / 2
 
     if not args.absolute:
-        populations_df_sum = populations_df.sum(axis=0)
+        populations_df_sum = pops_stack.sum(axis=0)
         populations_df_sum[populations_df_sum == 0] = 1
-        populations_df = populations_df / populations_df_sum
+        pops_stack = pops_stack / populations_df_sum
 
-    populations_df = populations_df.values
+    pops_stack = pops_stack.values
 
     if args.smooth:
-        populations_df = gaussian_filter(populations_df, (0, args.smooth))
+        pops_stack = gaussian_filter(pops_stack, (0, args.smooth))
 
     # Create colors
-    colors = np.array(cm.rainbow(np.linspace(0, 1, len(ids))).tolist())
+    colors = np.array(cm.rainbow(np.linspace(0, 1, len(ids))))
     np.random.shuffle(colors)
     colors = pd.DataFrame(colors, index=ids)
-    colors.loc[root_id] = [0.5, 0.5, 0.5, 1]
+    colors.loc[root_id] = .5 * np.ones(4)
     colors = colors.loc[ordering].values
 
     # Plot
-    plt.figure(figsize=(20, 10))
-    stackplot(np.arange(first_step, last_step + 1), populations_df, colors=colors,
-                  aa=True, lw=1)
+    dpi = 100
+    plt.figure(figsize=(args.width // dpi, args.height // dpi))
+    steps = np.arange(first_step, last_step + 1)
+    fish_plot(steps, pops_stack, colors=colors, aa=True, lw=1)
 
     plt.xlim(first_step, last_step)
 
