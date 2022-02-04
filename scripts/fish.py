@@ -143,10 +143,14 @@ if __name__ == '__main__':
     doubles = val[count > 1]
     pops_stack.loc[doubles] = pops_stack.loc[doubles] / 2
 
-    if not args.absolute:
-        populations_df_sum = pops_stack.sum(axis=0)
-        populations_df_sum[populations_df_sum == 0] = 1
-        pops_stack = pops_stack / populations_df_sum
+    if args.absolute:
+        pass
+        # pops_stack[pops_stack == 0] = 1
+        # pops_stack = np.log(pops_stack)
+    else:
+        pops_sum = pops_stack.sum(axis=0)
+        pops_sum[pops_sum == 0] = 1
+        pops_stack = pops_stack / pops_sum
 
     pops_stack = pops_stack.values
 
@@ -170,6 +174,7 @@ if __name__ == '__main__':
 
     if args.absolute:
         plt.yscale('log')
+        # plt.ylim(0, pops_stack.sum(axis=0).max())
     else:
         plt.ylim(0, 1)
 
