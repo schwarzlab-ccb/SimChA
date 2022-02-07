@@ -14,8 +14,10 @@ public struct SimParams
     public double MutationRate;
     public double DriverProb;
     public double DeathRate;
+    public double DecayRate;
     public double SplitRate;
-    public double FitnessInc;
+    public double FitnessIncMu;
+    public double FitnessIncSigma;
     public int InitialPop;
 
     public readonly Dictionary<AberrationEnum, double> AberrationRates =

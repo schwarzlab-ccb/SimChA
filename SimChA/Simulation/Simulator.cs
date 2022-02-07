@@ -43,6 +43,9 @@ public class Simulator
                 // Kill cells
                 int newDead = Binomial.Sample(Rnd, SimParams.DeathRate, subClone.AliveCount);
                 
+                // Decayed cells
+                int newDecayed = Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount);
+                
                 // Create new cells
                 double divRate = Math.Clamp(subClone.DivisionRate - slowDownRate, 0, 1);
                 int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
@@ -60,7 +63,11 @@ public class Simulator
                 int splitMutantCount = Binomial.Sample(Rnd, SimParams.SplitRate, newMutantCount);
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
-                    double divChange = Rnd.NextDouble() < SimParams.DriverProb ? SimParams.FitnessInc : 1f;
+                    double divChange = 1;
+                    if (Rnd.NextDouble() < SimParams.DriverProb)
+                    {
+                        divChange = Normal.Sample(Rnd, SimParams.FitnessIncMu, SimParams.FitnessIncSigma);
+                    }
                     var childClone = subClone.CreateChild(GetNewId(), _generation, divChange);
                     var aberration = SelectMutation();
                     childClone.Karyotype.ApplyAbberation(aberration);
@@ -80,7 +87,7 @@ public class Simulator
                 }
                 subClone.NewGen(
                     subClone.AliveCount + newCellsCount - splitCellsCount - newMutantCount - newDead,
-                    subClone.DeadCount + newDead);
+                    subClone.DeadCount + newDead - newDecayed);
             }
             pop.AddRange(newClones);
         }
