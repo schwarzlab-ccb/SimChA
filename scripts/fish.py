@@ -90,8 +90,8 @@ if __name__ == '__main__':
                         help="Output image filepath. The format must support alpha channels.")
     parser.add_argument('-a', '--absolute', dest="absolute", action="store_true", default=False,
                         help='Plot the populations in absolute numbers rather than normalized.')
-    parser.add_argument("-i", "--infer-empty", dest='infer_empty', action="store_true", default=False,
-                        help="Whether to infer empty entries.")
+    parser.add_argument("-i", "--interpolation", dest='interpolation', type=int, default=0,
+                        help="Order of interpolation for empty data (0 means no interpolation).")
     parser.add_argument("-S", "--smooth", type=float, default=None,
                         help="STDev for Gaussian convolutional filter. The higher the value "
                              "the smoother the resulting bands will be. Recommended is around 1.0.")
@@ -123,17 +123,38 @@ if __name__ == '__main__':
                                         (populations_df["Step"] <= last_step)]
 
     # populations dataframe processing
-    pops_table = populations_df.set_index(['Id', 'Step'])[['Pop']].unstack('Step')
+    pops_table = populations_df.set_index(['Id', 'Step'])['Pop'].unstack('Step')
 
-    if args.infer_empty:
-        pops_table[('Pop', 0)].fillna(0, inplace=True)
-        pops_table[('Pop', pops_table.shape[1] - 1)].fillna(0, inplace=True)
-        pops_table = pops_table.interpolate(axis=1)
+    if args.interpolation > 0:
+        if pops_table.shape[1] > 50:
+            print("WARNING: interpolation is not recommened for large data")
+        pops_table[first_step].fillna(0, inplace=True)
+        pops_table[last_step].fillna(0, inplace=True)
+
+        if (~pops_table.isna()).sum(axis=1).min() - 1 < args.interpolation:
+            raise ValueError(f"For interpolation order {args.interpolation}, the iput data has not "
+                             f"enough datapoints (at least {args.interpolation + 1} per sample)")
+    
+        larger_pops_table = pd.DataFrame(index=pops_table.index,
+                            columns=np.arange(0, pops_table.shape[1] - 0.1, 0.1))
+        larger_pops_table[pops_table.columns.astype(float)] = pops_table
+        larger_pops_table = larger_pops_table.astype(float)
+
+        linear_interpolation = larger_pops_table.interpolate(axis=1, method='linear')
+        pops_table_interpolate = larger_pops_table.interpolate(axis=1, method='spline',
+                                                               order=args.interpolation)
+        pops_table_interpolate[linear_interpolation <= 0] = 0
+
+        pops_table = pops_table_interpolate
+
+        # pops_table = pops_table.interpolate(axis=1)
     else:
         pops_table = pops_table.fillna(0)
 
-    pops_sums = pops_table.sum(axis=0)
+    steps = pops_table.columns
+
     if args.absolute:
+        pops_sums = pops_table.sum(axis=0)
         pop_max = pops_sums.max()
         pops_rest = pop_max - pops_sums
         pops_table.loc[-1] = pops_rest
@@ -169,7 +190,6 @@ if __name__ == '__main__':
     # Plot
     dpi = (args.width + args.height) // 20
     plt.figure(figsize=(args.width // dpi, args.height // dpi), dpi=dpi)
-    steps = np.arange(first_step, last_step + 1)
     fish_plot(steps, pops_stack, colors=colors, aa=True, lw=1)
 
     plt.xlim(first_step, last_step)
