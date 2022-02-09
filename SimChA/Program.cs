@@ -21,14 +21,15 @@ var simParams = new SimParams
     IsFemale = true,
     DivisionRate = 0.025f,
     MutationRate = 0.01f,
-    DriverProb = 0.1f,
+    DriverProb = 0.01f,
     DeathRate = 0.01f,
     SplitRate = 0.0f,
     DivisionSlowDown = 0.001f,
     DecayRate = 0.01f,
-    FitnessIncMu = 1.05f,
-    FitnessIncSigma = .1f,
+    FitnessIncMu = 1.0f,
+    FitnessIncSigma = .25f,
     InitialPop = 1000,
+    StepLimit = 10000,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -44,7 +45,7 @@ var simParams = new SimParams
     }
 };
 
-var random = new Random(seed);
+var random = new Random(simParams.Seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 0;
 var popSizes = new List<(long, long)> { (CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)) };
@@ -58,7 +59,7 @@ do
                       $"alive: { popSizes.Last().Item2 }");
     simulator.Step();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
-} while (popSizes.Last().Item1 < simParams.PopLimit && popSizes.Last().Item2 > 0);
+} while (popSizes.Last().Item1 < simParams.PopLimit && popSizes.Last().Item2 > 0 && stepNo < simParams.StepLimit);
 
 
 

@@ -7,6 +7,7 @@ public struct SimParams
 {
     public int Seed;
     public int PopLimit;
+    public int StepLimit;
     public float CutOff;
     public bool IsFemale;
     public double DivisionRate;
