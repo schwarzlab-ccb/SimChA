@@ -249,7 +249,8 @@ def _parse_arguments():
     return args
 
 
-def _setup_figure(width=1920, height=1080):
+def setup_figure(width=1920, height=1080):
+    """Create figure with specified height and width."""
     dpi = (width + height) // 20
     plt.figure(figsize=(width // dpi, height // dpi), dpi=dpi)
 
@@ -263,6 +264,6 @@ if __name__ == '__main__':
         args.interpolation, args.absolute, args.smooth, args.seed, args.cmap)
 
     # Plot
-    _setup_figure(args.width, args.height)
+    setup_figure(args.width, args.height)
     fish_plot(steps, pops_stack, colors, pop_max)
     plt.savefig(args.output)
