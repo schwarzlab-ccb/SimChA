@@ -9,7 +9,7 @@ from matplotlib import cm
 from scipy.ndimage import gaussian_filter
 
 
-def fish_plot(x, *args, ax=None, colors=None, labels=(), **kwargs):
+def stackplot(x, *args, ax=None, colors=None, labels=(), **kwargs):
     """Taken largely from the matplotlib implementation except that the keywords `edgecolor` and
     `where` are provided to `fill_between`"""
     y = np.row_stack(args)
@@ -78,7 +78,95 @@ def build_tree(parent_tree):
     return tree, ids, root_id
 
 
-if __name__ == '__main__':
+def create_colors(ids, root_id, ordering, seed=0):
+    np.random.seed(seed)
+    colors = np.array(cm.rainbow(np.linspace(0, 1, len(ids))))
+    np.random.shuffle(colors)
+    colors = pd.DataFrame(colors, index=ids)
+    colors.loc[-1] = np.ones(4)
+    colors.loc[root_id] = .5 * np.ones(4)
+    colors = colors.loc[ordering].values
+
+    return colors
+
+
+def load_data(populations_file, parent_tree, first_step, last_step,
+              interpolation=0, absolute=False, smooth=None, seed=0):
+    # population dataframe
+    populations_df = pd.read_csv(populations_file)
+
+    min_step = populations_df["Step"].min()
+    first_step = max(first_step, min_step) if first_step else min_step
+
+    max_step = populations_df["Step"].max()
+    last_step = min(last_step, max_step) if last_step else max_step
+
+    populations_df = populations_df.loc[(populations_df["Step"] >= first_step) &
+                                        (populations_df["Step"] <= last_step)]
+
+    # populations dataframe processing
+    pops_table = populations_df.set_index(['Id', 'Step'])['Pop'].unstack('Step')
+
+    if interpolation > 0:
+        if pops_table.shape[1] > 50:
+            print("WARNING: interpolation is not recommened for large data")
+        pops_table[first_step].fillna(0, inplace=True)
+        pops_table[last_step].fillna(0, inplace=True)
+
+        if (~pops_table.isna()).sum(axis=1).min() - 1 < interpolation:
+            raise ValueError(f"For interpolation order {interpolation}, the iput data has not "
+                             f"enough datapoints (at least {interpolation + 1} per sample)")
+
+        larger_pops_table = pd.DataFrame(index=pops_table.index,
+                                         columns=np.arange(0, pops_table.shape[1] - 0.1, 0.1))
+        larger_pops_table[pops_table.columns.astype(float)] = pops_table
+        larger_pops_table = larger_pops_table.astype(float)
+
+        linear_interpolation = larger_pops_table.interpolate(axis=1, method='linear')
+        pops_table_interpolate = larger_pops_table.interpolate(axis=1, method='spline',
+                                                               order=interpolation)
+        pops_table_interpolate[linear_interpolation <= 0] = 0
+
+        pops_table = pops_table_interpolate
+
+        # pops_table = pops_table.interpolate(axis=1)
+    else:
+        pops_table = pops_table.fillna(0)
+
+    steps = pops_table.columns
+
+    if smooth:
+        pops_table = pd.DataFrame(gaussian_filter(pops_table, (0, smooth)),
+                                  index=pops_table.index, columns=pops_table.columns)
+
+    if absolute:
+        pops_sums = pops_table.sum(axis=0)
+        pop_max = pops_sums.max()
+        pops_rest = pop_max - pops_sums
+        pops_table.loc[-1] = pops_rest
+    else:
+        pop_max = None
+
+    # Build parental relationship
+    tree, ids, root_id = build_tree(parent_tree)
+    samples = populations_df['Id'].unique()
+    ordering = create_ordering(tree, -1 if absolute else root_id)
+    ordering = [x for x in ordering if x in samples or x == -1 and absolute]
+
+    pops_stack = pops_table.loc[ordering]
+    val, count = np.unique(pops_stack.index, return_counts=True)
+    doubles = val[count > 1]
+    pops_stack.loc[doubles] = pops_stack.loc[doubles] / 2
+
+    pops_sum = pops_stack.sum(axis=0)
+    pops_sum[pops_sum == 0] = 1
+    pops_stack = pops_stack / (pops_sum)
+
+    colors = create_colors(ids, root_id, ordering, seed)
+    return pops_stack, steps, colors, pop_max
+
+
+def parse_arguments():
     randint = np.random.randint(0, 2**31 - 1)
     parser = argparse.ArgumentParser(description='Create a Fish (Muller) plot '
                                                  'for the given evolutionary tree.')
@@ -108,94 +196,30 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    np.random.seed(args.seed)
+    return args
 
-    # population dataframe
-    populations_df = pd.read_csv(args.populations)
 
-    min_step = populations_df["Step"].min()
-    first_step = max(args.first_step, min_step) if args.first_step else min_step
-
-    max_step = populations_df["Step"].max()
-    last_step = min(args.last_step, max_step) if args.last_step else max_step
-
-    populations_df = populations_df.loc[(populations_df["Step"] >= first_step) &
-                                        (populations_df["Step"] <= last_step)]
-
-    # populations dataframe processing
-    pops_table = populations_df.set_index(['Id', 'Step'])['Pop'].unstack('Step')
-
-    if args.interpolation > 0:
-        if pops_table.shape[1] > 50:
-            print("WARNING: interpolation is not recommened for large data")
-        pops_table[first_step].fillna(0, inplace=True)
-        pops_table[last_step].fillna(0, inplace=True)
-
-        if (~pops_table.isna()).sum(axis=1).min() - 1 < args.interpolation:
-            raise ValueError(f"For interpolation order {args.interpolation}, the iput data has not "
-                             f"enough datapoints (at least {args.interpolation + 1} per sample)")
-    
-        larger_pops_table = pd.DataFrame(index=pops_table.index,
-                            columns=np.arange(0, pops_table.shape[1] - 0.1, 0.1))
-        larger_pops_table[pops_table.columns.astype(float)] = pops_table
-        larger_pops_table = larger_pops_table.astype(float)
-
-        linear_interpolation = larger_pops_table.interpolate(axis=1, method='linear')
-        pops_table_interpolate = larger_pops_table.interpolate(axis=1, method='spline',
-                                                               order=args.interpolation)
-        pops_table_interpolate[linear_interpolation <= 0] = 0
-
-        pops_table = pops_table_interpolate
-
-        # pops_table = pops_table.interpolate(axis=1)
-    else:
-        pops_table = pops_table.fillna(0)
-
-    steps = pops_table.columns
-
-    if args.absolute:
-        pops_sums = pops_table.sum(axis=0)
-        pop_max = pops_sums.max()
-        pops_rest = pop_max - pops_sums
-        pops_table.loc[-1] = pops_rest
-
-    # Build parental relationship
-    tree, ids, root_id = build_tree(args.parent_tree)
-    samples = populations_df['Id'].unique()
-    ordering = create_ordering(tree, -1 if args.absolute else root_id)
-    ordering = [x for x in ordering if x in samples or x == -1 and args.absolute]
-
-    pops_stack = pops_table.loc[ordering]
-    val, count = np.unique(pops_stack.index, return_counts=True)
-    doubles = val[count > 1]
-    pops_stack.loc[doubles] = pops_stack.loc[doubles] / 2
-
-    pops_sum = pops_stack.sum(axis=0)
-    pops_sum[pops_sum == 0] = 1
-    pops_stack = pops_stack / pops_sum
-
-    pops_stack = pops_stack.values
-
-    if args.smooth:
-        pops_stack = gaussian_filter(pops_stack, (0, args.smooth))
-
-    # Create colors
-    colors = np.array(cm.rainbow(np.linspace(0, 1, len(ids))))
-    np.random.shuffle(colors)
-    colors = pd.DataFrame(colors, index=ids)
-    colors.loc[-1] = np.ones(4)
-    colors.loc[root_id] = .5 * np.ones(4)
-    colors = colors.loc[ordering].values
-
-    # Plot
+def create_plot(pops_stack, pop_max=None):
+    first_step = pops_stack.columns[0]
+    last_step = pops_stack.columns[-1]
     dpi = (args.width + args.height) // 20
     plt.figure(figsize=(args.width // dpi, args.height // dpi), dpi=dpi)
-    fish_plot(steps, pops_stack, colors=colors, aa=True, lw=1)
-
     plt.xlim(first_step, last_step)
     plt.ylim(0, 1)
-    label_text = np.abs(np.arange(-5, 6)) / 10
-    plt.yticks(np.arange(0, 11, step=1) / 10, (label_text * pop_max).astype(int) if args.absolute else label_text)
+    label_text = np.round(np.abs(np.arange(-0.5, 0.6, 0.1)), 1)
+    plt.yticks(np.arange(0, 1.1, step=0.1),
+               (label_text * pop_max).astype(int) if pop_max is not None else label_text)
     plt.xticks(np.arange(first_step, last_step + 1, step=(last_step - first_step) / 10).astype(int))
 
+
+if __name__ == '__main__':
+    
+    args = parse_arguments()
+
+    pops_stack, steps, colors, pop_max = load_data(args.populations, args.parent_tree, args.first_step, args.last_step,
+                                          args.interpolation, args.absolute, args.smooth, args.seed)
+    
+    # Plot
+    create_plot(pops_stack, pop_max)
+    stackplot(steps, pops_stack, colors=colors)
     plt.savefig(args.output)
