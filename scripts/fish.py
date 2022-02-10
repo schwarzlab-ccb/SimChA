@@ -48,7 +48,7 @@ def stackplot(x, *args, ax=None, colors=None, labels=(), **kwargs):
     return r
 
 
-def fish_plot(steps, pops_stack, colors=None, pop_max=None):
+def fish_plot(pops_stack, steps, colors=None, pop_max=None):
     """Plot the actual fish plot."""
     stackplot(steps, pops_stack, colors=colors)
 
@@ -79,9 +79,8 @@ def _create_ordering(cur_tree, cur_clone):
     return res
 
 
-def _build_tree(parent_tree):
+def _build_tree(parent_df):
     """Create a dict-based tree where for each parent there is a list of children."""
-    parent_df = pd.read_csv(parent_tree)
     parents = parent_df["ParentId"].unique()
     children = parent_df["ChildId"].unique()
     root_list = np.setdiff1d(parents, children)
@@ -99,39 +98,39 @@ def _build_tree(parent_tree):
     return tree, ids, root_id
 
 
-def _create_colors(ids, root_id, ordering, seed=0, cmap="Accent"):
+def _create_colors(ids, root_id, ordering, seed, cmap_name):
     np.random.seed(seed)
     try:
-        cmap = cm.get_cmap(cmap)
+        cmap = cm.get_cmap(cmap_name)
     except ValueError:
         print("WARNING: colormap not recognized, setting to default")
-        cmap = cm.get_cmap("Accent")
+        cmap = cm.get_cmap("rainbow")
 
-    colors = np.array(cmap(np.linspace(0, 1, len(ids))))
-    np.random.shuffle(colors)
-    colors = pd.DataFrame(colors, index=ids)
-    colors.loc[-1] = np.ones(4)
-    colors.loc[root_id] = .5 * np.ones(4)
-    colors = colors.loc[ordering].values
+    cols = np.array(cmap(np.linspace(0, 1, len(ids))))
+    np.random.shuffle(cols)
+    cols = pd.DataFrame(cols, index=ids)
+    cols.loc[-1] = np.ones(4)
+    cols.loc[root_id] = .5 * np.ones(4)
+    cols = cols.loc[ordering].values
 
-    return colors
+    return cols
 
 
-def load_data(populations_file, parent_tree,
-              first_step=None, last_step=None, interpolation=0, absolute=False, smooth=None, seed=0,
-              cmap="rainbow"):
+def process_data(pops_df, parent_df,
+                 first_step=None, last_step=None, interpolation=0, absolute=False, smooth=None, seed=0,
+                 cmap_name="rainbow"):
     """Load data required for plotting.
 
     Args:
-        populations_file (str): Location of populations file
-        parent_tree (str): Location of parents file
+        pops_df (DataFrame): Populations across steps (Id: +int, Step: +int, Pop: +int)
+        parent_df (DataFrame): Parent-child relationships (ParentID: +int, ChildID: +int)
         first_step (int, optional): First step to plot. Defaults to None.
         last_step (int, optional): Last step to plot. Defaults to None.
         interpolation (int, optional): Order of interpolation. Defaults to 0.
         absolute (bool, optional): Does not normalize data if set True. Defaults to False.
         smooth (int, optional): Window for Gaussian smoothing. Defaults to None.
         seed (int, optional): Seed used for coloring. Defaults to 0.
-        cmap (str, optional): Matplotlib colormap. Defaults to None.
+        cmap_name (str, optional): Matplotlib colormap. Defaults to None.
 
     Returns:
         pd.DataFrame: DataFrame with population information
@@ -139,20 +138,16 @@ def load_data(populations_file, parent_tree,
         list: List of colors
         int: Maximum population. None if not absolute
     """
-    # population dataframe
-    populations_df = pd.read_csv(populations_file)
-
-    min_step = populations_df["Step"].min()
+    min_step = pops_df["Step"].min()
     first_step = max(first_step, min_step) if first_step else min_step
 
-    max_step = populations_df["Step"].max()
+    max_step = pops_df["Step"].max()
     last_step = min(last_step, max_step) if last_step else max_step
 
-    populations_df = populations_df.loc[(populations_df["Step"] >= first_step) &
-                                        (populations_df["Step"] <= last_step)]
+    pops_df = pops_df.loc[(pops_df["Step"] >= first_step) & (pops_df["Step"] <= last_step)]
 
     # populations dataframe processing
-    pops_table = populations_df.set_index(['Id', 'Step'])['Pop'].unstack('Step')
+    pops_table = pops_df.set_index(['Id', 'Step'])['Pop'].unstack('Step')
 
     if interpolation > 0:
         if pops_table.shape[1] > 50:
@@ -194,8 +189,8 @@ def load_data(populations_file, parent_tree,
         pop_max = None
 
     # Build parental relationship
-    tree, ids, root_id = _build_tree(parent_tree)
-    samples = populations_df['Id'].unique()
+    tree, ids, root_id = _build_tree(parent_df)
+    samples = pops_df['Id'].unique()
     ordering = _create_ordering(tree, -1 if absolute else root_id)
     ordering = [x for x in ordering if x in samples or x == -1 and absolute]
 
@@ -208,7 +203,7 @@ def load_data(populations_file, parent_tree,
     pops_sum[pops_sum == 0] = 1
     pops_stack = pops_stack / pops_sum
 
-    colors = _create_colors(ids, root_id, ordering, seed, cmap)
+    colors = _create_colors(ids, root_id, ordering, seed, cmap_name)
     return pops_stack, steps, colors, pop_max
 
 
@@ -250,11 +245,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    pops_stack, steps, colors, pop_max = load_data(
-        args.populations, args.parent_tree, args.first_step, args.last_step,
-        args.interpolation, args.absolute, args.smooth, args.seed, args.cmap)
+    populations_df = pd.read_csv(args.populations)
+    parent_tree_df = pd.read_csv(args.parent_tree)
+
+    data = process_data(populations_df, parent_tree_df, args.first_step, args.last_step,
+                        args.interpolation, args.absolute, args.smooth, args.seed, args.cmap)
 
     # Plot
     setup_figure(args.width, args.height)
-    fish_plot(steps, pops_stack, colors, pop_max)
+    fish_plot(*data)
     plt.savefig(args.output)
