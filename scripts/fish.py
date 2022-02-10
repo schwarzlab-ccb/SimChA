@@ -119,7 +119,7 @@ def _create_colors(ids, root_id, ordering, seed=0, cmap="rainbow"):
 
 def load_data(populations_file, parent_tree,
               first_step=None, last_step=None, interpolation=0, absolute=False, smooth=None, seed=0,
-              cmap=None):
+              cmap="rainbow"):
     """Load data required for plotting.
 
     Args:
@@ -237,7 +237,7 @@ def _parse_arguments():
                         help="The step to end the plotting at.")
     parser.add_argument("-R", "--seed", dest="seed", type=int,
                         help="Random seed for selection of colors.", default=randint)
-    parser.add_argument("--cmap", type=str, default=None,
+    parser.add_argument("--cmap", type=str, default="rainbow",
                         help="Colormap to use. Has to be a matplotlib colormap Uses rainbow by default")
     parser.add_argument("-W", "--width", dest="width", type=int, default=1920,
                         help="Output image width")
