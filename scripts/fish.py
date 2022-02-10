@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Function to create fishplots."""
+"""Function to create fish (Muller) plots."""
 
 import argparse
 
@@ -86,8 +86,8 @@ def _build_tree(parent_tree):
     children = parent_df["ChildId"].unique()
     root_list = np.setdiff1d(parents, children)
     if len(root_list) != 1:
-        raise Exception(
-            "Failed to determine root. There must be exactly one node with no parent in the parent tree.")
+        raise Exception("Failed to determine root. "
+                        "There must be exactly one node with no parent in the parent tree.")
     root_id = root_list[0]
     ids = np.concatenate([[root_id], children])
 
@@ -99,13 +99,13 @@ def _build_tree(parent_tree):
     return tree, ids, root_id
 
 
-def _create_colors(ids, root_id, ordering, seed=0, cmap="rainbow"):
+def _create_colors(ids, root_id, ordering, seed=0, cmap="Accent"):
     np.random.seed(seed)
     try:
         cmap = cm.get_cmap(cmap)
     except ValueError:
         print("WARNING: colormap not recognized, setting to default")
-        cmap = cm.get_cmap("rainbow")
+        cmap = cm.get_cmap("Accent")
 
     colors = np.array(cmap(np.linspace(0, 1, len(ids))))
     np.random.shuffle(colors)
@@ -176,7 +176,6 @@ def load_data(populations_file, parent_tree,
 
         pops_table = pops_table_interpolate
 
-        # pops_table = pops_table.interpolate(axis=1)
     else:
         pops_table = pops_table.fillna(0)
 
@@ -207,14 +206,19 @@ def load_data(populations_file, parent_tree,
 
     pops_sum = pops_stack.sum(axis=0)
     pops_sum[pops_sum == 0] = 1
-    pops_stack = pops_stack / (pops_sum)
+    pops_stack = pops_stack / pops_sum
 
     colors = _create_colors(ids, root_id, ordering, seed, cmap)
     return pops_stack, steps, colors, pop_max
 
 
-def _parse_arguments():
-    """Parse the input arguments."""
+def setup_figure(width=1920, height=1080):
+    """Create figure with specified height and width."""
+    dpi = (width + height) // 20
+    plt.figure(figsize=(width // dpi, height // dpi), dpi=dpi)
+
+
+if __name__ == '__main__':
     randint = np.random.randint(0, 2**31 - 1)
     parser = argparse.ArgumentParser(description='Create a Fish (Muller) plot '
                                                  'for the given evolutionary tree.')
@@ -245,19 +249,6 @@ def _parse_arguments():
                         help="Output image height")
 
     args = parser.parse_args()
-
-    return args
-
-
-def setup_figure(width=1920, height=1080):
-    """Create figure with specified height and width."""
-    dpi = (width + height) // 20
-    plt.figure(figsize=(width // dpi, height // dpi), dpi=dpi)
-
-
-if __name__ == '__main__':
-
-    args = _parse_arguments()
 
     pops_stack, steps, colors, pop_max = load_data(
         args.populations, args.parent_tree, args.first_step, args.last_step,
