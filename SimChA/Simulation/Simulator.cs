@@ -7,6 +7,7 @@ namespace SimChA.Simulation;
 
 public class Simulator
 {
+    public long maxTumorSize = 1_000_000_000_000;
     public List<List<SubClone>> Populations { get; }
     public IEnumerable<SubClone> FlatPops => CellSampling.Flatten(Populations);
     public SimParams SimParams { get; }
@@ -36,7 +37,12 @@ public class Simulator
         foreach (var pop in Populations)
         {
             List<SubClone> newClones = new();
-            slowDownRate = Math.Pow(CellSampling.AliveCount(pop), 1f / 3) * SimParams.DivisionSlowDown;
+            long popSize = CellSampling.PopulationSize(pop);
+            slowDownRate = 0f;
+            if (SimParams.DivisionSlowDown > 0f && popSize > 1000)
+            {
+                slowDownRate = Math.Pow(popSize / 1000f, 1/3f) * SimParams.DivisionSlowDown;
+            }
             
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {
@@ -47,14 +53,14 @@ public class Simulator
                 int newDecayed = Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount);
                 
                 // Create new cells
-                double divRate = Math.Clamp(subClone.DivisionRate - slowDownRate, 0, 1);
+                double divRate = Math.Clamp(subClone.DivisionRate * Math.Clamp(1f - slowDownRate, 0, 1), 0, 1);
                 int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
 
                 //  From some of the cells, create new populations
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
                 for (int splitI = 0; splitI < splitCellsCount; splitI++)
                 {
-                    var childClone = subClone.CreateChild(GetNewId(), _generation, 1.0);
+                    var childClone = subClone.CreateChild(GetNewId(), _generation, 0.0);
                     newPops.Add(childClone);
                 }
 
