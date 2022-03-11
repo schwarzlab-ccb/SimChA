@@ -12,24 +12,26 @@ options.WithNotParsed(o =>
     Environment.Exit(0);
 });
 
+var watch = new System.Diagnostics.Stopwatch();
+watch.Start();
+
 int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
 var simParams = new SimParams
 {
     Seed = seed,
-    PopLimit = options.Value.StopCount,
+    PopLimit = 1_000_000,
     CutOff = options.Value.CutOff,
     IsFemale = true,
-    DivisionRate = 0.025f,
+    DivisionRate = 0.02f,
     MutationRate = 0.01f,
-    DriverProb = 0.01f,
+    DriverProb = 1f,
     DeathRate = 0.01f,
-    SplitRate = 0.0f,
     DivisionSlowDown = 0.001f,
-    DecayRate = 0.01f,
-    FitnessIncMu = 1.0f,
-    FitnessIncSigma = .25f,
+    DecayRate = 0.1f,
+    FitnessIncMu = 1f,
+    FitnessIncSigma = .025f,
     InitialPop = 1000,
-    StepLimit = 10000,
+    StepLimit = 25_000,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -87,3 +89,6 @@ catch (Exception e)
 {
     Console.WriteLine($"Failed to write to disk with error: {e.Message}");
 }
+
+watch.Stop();
+Console.WriteLine($"Execution Time: {(watch.ElapsedMilliseconds/1000.0):F2}s");
