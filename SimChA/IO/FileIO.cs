@@ -15,6 +15,7 @@ public class FileIO
     private const string POPULATIONS_DF_FILENAME = "populations.csv";
     private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
+    private const string VAF_FILENAME = "vaf.csv";
 
     private string OutFolder { get; }
 
@@ -111,6 +112,17 @@ public class FileIO
         }
     }
 
+    public void WriteVAF(Dictionary<int, float> vaf)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), VAF_FILENAME);
+        Console.WriteLine($"Writing VAF to the file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        foreach (var snv in vaf)
+        {
+            outputFile.WriteLine($"{snv.Key},{snv.Value}");
+        }
+    }
+    
     public void WriteRawData(Random rnd, IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
     {
         var outputbaf = new List<string>();

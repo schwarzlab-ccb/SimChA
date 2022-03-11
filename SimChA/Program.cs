@@ -23,13 +23,13 @@ var simParams = new SimParams
     CutOff = options.Value.CutOff,
     IsFemale = true,
     IsMultiplicative = false,
-    DivisionRate = 0.025f,
-    MutationRate = 0.01f,
-    DriverProb = .001f,
+    DivisionRate = 0.02f,
+    MutationRate = 0.02f,
+    DriverProb = .002f,
     DeathRate = 0.5f, // Multiplication of the Division rate
     SplitRate = 0.0f,
-    DivisionSlowDown = 0f,
-    DecayRate = 0.0f,
+    DivisionSlowDown = 0.08f,
+    DecayRate = 0.01f,
     FitnessIncMu = .01f,
     FitnessIncSigma = 1, // Multiplication of the Division rate
     InitialPop = 10,
@@ -52,22 +52,24 @@ var simParams = new SimParams
 var random = new Random(simParams.Seed);
 var simulator = new Simulator(simParams, random);
 int stepNo = 0;
-var popSizes = new List<(long, long)> { (CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)) };
+var popSizes = new List<(long total, long alive)>
+{
+    (CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations))
+};
 Console.WriteLine($"Sim with seed {seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 do
 {
     Console.WriteLine($"Step: {++stepNo:D3}, " +
                       $"populations: {simulator.Populations.Count}, " +
                       $"subClones: {simulator.FlatPops.Count()}, " +
-                      $"cells: { popSizes.Last().Item1 }, " +
-                      $"alive: { popSizes.Last().Item2 }");
+                      $"cells: { popSizes.Last().total }, " +
+                      $"alive: { popSizes.Last().alive }");
     simulator.Step();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
-} while (popSizes.Last().Item1 < simParams.PopLimit && popSizes.Last().Item2 > 0 && stepNo < simParams.StepLimit);
+} while (popSizes.Last().total < simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
 
 
-
-var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.Item2 * simParams.CutOff)).ToList();
+var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
 var aboveCutOff = simulator.FlatPops.Where(sc 
     => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
 var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
@@ -75,6 +77,7 @@ var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutO
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
+var vaf = TreeAnalysis.ComputeVAF(connectedTree, popSizes.Last().total);
 Console.WriteLine($"SubClone count {simulator.FlatPops.Count()}. Above cutoff: { sample.Count }");
 
 try
@@ -85,6 +88,7 @@ try
     files.WriteParentTree(lcaTree);
     files.WriteMullerDataFrames(aboveCutOff, connectedTree);
     files.WriteCopyNumbers(sample);
+    files.WriteVAF(vaf);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
 } 
 catch (Exception e) 
