@@ -27,7 +27,7 @@ public class Simulator
         Rnd = rnd;
         var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, refKaryotype, SimParams.InitialPop);
-        Populations = new List<List<SubClone>> { new() { firstClone } };
+        Populations = new List<List<SubClone>> {new() {firstClone}};
     }
 
     public void Step()
@@ -41,17 +41,17 @@ public class Simulator
             slowDownRate = 0f;
             if (SimParams.DivisionSlowDown > 0f && popSize > 1000)
             {
-                slowDownRate = Math.Pow(popSize / 1000f, 1/3f) * SimParams.DivisionSlowDown;
+                slowDownRate = Math.Pow(popSize / 1000f, 1 / 3f) * SimParams.DivisionSlowDown;
             }
-            
+
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {
                 // Kill cells
-                int newDead = Binomial.Sample(Rnd, SimParams.DeathRate, subClone.AliveCount);
-                
+                int newDead = Binomial.Sample(Rnd, SimParams.DivisionRate * SimParams.DeathRate, subClone.AliveCount);
+
                 // Decayed cells
                 int newDecayed = Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount);
-                
+
                 // Create new cells
                 double divRate = Math.Clamp(subClone.DivisionRate * Math.Clamp(1f - slowDownRate, 0, 1), 0, 1);
                 int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
@@ -60,7 +60,7 @@ public class Simulator
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
                 for (int splitI = 0; splitI < splitCellsCount; splitI++)
                 {
-                    var childClone = subClone.CreateChild(GetNewId(), _generation, 0.0);
+                    var childClone = subClone.CreateChild(GetNewId(), _generation, subClone.DivisionRate);
                     newPops.Add(childClone);
                 }
 
@@ -69,18 +69,24 @@ public class Simulator
                 int splitMutantCount = Binomial.Sample(Rnd, SimParams.SplitRate, newMutantCount);
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
-                    double divChange = 1;
+                    double divChange = SimParams.IsMultiplicative ? 1 : 0;
                     if (Rnd.NextDouble() < SimParams.DriverProb)
                     {
-                        divChange = Normal.Sample(Rnd, SimParams.FitnessIncMu, SimParams.FitnessIncSigma);
+                        divChange = Exponential.Sample(Rnd, SimParams.FitnessIncMu)
+                                    * (SimParams.FitnessIncMu * SimParams.FitnessIncSigma * SimParams.DivisionRate);
                     }
-                    var childClone = subClone.CreateChild(GetNewId(), _generation, divChange);
+
+                    double newDivision = SimParams.IsMultiplicative
+                        ? subClone.DivisionRate * divChange
+                        : subClone.DivisionRate + divChange;
+                    var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision);
                     var aberration = SelectMutation();
                     childClone.Karyotype.ApplyAbberation(aberration);
                     if (!IsViable(childClone.Karyotype))
                     {
                         continue;
                     }
+
                     // Some of the mutations may create new populations
                     if (mutationI < splitMutantCount)
                     {
@@ -91,18 +97,20 @@ public class Simulator
                         newClones.Add(childClone);
                     }
                 }
+
                 subClone.NewGen(
                     subClone.AliveCount + newCellsCount - splitCellsCount - newMutantCount - newDead,
                     subClone.DeadCount + newDead - newDecayed);
             }
+
             pop.AddRange(newClones);
         }
 
         // Create new population from the split cells
-        Populations.AddRange(newPops.Select(sc => new List<SubClone> { sc }));
+        Populations.AddRange(newPops.Select(sc => new List<SubClone> {sc}));
     }
 
-    private bool IsViable(Karyotype kar) 
+    private bool IsViable(Karyotype kar)
         => kar.ChromCount > 23;
 
     private AberrationEnum SelectMutation()
@@ -115,6 +123,7 @@ public class Simulator
             {
                 return abb;
             }
+
             sample -= rate;
         }
 

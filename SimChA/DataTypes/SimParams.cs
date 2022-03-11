@@ -20,6 +20,7 @@ public struct SimParams
     public double FitnessIncMu;
     public double FitnessIncSigma;
     public int InitialPop;
+    public bool IsMultiplicative;
 
     public readonly Dictionary<AberrationEnum, double> AberrationRates =
         Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
