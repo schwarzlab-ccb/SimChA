@@ -27,7 +27,7 @@ public class SubClone
     }
     
     public SubClone CreateChild(int newId, int generation, double divRateChange)
-        => new(newId, CloneId, generation, DivisionRate * divRateChange, Karyotype);
+        => new(newId, CloneId, generation, DivisionRate + divRateChange, Karyotype);
     
     public override string ToString() 
         => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Karyotype: {Karyotype}";

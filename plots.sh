@@ -1,8 +1,8 @@
 echo "Plotting Parent Graph"
 dot -Tpng out/parent_graph.dot > out/parent_tree.png
 echo "Plotting Fish Plot"
-col=402
-smooth=10
+col=42
+smooth=0
 python3 scripts/fish.py out/populations.csv out/parent_tree.csv out/fish.png -R $col -S $smooth
 python3 scripts/fish.py out/populations.csv out/parent_tree.csv out/fish_abs.png -R $col -S $smooth -a  
 echo "Plotting CN Tracks"
