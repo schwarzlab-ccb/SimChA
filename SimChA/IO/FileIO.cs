@@ -112,14 +112,15 @@ public class FileIO
         }
     }
 
-    public void WriteVAF(Dictionary<int, float> vaf)
+    public void WriteVAF(Dictionary<int, long> vaf, long totalSize)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), VAF_FILENAME);
         Console.WriteLine($"Writing VAF to the file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        foreach (var snv in vaf)
+        outputFile.WriteLine($"id,pop,vaf");
+        foreach ((int id, long pop) in vaf)
         {
-            outputFile.WriteLine($"{snv.Key},{snv.Value}");
+            outputFile.WriteLine($"{id},{pop},{(float) pop / totalSize}");
         }
     }
     

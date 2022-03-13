@@ -24,16 +24,16 @@ var simParams = new SimParams
     IsFemale = true,
     IsMultiplicative = false,
     DivisionRate = 0.02f,
-    MutationRate = 0.02f,
-    DriverProb = .002f,
-    DeathRate = 0.5f, // Multiplication of the Division rate
-    SplitRate = 0.0f,
-    DivisionSlowDown = 0.08f,
+    MutationRate = 0.001f,
+    DriverProb = .025f,
+    DeathRate = 0.8f, // Multiplication of the Division rate
+    SplitRate = 0.01f,
+    DivisionSlowDown = 0.05f,
     DecayRate = 0.01f,
     FitnessIncMu = .01f,
     FitnessIncSigma = 1, // Multiplication of the Division rate
     InitialPop = 10,
-    StepLimit = 20000,
+    StepLimit = 4000,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -77,7 +77,7 @@ var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutO
 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
-var vaf = TreeAnalysis.ComputeVAF(connectedTree, popSizes.Last().total);
+var vaf = TreeAnalysis.ComputeVAF(connectedTree);
 Console.WriteLine($"SubClone count {simulator.FlatPops.Count()}. Above cutoff: { sample.Count }");
 
 try
@@ -88,7 +88,7 @@ try
     files.WriteParentTree(lcaTree);
     files.WriteMullerDataFrames(aboveCutOff, connectedTree);
     files.WriteCopyNumbers(sample);
-    files.WriteVAF(vaf);
+    files.WriteVAF(vaf, popSizes.Last().total);
     files.WriteRawData(random, sample, snps, simParams.IsFemale);
 } 
 catch (Exception e) 

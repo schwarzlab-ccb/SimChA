@@ -11,6 +11,6 @@ public class TreeAnalysis
                 .Find(n => n.Id == e.TargetId)))
             .Sum();
 
-    public static Dictionary<int, float> ComputeVAF(ParentTree parentTree, long popSize) 
-        => parentTree.Nodes.ToDictionary(node => node.Id, node => (float) SubtreeCellCount(parentTree, node) / popSize);
+    public static Dictionary<int, long> ComputeVAF(ParentTree parentTree) 
+        => parentTree.Nodes.ToDictionary(node => node.Id, node => SubtreeCellCount(parentTree, node));
 }
