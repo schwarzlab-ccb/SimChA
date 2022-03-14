@@ -22,18 +22,19 @@ var simParams = new SimParams
     PopLimit = options.Value.StopCount,
     CutOff = options.Value.CutOff,
     IsFemale = true,
-    IsMultiplicative = false,
     DivisionRate = 0.02f,
-    MutationRate = 0.001f,
-    DriverProb = .025f,
-    DeathRate = 0.8f, // Multiplication of the Division rate
-    SplitRate = 0.01f,
-    DivisionSlowDown = 0.05f,
-    DecayRate = 0.01f,
+    MutationRate = 0.01f,
+    DriverProb = .01f,
     FitnessIncMu = .01f,
     FitnessIncSigma = 1, // Multiplication of the Division rate
-    InitialPop = 10,
-    StepLimit = 4000,
+    DeathRate = 0.99f, // Multiplication of the Division rate
+    SplitRate = 0.0f,
+    Confinement = 0.0f,
+    DecayRate = 0.0f,
+    InitialPop = 25,
+    
+    StepLimit = 10000,
+    IsMultiplicative = false,
     AberrationRates =
     {
         [AberrationEnum.InternalDeletion] = 50f,
@@ -57,16 +58,18 @@ var popSizes = new List<(long total, long alive)>
     (CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations))
 };
 Console.WriteLine($"Sim with seed {seed}, genome length  {ReferenceGenome.TotalLength(true)}");
+int clones;
 do
 {
+    clones = simulator.FlatPops.Count();
     Console.WriteLine($"Step: {++stepNo:D3}, " +
                       $"populations: {simulator.Populations.Count}, " +
-                      $"subClones: {simulator.FlatPops.Count()}, " +
+                      $"subClones: {clones}, " +
                       $"cells: { popSizes.Last().total }, " +
                       $"alive: { popSizes.Last().alive }");
     simulator.Step();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
-} while (popSizes.Last().total < simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
+} while (clones < simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
 
 
 var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
@@ -78,7 +81,9 @@ var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
 var vaf = TreeAnalysis.ComputeVAF(connectedTree);
+(int nodeCount, int leafCount, int depth, float branching) = TreeAnalysis.ComputeTreeSize(connectedTree);
 Console.WriteLine($"SubClone count {simulator.FlatPops.Count()}. Above cutoff: { sample.Count }");
+Console.WriteLine($"nodeCount: {nodeCount}, leafCount: {leafCount}, depth: {depth}, branching: {branching:F2} ");
 
 try
 {

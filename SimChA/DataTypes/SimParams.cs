@@ -11,7 +11,7 @@ public struct SimParams
     public float CutOff;
     public bool IsFemale;
     public double DivisionRate;
-    public double DivisionSlowDown;
+    public double Confinement;
     public double MutationRate;
     public double DriverProb;
     public double DeathRate;

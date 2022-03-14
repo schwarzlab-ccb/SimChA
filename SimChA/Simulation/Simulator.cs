@@ -39,9 +39,9 @@ public class Simulator
             List<SubClone> newClones = new();
             long popSize = CellSampling.PopulationSize(pop);
             slowDownRate = 0f;
-            if (SimParams.DivisionSlowDown > 0f && popSize > 1000)
+            if (SimParams.Confinement > 0f && popSize > 1000)
             {
-                slowDownRate = Math.Pow(popSize / 1000f, 1 / 3f) * SimParams.DivisionSlowDown;
+                slowDownRate = Math.Pow(popSize / 1000f, 1 / 3f) * SimParams.Confinement;
             }
 
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
