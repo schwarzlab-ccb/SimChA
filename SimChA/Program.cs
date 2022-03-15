@@ -24,30 +24,30 @@ var simParams = new SimParams
     IsFemale = true,
     DivisionRate = 0.02f,
     MutationRate = 0.01f,
-    DriverProb = .01f,
+    DriverProb = 0f,
     FitnessIncMu = .01f,
     FitnessIncSigma = 1, // Multiplication of the Division rate
-    DeathRate = 0.99f, // Multiplication of the Division rate
+    DeathRate = 1f, // Multiplication of the Division rate
     SplitRate = 0.0f,
     Confinement = 0.0f,
     DecayRate = 0.0f,
-    InitialPop = 25,
+    InitialPop = 1000,
     
-    StepLimit = 10000,
+    StepLimit = 25000,
     IsMultiplicative = false,
-    AberrationRates =
-    {
-        [AberrationEnum.InternalDeletion] = 50f,
-        [AberrationEnum.InternalDuplication] = 50f,
-        [AberrationEnum.Translocation] = 20f,
-        [AberrationEnum.TailDeletion] = 15f,
-        [AberrationEnum.BreakageFusionBridge] = 10f,
-        [AberrationEnum.Inversion] = 10f,
-        [AberrationEnum.Missegregation] = 5f,
-        [AberrationEnum.Duplication] = 5f,
-        [AberrationEnum.Chromothripsis] = 1f,
-        [AberrationEnum.WholeGenomeDoubling] = 1f
-    }
+    // AberrationRates =
+    // {
+    //     [AberrationEnum.InternalDeletion] = 50f,
+    //     [AberrationEnum.InternalDuplication] = 50f,
+    //     [AberrationEnum.Translocation] = 20f,
+    //     [AberrationEnum.TailDeletion] = 15f,
+    //     [AberrationEnum.BreakageFusionBridge] = 10f,
+    //     [AberrationEnum.Inversion] = 10f,
+    //     [AberrationEnum.Missegregation] = 5f,
+    //     [AberrationEnum.Duplication] = 5f,
+    //     [AberrationEnum.Chromothripsis] = 1f,
+    //     [AberrationEnum.WholeGenomeDoubling] = 1f
+    // }
 };
 
 var random = new Random(simParams.Seed);
@@ -92,9 +92,9 @@ try
     files.WriteSubClones(sample);
     files.WriteParentTree(lcaTree);
     files.WriteMullerDataFrames(aboveCutOff, connectedTree);
-    files.WriteCopyNumbers(sample);
-    files.WriteVAF(vaf, popSizes.Last().total);
-    files.WriteRawData(random, sample, snps, simParams.IsFemale);
+    files.WriteCCF(vaf, popSizes.Last().total);
+    // files.WriteCopyNumbers(sample);
+    // files.WriteRawData(random, sample, snps, simParams.IsFemale);
 } 
 catch (Exception e) 
 {

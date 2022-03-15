@@ -25,8 +25,8 @@ public class Simulator
     {
         SimParams = simParams;
         Rnd = rnd;
-        var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, refKaryotype, SimParams.InitialPop);
+        // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
+        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate,  SimParams.InitialPop);
         Populations = new List<List<SubClone>> {new() {firstClone}};
     }
 
@@ -53,7 +53,7 @@ public class Simulator
                 int newDecayed = Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount);
 
                 // Create new cells
-                double divRate = Math.Clamp(subClone.DivisionRate * Math.Clamp(1f - slowDownRate, 0, 1), 0, 1);
+                double divRate = Math.Clamp(subClone.DivisionRate * (1.0 - slowDownRate), 0.0, 1.0);
                 int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
 
                 //  From some of the cells, create new populations
@@ -80,12 +80,13 @@ public class Simulator
                         ? subClone.DivisionRate * divChange
                         : subClone.DivisionRate + divChange;
                     var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision);
-                    var aberration = SelectMutation();
-                    childClone.Karyotype.ApplyAbberation(aberration);
-                    if (!IsViable(childClone.Karyotype))
-                    {
-                        continue;
-                    }
+                    
+                    // var aberration = SelectMutation();
+                    // childClone.Karyotype.ApplyAbberation(aberration);
+                    // if (!IsViable(childClone.Karyotype))
+                    // {
+                    //     continue;
+                    // }
 
                     // Some of the mutations may create new populations
                     if (mutationI < splitMutantCount)
@@ -98,6 +99,7 @@ public class Simulator
                     }
                 }
 
+                
                 subClone.NewGen(
                     subClone.AliveCount + newCellsCount - splitCellsCount - newMutantCount - newDead,
                     subClone.DeadCount + newDead - newDecayed);
