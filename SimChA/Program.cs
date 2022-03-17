@@ -19,16 +19,16 @@ var simParams = new SimParams
     PopLimit = options.Value.StopCount,
     CutOff = options.Value.CutOff,
     IsFemale = true,
-    DivisionRate = 0.001f,
+    DivisionRate = 0.01f,
     MutationRate = 0.00f,
     DriverProb = 0.0f,
-    FitnessIncMu = .01f,
+    FitnessIncMu = 0.01f,
     FitnessIncSigma = 1, // Multiplication of the Division rate
     DeathRate = 1f, // Multiplication of the Division rate
     SplitRate = 0.0f,
     Confinement = 0.0f,
     DecayRate = 0.0f,
-    InitialPop = 100,
+    InitialPop = 1000,
 
     StepLimit = 10_000,
     IsMultiplicative = false,
@@ -139,6 +139,7 @@ for (int i = 0; i < options.Value.Reps; i++)
     Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds / 1000.0:F2}s\n");
 }
 
+files.CopySummary();
 globalWatch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(globalWatch.ElapsedMilliseconds)}");
 
