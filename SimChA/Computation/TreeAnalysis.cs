@@ -42,8 +42,9 @@ public class TreeAnalysis
         var branches = TreeToBranches(parentTree);
         int depth = CountNodes(branches, data, parentTree.RootId, 0);
         int nodeCount = parentTree.Nodes.Count;
-        int leafCount = nodeCount - data.leafCount;
-        return ( nodeCount, leafCount, depth, data.childCount/(float)leafCount );
+        int leafCount = data.leafCount;
+        float branching = data.childCount / (float)leafCount;
+        return ( nodeCount, leafCount, depth, branching );
     }
 
     private static Dictionary<int, List<int>> TreeToBranches(ParentTree pt)

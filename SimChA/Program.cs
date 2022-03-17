@@ -29,7 +29,7 @@ var simParams = new SimParams
     Confinement = 0.0f,
     DecayRate = 0.0f,
     InitialPop = 100,
-    
+
     StepLimit = 10_000,
     IsMultiplicative = false,
     // AberrationRates =
@@ -52,6 +52,8 @@ FileIO files;
 try
 {
     files = new FileIO(options.Value.OutputPath);
+    files.CreateSummary();
+    files.WriteSimParams(simParams);
 }
 catch (Exception e)
 {
@@ -62,33 +64,35 @@ catch (Exception e)
 var globalWatch = new System.Diagnostics.Stopwatch();
 globalWatch.Start();
 
-for (int i = 0; i < options.Value.Reps; i++) {
+for (int i = 0; i < options.Value.Reps; i++)
+{
     var watch = new System.Diagnostics.Stopwatch();
     watch.Start();
-    
-    Console.WriteLine(string.Join("", Enumerable.Repeat("*" , 100 )));
-    Console.WriteLine($"* Simulation {i}/{options.Value.Reps}");
+
+    Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
+    Console.WriteLine($"* Simulation {i+1}/{options.Value.Reps}");
     Console.WriteLine($"* Sim with seed {seed}, genome length  {ReferenceGenome.TotalLength(true)}");
-    
+
     // Simulation
     var simulator = new Simulator(simParams, random);
     int stepNo = 0;
     var popSizes = new List<(long total, long alive)>();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
-    int clones;
+    int cloneCount;
     do
     {
-        clones = simulator.FlatPops.Count();
-        Console.Write($"Step: {++stepNo:D3}, " +
+        cloneCount = simulator.FlatPops.Count();
+        Console.Write($"\rStep: {++stepNo:D3}, " +
                       $"populations: {simulator.Populations.Count}, " +
-                      $"subClones: {clones}, " +
+                      $"subClones: {cloneCount}, " +
                       $"cells: {popSizes.Last().total}, " +
-                      $"alive: {popSizes.Last().alive}" +
-                      "\r");
+                      $"alive: {popSizes.Last().alive}");
         simulator.Step();
-        popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
-    } while (clones < simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
-    
+        popSizes.Add((CellSampling.PopulationSize(simulator.Populations),
+            CellSampling.AliveCount(simulator.Populations)));
+    } while (cloneCount < simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
+    Console.WriteLine("");
+
     // Analysis
     var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
     var aboveCutOff = simulator.FlatPops.Where(sc
@@ -99,44 +103,40 @@ for (int i = 0; i < options.Value.Reps; i++) {
     var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
     var vaf = TreeAnalysis.ComputeVAF(connectedTree);
     // var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
-    
+
     // Summary
-    ResultSummary resultSummary = new ();
-    (resultSummary.nodeCount, resultSummary.leafCount, resultSummary.treeDepth, resultSummary.branching) 
+    ResultSummary resultSummary = new();
+    (resultSummary.nodeCount, resultSummary.leafCount, resultSummary.treeDepth, resultSummary.branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
-    resultSummary.subcloneTotal = clones;
+    resultSummary.subcloneTotal = cloneCount;
     resultSummary.subcloneSelect = sample.Count;
     resultSummary.generations = stepNo;
     resultSummary.aliveCount = popSizes.Last().alive;
     resultSummary.totalCount = popSizes.Last().total;
-    Console.WriteLine($"SubClone count {resultSummary.subcloneTotal}. Above cutoff: {resultSummary.subcloneSelect}");
-    Console.WriteLine(ResultSummary.Header());
-    Console.WriteLine(resultSummary.ToString());
+    Console.WriteLine(resultSummary.ToLine());
+    
 
     // Output
-    if (i == 0)
+    Console.WriteLine("Writing output");
+    try
     {
-        try
-        {
-            files.WriteSimParams(simParams);
-            files.WriteSubClones(sample);
-            files.WriteParentTree(lcaTree);
-            files.WriteMullerDataFrames(aboveCutOff, connectedTree);
-            files.WriteCCF(vaf, popSizes.Last().total);
-            files.CreateSummary();
-            // files.WriteCopyNumbers(sample);
-            // files.WriteRawData(random, sample, snps, simParams.IsFemale);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Failed to write to disk with error: {e.Message}");
-        }
+        files.WriteSubClones(sample);
+        files.WriteParentTree(lcaTree);
+        files.WriteMullerDataFrames(aboveCutOff, connectedTree);
+        files.WriteCCF(vaf, popSizes.Last().total);
+        files.AddToSummary(resultSummary);
+        files.StoreCopy(i);
+        // files.WriteCopyNumbers(sample);
+        // files.WriteRawData(random, sample, snps, simParams.IsFemale);
     }
-    files.AddToSummary(resultSummary);
-    
-    
+    catch (Exception e)
+    {
+        Console.WriteLine($"Failed to write to disk with error: {e.Message}");
+    }
+
+
     watch.Stop();
-    Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds/1000.0:F2}s\n");
+    Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds / 1000.0:F2}s\n");
 }
 
 globalWatch.Stop();

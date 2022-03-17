@@ -17,30 +17,35 @@ public class FileIO
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string CCF_FILENAME = "ccf.csv";
     private const string SUMMARY_FILENAME = "summary.csv";
+    private string Timestamp { get; }
+    private string RootFolder { get; }
+    private string ExperimentFolder { get; }
 
-    private string OutFolder { get; }
-
-    public FileIO(string outFolder)
+    public FileIO(string rootFolder)
     {
+        Timestamp =  DateTime.Now.ToString("yy_MM_dd_hh_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-        OutFolder = outFolder;
-        if (Directory.Exists(outFolder))
+        
+        RootFolder = rootFolder;
+        if (Directory.Exists(RootFolder))
         {
-            foreach (var file in new DirectoryInfo(outFolder).GetFiles())
+            foreach (var file in new DirectoryInfo(RootFolder).GetFiles())
             {
                 file.Delete();
             }
         }
         else
         {
-            Directory.CreateDirectory(outFolder);
+            Directory.CreateDirectory(RootFolder);
         }
+
+        ExperimentFolder = Path.Join(RootFolder, Timestamp);
+        Directory.CreateDirectory(ExperimentFolder);
     }
 
     public void WriteSubClones(IEnumerable<SubClone> subClones)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
-        Console.WriteLine($"Writing subclones to file {outPath}");
+        string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
         using var outputFile = new StreamWriter(outPath);
         
         foreach (var subClone in subClones)
@@ -51,8 +56,7 @@ public class FileIO
     
     public void WriteParentTree(ParentTree tree)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), DOT_FILENAME);
-        Console.WriteLine($"Writing parent graph to file {outPath}");
+        string outPath = Path.Combine(Path.GetFullPath(RootFolder), DOT_FILENAME);
         using var outputFile = new StreamWriter(outPath);
         
         outputFile.WriteLine("Digraph SimChA {");
@@ -84,9 +88,8 @@ public class FileIO
 
     public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {   
-        string popPath = Path.Combine(Path.GetFullPath(OutFolder), POPULATIONS_DF_FILENAME);
-        string adjPath = Path.Combine(Path.GetFullPath(OutFolder), ADJACENCY_DF_FILENAME);
-        Console.WriteLine($"Writing population to file {popPath}, adjacency to file {adjPath}");
+        string popPath = Path.Combine(Path.GetFullPath(RootFolder), POPULATIONS_DF_FILENAME);
+        string adjPath = Path.Combine(Path.GetFullPath(RootFolder), ADJACENCY_DF_FILENAME);
 
         using var popFile = new StreamWriter(popPath);
         popFile.WriteLine("Id,Step,Pop");
@@ -115,10 +118,9 @@ public class FileIO
 
     public void WriteCCF(Dictionary<int, long> vaf, long totalSize)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CCF_FILENAME);
-        Console.WriteLine($"Writing CCF to the file {outPath}");
+        string outPath = Path.Combine(Path.GetFullPath(RootFolder), CCF_FILENAME);
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine($"id,pop,ccf");
+        outputFile.WriteLine("id,pop,ccf");
         foreach ((int id, long pop) in vaf)
         {
             outputFile.WriteLine($"{id},{pop},{(float) pop / totalSize}");
@@ -161,21 +163,18 @@ public class FileIO
     
     public void WriteRawData(List<SNPData> rawData, int subcloneId)
     {
-        string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), $"{subcloneId}_{BAF_FILENAME}");
-        Console.WriteLine($"Writing BAF to file {outPathBAF}");
+        string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{BAF_FILENAME}");
         using var outputFileBAF = new StreamWriter(outPathBAF);
         outputFileBAF.Write(SNPMetrics.PrintBAF(rawData) + "\n");
 
-        string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), $"{subcloneId}_{LOGR_FILENAME}");
-        Console.WriteLine($"Writing LogR to file {outPathLogR}");
+        string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{LOGR_FILENAME}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
         outputFileLogR.Write(SNPMetrics.PrintLogR(rawData) + "\n");
     }
 
     public void WriteSimParams(SimParams simParams)
     {
-        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
-        Console.WriteLine($"Writing simulation params to file {filePath}");
+        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME);
         using var file = new StreamWriter(filePath);
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
         string jsonString = JsonSerializer.Serialize(simParams, options);
@@ -184,17 +183,26 @@ public class FileIO
 
     public void CreateSummary()
     {
-        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SUMMARY_FILENAME);
-        Console.WriteLine($"Writing summary header to the file {filePath}");
+        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
         using var file = new StreamWriter(filePath);
         file.WriteLine(ResultSummary.Header());
     }
 
     public void AddToSummary(ResultSummary resultSummary)
     {
-        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SUMMARY_FILENAME);
-        Console.WriteLine($"Adding summary to the file {filePath}");
+        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
         using var file = new StreamWriter(filePath, true);
         file.WriteLine(resultSummary.ToString());
+    }
+
+    public void StoreCopy(int runId)
+    {
+        string copyFolder = Path.Join(ExperimentFolder, runId.ToString());
+        Directory.CreateDirectory(copyFolder);
+        
+        foreach (var file in new DirectoryInfo(RootFolder).GetFiles())
+        {
+            file.CopyTo(Path.Join(copyFolder, file.Name));
+        }
     }
 }

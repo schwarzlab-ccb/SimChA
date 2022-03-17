@@ -14,9 +14,12 @@ public struct ResultSummary
     public int subcloneTotal;
     public int subcloneSelect;
 
-    public string ToString() 
+    public string ToString()
         => $"{aliveCount},{totalCount},{generations},{treeDepth},{nodeCount},{leafCount},{branching},{subcloneTotal},{subcloneSelect}";
-    
-    public static string Header() 
+
+    public static string Header()
         => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching,subcloneTotal,subcloneSelect";
+
+    public string ToLine()
+        => string.Join(", ", Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}:{val}"));
 }
