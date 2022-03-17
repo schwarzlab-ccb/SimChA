@@ -9,13 +9,14 @@ public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
     private const string SUBCLONES_FILENAME = "subclones.out";
-    private const string COPYNUMBERS_FILENAME = "copynumbers.out";
+    // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string POPULATIONS_DF_FILENAME = "populations.csv";
     private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string CCF_FILENAME = "ccf.csv";
+    private const string SUMMARY_FILENAME = "summary.csv";
 
     private string OutFolder { get; }
 
@@ -179,5 +180,21 @@ public class FileIO
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
         string jsonString = JsonSerializer.Serialize(simParams, options);
         file.WriteLine(jsonString);
+    }
+
+    public void CreateSummary()
+    {
+        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SUMMARY_FILENAME);
+        Console.WriteLine($"Writing summary header to the file {filePath}");
+        using var file = new StreamWriter(filePath);
+        file.WriteLine(ResultSummary.Header());
+    }
+
+    public void AddToSummary(ResultSummary resultSummary)
+    {
+        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SUMMARY_FILENAME);
+        Console.WriteLine($"Adding summary to the file {filePath}");
+        using var file = new StreamWriter(filePath, true);
+        file.WriteLine(resultSummary.ToString());
     }
 }
