@@ -14,7 +14,7 @@ public struct ResultSummary
     public int SubcloneTotal;
     public int SubcloneSelect;
     public float treeBalance;
-    public float treeBalanceConnected;
+    public float treeBalanceFiltered;
     public float clonalDiversity;
     public float clonalDiversityFiltered;
     public float meanDriversPerCell;
@@ -23,12 +23,12 @@ public struct ResultSummary
     public override string ToString()
         => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching}," +
            $"{SubcloneTotal},{SubcloneSelect},{clonalDiversityFiltered},{clonalDiversity},{treeBalance}," +
-           $"{treeBalanceConnected},{meanDriversPerCell},{meanDriversPerCellFiltered}";
+           $"{treeBalanceFiltered},{meanDriversPerCell},{meanDriversPerCellFiltered}";
 
     public static string Header()
         => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
            "subcloneTotal,subcloneSelect,clonalDiversityFiltered,clonalDiversity,treeBalance" +
-           "treeBalanceConnected,meanDriversPerCell,meanDriversPerCellFiltered";
+           "treeBalanceFiltered,meanDriversPerCell,meanDriversPerCellFiltered";
 
     public string ToLine()
         => string.Join(", ", Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}:{val}"));

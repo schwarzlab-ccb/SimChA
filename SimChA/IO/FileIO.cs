@@ -92,17 +92,17 @@ public class FileIO
         string adjPath = Path.Combine(Path.GetFullPath(RootFolder), ADJACENCY_DF_FILENAME);
 
         using var popFile = new StreamWriter(popPath);
-        popFile.WriteLine("Id,Step,Pop");
+        popFile.WriteLine("Id,Step,Pop,Drivers");
         foreach (var subClone in subClones)
         {
             int start = subClone.FirstGen;
             int end = subClone.LastGen;
             for (int gen = start; gen < end ; gen++)
             {
-                int alive = subClone.AliveAtGen(gen);
-                if (alive > 0)
+                int totalCells = subClone.TotalAtGen(gen);
+                if (totalCells > 0)
                 {
-                    popFile.WriteLine($"{subClone.CloneId},{gen},{alive}");
+                    popFile.WriteLine($"{subClone.CloneId},{gen},{totalCells},{subClone.NumberDrivers}");
                 }
             }
         }

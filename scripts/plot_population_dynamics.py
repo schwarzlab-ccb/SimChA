@@ -49,8 +49,7 @@ if __name__ == "__main__":
     clonal_diversity = np.zeros(len(generations))
     for j, i in enumerate(generations):
         cur_pop = populations_df.loc[populations_df['Step']==i].copy()
-        cur_driver = cur_pop.apply(lambda x: number_mutations[str(x['Id'])], axis=1)
-        mean_driver[j] = (cur_driver * cur_pop['Pop']).sum() / cur_pop['Pop'].sum()
+        mean_driver[j] = (cur_pop['Drivers'] * cur_pop['Pop']).sum() / cur_pop['Pop'].sum()
 
         clonal_diversity[j] = 1 / np.sum((cur_pop['Pop'] / cur_pop['Pop'].sum())**2)
 

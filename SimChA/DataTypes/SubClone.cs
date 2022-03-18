@@ -37,6 +37,9 @@ public class SubClone
     public int AliveAtGen(int gen)
         => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Item1 : 0;
 
+    public int TotalAtGen(int gen)
+        => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Item2 : 0;
+
     public void NewGen(int genAlive, int genDead) 
         => Cells.Add((genAlive, genDead));
 

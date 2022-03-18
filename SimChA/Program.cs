@@ -1,4 +1,4 @@
-using SimChA.DataTypes;
+﻿using SimChA.DataTypes;
 using SimChA.Simulation;
 using CommandLine;
 using SimChA.Computation;
@@ -20,9 +20,9 @@ var simParams = new SimParams
     CutOff = options.Value.CutOff,
     IsFemale = true,
     DivisionRate = 0.001f,
-    MutationRate = 0.00f,
-    DriverProb = 0.0f,
-    FitnessIncMu = 0.01f,
+    MutationRate = 0.05f,
+    DriverProb = 0.02f,
+    FitnessIncMu = 0.02f,
     FitnessIncSigma = 1, // Multiplication of the Division rate
     DeathRate = 1f, // Multiplication of the Division rate
     SplitRate = 0.0f,
@@ -30,7 +30,7 @@ var simParams = new SimParams
     DecayRate = 0.0f,
     InitialPop = 1000,
 
-    StepLimit = 20_000,
+    StepLimit = 10_000,
     IsMultiplicative = false,
     // AberrationRates =
     // {
@@ -99,6 +99,7 @@ for (int i = 0; i < options.Value.Reps; i++)
         => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
     var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
     var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
+    var connectedFullTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, simulator.FlatPops.ToList());
     var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
     var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
     var vaf = TreeAnalysis.ComputeVAF(connectedTree);
@@ -108,10 +109,10 @@ for (int i = 0; i < options.Value.Reps; i++)
     ResultSummary resultSummary = new();
     (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
-    resultSummary.treeBalance = TreeAnalysis.ComputeTreeBalance(lcaTree);
-    resultSummary.treeBalanceConnected = TreeAnalysis.ComputeTreeBalance(connectedTree);
-    resultSummary.clonalDiversity = TreeAnalysis.ComputeClonalDiversity(connectedTree);
-    resultSummary.clonalDiversityFiltered = TreeAnalysis.ComputeClonalDiversityFiltered(aboveCutOff);
+    resultSummary.treeBalance = TreeAnalysis.ComputeTreeBalance(connectedFullTree);
+    resultSummary.treeBalanceFiltered = TreeAnalysis.ComputeTreeBalance(connectedTree);
+    resultSummary.clonalDiversity = TreeAnalysis.ComputeClonalDiversity(simulator.FlatPops.ToList());
+    resultSummary.clonalDiversityFiltered = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
     resultSummary.meanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(simulator.FlatPops.ToList());
     resultSummary.meanDriversPerCellFiltered = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
     resultSummary.SubcloneTotal = cloneCount;

@@ -72,17 +72,8 @@ public class TreeAnalysis
         return treeBalance / Sdash_i_sum;
     }
 
-    public static float ComputeClonalDiversity(ParentTree parentTree)
-    {
-        long totalPop = SubtreeCellCount(parentTree, parentTree.Nodes.Where(n => n.Id == parentTree.RootId).First());
-        float clonalDiversity = 1 / parentTree.Nodes.Where(node => node.Size > 0)
-                                                .Select(node => (float)Math.Pow(((float)node.Size / totalPop), 2))
-                                                .Sum();
 
-        return clonalDiversity;
-    }
-
-    public static float ComputeClonalDiversityFiltered(List<SubClone> subClones)
+    public static float ComputeClonalDiversity(List<SubClone> subClones)
     {
         long totalPop = subClones.Select(clone => clone.AliveCount).Sum();
         float clonalDiversity = 1 / subClones.Select(clone => (float)Math.Pow(((float)clone.AliveCount / totalPop), 2)).Sum();
