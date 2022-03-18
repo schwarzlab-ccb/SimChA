@@ -13,12 +13,14 @@ public struct ResultSummary
     public float Branching;
     public int SubcloneTotal;
     public int SubcloneSelect;
+    public float clonalDiversityFiltered;
+    public float clonalDiversity;
 
     public override string ToString()
-        => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneSelect}";
+        => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneSelect},{clonalDiversityFiltered},{clonalDiversity}";
 
     public static string Header()
-        => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching,subcloneTotal,subcloneSelect";
+        => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching,subcloneTotal,subcloneSelect,clonalDiversityFiltered,clonalDiversity";
 
     public string ToLine()
         => string.Join(", ", Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}:{val}"));

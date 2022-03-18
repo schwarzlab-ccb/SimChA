@@ -47,6 +47,27 @@ public class TreeAnalysis
         return ( nodeCount, leafCount, depth, branching );
     }
 
+    public static float ComputeClonalDiversity(ParentTree parentTree)
+    {
+        long totalPop = SubtreeCellCount(parentTree, parentTree.Nodes.Where(n => n.Id == parentTree.RootId).First());
+
+        float clonalDiversity = parentTree.Nodes.Where(node => node.Size > 0)
+                                                .Select(node => (float)Math.Pow(((float)node.Size / totalPop), 2))
+                                                .Sum();
+
+        return 1 / clonalDiversity;
+    }
+
+    public static float ComputeClonalDiversityFiltered(List<SubClone> subClones)
+    {
+        long totalPop = subClones.Select(clone => clone.AliveCount).Sum();
+
+        float clonalDiversity = subClones.Select(clone => (float)Math.Pow(((float)clone.AliveCount / totalPop), 2)).Sum();
+
+        return 1 / clonalDiversity;
+    }
+
+
     private static Dictionary<int, List<int>> TreeToBranches(ParentTree pt)
     {
         Dictionary<int, List<int>> branches = new();
