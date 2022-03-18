@@ -108,6 +108,8 @@ for (int i = 0; i < options.Value.Reps; i++)
     ResultSummary resultSummary = new();
     (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
+    resultSummary.treeBalance = TreeAnalysis.ComputeTreeBalance(lcaTree);
+    resultSummary.treeBalanceConnected = TreeAnalysis.ComputeTreeBalance(connectedTree);
     resultSummary.clonalDiversity = TreeAnalysis.ComputeClonalDiversity(connectedTree);
     resultSummary.clonalDiversityFiltered = TreeAnalysis.ComputeClonalDiversityFiltered(aboveCutOff);
     resultSummary.SubcloneTotal = cloneCount;

@@ -47,24 +47,47 @@ public class TreeAnalysis
         return ( nodeCount, leafCount, depth, branching );
     }
 
+    public static float ComputeTreeBalance(ParentTree parentTree)
+    {
+        float treeBalance = 0;
+        long Sdash_i_sum = 0;
+        var subtreeCount = ComputeVAF(parentTree);
+        var branches = TreeToBranches(parentTree);
+
+        foreach (var node in parentTree.Nodes.Where(n => branches[n.Id].Count() >= 2))
+        {
+            int nChildren = branches[node.Id].Count();
+            long S_i = subtreeCount[node.Id];
+            long Sdash_i = S_i - node.Size;
+            Sdash_i_sum += Sdash_i;
+
+            float W_i = branches[node.Id].Select(b => (float)subtreeCount[b] / Sdash_i)
+                                         .Where(p => p > 0)
+                                         .Select(p => -1 * p * (float)Math.Log(p) / (float)Math.Log(nChildren))
+                                         .Sum();
+
+            treeBalance += Sdash_i * Sdash_i / S_i * W_i;
+        }
+
+        return treeBalance / Sdash_i_sum;
+    }
+
     public static float ComputeClonalDiversity(ParentTree parentTree)
     {
         long totalPop = SubtreeCellCount(parentTree, parentTree.Nodes.Where(n => n.Id == parentTree.RootId).First());
-
-        float clonalDiversity = parentTree.Nodes.Where(node => node.Size > 0)
+        float clonalDiversity = 1 / parentTree.Nodes.Where(node => node.Size > 0)
                                                 .Select(node => (float)Math.Pow(((float)node.Size / totalPop), 2))
                                                 .Sum();
 
-        return 1 / clonalDiversity;
+        return clonalDiversity;
     }
 
     public static float ComputeClonalDiversityFiltered(List<SubClone> subClones)
     {
         long totalPop = subClones.Select(clone => clone.AliveCount).Sum();
+        float clonalDiversity = 1 / subClones.Select(clone => (float)Math.Pow(((float)clone.AliveCount / totalPop), 2)).Sum();
 
-        float clonalDiversity = subClones.Select(clone => (float)Math.Pow(((float)clone.AliveCount / totalPop), 2)).Sum();
-
-        return 1 / clonalDiversity;
+        return clonalDiversity;
     }
 
 
