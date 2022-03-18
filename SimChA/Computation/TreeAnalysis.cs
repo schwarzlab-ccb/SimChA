@@ -90,6 +90,8 @@ public class TreeAnalysis
         return clonalDiversity;
     }
 
+    public static float ComputeMeanDriversPerCell(List<SubClone> SubClones)
+        => (float)SubClones.Select(clone => clone.TotalCount * clone.NumberDrivers).Sum() / SubClones.Select(clone => clone.TotalCount).Sum();
 
     private static Dictionary<int, List<int>> TreeToBranches(ParentTree pt)
     {

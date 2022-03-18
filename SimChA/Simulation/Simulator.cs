@@ -26,7 +26,7 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate,  SimParams.InitialPop);
+        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, 0, SimParams.InitialPop);
         Populations = new List<List<SubClone>> {new() {firstClone}};
     }
 
@@ -60,7 +60,7 @@ public class Simulator
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
                 for (int splitI = 0; splitI < splitCellsCount; splitI++)
                 {
-                    var childClone = subClone.CreateChild(GetNewId(), _generation, subClone.DivisionRate);
+                    var childClone = subClone.CreateChild(GetNewId(), _generation, subClone.DivisionRate, subClone.NumberDrivers);
                     newPops.Add(childClone);
                 }
 
@@ -70,16 +70,18 @@ public class Simulator
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
                     double divChange = SimParams.IsMultiplicative ? 1 : 0;
+                    bool isDriver = false;
                     if (Rnd.NextDouble() < SimParams.DriverProb)
                     {
                         divChange = Exponential.Sample(Rnd, SimParams.FitnessIncMu)
                                     * (SimParams.FitnessIncMu * SimParams.FitnessIncSigma * SimParams.DivisionRate);
+                        isDriver = true;
                     }
 
                     double newDivision = SimParams.IsMultiplicative
                         ? subClone.DivisionRate * divChange
                         : subClone.DivisionRate + divChange;
-                    var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision);
+                    var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision, subClone.NumberDrivers + (isDriver ? 1 : 0));
                     
                     // var aberration = SelectMutation();
                     // childClone.Karyotype.ApplyAbberation(aberration);
@@ -99,7 +101,6 @@ public class Simulator
                     }
                 }
 
-                
                 subClone.NewGen(
                     subClone.AliveCount + newCellsCount - splitCellsCount - newMutantCount - newDead,
                     subClone.DeadCount + newDead - newDecayed);
