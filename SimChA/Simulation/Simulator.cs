@@ -65,7 +65,7 @@ public class Simulator
                 }
 
                 // Mutate some of the cells
-                int newMutantCount = Binomial.Sample(Rnd, SimParams.MutationRate, newCellsCount);
+                int newMutantCount = Binomial.Sample(Rnd, SimParams.MutationRate, newCellsCount * 2);
                 int splitMutantCount = Binomial.Sample(Rnd, SimParams.SplitRate, newMutantCount);
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
