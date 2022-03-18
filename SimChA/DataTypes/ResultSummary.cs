@@ -4,18 +4,18 @@ namespace SimChA.DataTypes;
 
 public struct ResultSummary
 {
-    public long aliveCount;
-    public long totalCount;
-    public int generations;
-    public int treeDepth;
-    public int nodeCount;
-    public int leafCount;
-    public float branching;
-    public int subcloneTotal;
-    public int subcloneSelect;
+    public long AliveCount;
+    public long TotalCount;
+    public int Generations;
+    public int TreeDepth;
+    public int NodeCount;
+    public int LeafCount;
+    public float Branching;
+    public int SubcloneTotal;
+    public int SubcloneSelect;
 
-    public string ToString()
-        => $"{aliveCount},{totalCount},{generations},{treeDepth},{nodeCount},{leafCount},{branching},{subcloneTotal},{subcloneSelect}";
+    public override string ToString()
+        => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneSelect}";
 
     public static string Header()
         => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching,subcloneTotal,subcloneSelect";

@@ -22,8 +22,28 @@ public struct SimParams
     public int InitialPop;
     public bool IsMultiplicative;
 
-    public readonly Dictionary<AberrationEnum, double> AberrationRates =
-        Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
+    public SimParams()
+    {
+        Seed = 0;
+        PopLimit = 0;
+        StepLimit = 0;
+        CutOff = 0;
+        IsFemale = false;
+        DivisionRate = 0;
+        Confinement = 0;
+        MutationRate = 0;
+        DriverProb = 0;
+        DeathRate = 0;
+        DecayRate = 0;
+        SplitRate = 0;
+        FitnessIncMu = 0;
+        FitnessIncSigma = 0;
+        InitialPop = 0;
+        IsMultiplicative = false;
+        AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
+    }
+
+    public Dictionary<AberrationEnum, double> AberrationRates { get; }
 
     public double SumRates() => AberrationRates.Sum(ar => ar.Value);
 }

@@ -19,7 +19,7 @@ var simParams = new SimParams
     PopLimit = options.Value.StopCount,
     CutOff = options.Value.CutOff,
     IsFemale = true,
-    DivisionRate = 0.01f,
+    DivisionRate = 0.001f,
     MutationRate = 0.00f,
     DriverProb = 0.0f,
     FitnessIncMu = 0.01f,
@@ -30,7 +30,7 @@ var simParams = new SimParams
     DecayRate = 0.0f,
     InitialPop = 1000,
 
-    StepLimit = 10_000,
+    StepLimit = 20_000,
     IsMultiplicative = false,
     // AberrationRates =
     // {
@@ -106,13 +106,13 @@ for (int i = 0; i < options.Value.Reps; i++)
 
     // Summary
     ResultSummary resultSummary = new();
-    (resultSummary.nodeCount, resultSummary.leafCount, resultSummary.treeDepth, resultSummary.branching)
+    (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
-    resultSummary.subcloneTotal = cloneCount;
-    resultSummary.subcloneSelect = sample.Count;
-    resultSummary.generations = stepNo;
-    resultSummary.aliveCount = popSizes.Last().alive;
-    resultSummary.totalCount = popSizes.Last().total;
+    resultSummary.SubcloneTotal = cloneCount;
+    resultSummary.SubcloneSelect = sample.Count;
+    resultSummary.Generations = stepNo;
+    resultSummary.AliveCount = popSizes.Last().alive;
+    resultSummary.TotalCount = popSizes.Last().total;
     Console.WriteLine(resultSummary.ToLine());
     
 
