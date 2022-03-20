@@ -40,5 +40,5 @@ if __name__ == "__main__":
     g.map_upper(sns.scatterplot)
     g.map_lower(sns.kdeplot)
     g.map_diag(sns.histplot)
-    plt.savefig(os.path.join(input_folder, 'metrics_relationships.png'))
+    plt.savefig(os.path.join(output_folder, 'metrics_relationships.png'))
     plt.close()
