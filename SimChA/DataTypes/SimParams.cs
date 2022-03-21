@@ -17,7 +17,7 @@ public struct SimParams
     public double DeathRate;
     public double DecayRate;
     public double SplitRate;
-    public double FitnessIncMu;
+    public double FitnessLambda;
     public double FitnessIncSigma;
     public int InitialPop;
     public bool IsMultiplicative;
@@ -36,7 +36,7 @@ public struct SimParams
         DeathRate = 0;
         DecayRate = 0;
         SplitRate = 0;
-        FitnessIncMu = 0;
+        FitnessLambda = 0;
         FitnessIncSigma = 0;
         InitialPop = 0;
         IsMultiplicative = false;

@@ -39,18 +39,18 @@ public class Simulator
             List<SubClone> newClones = new();
             long popSize = CellSampling.PopulationSize(pop);
             slowDownRate = 0f;
-            if (SimParams.Confinement > 0f && popSize > 1000)
+            if (SimParams.Confinement > 0f)
             {
-                slowDownRate = Math.Pow(popSize / 1000f, 1 / 3f) * SimParams.Confinement;
+                slowDownRate = Math.Pow(popSize, 1/3f) * SimParams.Confinement / 1000.0;
             }
 
-            foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
+            foreach (var subClone in pop.Where(sc => sc.TotalCount > 0))
             {
                 // Kill cells
                 int newDead = Binomial.Sample(Rnd, SimParams.DivisionRate * SimParams.DeathRate, subClone.AliveCount);
 
                 // Decayed cells
-                int newDecayed = Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount);
+                int newDecayed = SimParams.DecayRate > 0 ? Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount) : 0;
 
                 // Create new cells
                 double divRate = Math.Clamp(subClone.DivisionRate * (1.0 - slowDownRate), 0.0, 1.0);
@@ -73,8 +73,7 @@ public class Simulator
                     bool isDriver = false;
                     if (Rnd.NextDouble() < SimParams.DriverProb)
                     {
-                        divChange = Exponential.Sample(Rnd, SimParams.FitnessIncMu)
-                                    * (SimParams.FitnessIncMu * SimParams.FitnessIncSigma * SimParams.DivisionRate);
+                        divChange = Exponential.Sample(Rnd, SimParams.FitnessLambda) * SimParams.FitnessLambda * SimParams.DivisionRate;
                         isDriver = true;
                     }
 

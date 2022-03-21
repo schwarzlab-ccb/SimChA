@@ -7,13 +7,14 @@ public class SubClone
     public int FirstGen { get; }
     public int CloneId { get; }
     public int ParentId { get; }
-    // public Karyotype Karyotype { get; }
     public double DivisionRate { get; }
     public int NumberDrivers { get; }
-    private List<(int, int)> Cells { get; } // (Alive,Dead)
+    private List<(int Alive, int Dead)> Cells { get; } 
+    
+    // public Karyotype Karyotype { get; }
 
-    public int AliveCount => Cells.Last().Item1;
-    public int DeadCount => Cells.Last().Item2;
+    public int AliveCount => Cells.Last().Alive;
+    public int DeadCount => Cells.Last().Dead;
     public int TotalCount => AliveCount + DeadCount;
     public int LastGen => FirstGen + Cells.Count;
     
@@ -35,14 +36,16 @@ public class SubClone
         => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Drivers: {NumberDrivers}";
 
     public int AliveAtGen(int gen)
-        => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Item1 : 0;
+        => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive : 0;
 
     public int TotalAtGen(int gen)
-        => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Item2 : 0;
-
+    {
+        return gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive + Cells[gen - FirstGen].Dead : 0;
+    }
+    
     public void NewGen(int genAlive, int genDead) 
         => Cells.Add((genAlive, genDead));
 
     public void AddNewCells(int newAliveCount) 
-        => Cells[^1] = (Cells[^1].Item1 + newAliveCount, Cells[^1].Item2);
+        => Cells[^1] = (Cells[^1].Dead + newAliveCount, Cells[^1].Dead);
 }
