@@ -66,5 +66,5 @@ if __name__ == "__main__":
     axs[2].set_xlabel('mean nr drivers')
     axs[2].set_ylabel('clonal diversity')
     plt.tight_layout()
-    plt.savefig(os.path.join(input_folder, 'population_score.png'))
+    plt.savefig(os.path.join(output_folder, 'population_score.png'))
     plt.close()

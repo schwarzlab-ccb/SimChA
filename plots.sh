@@ -13,3 +13,5 @@ echo "Plotting Population Dynamics"
 python3 scripts/plot_population_dynamics.py --input_folder $out --output_folder $out
 echo "Plotting Parent Graph"
 dot -Tpng $out/parent_graph.dot > $out/parent_tree.png
+echo "plotting Metrics Overview"
+python plot_metrics_single_experiment.py $out/populations.csv $out/parent_tree.csv

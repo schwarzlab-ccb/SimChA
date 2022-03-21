@@ -27,7 +27,7 @@ public struct ResultSummary
 
     public static string Header()
         => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
-           "subcloneTotal,subcloneSelect,clonalDiversityFiltered,clonalDiversity,treeBalance" +
+           "subcloneTotal,subcloneSelect,clonalDiversityFiltered,clonalDiversity,treeBalance," +
            "treeBalanceFiltered,meanDriversPerCell,meanDriversPerCellFiltered";
 
     public string ToLine()
