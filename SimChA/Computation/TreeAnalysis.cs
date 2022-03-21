@@ -75,8 +75,8 @@ public class TreeAnalysis
 
     public static float ComputeClonalDiversity(List<SubClone> subClones)
     {
-        long totalPop = subClones.Select(clone => clone.AliveCount).Sum();
-        float clonalDiversity = 1 / subClones.Select(clone => (float)Math.Pow(((float)clone.AliveCount / totalPop), 2)).Sum();
+        long totalPop = subClones.Select(clone => clone.TotalCount).Sum();
+        float clonalDiversity = 1 / subClones.Select(clone => (float)Math.Pow((float)clone.TotalCount / totalPop, 2)).Sum();
 
         return clonalDiversity;
     }

@@ -30,7 +30,7 @@ var simParams = new SimParams
     DecayRate = 0.0f,
     InitialPop = 100,
 
-    StepLimit = 10_000,
+    StepLimit = 20_000,
     IsMultiplicative = true,
     // AberrationRates =
     // {
@@ -109,12 +109,12 @@ for (int i = 0; i < options.Value.Reps; i++)
     ResultSummary resultSummary = new();
     (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
-    // resultSummary.treeBalance = TreeAnalysis.ComputeTreeBalance(connectedFullTree);
-    // resultSummary.treeBalanceFiltered = TreeAnalysis.ComputeTreeBalance(connectedTree);
-    // resultSummary.clonalDiversity = TreeAnalysis.ComputeClonalDiversity(simulator.FlatPops.ToList());
-    // resultSummary.clonalDiversityFiltered = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
-    // resultSummary.meanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(simulator.FlatPops.ToList());
-    // resultSummary.meanDriversPerCellFiltered = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
+    resultSummary.treeBalance = TreeAnalysis.ComputeTreeBalance(connectedFullTree);
+    resultSummary.treeBalanceFiltered = TreeAnalysis.ComputeTreeBalance(connectedTree);
+    resultSummary.clonalDiversity = TreeAnalysis.ComputeClonalDiversity(simulator.FlatPops.ToList());
+    resultSummary.clonalDiversityFiltered = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
+    resultSummary.meanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(simulator.FlatPops.ToList());
+    resultSummary.meanDriversPerCellFiltered = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
     resultSummary.SubcloneTotal = cloneCount;
     resultSummary.SubcloneSelect = sample.Count;
     resultSummary.Generations = stepNo;
