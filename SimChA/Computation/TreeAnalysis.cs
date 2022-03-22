@@ -54,7 +54,7 @@ public class TreeAnalysis
         var subtreeCount = ComputeVAF(parentTree);
         var branches = TreeToBranches(parentTree);
 
-        foreach (var node in parentTree.Nodes.Where(n => branches[n.Id].Count() >= 2))
+        foreach (var node in parentTree.Nodes.Where(n => branches[n.Id].Count >= 2))
         {
             int nChildren = branches[node.Id].Count();
             long S_i = subtreeCount[node.Id];

@@ -73,7 +73,8 @@ public class Simulator
                     bool isDriver = false;
                     if (Rnd.NextDouble() < SimParams.DriverProb)
                     {
-                        divChange = Exponential.Sample(Rnd, SimParams.FitnessLambda) * SimParams.FitnessLambda * SimParams.DivisionRate * SimParams.FitnessInc;
+                        // divChange = Exponential.Sample(Rnd, SimParams.FitnessLambda) * SimParams.FitnessLambda * SimParams.DivisionRate * SimParams.FitnessInc;
+                        divChange = SimParams.DivisionRate * SimParams.FitnessInc;
                         isDriver = true;
                     }
 
