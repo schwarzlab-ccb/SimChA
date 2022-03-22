@@ -20,14 +20,14 @@ var simParams = new SimParams
     CutOff = options.Value.CutOff,
     IsFemale = true,
     DivisionRate = 0.01f,
-    MutationRate = 0.001f,
-    DriverProb = 0.01f,
+    MutationRate = 0.002f,
+    DriverProb = .002f,
     FitnessLambda = 1f,
     FitnessInc = .1f, // Multiplication of the Division rate
-    DeathRate = .95f, // Multiplication of the Division rate
-    Confinement = 1f,
+    DeathRate = .99f, // Multiplication of the Division rate
+    Confinement = 0f,
     SplitRate = 0.0f,
-    DecayRate = 0.01f,
+    DecayRate = 0.0f,
     InitialPop = 1000,
 
     StepLimit = 100_000,
@@ -85,6 +85,7 @@ for (int i = 0; i < options.Value.Reps; i++)
         Console.Write(($"\rStep: {++stepNo:D3}, " +
                       $"populations: {simulator.Populations.Count}, " +
                       $"subClones: {cloneCount}, " +
+                      $"alive SC: {simulator.AliveSC}, " +
                       $"cells: {popSizes.Last().total}, " +
                       $"alive: {popSizes.Last().alive}").PadRight(80));
         simulator.Step();
