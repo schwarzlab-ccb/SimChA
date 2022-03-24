@@ -23,7 +23,7 @@ public class FileIO
 
     public FileIO(string rootFolder)
     {
-        Timestamp =  DateTime.Now.ToString("yy_MM_dd_hh_mm_ss");
+        Timestamp =  DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
         
         RootFolder = rootFolder;
@@ -99,7 +99,7 @@ public class FileIO
             int end = subClone.LastGen;
             for (int gen = start; gen < end ; gen++)
             {
-                int totalCells = subClone.TotalAtGen(gen);
+                int totalCells = subClone.AliveAtGen(gen);
                 if (totalCells > 0)
                 {
                     popFile.WriteLine($"{subClone.CloneId},{gen},{totalCells},{subClone.NumberDrivers}");

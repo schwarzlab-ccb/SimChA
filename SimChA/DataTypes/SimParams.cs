@@ -18,7 +18,7 @@ public struct SimParams
     public double DecayRate;
     public double SplitRate;
     public double FitnessLambda;
-    public double FitnessIncSigma;
+    public double FitnessInc;
     public int InitialPop;
     public bool IsMultiplicative;
 
@@ -37,7 +37,7 @@ public struct SimParams
         DecayRate = 0;
         SplitRate = 0;
         FitnessLambda = 0;
-        FitnessIncSigma = 0;
+        FitnessInc = 0;
         InitialPop = 0;
         IsMultiplicative = false;
         AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
