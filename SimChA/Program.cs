@@ -20,12 +20,12 @@ var simParams = new SimParams
     CutOff = options.Value.CutOff,
     DivisionRate = 0.01f,
     MutationRate = 0.0001f,
-    FitnessLambdaInv = 0.05f,
-    Confinement = .05f,
+    DriverProb = 1f,
+    FitnessLambdaInv = 0.1f,
+    Confinement = .1f,
     SplitRate = 0.0f,
     
-    InitialPop = 1000,
-    DriverProb = 1f,
+    InitialPop = 1,
 
     StepLimit = 100_000,
     IsMultiplicative = false,

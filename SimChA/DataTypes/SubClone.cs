@@ -9,7 +9,10 @@ public class SubClone
     public int ParentId { get; }
     public double DivisionRate { get; }
     public int NumberDrivers { get; }
-    private List<(int Alive, int Dead)> Cells { get; } 
+    private List<(int Alive, int Dead)> Cells { get; }
+
+    public double ToDivide { get; set; }
+    public double ToDie { get; set; }
     
     // public Karyotype Karyotype { get; }
 
@@ -27,6 +30,8 @@ public class SubClone
         DivisionRate = Math.Clamp(divisionRate, 0, 1);
         FirstGen = generation;
         Cells = new List<(int, int)> { (popSize, 0) };
+        ToDivide = 0;
+        ToDie = 0;
     }
     
     public SubClone CreateChild(int newId, int generation, double divRateChange, int numberDrivers)
@@ -46,7 +51,4 @@ public class SubClone
     
     public void NewGen(int genAlive, int genDead) 
         => Cells.Add((genAlive, genDead));
-
-    public void AddNewCells(int newAliveCount) 
-        => Cells[^1] = (Cells[^1].Dead + newAliveCount, Cells[^1].Dead);
 }

@@ -25,7 +25,9 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, 0, (int) Math.Round(1 / SimParams.MutationRate));
+        int popSize = (int)Math.Round(1 / SimParams.MutationRate);
+        popSize = simParams.InitialPop;
+        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate * (1 + SimParams.FitnessLambdaInv), 1, popSize);
         Populations = new List<List<SubClone>> {new() {firstClone}};
     }
 
@@ -54,14 +56,18 @@ public class Simulator
                 AliveSC++;
                 
                 // Kill cells
-                int newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, subClone.AliveCount);
+                double deadFraction = SimParams.DivisionRate * subClone.AliveCount + subClone.ToDie;
+                int newDead = (int)deadFraction;
+                subClone.ToDie = deadFraction - newDead;
 
                 // Decayed cells
                 // int newDecayed = SimParams.DecayRate > 0 ? Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount) : 0;
  
                 // Create new cells
                 double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
-                int newCellsCount = divRate > 0 ? Binomial.Sample(Rnd, divRate, subClone.AliveCount) : 0;
+                double divideFraction = (divRate > 0 ? divRate * subClone.AliveCount : 0) + subClone.ToDivide;
+                int newCellsCount = (int)divideFraction;
+                subClone.ToDivide = divideFraction - newCellsCount;
 
                 //  From some of the cells, create new populations
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
