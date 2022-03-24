@@ -20,8 +20,10 @@ public class FileIO
     private string Timestamp { get; }
     private string RootFolder { get; }
     private string ExperimentFolder { get; }
+    
+    private bool IsRepeated { get;  }
 
-    public FileIO(string rootFolder)
+    public FileIO(string rootFolder, bool isRepeated)
     {
         Timestamp =  DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -39,8 +41,18 @@ public class FileIO
             Directory.CreateDirectory(RootFolder);
         }
 
-        ExperimentFolder = Path.Join(RootFolder, Timestamp);
-        Directory.CreateDirectory(ExperimentFolder);
+        IsRepeated = isRepeated;
+
+        if (IsRepeated)
+        {
+            ExperimentFolder = Path.Join(RootFolder, Timestamp);
+            Directory.CreateDirectory(ExperimentFolder);
+        }
+        else
+        {
+            ExperimentFolder = RootFolder;
+        }
+        CreateSummary();
     }
 
     public void WriteSubClones(IEnumerable<SubClone> subClones)
@@ -181,7 +193,7 @@ public class FileIO
         file.WriteLine(jsonString);
     }
 
-    public void CreateSummary()
+    private void CreateSummary()
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
         using var file = new StreamWriter(filePath);
@@ -197,6 +209,8 @@ public class FileIO
 
     public void StoreCopy(int runId)
     {
+        if (!IsRepeated) return;
+        
         string copyFolder = Path.Join(ExperimentFolder, runId.ToString());
         Directory.CreateDirectory(copyFolder);
         
@@ -208,6 +222,8 @@ public class FileIO
 
     public void CopySummary()
     {
+        if (!IsRepeated) return;
+        
         File.Copy(
             Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME), 
             Path.Combine(Path.GetFullPath(RootFolder), SUMMARY_FILENAME));

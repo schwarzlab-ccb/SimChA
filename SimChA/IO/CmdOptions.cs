@@ -10,8 +10,8 @@ public class CmdOptions
     [Option('c', "cutoff", Required = false, Default = 0, HelpText = "Minimal fraction of a subclone to be considered for an output.")]
     public float CutOff { get; set; }
     
-    [Option('r', "reps", Required = false, Default = 0, HelpText = "Number of repetitions")]
-    public float Reps { get; set; }
+    [Option('r', "reps", Required = false, Default = 1, HelpText = "Number of repetitions")]
+    public int RepsCount { get; set; }
     
     [Option('O', "output", Required = false, Default = "../out", HelpText = "The path to the output files.")]
     public string OutputPath { get; set; }

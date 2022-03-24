@@ -20,11 +20,11 @@ var simParams = new SimParams
     CutOff = options.Value.CutOff,
     IsFemale = true,
     DivisionRate = 0.001f,
-    MutationRate = 0.002f,
-    DriverProb = .002f,
+    MutationRate = 0.01f,
+    DriverProb = .005f,
     FitnessLambda = 1f,
-    FitnessInc = .1f, // Multiplication of the Division rate
-    DeathRate = .99f, // Multiplication of the Division rate
+    FitnessInc = 1f, // Multiplication of the Division rate
+    DeathRate = 1f, // Multiplication of the Division rate
     Confinement = 0f,
     SplitRate = 0.0f,
     DecayRate = 0.0f,
@@ -49,10 +49,10 @@ var simParams = new SimParams
 
 var random = new Random(simParams.Seed);
 FileIO files;
+bool isRepeated = options.Value.RepsCount > 1;
 try
 {
-    files = new FileIO(options.Value.OutputPath);
-    files.CreateSummary();
+    files = new FileIO(options.Value.OutputPath, isRepeated);
     files.WriteSimParams(simParams);
 }
 catch (Exception e)
@@ -64,13 +64,13 @@ catch (Exception e)
 var globalWatch = new System.Diagnostics.Stopwatch();
 globalWatch.Start();
 
-for (int i = 0; i < options.Value.Reps; i++)
+for (int i = 0; i < options.Value.RepsCount; i++)
 {
     var watch = new System.Diagnostics.Stopwatch();
     watch.Start();
 
     Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
-    Console.WriteLine($"* Simulation {i+1}/{options.Value.Reps}");
+    Console.WriteLine($"* Simulation {i+1}/{options.Value.RepsCount}");
     Console.WriteLine($"* Sim with seed {seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 
     // Simulation
