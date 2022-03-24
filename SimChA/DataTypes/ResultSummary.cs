@@ -22,12 +22,12 @@ public struct ResultSummary
 
     public override string ToString()
         => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching}," +
-           $"{SubcloneTotal},{SubcloneSelect},{clonalDiversityFiltered},{clonalDiversity},{treeBalance}," +
+           $"{SubcloneTotal},{SubcloneSelect},{clonalDiversity},{clonalDiversityFiltered},{treeBalance}," +
            $"{treeBalanceFiltered},{meanDriversPerCell},{meanDriversPerCellFiltered}";
 
     public static string Header()
         => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
-           "subcloneTotal,subcloneSelect,clonalDiversityFiltered,clonalDiversity,treeBalance," +
+           "subcloneTotal,subcloneSelect,clonalDiversity,clonalDiversityFiltered,treeBalance," +
            "treeBalanceFiltered,meanDriversPerCell,meanDriversPerCellFiltered";
 
     public string ToLine()
