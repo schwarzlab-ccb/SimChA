@@ -33,7 +33,8 @@ public class SubClone
         => new(newId, CloneId, generation, divRateChange, numberDrivers);
     
     public override string ToString() 
-        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Drivers: {NumberDrivers}";
+        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, " +
+           $"Dead: {DeadCount}, Drivers: {NumberDrivers}, DivisionRate: {DivisionRate}";
 
     public int AliveAtGen(int gen)
         => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive : 0;

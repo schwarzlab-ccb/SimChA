@@ -62,7 +62,7 @@ public class FileIO
         
         foreach (var subClone in subClones)
         {
-            outputFile.Write(subClone);
+            outputFile.WriteLine(subClone);
         }
     }
     

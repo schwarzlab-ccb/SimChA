@@ -18,9 +18,6 @@ public class Simulator
     private int GetNewId() => ++newId;
 
     private int _generation;
-
-    private double slowDownRate;
-
     private Random Rnd { get; }
 
     public Simulator(SimParams simParams, Random rnd)
@@ -28,7 +25,7 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
-        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, 0, SimParams.InitialPop);
+        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate, 0, (int) Math.Round(1 / SimParams.MutationRate));
         Populations = new List<List<SubClone>> {new() {firstClone}};
     }
 
@@ -40,10 +37,15 @@ public class Simulator
         {
             List<SubClone> newClones = new();
             long popSize = CellSampling.PopulationSize(pop);
-            slowDownRate = 0f;
-            if (SimParams.Confinement > 0f)
+            long aliveCount = CellSampling.AliveCount(pop);
+            double divisionFraction = 1f;
+            if (SimParams.Confinement > 0 && aliveCount > 1/SimParams.Confinement)
             {
-                slowDownRate = Math.Pow(popSize, 1/3f) * SimParams.Confinement / 1000.0;
+                double divisible = Math.Round(Math.Pow(popSize, 2 / 3f)) / SimParams.Confinement;
+                if (aliveCount > divisible && aliveCount > 0)
+                {
+                    divisionFraction = divisible / aliveCount;
+                }
             }
 
             AliveSC = 0;
@@ -52,14 +54,14 @@ public class Simulator
                 AliveSC++;
                 
                 // Kill cells
-                int newDead = Binomial.Sample(Rnd, SimParams.DivisionRate * SimParams.DeathRate, subClone.AliveCount);
+                int newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, subClone.AliveCount);
 
                 // Decayed cells
                 // int newDecayed = SimParams.DecayRate > 0 ? Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount) : 0;
  
                 // Create new cells
-                double divRate = Math.Clamp(subClone.DivisionRate * (1.0 - slowDownRate), 0.0, 1.0);
-                int newCellsCount = Binomial.Sample(Rnd, divRate, subClone.AliveCount);
+                double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
+                int newCellsCount = divRate > 0 ? Binomial.Sample(Rnd, divRate, subClone.AliveCount) : 0;
 
                 //  From some of the cells, create new populations
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
@@ -78,8 +80,8 @@ public class Simulator
                     bool isDriver = false;
                     if (Rnd.NextDouble() < SimParams.DriverProb)
                     {
-                        // divChange = Exponential.Sample(Rnd, SimParams.FitnessLambda) * SimParams.FitnessLambda * SimParams.DivisionRate * SimParams.FitnessInc;
-                        divChange = SimParams.DivisionRate * SimParams.FitnessInc;
+                        divChange = Exponential.Sample(Rnd, 1 / SimParams.FitnessLambdaInv) * SimParams.DivisionRate;
+                        divChange = Math.Min(divChange, 3 * SimParams.FitnessLambdaInv);
                         isDriver = true;
                     }
 

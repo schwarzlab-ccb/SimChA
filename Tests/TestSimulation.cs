@@ -23,7 +23,6 @@ public class TestSimulation
             DivisionRate = 0.1f, 
             MutationRate = 0.01f,
             DriverProb = 1f, 
-            IsFemale = true,
             AberrationRates =
             {
                 [AberrationEnum.InternalDeletion] = 50f,

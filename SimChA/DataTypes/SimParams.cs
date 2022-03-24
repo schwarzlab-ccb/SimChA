@@ -9,16 +9,13 @@ public struct SimParams
     public int PopLimit;
     public int StepLimit;
     public float CutOff;
-    public bool IsFemale;
+    // public bool IsFemale;
     public double DivisionRate;
     public double Confinement;
     public double MutationRate;
     public double DriverProb;
-    public double DeathRate;
-    public double DecayRate;
     public double SplitRate;
-    public double FitnessLambda;
-    public double FitnessInc;
+    public double FitnessLambdaInv;
     public int InitialPop;
     public bool IsMultiplicative;
 
@@ -28,16 +25,13 @@ public struct SimParams
         PopLimit = 0;
         StepLimit = 0;
         CutOff = 0;
-        IsFemale = false;
+        // IsFemale = false;
         DivisionRate = 0;
         Confinement = 0;
         MutationRate = 0;
         DriverProb = 0;
-        DeathRate = 0;
-        DecayRate = 0;
         SplitRate = 0;
-        FitnessLambda = 0;
-        FitnessInc = 0;
+        FitnessLambdaInv = 0;
         InitialPop = 0;
         IsMultiplicative = false;
         AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);

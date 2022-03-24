@@ -18,17 +18,14 @@ var simParams = new SimParams
     Seed = seed,
     PopLimit = options.Value.StopCount,
     CutOff = options.Value.CutOff,
-    IsFemale = true,
-    DivisionRate = 0.001f,
-    MutationRate = 0.01f,
-    DriverProb = .005f,
-    FitnessLambda = 1f,
-    FitnessInc = 1f, // Multiplication of the Division rate
-    DeathRate = 1f, // Multiplication of the Division rate
-    Confinement = 0f,
+    DivisionRate = 0.01f,
+    MutationRate = 0.0001f,
+    FitnessLambdaInv = 0.05f,
+    Confinement = .05f,
     SplitRate = 0.0f,
-    DecayRate = 0.0f,
+    
     InitialPop = 1000,
+    DriverProb = 1f,
 
     StepLimit = 100_000,
     IsMultiplicative = false,
@@ -123,7 +120,6 @@ for (int i = 0; i < options.Value.RepsCount; i++)
     resultSummary.TotalCount = popSizes.Last().total;
     Console.WriteLine(resultSummary.ToLine());
     
-
     // Output
     Console.WriteLine("Writing output");
     try
@@ -141,8 +137,7 @@ for (int i = 0; i < options.Value.RepsCount; i++)
     {
         Console.WriteLine($"Failed to write to disk with error: {e.Message}");
     }
-
-
+    
     watch.Stop();
     Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds / 1000.0:F2}s\n");
 }
