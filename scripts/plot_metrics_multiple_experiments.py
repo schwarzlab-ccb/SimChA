@@ -39,7 +39,6 @@ if __name__ == "__main__":
 
     # aliveCount, totalCount, generations, treeDepth, nodeCount, leafCount, branching, subcloneTotal, subcloneSelect, clonalDiversityFiltered, clonalDiversity, treeBalancetreeBalanceFiltered, meanDriversPerCell, meanDriversPerCellFiltered
 
-    print(summary_df)
     # fig, ax = plt.subplots(figsize=(20, 20))
     g = sns.PairGrid(summary_df[metrics + ['experiment']], hue='experiment')
     g.map_upper(sns.scatterplot)
