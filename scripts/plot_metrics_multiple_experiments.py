@@ -25,6 +25,8 @@ if __name__ == "__main__":
         cur['experiment'] = cur_folder.split('/')[-1]
         summary_df = pd.concat([summary_df, cur], axis=0)
 
+    summary_df = summary_df.reset_index()
+
     if args.output_folder is not None:
         output_folder = args.output_folder
     else:
@@ -37,10 +39,11 @@ if __name__ == "__main__":
 
     # aliveCount, totalCount, generations, treeDepth, nodeCount, leafCount, branching, subcloneTotal, subcloneSelect, clonalDiversityFiltered, clonalDiversity, treeBalancetreeBalanceFiltered, meanDriversPerCell, meanDriversPerCellFiltered
 
+    print(summary_df)
     # fig, ax = plt.subplots(figsize=(20, 20))
     g = sns.PairGrid(summary_df[metrics + ['experiment']], hue='experiment')
     g.map_upper(sns.scatterplot)
     g.map_lower(sns.kdeplot)
     g.map_diag(sns.histplot)
-    plt.savefig(os.path.join(output_folder, 'metrics_relationships{}.png'.format('-'.join(summary_df['experiment'].unique()))))
+    plt.savefig(os.path.join(output_folder, 'metrics_relationships_{}.png'.format('-'.join(summary_df['experiment'].unique()))))
     plt.close()
