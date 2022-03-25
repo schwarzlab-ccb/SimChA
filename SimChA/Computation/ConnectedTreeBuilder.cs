@@ -39,7 +39,7 @@ public static class ConnectedTreeBuilder
 
         if (edges.Count(e => e.SourceId == -1) > 1)
         {
-            nodes.Add(new TreeNode { Id = -1, Size = -1 }); // Root in an abstract node since the root is missing
+            nodes.Add(new TreeNode { Id = -1, Size = 0 }); // Root in an abstract node since the root is missing
             rootId = -1;
         }
         else

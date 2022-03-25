@@ -6,38 +6,23 @@ namespace SimChA.DataTypes;
 public struct SimParams
 {
     public int Seed;
-    public int PopLimit;
-    public int StepLimit;
-    public float CutOff;
-    // public bool IsFemale;
+    public uint Repeats;
+    public uint PopLimit;
+    public uint StepLimit;
+    public double CutOff;
     public double DivisionRate;
     public double Confinement;
     public double MutationRate;
-    public double DriverProb;
     public double SplitRate;
     public double FitnessLambdaInv;
-    public int InitialPop;
-    public bool IsMultiplicative;
+    public uint InitialPop;
 
-    public SimParams()
-    {
-        Seed = 0;
-        PopLimit = 0;
-        StepLimit = 0;
-        CutOff = 0;
-        // IsFemale = false;
-        DivisionRate = 0;
-        Confinement = 0;
-        MutationRate = 0;
-        DriverProb = 0;
-        SplitRate = 0;
-        FitnessLambdaInv = 0;
-        InitialPop = 0;
-        IsMultiplicative = false;
-        AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
-    }
+    // public SimParams()
+    // {
+    // AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
+    // }
 
-    public Dictionary<AberrationEnum, double> AberrationRates { get; }
+    // public Dictionary<AberrationEnum, double> AberrationRates { get; }
 
-    public double SumRates() => AberrationRates.Sum(ar => ar.Value);
+    // public double SumRates() => AberrationRates.Sum(ar => ar.Value);
 }

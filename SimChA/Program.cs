@@ -12,41 +12,30 @@ options.WithNotParsed(o =>
     Environment.Exit(1);
 });
 
-int seed = options.Value.Seed >= 0 ? options.Value.Seed : new Random().Next();
+var programConfig = new ProgramConfig
+{
+    MultiplicativeFitness = false,
+    StochasticCellLife = false
+};
+
 var simParams = new SimParams
 {
-    Seed = seed,
-    PopLimit = options.Value.StopCount,
-    CutOff = options.Value.CutOff,
+    Seed = new Random().Next(),
+    PopLimit = 1_000_000_000,
+    CutOff = 0.01f,
+    Repeats = 1,
     DivisionRate = 0.01f,
-    MutationRate = 0.0001f,
-    DriverProb = 1f,
+    MutationRate = 0.00002f,
     FitnessLambdaInv = 0.1f,
-    Confinement = .1f,
+    Confinement = 0.5f,
     SplitRate = 0.0f,
-    
     InitialPop = 1,
-
     StepLimit = 100_000,
-    IsMultiplicative = false,
-    // AberrationRates =
-    // {
-    //     [AberrationEnum.InternalDeletion] = 50f,
-    //     [AberrationEnum.InternalDuplication] = 50f,
-    //     [AberrationEnum.Translocation] = 20f,
-    //     [AberrationEnum.TailDeletion] = 15f,
-    //     [AberrationEnum.BreakageFusionBridge] = 10f,
-    //     [AberrationEnum.Inversion] = 10f,
-    //     [AberrationEnum.Missegregation] = 5f,
-    //     [AberrationEnum.Duplication] = 5f,
-    //     [AberrationEnum.Chromothripsis] = 1f,
-    //     [AberrationEnum.WholeGenomeDoubling] = 1f
-    // }
 };
 
 var random = new Random(simParams.Seed);
 FileIO files;
-bool isRepeated = options.Value.RepsCount > 1;
+bool isRepeated = simParams.Repeats > 1;
 try
 {
     files = new FileIO(options.Value.OutputPath, isRepeated);
@@ -61,17 +50,17 @@ catch (Exception e)
 var globalWatch = new System.Diagnostics.Stopwatch();
 globalWatch.Start();
 
-for (int i = 0; i < options.Value.RepsCount; i++)
+for (int i = 0; i < simParams.Repeats; i++)
 {
     var watch = new System.Diagnostics.Stopwatch();
     watch.Start();
 
     Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
-    Console.WriteLine($"* Simulation {i+1}/{options.Value.RepsCount}");
-    Console.WriteLine($"* Sim with seed {seed}, genome length  {ReferenceGenome.TotalLength(true)}");
+    Console.WriteLine($"* Simulation {i+1}/{simParams.Repeats}");
+    Console.WriteLine($"* Sim with seed {simParams.Seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 
     // Simulation
-    var simulator = new Simulator(simParams, random);
+    var simulator = new Simulator(simParams, programConfig, random);
     int stepNo = 0;
     var popSizes = new List<(long total, long alive)>();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));
@@ -83,12 +72,12 @@ for (int i = 0; i < options.Value.RepsCount; i++)
                       $"populations: {simulator.Populations.Count}, " +
                       $"subClones: {cloneCount}, " +
                       $"alive SC: {simulator.AliveSC}, " +
-                      $"cells: {popSizes.Last().total}, " +
-                      $"alive: {popSizes.Last().alive}").PadRight(80));
+                      $"cells: {popSizes.Last().total:N0}, " +
+                      $"alive: {popSizes.Last().alive:N0}").PadRight(80));
         simulator.Step();
         popSizes.Add((CellSampling.PopulationSize(simulator.Populations),
             CellSampling.AliveCount(simulator.Populations)));
-    } while (cloneCount < simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
+    } while (popSizes.Last().total <= simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
     Console.WriteLine("");
 
     // Analysis

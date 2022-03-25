@@ -38,13 +38,13 @@ public class TreeAnalysis
     // Returns number of nodes, number of leafs, depth, mean child count
     public static (int, int, int, float) ComputeTreeSize(ParentTree parentTree)
     {
-        TreeSizeData data = new ();
+        TreeSizeData data = new();
         var branches = TreeToBranches(parentTree);
         int depth = CountNodes(branches, data, parentTree.RootId, 0);
         int nodeCount = parentTree.Nodes.Count;
         int leafCount = data.leafCount;
         float branching = data.childCount / (float)leafCount;
-        return ( nodeCount, leafCount, depth, branching );
+        return (nodeCount, leafCount, depth, branching);
     }
 
     public static float ComputeTreeBalance(ParentTree parentTree)
@@ -62,9 +62,9 @@ public class TreeAnalysis
             Sdash_i_sum += Sdash_i;
 
             float W_i = branches[node.Id].Select(b => (float)subtreeCount[b] / Sdash_i)
-                                         .Where(p => p > 0)
-                                         .Select(p => -1 * p * (float)Math.Log(p) / (float)Math.Log(nChildren))
-                                         .Sum();
+                .Where(p => p > 0)
+                .Select(p => -1 * p * (float)Math.Log(p) / (float)Math.Log(nChildren))
+                .Sum();
 
             treeBalance += Sdash_i * Sdash_i / S_i * W_i;
         }
@@ -73,16 +73,16 @@ public class TreeAnalysis
     }
 
 
-    public static float ComputeClonalDiversity(List<SubClone> subClones)
+    public static double ComputeClonalDiversity(List<SubClone> subClones)
     {
-        long totalPop = subClones.Select(clone => clone.TotalCount).Sum();
-        float clonalDiversity = 1 / subClones.Select(clone => (float)Math.Pow((float)clone.TotalCount / totalPop, 2)).Sum();
-
+        long totalPop = subClones.Select(clone => (long)clone.TotalCount).Sum();
+        double clonalDiversity = 1 / subClones.Select(clone => Math.Pow((float)clone.TotalCount / totalPop, 2)).Sum();
         return clonalDiversity;
     }
 
-    public static float ComputeMeanDriversPerCell(List<SubClone> SubClones)
-        => (float)SubClones.Select(clone => clone.TotalCount * clone.NumberDrivers).Sum() / SubClones.Select(clone => clone.TotalCount).Sum();
+    public static double ComputeMeanDriversPerCell(List<SubClone> subClones)
+        => subClones.Select(clone => (double)clone.TotalCount * clone.NumberDrivers).Sum()
+           / subClones.Select(clone => (double)clone.TotalCount).Sum();
 
     private static Dictionary<int, List<int>> TreeToBranches(ParentTree pt)
     {
@@ -92,6 +92,7 @@ public class TreeAnalysis
             var targets = pt.Edges.Where(e => e.SourceId == node.Id).Select(e => e.TargetId).ToList();
             branches.Add(node.Id, targets);
         }
+
         return branches;
     }
 }

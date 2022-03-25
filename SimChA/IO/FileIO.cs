@@ -111,7 +111,7 @@ public class FileIO
             int end = subClone.LastGen;
             for (int gen = start; gen < end ; gen++)
             {
-                int totalCells = subClone.AliveAtGen(gen);
+                uint totalCells = subClone.AliveAtGen(gen);
                 if (totalCells > 0)
                 {
                     popFile.WriteLine($"{subClone.CloneId},{gen},{totalCells},{subClone.NumberDrivers}");

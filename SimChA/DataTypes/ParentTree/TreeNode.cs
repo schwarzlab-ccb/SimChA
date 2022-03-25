@@ -5,5 +5,5 @@ namespace SimChA.DataTypes;
 public struct TreeNode
 {
     public int Id;
-    public int Size;
+    public uint Size;
 }

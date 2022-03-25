@@ -13,12 +13,12 @@ public struct ResultSummary
     public float Branching;
     public int SubcloneTotal;
     public int SubcloneSelect;
-    public float treeBalance;
-    public float treeBalanceFiltered;
-    public float clonalDiversity;
-    public float clonalDiversityFiltered;
-    public float meanDriversPerCell;
-    public float meanDriversPerCellFiltered;
+    public double treeBalance;
+    public double treeBalanceFiltered;
+    public double clonalDiversity;
+    public double clonalDiversityFiltered;
+    public double meanDriversPerCell;
+    public double meanDriversPerCellFiltered;
 
     public override string ToString()
         => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching}," +
