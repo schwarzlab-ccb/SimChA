@@ -57,18 +57,35 @@ public class Simulator
                 AliveSC++;
 
                 // Kill cells
-                double deadFraction = SimParams.DivisionRate * subClone.AliveCount + subClone.ToDie;
-                int newDead = (int)deadFraction;
-                subClone.ToDie = deadFraction - newDead;
+                int newDead;
+                if (Config.StochasticCellLife)
+                {
+                    newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, (int) subClone.AliveCount);
+                }
+                else
+                {
+                    double deadFraction = SimParams.DivisionRate * subClone.AliveCount + subClone.ToDie;
+                    newDead = (int)deadFraction;
+                    subClone.ToDie = deadFraction - newDead;
+                }
+                
+                // Create new cells
+                int newCellsCount;
+                double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
+                if (Config.StochasticCellLife)
+                {
+                    newCellsCount = Binomial.Sample(Rnd, divRate, (int) subClone.AliveCount);
+                }
+                else
+                {
+                    double divideFraction = (divRate > 0 ? divRate * subClone.AliveCount : 0) + subClone.ToDivide;
+                    newCellsCount = (int)divideFraction;
+                    subClone.ToDivide = divideFraction - newCellsCount;
+                }
 
                 // Decayed cells
                 // int newDecayed = SimParams.DecayRate > 0 ? Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount) : 0;
 
-                // Create new cells
-                double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
-                double divideFraction = (divRate > 0 ? divRate * subClone.AliveCount : 0) + subClone.ToDivide;
-                int newCellsCount = (int)divideFraction;
-                subClone.ToDivide = divideFraction - newCellsCount;
 
                 //  From some of the cells, create new populations
                 int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
@@ -80,8 +97,12 @@ public class Simulator
                 }
 
                 // Mutate some of the cells
-                int newMutantCount = Binomial.Sample(Rnd, SimParams.MutationRate, newCellsCount * 2);
-                int splitMutantCount = Binomial.Sample(Rnd, SimParams.SplitRate, newMutantCount);
+                int newMutantCount = SimParams.MutationRate > 0 
+                    ? Binomial.Sample(Rnd, SimParams.MutationRate, newCellsCount * 2) 
+                    : 0;
+                int splitMutantCount = SimParams.SplitRate > 0
+                    ? Binomial.Sample(Rnd, SimParams.SplitRate, newMutantCount)
+                    : 0;
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
                     double divChange = Math.Min(

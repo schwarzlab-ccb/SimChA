@@ -23,23 +23,23 @@ if (options.Value.ConfigFile != "")
 {
     simParams = FileIO.SimParamsFromFile(options.Value.ConfigFile);
 }
-else {
+else
+{
     simParams = new SimParams
     {
         Seed = new Random().Next(),
-        PopLimit = 1_000_000,
+        PopLimit = 1_000_000_000,
+        StepLimit = 100_000,
         CutOff = 0.01f,
         Repeats = 1,
         DivisionRate = 0.01f,
         MutationRate = 0.00002f,
         FitnessLambdaInv = 0.1f,
-        Confinement = 0.5f,
+        Confinement = 0.05f,
         SplitRate = 0.0f,
         InitialPop = 1,
-        StepLimit = 100_000,
     };
 }
-
 
 var random = new Random(simParams.Seed);
 FileIO files;
@@ -64,7 +64,7 @@ for (int i = 0; i < simParams.Repeats; i++)
     watch.Start();
 
     Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
-    Console.WriteLine($"* Simulation {i+1}/{simParams.Repeats}");
+    Console.WriteLine($"* Simulation {i + 1}/{simParams.Repeats}");
     Console.WriteLine($"* Sim with seed {simParams.Seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 
     // Simulation
@@ -76,17 +76,18 @@ for (int i = 0; i < simParams.Repeats; i++)
     do
     {
         cloneCount = simulator.FlatPops.Count();
-        Console.Write(($"\rStep: {++stepNo:D3}, " +
-                      $"populations: {simulator.Populations.Count}, " +
-                      $"subClones: {cloneCount}, " +
-                      $"alive SC: {simulator.AliveSC}, " +
-                      $"cells: {popSizes.Last().total:N0}, " +
-                      $"alive: {popSizes.Last().alive:N0}").PadRight(80));
+        Console.Write(($"Step: {++stepNo:D3}, " +
+                       $"populations: {simulator.Populations.Count}, " +
+                       $"subClones: {cloneCount}, " +
+                       $"alive SC: {simulator.AliveSC}, " +
+                       $"cells: {popSizes.Last().total:N0}, " +
+                       $"alive: {popSizes.Last().alive:N0}").PadRight(160) + "\r");
         simulator.Step();
-        popSizes.Add((CellSampling.PopulationSize(simulator.Populations),
-            CellSampling.AliveCount(simulator.Populations)));
+        popSizes.Add((
+                CellSampling.PopulationSize(simulator.Populations),
+                CellSampling.AliveCount(simulator.Populations)
+            ));
     } while (popSizes.Last().total <= simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
-    Console.WriteLine("");
 
     // Analysis
     var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
@@ -115,8 +116,9 @@ for (int i = 0; i < simParams.Repeats; i++)
     resultSummary.Generations = stepNo;
     resultSummary.AliveCount = popSizes.Last().alive;
     resultSummary.TotalCount = popSizes.Last().total;
+    Console.WriteLine("Result:".PadRight(160));
     Console.WriteLine(resultSummary.ToLine());
-    
+
     // Output
     Console.WriteLine("Writing output");
     try
@@ -134,7 +136,7 @@ for (int i = 0; i < simParams.Repeats; i++)
     {
         Console.WriteLine($"Failed to write to disk with error: {e.Message}");
     }
-    
+
     watch.Stop();
     Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds / 1000.0:F2}s\n");
 }

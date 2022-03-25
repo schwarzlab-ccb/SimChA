@@ -7,7 +7,7 @@ public struct SimParams
 {
     public int Seed;
     public uint Repeats;
-    public uint PopLimit;
+    public long PopLimit;
     public uint StepLimit;
     public double CutOff;
     public double DivisionRate;

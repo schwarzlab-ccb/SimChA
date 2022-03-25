@@ -4,9 +4,9 @@ namespace SimChA.DataTypes;
 
 public struct ResultSummary
 {
+    public int Generations;
     public long AliveCount;
     public long TotalCount;
-    public int Generations;
     public int TreeDepth;
     public int NodeCount;
     public int LeafCount;
@@ -31,5 +31,5 @@ public struct ResultSummary
            "treeBalanceFiltered,meanDriversPerCell,meanDriversPerCellFiltered";
 
     public string ToLine()
-        => string.Join(", ", Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}:{val}"));
+        => "\t" + string.Join(",\n\t", Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}: {val}"));
 }
