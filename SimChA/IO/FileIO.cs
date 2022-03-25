@@ -193,6 +193,26 @@ public class FileIO
         file.WriteLine(jsonString);
     }
 
+    public static SimParams SimParamsFromFile(string filePath)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"Configuration file {fileFullPath} does not exist");
+        }
+        try
+        {
+            string serializedJSON = File.ReadAllText(fileFullPath);
+            var options = new JsonSerializerOptions { IncludeFields = true };
+            var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
+            return simParams;
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+    
     private void CreateSummary()
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);

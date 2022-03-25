@@ -25,4 +25,5 @@ public struct SimParams
     // public Dictionary<AberrationEnum, double> AberrationRates { get; }
 
     // public double SumRates() => AberrationRates.Sum(ar => ar.Value);
+    
 }

@@ -18,20 +18,28 @@ var programConfig = new ProgramConfig
     StochasticCellLife = false
 };
 
-var simParams = new SimParams
+SimParams simParams;
+if (options.Value.ConfigFile != "")
 {
-    Seed = new Random().Next(),
-    PopLimit = 1_000_000_000,
-    CutOff = 0.01f,
-    Repeats = 1,
-    DivisionRate = 0.01f,
-    MutationRate = 0.00002f,
-    FitnessLambdaInv = 0.1f,
-    Confinement = 0.5f,
-    SplitRate = 0.0f,
-    InitialPop = 1,
-    StepLimit = 100_000,
-};
+    simParams = FileIO.SimParamsFromFile(options.Value.ConfigFile);
+}
+else {
+    simParams = new SimParams
+    {
+        Seed = new Random().Next(),
+        PopLimit = 1_000_000,
+        CutOff = 0.01f,
+        Repeats = 1,
+        DivisionRate = 0.01f,
+        MutationRate = 0.00002f,
+        FitnessLambdaInv = 0.1f,
+        Confinement = 0.5f,
+        SplitRate = 0.0f,
+        InitialPop = 1,
+        StepLimit = 100_000,
+    };
+}
+
 
 var random = new Random(simParams.Seed);
 FileIO files;
