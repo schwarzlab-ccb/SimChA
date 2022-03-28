@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-DEFAULT_METRICS = ["clonalDiversityFiltered", "treeBalanceFiltered", "meanDriversPerCellFiltered"]
+DEFAULT_METRICS = ["clonalDiversity", "treeBalance", "meanDriversPerCell"]
 
 
 if __name__ == "__main__":
@@ -15,6 +15,8 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input_folder", type=str, default=None, required=False)
     parser.add_argument("-o", "--output_folder", type=str, default=None, required=False)
     parser.add_argument("--metrics", type=str, default=None, required=False)
+    parser.add_argument("--generation", type=int, default=None, required=False)
+    parser.add_argument("--over_time", action='store_true')
     args = parser.parse_args()
 
     if args.input_folder is not None:
@@ -33,12 +35,35 @@ if __name__ == "__main__":
         metrics = DEFAULT_METRICS
 
     summary_df = pd.read_csv(os.path.join(input_folder, "summary.csv"), index_col=None)
-    # aliveCount, totalCount, generations, treeDepth, nodeCount, leafCount, branching, subcloneTotal, subcloneSelect, clonalDiversityFiltered, clonalDiversity, treeBalancetreeBalanceFiltered, meanDriversPerCell, meanDriversPerCellFiltered
+
+    if not args.over_time:
+        if args.generation is not None:
+            cur_generation = args.generation
+        else:
+            cur_generation = np.max(summary_df['GenerationId'].values)
+        summary_df = summary_df.loc[summary_df['GenerationId']==cur_generation]
+
+    else:
+        metrics += ['GenerationId']
 
     # fig, ax = plt.subplots(figsize=(20, 20))
-    g = sns.PairGrid(summary_df[metrics])
+    if args.over_time:
+        summary_df['GenerationId'] = "$10^" + np.log10(summary_df['GenerationId']).astype(int).astype(str) + "$"
+        g = sns.PairGrid(summary_df[metrics], hue='GenerationId', palette='viridis')
+    else:
+        g = sns.PairGrid(summary_df[metrics])
     g.map_upper(sns.scatterplot)
-    g.map_lower(sns.kdeplot)
+
+    # catch error if not enough datapoints for kdeplot are present
+    try:
+        g.map_lower(sns.kdeplot)
+    except:
+        pass
+
     g.map_diag(sns.histplot)
-    plt.savefig(os.path.join(output_folder, 'metrics_relationships.png'))
+
+    if args.over_time:
+        g.add_legend()
+
+    plt.savefig(os.path.join(output_folder, f'metrics_relationships{"_over_time" if args.over_time else ""}.png'))
     plt.close()

@@ -8,7 +8,9 @@ namespace SimChA.IO;
 public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
+
     private const string SUBCLONES_FILENAME = "subclones.out";
+
     // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
@@ -20,14 +22,14 @@ public class FileIO
     private string Timestamp { get; }
     private string RootFolder { get; }
     private string ExperimentFolder { get; }
-    
-    private bool IsRepeated { get;  }
+
+    private bool IsRepeated { get; }
 
     public FileIO(string rootFolder, bool isRepeated)
     {
-        Timestamp =  DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
+        Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-        
+
         RootFolder = rootFolder;
         if (Directory.Exists(RootFolder))
         {
@@ -52,6 +54,7 @@ public class FileIO
         {
             ExperimentFolder = RootFolder;
         }
+
         CreateSummary();
     }
 
@@ -59,28 +62,30 @@ public class FileIO
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
         using var outputFile = new StreamWriter(outPath);
-        
+
         foreach (var subClone in subClones)
         {
             outputFile.WriteLine(subClone);
         }
     }
-    
+
     public void WriteParentTree(ParentTree tree)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), DOT_FILENAME);
         using var outputFile = new StreamWriter(outPath);
-        
+
         outputFile.WriteLine("Digraph SimChA {");
         foreach (var node in tree.Nodes)
         {
             double size = Math.Round(.25 * (1 + Math.Log(1 + node.Size)), 2);
-            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Id}:{node.Size}\", width={size}, height={size*.6}];");
+            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Id}:{node.Size}\", width={size}, height={size * .6}];");
         }
+
         foreach (var edge in tree.Edges)
         {
             outputFile.WriteLine($"\t{edge.SourceId} -> {edge.TargetId} [label=\"{edge.Distance}\"];");
         }
+
         outputFile.WriteLine("}");
     }
 
@@ -99,7 +104,7 @@ public class FileIO
     // }
 
     public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
-    {   
+    {
         string popPath = Path.Combine(Path.GetFullPath(RootFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(RootFolder), ADJACENCY_DF_FILENAME);
 
@@ -109,7 +114,7 @@ public class FileIO
         {
             int start = subClone.FirstGen;
             int end = subClone.LastGen;
-            for (int gen = start; gen < end ; gen++)
+            for (int gen = start; gen < end; gen++)
             {
                 long totalCells = subClone.AliveAtGen(gen);
                 if (totalCells > 0)
@@ -135,10 +140,10 @@ public class FileIO
         outputFile.WriteLine("id,pop,ccf");
         foreach ((int id, long pop) in vaf)
         {
-            outputFile.WriteLine($"{id},{pop},{(float) pop / totalSize}");
+            outputFile.WriteLine($"{id},{pop},{(float)pop / totalSize}");
         }
     }
-    
+
     // public void WriteRawData(Random rnd, IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
     // {
     //     var outputbaf = new List<string>();
@@ -172,7 +177,7 @@ public class FileIO
     //     using var outputFileLogR = new StreamWriter(outPathLogR);
     //     outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
     // }
-    
+
     public void WriteRawData(List<SNPData> rawData, int subcloneId)
     {
         string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{BAF_FILENAME}");
@@ -200,6 +205,7 @@ public class FileIO
         {
             throw new Exception($"Configuration file {fileFullPath} does not exist");
         }
+
         try
         {
             string serializedJSON = File.ReadAllText(fileFullPath);
@@ -212,7 +218,7 @@ public class FileIO
             throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
         }
     }
-    
+
     private void CreateSummary()
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
@@ -230,10 +236,10 @@ public class FileIO
     public void StoreCopy(int runId)
     {
         if (!IsRepeated) return;
-        
+
         string copyFolder = Path.Join(ExperimentFolder, runId.ToString());
         Directory.CreateDirectory(copyFolder);
-        
+
         foreach (var file in new DirectoryInfo(RootFolder).GetFiles())
         {
             file.CopyTo(Path.Join(copyFolder, file.Name));
@@ -243,13 +249,33 @@ public class FileIO
     public void CopySummary()
     {
         if (!IsRepeated) return;
-        
+
         File.Copy(
-            Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME), 
+            Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME),
             Path.Combine(Path.GetFullPath(RootFolder), SUMMARY_FILENAME));
-        
+
         File.Copy(
-            Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME), 
+            Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME),
             Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
+    }
+
+    public void WriteFinalOutput(int i, IEnumerable<SubClone> subClones, ParentTree lcaTree,
+        IEnumerable<SubClone> aboveCutOff, ParentTree connectedTree, Dictionary<int, long> vaf, long totalSize)
+    {
+        try
+        {
+            WriteSubClones(subClones);
+            WriteParentTree(lcaTree);
+            WriteMullerDataFrames(aboveCutOff, connectedTree);
+            WriteCCF(vaf, totalSize);
+            StoreCopy(i);
+
+            // WriteCopyNumbers(subClones);
+            // WriteRawData(random, subClones, snps, simParams.IsFemale);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to write to disk with error: {e.Message}");
+        }
     }
 }
