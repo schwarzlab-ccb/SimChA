@@ -18,7 +18,7 @@ public struct SimParams
     public double Confinement;
     public double MutationRate;
     public double SplitRate;
-    public double FitnessLambdaMean;
+    public double FitnessMean;
 
     // public SimParams()
     // {

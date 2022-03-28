@@ -15,7 +15,8 @@ options.WithNotParsed(o =>
 var programConfig = new ProgramConfig
 {
     MultiplicativeFitness = false,
-    StochasticCellLife = true
+    StochasticCellLife = true,
+    FitnessType = FitnessSampleType.Constant
 };
 
 SimParams simParams;
@@ -37,7 +38,7 @@ else
         // Model
         DivisionRate = 0.01f,
         MutationRate = 0.00002f,
-        FitnessLambdaMean = 0.05f,
+        FitnessMean = 0.05f,
         Confinement = 0.25f,
         SplitRate = 0.0f
     };
@@ -84,7 +85,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
     {
         int cloneCount = simulator.FlatPops.Count();
         int popCount = simulator.Populations.Count;
-        Console.Write(($"Step: {++stepNo:D3}, " +
+        Console.Write(($"step: {++stepNo:D3}, " +
                        $"populations: {popCount}, " +
                        $"subClones: {cloneCount}, " +
                        $"alive SC: {simulator.AliveSC}, " +
@@ -126,7 +127,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
     } while (!EndCond());
     
     watch.Stop();
-    Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds / 1000.0:F2}s\n");
+    Console.WriteLine($"Execution Time: {TimeSpan.FromMilliseconds(globalWatch.ElapsedMilliseconds)}\n");
 }
 
 files.CopySummary();
