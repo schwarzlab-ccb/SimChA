@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-DEFAULT_METRICS = ["clonalDiversityFiltered", "treeBalanceFiltered", "meanDriversPerCellFiltered"]
+DEFAULT_METRICS = ["clonalDiversity", "treeBalance", "meanDriversPerCell"]
 
 
 if __name__ == "__main__":
@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input_folders", required=True)
     parser.add_argument("-o", "--output_folder", type=str, default=None, required=False)
     parser.add_argument("--metrics", type=str, default=None, required=False)
+    parser.add_argument("--generation", type=int, default=None, required=False)
     args = parser.parse_args()
 
     summary_df = pd.DataFrame()
@@ -26,6 +27,12 @@ if __name__ == "__main__":
         summary_df = pd.concat([summary_df, cur], axis=0)
 
     summary_df = summary_df.reset_index()
+
+    if args.generation is not None:
+        cur_generation = args.generation
+    else:
+        cur_generation = np.max(summary_df['GenerationId'].values)
+    summary_df = summary_df.loc[summary_df['GenerationId']==cur_generation]
 
     if args.output_folder is not None:
         output_folder = args.output_folder
@@ -42,7 +49,14 @@ if __name__ == "__main__":
     # fig, ax = plt.subplots(figsize=(20, 20))
     g = sns.PairGrid(summary_df[metrics + ['experiment']], hue='experiment')
     g.map_upper(sns.scatterplot)
-    g.map_lower(sns.kdeplot)
+
+
+    # catch error if not enough datapoints for kdeplot are present
+    try:
+        g.map_lower(sns.kdeplot)
+    except:
+        pass
+
     g.map_diag(sns.histplot)
     g.add_legend()
 
