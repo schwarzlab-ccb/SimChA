@@ -5,17 +5,20 @@ namespace SimChA.DataTypes;
 [Serializable]
 public struct SimParams
 {
+    // Simulator
     public int Seed;
+    // Experiment
     public uint Repeats;
     public long PopLimit;
     public uint StepLimit;
     public double CutOff;
+    public uint InitPop;
+    // Model
     public double DivisionRate;
     public double Confinement;
     public double MutationRate;
     public double SplitRate;
-    public double FitnessLambdaInv;
-    public uint InitialPop;
+    public double FitnessLambdaMean;
 
     // public SimParams()
     // {

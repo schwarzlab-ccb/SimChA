@@ -15,7 +15,7 @@ options.WithNotParsed(o =>
 var programConfig = new ProgramConfig
 {
     MultiplicativeFitness = false,
-    StochasticCellLife = false
+    StochasticCellLife = true
 };
 
 SimParams simParams;
@@ -28,16 +28,18 @@ else
     simParams = new SimParams
     {
         Seed = new Random().Next(),
+        // Experiment
         PopLimit = 1_000_000_000,
         StepLimit = 100_000,
         CutOff = 0.01f,
         Repeats = 1,
+        InitPop = 1000,
+        // Model
         DivisionRate = 0.01f,
         MutationRate = 0.00002f,
-        FitnessLambdaInv = 0.1f,
-        Confinement = 0.05f,
-        SplitRate = 0.0f,
-        InitialPop = 1,
+        FitnessLambdaMean = 0.05f,
+        Confinement = 0.25f,
+        SplitRate = 0.0f
     };
 }
 
@@ -105,19 +107,16 @@ for (int i = 0; i < simParams.Repeats; i++)
     ResultSummary resultSummary = new();
     (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
-    // resultSummary.treeBalance = TreeAnalysis.ComputeTreeBalance(connectedFullTree);
-    resultSummary.treeBalanceFiltered = TreeAnalysis.ComputeTreeBalance(connectedTree);
-    // resultSummary.clonalDiversity = TreeAnalysis.ComputeClonalDiversity(simulator.FlatPops.ToList());
-    resultSummary.clonalDiversityFiltered = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
-    // resultSummary.meanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(simulator.FlatPops.ToList());
-    resultSummary.meanDriversPerCellFiltered = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
+    resultSummary.TreeBalance = TreeAnalysis.ComputeTreeBalance(connectedTree);
+    resultSummary.ClonalDiversity = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
+    resultSummary.MeanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
     resultSummary.SubcloneTotal = cloneCount;
     resultSummary.SubcloneSelect = sample.Count;
     resultSummary.Generations = stepNo;
     resultSummary.AliveCount = popSizes.Last().alive;
     resultSummary.TotalCount = popSizes.Last().total;
     Console.WriteLine("Result:".PadRight(160));
-    Console.WriteLine(resultSummary.ToLine());
+    Console.WriteLine(resultSummary.ToText());
 
     // Output
     Console.WriteLine("Writing output");

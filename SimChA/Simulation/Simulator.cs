@@ -1,6 +1,7 @@
 ﻿using MathNet.Numerics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using  ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
 
 namespace SimChA.Simulation;
 
@@ -9,7 +10,6 @@ public class Simulator
     public List<List<SubClone>> Populations { get; }
     public IEnumerable<SubClone> FlatPops => CellSampling.Flatten(Populations);
     public SimParams SimParams { get; }
-
     public ProgramConfig Config { get; }
 
     public int AliveSC;
@@ -20,6 +20,10 @@ public class Simulator
     private int _generation;
     private Random Rnd { get; }
 
+    private const int INIT_POP = 1;
+    const double THIRD = 1.0 / 3.0;
+    const double TWO_THIRD = 2.0 / 3.0;
+
     public Simulator(SimParams simParams, ProgramConfig config, Random rnd)
     {
         SimParams = simParams;
@@ -28,30 +32,30 @@ public class Simulator
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         // int popSize = (int)Math.Round(1 / SimParams.MutationRate);
         // popSize = simParams.InitialPop;
-        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate * (1 + SimParams.FitnessLambdaInv), 1, simParams.InitialPop);
+        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate * (1 + SimParams.FitnessLambdaMean), 1, SimParams.InitPop);
         Populations = new List<List<SubClone>> { new() { firstClone } };
     }
 
     public void Step()
     {
         _generation++;
+        AliveSC = 0;
         List<SubClone> newPops = new();
         foreach (var pop in Populations)
         {
             List<SubClone> newClones = new();
             long popSize = CellSampling.PopulationSize(pop);
             long aliveCount = CellSampling.AliveCount(pop);
-            double divisionFraction = 1f;
+            double divisionFraction = 1;
             if (SimParams.Confinement > 0 && aliveCount > 1 / SimParams.Confinement)
             {
-                double divisible = Math.Round(Math.Pow(popSize, 2 / 3f)) / SimParams.Confinement;
+                double divisible = Math.Round(Math.Pow(popSize, TWO_THIRD)) / SimParams.Confinement;
                 if (aliveCount > divisible && aliveCount > 0)
                 {
-                    divisionFraction = divisible / aliveCount;
+                    divisionFraction = Math.Clamp(divisible / aliveCount, 0.0, 1.0);
                 }
             }
 
-            AliveSC = 0;
             foreach (var subClone in pop.Where(sc => sc.AliveCount > 0))
             {
                 AliveSC++;
@@ -60,7 +64,8 @@ public class Simulator
                 int newDead;
                 if (Config.StochasticCellLife)
                 {
-                    newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, (int) subClone.AliveCount);
+                    // newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, (int)subClone.AliveCount);
+                    newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.DivisionRate);
                 }
                 else
                 {
@@ -68,13 +73,15 @@ public class Simulator
                     newDead = (int)deadFraction;
                     subClone.ToDie = deadFraction - newDead;
                 }
-                
+
                 // Create new cells
                 int newCellsCount;
                 double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
                 if (Config.StochasticCellLife)
                 {
-                    newCellsCount = Binomial.Sample(Rnd, divRate, (int) subClone.AliveCount);
+                    newCellsCount =
+                        ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, divRate);
+                    // newCellsCount = Binomial.Sample(Rnd, divRate, (int)subClone.AliveCount);
                 }
                 else
                 {
@@ -82,46 +89,45 @@ public class Simulator
                     newCellsCount = (int)divideFraction;
                     subClone.ToDivide = divideFraction - newCellsCount;
                 }
-
-                // Decayed cells
-                // int newDecayed = SimParams.DecayRate > 0 ? Binomial.Sample(Rnd, SimParams.DecayRate, subClone.DeadCount) : 0;
-
-
-                //  From some of the cells, create new populations
-                int splitCellsCount = Binomial.Sample(Rnd, SimParams.SplitRate, newCellsCount);
-                for (int splitI = 0; splitI < splitCellsCount; splitI++)
-                {
-                    var childClone = subClone.CreateChild(
-                        GetNewId(), _generation, subClone.DivisionRate, subClone.NumberDrivers);
-                    newPops.Add(childClone);
-                }
+                
+                // Calculate Split chance 
+                double splitFactor = SimParams.SplitRate > 0 ?
+                    SimParams.SplitRate * Math.Pow(popSize, THIRD) * (1f - divisionFraction) / Populations.Count
+                    : 0.0;
 
                 // Mutate some of the cells
                 int newMutantCount = SimParams.MutationRate > 0 
-                    ? Binomial.Sample(Rnd, SimParams.MutationRate, newCellsCount * 2) 
-                    : 0;
-                int splitMutantCount = SimParams.SplitRate > 0
-                    ? Binomial.Sample(Rnd, SimParams.SplitRate, newMutantCount)
-                    : 0;
+                    ?  ExtremeBinDist.Sample(Rnd, newCellsCount, SimParams.MutationRate) : 0;
+
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
                     double divChange = Math.Min(
-                        Exponential.Sample(Rnd, 1/SimParams.FitnessLambdaInv) * SimParams.DivisionRate,
-                        3 * SimParams.FitnessLambdaInv);
+                        Exponential.Sample(Rnd, 1/SimParams.FitnessLambdaMean) * SimParams.DivisionRate,
+                        3 * SimParams.FitnessLambdaMean);
 
                     double newDivision = Config.MultiplicativeFitness
                         ? subClone.DivisionRate * divChange
                         : subClone.DivisionRate + divChange;
                     var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision, subClone.NumberDrivers + 1);
-
-                    // Some of the mutations may create new populations
-                    if (mutationI < splitMutantCount)
+                    if (splitFactor > 0 && ContinuousUniform.Sample(Rnd, 0, 1) < splitFactor)
                     {
                         newPops.Add(childClone);
                     }
                     else
                     {
                         newClones.Add(childClone);
+                    }
+                }
+                
+                //  From some of the cells, create new populations
+                int splitCellsCount = 0;
+                if (splitFactor > 0 && newCellsCount > newMutantCount)
+                {
+                    splitCellsCount = Binomial.Sample(Rnd, splitFactor, newCellsCount - newMutantCount);
+                    for (int splitI = 0; splitI < splitCellsCount; splitI++)
+                    {
+                        var childClone = subClone.CreateChild(GetNewId(), _generation, subClone.DivisionRate, subClone.NumberDrivers);
+                        newPops.Add(childClone);
                     }
                 }
 

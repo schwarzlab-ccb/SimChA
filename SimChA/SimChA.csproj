@@ -10,7 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="alglib.net" Version="3.18.2" />
     <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
+    <PackageReference Include="Extreme.Numerics" Version="8.1.5" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0-alpha03" />
   </ItemGroup>
 
