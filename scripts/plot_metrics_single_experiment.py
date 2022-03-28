@@ -48,7 +48,8 @@ if __name__ == "__main__":
 
     # fig, ax = plt.subplots(figsize=(20, 20))
     if args.over_time:
-        g = sns.PairGrid(summary_df[metrics], hue='GenerationId')
+        summary_df['GenerationId'] = "$10^" + np.log10(summary_df['GenerationId']).astype(int).astype(str) + "$"
+        g = sns.PairGrid(summary_df[metrics], hue='GenerationId', palette='viridis')
     else:
         g = sns.PairGrid(summary_df[metrics])
     g.map_upper(sns.scatterplot)
