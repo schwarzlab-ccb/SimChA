@@ -47,8 +47,10 @@ public class TreeAnalysis
         return (nodeCount, leafCount, depth, branching);
     }
 
-    public static float ComputeTreeBalance(ParentTree parentTree)
+    public static float ComputeTreeBalance(int leafCount, ParentTree parentTree)
     {
+        if (leafCount == 1) return 0;
+
         float treeBalance = 0;
         long Sdash_i_sum = 0;
         var subtreeCount = ComputeVAF(parentTree);

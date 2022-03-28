@@ -43,6 +43,8 @@ else
     };
 }
 
+var checkpoints = new List<int>();
+
 var random = new Random(simParams.Seed);
 FileIO files;
 bool isRepeated = simParams.Repeats > 1;
@@ -60,13 +62,21 @@ catch (Exception e)
 var globalWatch = new System.Diagnostics.Stopwatch();
 globalWatch.Start();
 
-for (int i = 0; i < simParams.Repeats; i++)
+ResultSummary resultSummary = new();
+
+for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
 {
     var watch = new System.Diagnostics.Stopwatch();
     watch.Start();
 
+    checkpoints = new List<int>();
+    for (int mag = 5; mag <= Math.Log10(simParams.PopLimit); mag++)
+    {
+        checkpoints.Add((int)Math.Pow(10, mag));
+    }
+
     Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
-    Console.WriteLine($"* Simulation {i + 1}/{simParams.Repeats}");
+    Console.WriteLine($"* Simulation {repeatId + 1}/{simParams.Repeats}");
     Console.WriteLine($"* Sim with seed {simParams.Seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 
     // Simulation
@@ -89,52 +99,38 @@ for (int i = 0; i < simParams.Repeats; i++)
                 CellSampling.PopulationSize(simulator.Populations),
                 CellSampling.AliveCount(simulator.Populations)
             ));
+
+        if (popSizes.Last().total > checkpoints.First()) {
+            // Analysis
+            var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
+            var aboveCutOff = simulator.FlatPops.Where(sc
+                => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
+            var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
+            var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
+            // var connectedFullTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, simulator.FlatPops.ToList());
+            var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
+            var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+            var vaf = TreeAnalysis.ComputeVAF(connectedTree);
+            // var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
+
+            // Summary
+            resultSummary = new();
+            resultSummary.Calculate(repeatId, checkpoints.First(), connectedTree, aboveCutOff, cloneCount, sample.Count, stepNo, popSizes);
+
+            // Output
+            files.AddToSummary(resultSummary);
+            if ((checkpoints.Count() == 1))
+            {
+                files.WriteFinalOutput(repeatId, sample, lcaTree, aboveCutOff, connectedTree, vaf, popSizes.Last().total);
+            }
+
+            checkpoints.RemoveAt(0);
+        }
+
     } while (popSizes.Last().total <= simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
 
-    // Analysis
-    var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
-    var aboveCutOff = simulator.FlatPops.Where(sc
-        => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
-    var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
-    var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
-    // var connectedFullTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, simulator.FlatPops.ToList());
-    var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
-    var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
-    var vaf = TreeAnalysis.ComputeVAF(connectedTree);
-    // var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
-
-    // Summary
-    ResultSummary resultSummary = new();
-    (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
-        = TreeAnalysis.ComputeTreeSize(connectedTree);
-    resultSummary.TreeBalance = TreeAnalysis.ComputeTreeBalance(connectedTree);
-    resultSummary.ClonalDiversity = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
-    resultSummary.MeanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
-    resultSummary.SubcloneTotal = cloneCount;
-    resultSummary.SubcloneSelect = sample.Count;
-    resultSummary.Generations = stepNo;
-    resultSummary.AliveCount = popSizes.Last().alive;
-    resultSummary.TotalCount = popSizes.Last().total;
-    Console.WriteLine("Result:".PadRight(160));
+    Console.WriteLine("Final Result:".PadRight(160));
     Console.WriteLine(resultSummary.ToText());
-
-    // Output
-    Console.WriteLine("Writing output");
-    try
-    {
-        files.WriteSubClones(sample);
-        files.WriteParentTree(lcaTree);
-        files.WriteMullerDataFrames(aboveCutOff, connectedTree);
-        files.WriteCCF(vaf, popSizes.Last().total);
-        files.AddToSummary(resultSummary);
-        files.StoreCopy(i);
-        // files.WriteCopyNumbers(sample);
-        // files.WriteRawData(random, sample, snps, simParams.IsFemale);
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine($"Failed to write to disk with error: {e.Message}");
-    }
 
     watch.Stop();
     Console.WriteLine($"Execution Time: {watch.ElapsedMilliseconds / 1000.0:F2}s\n");

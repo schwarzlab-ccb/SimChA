@@ -252,4 +252,27 @@ public class FileIO
             Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME), 
             Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
     }
+
+    public void WriteFinalOutput(int i, IEnumerable<SubClone> subClones, ParentTree lcaTree, IEnumerable<SubClone> aboveCutOff,
+                            ParentTree connectedTree, Dictionary<int, long> vaf, long totalSize)
+    {
+
+        try
+        {
+            WriteSubClones(subClones);
+            WriteParentTree(lcaTree);
+            WriteMullerDataFrames(aboveCutOff, connectedTree);
+            WriteCCF(vaf, totalSize);
+            StoreCopy(i);
+
+            // WriteCopyNumbers(subClones);
+            // WriteRawData(random, subClones, snps, simParams.IsFemale);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to write to disk with error: {e.Message}");
+        }
+
+
+    }
 }
