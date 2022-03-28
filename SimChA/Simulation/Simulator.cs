@@ -92,8 +92,7 @@ public class Simulator
                 
                 // Calculate Split chance 
                 double splitFactor = SimParams.SplitRate > 0 ?
-                    SimParams.SplitRate * Math.Pow(popSize, THIRD) * (1f - divisionFraction) / Populations.Count
-                    : 0.0;
+                    Math.Clamp((SimParams.SplitRate * Math.Pow(popSize, THIRD * (1f - divisionFraction)) / Populations.Count), 0.0, 1.0) : 0.0;
 
                 // Mutate some of the cells
                 int newMutantCount = SimParams.MutationRate > 0 
@@ -109,7 +108,7 @@ public class Simulator
                         ? subClone.DivisionRate * divChange
                         : subClone.DivisionRate + divChange;
                     var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision, subClone.NumberDrivers + 1);
-                    if (splitFactor > 0 && ContinuousUniform.Sample(Rnd, 0, 1) < splitFactor)
+                    if (splitFactor > 0 && Rnd.NextDouble() < splitFactor)
                     {
                         newPops.Add(childClone);
                     }
@@ -123,7 +122,7 @@ public class Simulator
                 int splitCellsCount = 0;
                 if (splitFactor > 0 && newCellsCount > newMutantCount)
                 {
-                    splitCellsCount = Binomial.Sample(Rnd, splitFactor, newCellsCount - newMutantCount);
+                    splitCellsCount = ExtremeBinDist.Sample(Rnd, newCellsCount - newMutantCount, splitFactor);
                     for (int splitI = 0; splitI < splitCellsCount; splitI++)
                     {
                         var childClone = subClone.CreateChild(GetNewId(), _generation, subClone.DivisionRate, subClone.NumberDrivers);

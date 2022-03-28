@@ -5,6 +5,7 @@ namespace SimChA.DataTypes;
 public struct ResultSummary
 {
     public int Generations;
+    public int ClusterCount;
     public long AliveCount;
     public long TotalCount;
     public int TreeDepth;
@@ -21,12 +22,12 @@ public struct ResultSummary
     public double MeanDriversPerCell;
 
     public override string ToString()
-        => $"{AliveCount},{TotalCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching}," +
+        => $"{AliveCount},{TotalCount},{ClusterCount},{Generations},{TreeDepth},{NodeCount},{LeafCount},{Branching}," +
            $"{SubcloneTotal},{SubcloneSelect},{ClonalDiversity}," +
            $"{TreeBalance},{MeanDriversPerCell}";
 
     public static string Header()
-        => "aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
+        => "aliveCount,totalCount,clusterCount,generations,treeDepth,nodeCount,leafCount,branching," +
            "subcloneTotal,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell";
 
     public string ToText()

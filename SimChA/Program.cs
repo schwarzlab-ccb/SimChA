@@ -39,7 +39,7 @@ else
         MutationRate = 0.00002f,
         FitnessLambdaMean = 0.05f,
         Confinement = 0.25f,
-        SplitRate = 0.0f
+        SplitRate = 0.001f
     };
 }
 
@@ -78,8 +78,8 @@ for (int i = 0; i < simParams.Repeats; i++)
     do
     {
         cloneCount = simulator.FlatPops.Count();
-        Console.Write(($"Step: {++stepNo:D3}, " +
-                       $"populations: {simulator.Populations.Count}, " +
+        Console.Write(($"step: {++stepNo:D3}, " +
+                       $"pops: {simulator.Populations.Count}, " +
                        $"subClones: {cloneCount}, " +
                        $"alive SC: {simulator.AliveSC}, " +
                        $"cells: {popSizes.Last().total:N0}, " +
@@ -105,6 +105,7 @@ for (int i = 0; i < simParams.Repeats; i++)
 
     // Summary
     ResultSummary resultSummary = new();
+    resultSummary.ClusterCount = simulator.Populations.Count;
     (resultSummary.NodeCount, resultSummary.LeafCount, resultSummary.TreeDepth, resultSummary.Branching)
         = TreeAnalysis.ComputeTreeSize(connectedTree);
     resultSummary.TreeBalance = TreeAnalysis.ComputeTreeBalance(connectedTree);
