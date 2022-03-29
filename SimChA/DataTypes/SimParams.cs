@@ -7,12 +7,15 @@ public struct SimParams
 {
     // Simulator
     public int Seed;
+
     // Experiment
     public uint Repeats;
     public long PopLimit;
     public uint StepLimit;
     public double CutOff;
+
     public uint InitPop;
+
     // Model
     public double DivisionRate;
     public double Confinement;
@@ -20,6 +23,11 @@ public struct SimParams
     public double SplitRate;
     public double FitnessMean;
 
+    // Function    
+    public bool MultiplicativeFitness;
+    public bool StochasticCellLife;
+    public FitnessSampleType FitnessType;
+    
     // public SimParams()
     // {
     // AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
@@ -28,5 +36,4 @@ public struct SimParams
     // public Dictionary<AberrationEnum, double> AberrationRates { get; }
 
     // public double SumRates() => AberrationRates.Sum(ar => ar.Value);
-    
 }

@@ -7,9 +7,9 @@ namespace SimChA.Simulation;
 
 public static class FitnessFunction
 {
-    public static double SampleFitness(SimParams simParams, ProgramConfig config, Random rnd)
+    public static double SampleFitness(SimParams simParams, Random rnd)
     {
-        switch (config.FitnessType)
+        switch (simParams.FitnessType)
         {
             case FitnessSampleType.Exponential:
                 return Exponential.Sample(rnd, 1/simParams.FitnessMean) * simParams.DivisionRate;

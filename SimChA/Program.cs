@@ -12,13 +12,6 @@ options.WithNotParsed(o =>
     Environment.Exit(1);
 });
 
-var programConfig = new ProgramConfig
-{
-    MultiplicativeFitness = false,
-    StochasticCellLife = true,
-    FitnessType = FitnessSampleType.Uniform
-};
-
 SimParams simParams;
 if (options.Value.ConfigFile != "")
 {
@@ -28,6 +21,10 @@ else
 {
     simParams = new SimParams
     {
+        // Function
+        MultiplicativeFitness = false,
+        StochasticCellLife = true,
+        FitnessType = FitnessSampleType.Uniform,
         Seed = new Random().Next(),
         // Experiment
         PopLimit = 1_000_000_000,
@@ -40,7 +37,7 @@ else
         MutationRate = 0.00004f,
         FitnessMean = 0.1f,
         Confinement = 0.1f,
-        SplitRate = 0.0f
+        SplitRate = 0.0f,
     };
 }
 
@@ -75,7 +72,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
     Console.WriteLine($"* Sim with seed {simParams.Seed}, genome length  {ReferenceGenome.TotalLength(true)}");
 
     // Simulation
-    var simulator = new Simulator(simParams, programConfig, random);
+    var simulator = new Simulator(simParams, random);
     int stepNo = 0;
     var popSizes = new List<(long total, long alive)>();
     popSizes.Add((CellSampling.PopulationSize(simulator.Populations), CellSampling.AliveCount(simulator.Populations)));

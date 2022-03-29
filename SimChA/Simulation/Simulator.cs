@@ -10,7 +10,6 @@ public class Simulator
     public List<List<SubClone>> Populations { get; }
     public IEnumerable<SubClone> FlatPops => CellSampling.Flatten(Populations);
     public SimParams SimParams { get; }
-    public ProgramConfig Config { get; }
 
     public int AliveSC;
 
@@ -24,10 +23,9 @@ public class Simulator
     const double THIRD = 1.0 / 3.0;
     const double TWO_THIRD = 2.0 / 3.0;
 
-    public Simulator(SimParams simParams, ProgramConfig config, Random rnd)
+    public Simulator(SimParams simParams, Random rnd)
     {
         SimParams = simParams;
-        Config = config;
         Rnd = rnd;
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         // int popSize = (int)Math.Round(1 / SimParams.MutationRate);
@@ -62,7 +60,7 @@ public class Simulator
 
                 // Kill cells
                 int newDead;
-                if (Config.StochasticCellLife)
+                if (SimParams.StochasticCellLife)
                 {
                     // newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, (int)subClone.AliveCount);
                     newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.DivisionRate);
@@ -77,7 +75,7 @@ public class Simulator
                 // Create new cells
                 int newCellsCount;
                 double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
-                if (Config.StochasticCellLife)
+                if (SimParams.StochasticCellLife)
                 {
                     newCellsCount =
                         ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, divRate);
@@ -100,9 +98,9 @@ public class Simulator
 
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
-                    double divChange = FitnessFunction.SampleFitness(SimParams, Config, Rnd);
+                    double divChange = FitnessFunction.SampleFitness(SimParams, Rnd);
 
-                    double newDivision = Config.MultiplicativeFitness
+                    double newDivision = SimParams.MultiplicativeFitness
                         ? subClone.DivisionRate * divChange
                         : subClone.DivisionRate + divChange;
                     

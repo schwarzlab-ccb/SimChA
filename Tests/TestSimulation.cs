@@ -13,7 +13,6 @@ namespace Tests;
 public class TestSimulation
 {
     private SimParams _simParams;
-    private ProgramConfig _config;
     private Simulator _sim;
     
     [SetUp]
@@ -35,13 +34,10 @@ public class TestSimulation
             //     [AberrationEnum.Duplication] = 5f,
             //     [AberrationEnum.Chromothripsis] = 1f
             // }
-        };
-        _config = new ProgramConfig
-        {
             StochasticCellLife = false,
             MultiplicativeFitness = false
         };
-        _sim = new Simulator(_simParams, _config, new Random(0));
+        _sim = new Simulator(_simParams, new Random(0));
     }
 
     [Test]
