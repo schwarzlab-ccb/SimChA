@@ -12,6 +12,6 @@ dot -Tpng $out/parent_graph.dot > $out/parent_tree.png
 #echo "Plotting Population Dynamics"
 #python3 scripts/plot_population_dynamics.py --input_folder $out --output_folder $out
 echo "plotting Metrics Overview"
-python3 scripts/plot_metrics_single_experiment.py --input_folder $out --over_time
+python3 scripts/plot_metrics_single_experiment.py --input_folder $out 
 #echo "Plotting CN Tracks"
 #python3 scripts/plot_cn_tracks.py --input_folder out --output_folder out --fraction

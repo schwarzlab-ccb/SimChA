@@ -16,7 +16,7 @@ var programConfig = new ProgramConfig
 {
     MultiplicativeFitness = false,
     StochasticCellLife = true,
-    FitnessType = FitnessSampleType.Constant
+    FitnessType = FitnessSampleType.Uniform
 };
 
 SimParams simParams;
@@ -37,9 +37,9 @@ else
         InitPop = 1000,
         // Model
         DivisionRate = 0.01f,
-        MutationRate = 0.00002f,
-        FitnessMean = 0.05f,
-        Confinement = 0.25f,
+        MutationRate = 0.00004f,
+        FitnessMean = 0.1f,
+        Confinement = 0.1f,
         SplitRate = 0.0f
     };
 }

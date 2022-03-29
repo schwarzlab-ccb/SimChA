@@ -110,13 +110,14 @@ public class FileIO
 
         using var popFile = new StreamWriter(popPath);
         popFile.WriteLine("Id,Step,Pop,Drivers");
+        int lastGen = subClones.Max(sc => sc.LastGen);
         foreach (var subClone in subClones)
         {
             int start = subClone.FirstGen;
-            int end = subClone.LastGen;
-            for (int gen = start; gen < end; gen++)
+            // int end = subClone.LastGen;
+            for (int gen = start; gen < lastGen; gen++)
             {
-                long totalCells = subClone.AliveAtGen(gen);
+                long totalCells = subClone.TotalAtGen(gen);
                 if (totalCells > 0)
                 {
                     popFile.WriteLine($"{subClone.CloneId},{gen},{totalCells},{subClone.NumberDrivers}");
