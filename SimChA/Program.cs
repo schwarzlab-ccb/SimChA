@@ -27,7 +27,7 @@ else
         FitnessType = FitnessSampleType.Uniform,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_000_000_000,
+        PopLimit = 1_000_000,
         StepLimit = 100_000,
         CutOff = 0.01f,
         Repeats = 1,
@@ -63,9 +63,9 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
     var watch = new System.Diagnostics.Stopwatch();
     watch.Start();
 
-    int firstCp = (int)Math.Log10(simParams.InitPop);
-    int lastCp = (int)Math.Log10(simParams.PopLimit);
-    var checkpoints = Enumerable.Range(firstCp, lastCp - firstCp + 1).Select(mag => (int)Math.Pow(10, mag)).ToList();
+    int firstCp = (int) Math.Ceiling(Math.Log2(simParams.InitPop));
+    int lastCp = (int) Math.Ceiling(Math.Log2(simParams.PopLimit));
+    var checkpoints = Enumerable.Range(firstCp, lastCp - firstCp + 1).Select(mag => (int)Math.Pow(2, mag)).ToList();
 
     Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
     Console.WriteLine($"* Simulation {repeatId + 1}/{simParams.Repeats}");
@@ -106,7 +106,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
             var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 
             // Summary
-            var result = new ResultSummary(repeatId, checkpoints.First(), connectedTree,
+            var result = new ResultSummary(repeatId, (int) Math.Log2(checkpoints.First()) - firstCp, connectedTree,
                 aboveCutOff, cloneCount, sample.Count, stepNo, popSizes, popCount);
             files.AddToSummary(result);
 
