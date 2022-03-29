@@ -4,7 +4,7 @@ using System.Reflection.Metadata;
 
 namespace SimChA.DataTypes;
 
-public enum FitnessSampleType { Constant, Normal, Exponential, Beta }
+public enum FitnessSampleType { Constant, Normal, Exponential, Beta, Uniform }
 
 public struct ProgramConfig
 {
