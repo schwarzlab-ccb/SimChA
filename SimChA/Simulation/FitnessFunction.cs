@@ -18,7 +18,7 @@ public static class FitnessFunction
                 return Beta.Sample(rnd, 1, 1/simParams.FitnessMean - 1) * simParams.DivisionRate;
                 
             case FitnessSampleType.Normal:
-                return Math.Max(Normal.Sample(simParams.FitnessMean, simParams.FitnessMean/2.0), 0) * simParams.DivisionRate;
+                return Math.Max(Normal.Sample(rnd, simParams.FitnessMean, simParams.FitnessMean/2.0), 0) * simParams.DivisionRate;
             
             case FitnessSampleType.Uniform:
                 return ContinuousUniform.Sample(rnd, 0, simParams.FitnessMean * 2.0) * simParams.DivisionRate;

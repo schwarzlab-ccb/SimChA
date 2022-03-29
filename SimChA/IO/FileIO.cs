@@ -206,12 +206,15 @@ public class FileIO
         {
             throw new Exception($"Configuration file {fileFullPath} does not exist");
         }
-
         try
         {
             string serializedJSON = File.ReadAllText(fileFullPath);
             var options = new JsonSerializerOptions { IncludeFields = true };
             var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
+            if (simParams.Seed < 0)
+            {
+                simParams.Seed = new Random().Next();
+            }
             return simParams;
         }
         catch (Exception e)
