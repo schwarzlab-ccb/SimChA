@@ -29,7 +29,8 @@ public struct SimParams
     
     // Output
     public bool AliveOnly;
-    
+    public bool Checkpoints;
+
     // public SimParams()
     // {
     // AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);

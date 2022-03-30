@@ -128,9 +128,16 @@ public class FileIO
         using var adjFile = new StreamWriter(adjPath);
         adjFile.WriteLine("ParentId,ChildId");
 
-        foreach (var edge in tree.Edges)
+        if (tree.Edges.Any())
         {
-            adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
+            foreach (var edge in tree.Edges)
+            {
+                adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
+            }
+        }
+        else
+        {
+            adjFile.WriteLine($"\t-1,{subClones.First().CloneId}");
         }
     }
 
