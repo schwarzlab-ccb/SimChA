@@ -36,8 +36,8 @@ else
         InitPop = 100,
         // Model
         BirthRate = 0.01,
-        MutationRate = 0.0001,
-        FitnessMean = 0.1,
+        MutationRate = 0.00008,
+        FitnessMean = 0.05,
         Confinement = 0.1,
     };
 }
