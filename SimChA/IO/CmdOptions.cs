@@ -19,6 +19,9 @@ public class CmdOptions
     [Option('C', "config", Required = false, Default = "", HelpText = "A json file with configuration of the experiment.")]
     public string ConfigFile { get; set; }
     
+    [Option('N',  Required = false, Default = false, HelpText = "Use newline in logs (useful for batch execution)")]
+    public bool Newline { get; set; }
+    
     
     // [Option('s', "seed", Required = false, Default = -1, HelpText = "Random seed. If not specified, one is selected at random.")]
     // public int Seed { get; set; }
