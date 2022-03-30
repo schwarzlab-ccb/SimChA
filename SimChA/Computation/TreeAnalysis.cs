@@ -60,6 +60,7 @@ public class TreeAnalysis
         {
             int nChildren = branches[node.Id].Count();
             long S_i = subtreeCount[node.Id];
+            if (S_i == 0) continue;
             long Sdash_i = S_i - node.Size;
             Sdash_i_sum += Sdash_i;
 
