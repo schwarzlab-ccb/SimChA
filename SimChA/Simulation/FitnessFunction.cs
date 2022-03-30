@@ -12,20 +12,20 @@ public static class FitnessFunction
         switch (simParams.FitnessType)
         {
             case FitnessSampleType.Exponential:
-                return Exponential.Sample(rnd, 1/simParams.FitnessMean) * simParams.DivisionRate;
+                return Exponential.Sample(rnd, 1/simParams.FitnessMean) * simParams.BirthRate;
             
             case FitnessSampleType.Beta:
-                return Beta.Sample(rnd, 1, 1/simParams.FitnessMean - 1) * simParams.DivisionRate;
+                return Beta.Sample(rnd, 1, 1/simParams.FitnessMean - 1) * simParams.BirthRate;
                 
             case FitnessSampleType.Normal:
-                return Math.Max(Normal.Sample(rnd, simParams.FitnessMean, simParams.FitnessMean/2.0), 0) * simParams.DivisionRate;
+                return Math.Max(Normal.Sample(rnd, simParams.FitnessMean, simParams.FitnessMean/2.0), 0) * simParams.BirthRate;
             
             case FitnessSampleType.Uniform:
-                return ContinuousUniform.Sample(rnd, 0, simParams.FitnessMean * 2.0) * simParams.DivisionRate;
+                return ContinuousUniform.Sample(rnd, 0, simParams.FitnessMean * 2.0) * simParams.BirthRate;
 
             case FitnessSampleType.Constant:
             default:
-                return simParams.FitnessMean * simParams.DivisionRate;
+                return simParams.FitnessMean * simParams.BirthRate;
         }
     }
 }

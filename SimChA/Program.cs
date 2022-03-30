@@ -30,15 +30,15 @@ else
         Seed = new Random().Next(),
         // Experiment
         PopLimit = 1_000_000_000,
-        StepLimit = 1_000,
+        StepLimit = 100_000,
         CutOff = 0.01f,
-        Repeats = 10_000,
+        Repeats = 1,
         InitPop = 100,
         // Model
-        DivisionRate = 0.01,
-        MutationRate = 0.0,
-        FitnessMean = 0.0,
-        Confinement = 0.0,
+        BirthRate = 0.01,
+        MutationRate = 0.0001,
+        FitnessMean = 0.1,
+        Confinement = 0.1,
     };
 }
 

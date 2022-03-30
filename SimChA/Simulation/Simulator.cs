@@ -30,7 +30,7 @@ public class Simulator
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         // int popSize = (int)Math.Round(1 / SimParams.MutationRate);
         // popSize = simParams.InitialPop;
-        var firstClone = new SubClone(0, -1, 0, BumpFitness(SimParams.DivisionRate, SimParams, Rnd), 1, SimParams.InitPop);
+        var firstClone = new SubClone(0, -1, 0, BumpFitness(SimParams.BirthRate, SimParams, Rnd), 1, SimParams.InitPop);
         Populations = new List<List<SubClone>> { new() { firstClone } };
     }
 
@@ -69,11 +69,11 @@ public class Simulator
                 if (SimParams.StochasticCellLife)
                 {
                     // newDead = Binomial.Sample(Rnd, SimParams.DivisionRate, (int)subClone.AliveCount);
-                    newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.DivisionRate);
+                    newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.BirthRate);
                 }
                 else
                 {
-                    double deadFraction = SimParams.DivisionRate * subClone.AliveCount + subClone.ToDie;
+                    double deadFraction = SimParams.BirthRate * subClone.AliveCount + subClone.ToDie;
                     newDead = (int)deadFraction;
                     subClone.ToDie = deadFraction - newDead;
                 }

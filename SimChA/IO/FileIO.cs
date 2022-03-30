@@ -242,6 +242,7 @@ public class FileIO
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
         using var file = new StreamWriter(filePath, true);
         file.WriteLine(resultSummary.ToString());
+        file.Flush();
     }
 
     public void StoreCopy(int runId)
