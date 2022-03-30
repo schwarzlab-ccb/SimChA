@@ -7,7 +7,6 @@ public struct SimParams
 {
     // Simulator
     public int Seed;
-    public bool ClusterLogging;
 
     // Experiment
     public uint Repeats;

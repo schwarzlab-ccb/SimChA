@@ -96,7 +96,7 @@ public class Simulator
                 
                 // Calculate Split chance 
                 double splitFactor = SimParams.SplitRate > 0 ?
-                    Math.Clamp((SimParams.SplitRate * Math.Pow(popSize, THIRD * (1f - divisionFraction)) / Populations.Count), 0.0, 1.0) : 0.0;
+                    Math.Clamp(Math.Pow(SimParams.SplitRate * (1f - divisionFraction), Populations.Count), 0.0, 1.0) : 0.0;
 
                 // Mutate some of the cells
                 int newMutantCount = SimParams.MutationRate > 0 
