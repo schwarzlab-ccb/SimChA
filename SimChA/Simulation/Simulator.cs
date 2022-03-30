@@ -105,7 +105,7 @@ public class Simulator
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
 
-                    double newDivision = BumpFitness(SimParams.DivisionRate, SimParams, Rnd);
+                    double newDivision = BumpFitness(subClone.DivisionRate, SimParams, Rnd);
                     var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision, subClone.NumberDrivers + 1);
                     if (splitFactor > 0 && Rnd.NextDouble() < splitFactor)
                     {

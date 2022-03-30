@@ -28,15 +28,15 @@ else
         FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_000_000,
-        StepLimit = 1_000,
+        PopLimit = 1_000_000_000,
+        StepLimit = 100_000,
         CutOff = 0.01f,
         Repeats = 1,
         InitPop = 100,
         // Model
         DivisionRate = 0.01f,
-        MutationRate = 1f,
-        FitnessMean = 0.0f,
+        MutationRate = 0.00004f,
+        FitnessMean = 0.1f,
         Confinement = 0f,
     };
 }
