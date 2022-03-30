@@ -33,7 +33,7 @@ public static class ConnectedTreeBuilder
 
         foreach (var subClone in selection)
         {
-            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.TotalCount });
+            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.AliveCount });
             edges.Add(FindEdgeToParent(parentMap, selection, subClone.CloneId));
         }
 
