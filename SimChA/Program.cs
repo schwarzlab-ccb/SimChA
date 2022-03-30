@@ -39,8 +39,12 @@ else
         MutationRate = 0.0001,
         FitnessMean = 0.1,
         Confinement = 0.1,
+        ClusterLogging = false
     };
 }
+
+string endOfLine = "\r";
+if (simParams.ClusterLogging) endOfLine = "\n";
 
 var random = new Random(simParams.Seed);
 FileIO files;
@@ -90,7 +94,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
                        $"subClones: {cloneCount}, " +
                        $"alive SC: {simulator.AliveSC}, " +
                        $"cells: {popSizes.Last().total:N0}, " +
-                       $"alive: {popSizes.Last().alive:N0}").PadRight(160) + "\r");
+                       $"alive: {popSizes.Last().alive:N0}").PadRight(160) + endOfLine);
         simulator.Step();
         popSizes.Add((
             CellSampling.PopulationSize(simulator.Populations),
