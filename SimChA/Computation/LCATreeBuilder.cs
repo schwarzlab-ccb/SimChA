@@ -49,7 +49,7 @@ public static class LCATreeBuilder
 
         foreach (var subClone in selection)
         {
-            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.TotalCount });
+            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.AliveCount });
             edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
         }
         foreach (int internalNode in internalNodes)

@@ -20,7 +20,7 @@ public class TestSimulation
     {
         _simParams = new SimParams
         {
-            DivisionRate = 0.1f, 
+            BirthRate = 0.1f, 
             MutationRate = 0.01f,
             // AberrationRates =
             // {

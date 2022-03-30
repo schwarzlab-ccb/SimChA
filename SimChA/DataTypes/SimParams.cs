@@ -13,11 +13,10 @@ public struct SimParams
     public long PopLimit;
     public uint StepLimit;
     public double CutOff;
-
     public uint InitPop;
 
     // Model
-    public double DivisionRate;
+    public double BirthRate;
     public double Confinement;
     public double MutationRate;
     public double SplitRate;
@@ -28,6 +27,10 @@ public struct SimParams
     public bool StochasticCellLife;
     public FitnessSampleType FitnessType;
     
+    // Output
+    public bool AliveOnly;
+    public bool Checkpoints;
+
     // public SimParams()
     // {
     // AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
