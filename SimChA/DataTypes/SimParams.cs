@@ -13,7 +13,6 @@ public struct SimParams
     public long PopLimit;
     public uint StepLimit;
     public double CutOff;
-
     public uint InitPop;
 
     // Model
@@ -27,6 +26,9 @@ public struct SimParams
     public bool MultiplicativeFitness;
     public bool StochasticCellLife;
     public FitnessSampleType FitnessType;
+    
+    // Output
+    public bool AliveOnly;
     
     // public SimParams()
     // {

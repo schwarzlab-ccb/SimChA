@@ -30,10 +30,16 @@ public class Simulator
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         // int popSize = (int)Math.Round(1 / SimParams.MutationRate);
         // popSize = simParams.InitialPop;
-        var firstClone = new SubClone(0, -1, 0, SimParams.DivisionRate * (1 + SimParams.FitnessMean), 1, SimParams.InitPop);
+        var firstClone = new SubClone(0, -1, 0, BumpFitness(SimParams.DivisionRate, SimParams, Rnd), 1, SimParams.InitPop);
         Populations = new List<List<SubClone>> { new() { firstClone } };
     }
 
+    private static double BumpFitness(double original, SimParams simParams, Random rnd)
+    {
+        double divChange = FitnessFunction.SampleFitness(simParams, rnd);
+        return simParams.MultiplicativeFitness ? original * divChange : original + divChange;
+    }
+    
     public void Step()
     {
         _generation++;
@@ -98,12 +104,8 @@ public class Simulator
 
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
-                    double divChange = FitnessFunction.SampleFitness(SimParams, Rnd);
 
-                    double newDivision = SimParams.MultiplicativeFitness
-                        ? subClone.DivisionRate * divChange
-                        : subClone.DivisionRate + divChange;
-                    
+                    double newDivision = BumpFitness(SimParams.DivisionRate, SimParams, Rnd);
                     var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision, subClone.NumberDrivers + 1);
                     if (splitFactor > 0 && Rnd.NextDouble() < splitFactor)
                     {

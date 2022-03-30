@@ -4,7 +4,7 @@ echo "Plotting CCF"
 python3 scripts/cancer_cell_fraction.py --input_file $out/ccf.csv --output_folder $out
 echo "Plotting Fish Plot"
 col=42
-smooth=50
+smooth=2
 pyfish $out/populations.csv $out/parent_tree.csv $out/fish.png -R $col -S $smooth
 pyfish $out/populations.csv $out/parent_tree.csv $out/fish_abs.png -R $col -S $smooth -a  
 echo "Plotting Parent Graph"

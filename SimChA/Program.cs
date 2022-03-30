@@ -21,23 +21,23 @@ else
 {
     simParams = new SimParams
     {
+        AliveOnly = true,
         // Function
         MultiplicativeFitness = false,
         StochasticCellLife = true,
-        FitnessType = FitnessSampleType.Uniform,
+        FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
         PopLimit = 1_000_000,
-        StepLimit = 100_000,
+        StepLimit = 1_000,
         CutOff = 0.01f,
         Repeats = 1,
-        InitPop = 1000,
+        InitPop = 100,
         // Model
         DivisionRate = 0.01f,
-        MutationRate = 0.00004f,
-        FitnessMean = 0.1f,
-        Confinement = 0.1f,
-        SplitRate = 0.0f,
+        MutationRate = 1f,
+        FitnessMean = 0.0f,
+        Confinement = 0f,
     };
 }
 
@@ -65,7 +65,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
 
     int firstCp = (int) Math.Ceiling(Math.Log2(simParams.InitPop));
     int lastCp = (int) Math.Ceiling(Math.Log2(simParams.PopLimit));
-    var checkpoints = Enumerable.Range(firstCp, lastCp - firstCp + 1).Select(mag => (int)Math.Pow(2, mag)).ToList();
+    var checkpoints = Enumerable.Range(firstCp, lastCp + 1).Select(mag => (int)Math.Pow(2, mag)).ToList();
 
     Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
     Console.WriteLine($"* Simulation {repeatId + 1}/{simParams.Repeats}");
@@ -116,7 +116,7 @@ for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
             {
                 var vaf = TreeAnalysis.ComputeVAF(connectedTree);
                 files.WriteFinalOutput(repeatId, sample, lcaTree, aboveCutOff, connectedTree, vaf,
-                    popSizes.Last().total);
+                    popSizes.Last().total, simParams.AliveOnly);
                 Console.WriteLine("Final Result:".PadRight(160));
                 Console.WriteLine(result.ToText());
             }
