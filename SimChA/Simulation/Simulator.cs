@@ -37,7 +37,7 @@ public class Simulator
     private static double BumpFitness(double original, SimParams simParams, Random rnd)
     {
         double divChange = FitnessFunction.SampleFitness(simParams, rnd);
-        return simParams.MultiplicativeFitness ? original * divChange : original + divChange;
+        return simParams.MultiplicativeFitness ? original * (1 + divChange) : original + divChange;
     }
     
     public void Step()
