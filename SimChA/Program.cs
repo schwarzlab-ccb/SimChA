@@ -24,7 +24,7 @@ else
         AliveOnly = true,
         Checkpoints = false,
         // Function
-        MultiplicativeFitness = false,
+        MultiplicativeFitness = true,
         StochasticCellLife = true,
         FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
