@@ -22,9 +22,9 @@ else
     simParams = new SimParams
     {
         AliveOnly = true,
-        Checkpoints = false,
+        Checkpoints = true,
         // Function
-        MultiplicativeFitness = true,
+        MultiplicativeFitness = false,
         StochasticCellLife = true,
         FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
@@ -37,8 +37,8 @@ else
         // Model
         BirthRate = 0.01,
         MutationRate = 0.00008,
-        FitnessMean = 0.05,
-        Confinement = 0.0,
+        FitnessMean = 0.5,
+        Confinement = 0.05
     };
 }
 
@@ -66,11 +66,12 @@ try
         var watch = new System.Diagnostics.Stopwatch();
         watch.Start();
 
-        int firstCp = (int)Math.Ceiling(Math.Log2(simParams.InitPop));
-        int lastCp = (int)Math.Ceiling(Math.Log2(simParams.PopLimit));
-        var checkpoints = simParams.Checkpoints
-            ? Enumerable.Range(firstCp, lastCp - firstCp + 1).Select(mag => (int)Math.Pow(2, mag)).ToList()
-            : new List<int>();
+        var checkpoints = new List<uint> { simParams.InitPop };
+        int checkpointId = 0;
+        while (checkpoints.Last() < simParams.PopLimit)
+        {
+            checkpoints.Add(checkpoints.Last() * 2);
+        }
 
         Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
         Console.WriteLine($"* Simulation {repeatId + 1}/{simParams.Repeats}");
@@ -82,27 +83,26 @@ try
         var popSizes = new List<(long total, long alive)>();
         popSizes.Add((CellSampling.PopulationSize(simulator.Populations),
             CellSampling.AliveCount(simulator.Populations)));
-        var EndCond = ()
-            => !(popSizes.Last().total <= simParams.PopLimit && popSizes.Last().alive > 0 &&
-                 stepNo < simParams.StepLimit);
+        var EndCondFunc = ()
+            => !(popSizes.Last().total <= simParams.PopLimit && popSizes.Last().alive > 0 && stepNo < simParams.StepLimit);
         do
         {
             int cloneCount = simulator.FlatPops.Count();
             int popCount = simulator.Populations.Count;
+            simulator.Step();
+            popSizes.Add((
+                CellSampling.PopulationSize(simulator.Populations),
+                CellSampling.AliveCount(simulator.Populations)
+            ));
             Console.Write(($"step: {++stepNo:D3}, " +
                            $"populations: {popCount}, " +
                            $"subClones: {cloneCount}, " +
                            $"alive SC: {simulator.AliveSC}, " +
                            $"cells: {popSizes.Last().total:N0}, " +
                            $"alive: {popSizes.Last().alive:N0}").PadRight(160) + 
-                           (options.Value.Newline ? "\n" : "\r"));
-            simulator.Step();
-            popSizes.Add((
-                CellSampling.PopulationSize(simulator.Populations),
-                CellSampling.AliveCount(simulator.Populations)
-            ));
+                          (options.Value.Newline ? "\n" : "\r"));
 
-            if (EndCond() || (checkpoints.Any() && popSizes.Last().total > checkpoints.First()))
+            if (EndCondFunc() || checkpoints.Any() && popSizes.Last().total > checkpoints.First())
             {
                 // Analysis
                 var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
@@ -114,19 +114,18 @@ try
                 var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 
                 // Summary
-                int stepId = 0;
                 if (checkpoints.Any())
                 {
-                    stepId = (int)Math.Log2(checkpoints.First()) - firstCp;
+                    checkpointId++;
                     checkpoints.RemoveAt(0);
                 }
 
-                var result = new ResultSummary(repeatId, stepId, connectedTree,
+                var result = new ResultSummary(repeatId, checkpointId, connectedTree,
                     aboveCutOff, cloneCount, sample.Count, stepNo, popSizes, popCount);
                 files.AddToSummary(result);
 
                 // Result
-                if (EndCond())
+                if (EndCondFunc())
                 {
                     var vaf = TreeAnalysis.ComputeVAF(connectedTree);
                     files.WriteFinalOutput(repeatId, sample, lcaTree, aboveCutOff, connectedTree, vaf,
@@ -135,7 +134,7 @@ try
                     Console.WriteLine(result.ToText());
                 }
             }
-        } while (!EndCond());
+        } while (!EndCondFunc());
 
         watch.Stop();
         Console.WriteLine($"Execution Time: {TimeSpan.FromMilliseconds(globalWatch.ElapsedMilliseconds)}\n");
