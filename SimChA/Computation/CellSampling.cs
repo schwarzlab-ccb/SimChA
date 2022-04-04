@@ -21,4 +21,7 @@ public static class CellSampling
     
     public static IEnumerable<SubClone> Flatten(IEnumerable<IEnumerable<SubClone>> populations) 
         => populations.SelectMany(x => x);
+
+    public static (long, long) PopState(List<SubClone> populations) =>
+        (PopulationSize(populations), AliveCount(populations));
 }

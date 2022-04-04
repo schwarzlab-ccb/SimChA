@@ -14,6 +14,7 @@ public struct SimParams
     public uint StepLimit;
     public double CutOff;
     public uint InitPop;
+    public uint InitMut;
 
     // Model
     public double BirthRate;

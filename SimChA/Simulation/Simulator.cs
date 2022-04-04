@@ -30,8 +30,9 @@ public class Simulator
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         // int popSize = (int)Math.Round(1 / SimParams.MutationRate);
         // popSize = simParams.InitialPop;
-        var firstClone = new SubClone(0, -1, 0, BumpFitness(SimParams.BirthRate, SimParams, Rnd), 1, SimParams.InitPop);
-        Populations = new List<List<SubClone>> { new() { firstClone } };
+        // var firstClone = new SubClone(0, -1, 0, BumpFitness(SimParams.BirthRate + (SimParams.FitnessMean * 4 * SimParams.BirthRate), SimParams, Rnd));
+        var primeval = new SubClone(0, -1, 0, BumpFitness(SimParams.BirthRate, SimParams, Rnd));
+        Populations = new List<List<SubClone>> { new() { primeval } };
     }
 
     private static double BumpFitness(double original, SimParams simParams, Random rnd)
