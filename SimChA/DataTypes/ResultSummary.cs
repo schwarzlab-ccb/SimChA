@@ -17,6 +17,7 @@ public struct ResultSummary
     public int LeafCount;
     public float Branching;
     public int SubcloneTotal;
+    public int SubcloneAlive;
 
     public int SubcloneSelect;
 
@@ -32,12 +33,12 @@ public struct ResultSummary
     public override string ToString()
         =>
             $"{RepeatId},{GenerationId},{PopCount},{AliveCount},{TotalCount},{Generations},{TreeDepth}," +
-            $"{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneSelect},{ClonalDiversity}," + 
+            $"{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneAlive},{SubcloneSelect},{ClonalDiversity}," + 
             $"{TreeBalance},{MeanDriversPerCell}";
 
     public static string Header()
         => "RepeatId,GenerationId,popCount,aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
-           "subcloneTotal,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell";
+           "subcloneTotal,subcloneAlive,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell";
 
     public string ToText()
         => "\t" + string.Join(",\n\t",
@@ -45,7 +46,7 @@ public struct ResultSummary
 
 
     public ResultSummary(int repeatId, int generationId, ParentTree connectedTree, List<SubClone> aboveCutOff,
-        int cloneCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes, int popCount)
+        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes, int popCount)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
@@ -57,6 +58,7 @@ public struct ResultSummary
         MeanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
         SubcloneTotal = cloneCount;
         SubcloneSelect = sampleCount;
+        SubcloneAlive = aliveCount;
         Generations = stepNo;
         AliveCount = popSizes.Last().alive;
         TotalCount = popSizes.Last().total;

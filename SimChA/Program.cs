@@ -29,18 +29,18 @@ else
         FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_000_000,
+        PopLimit = 100_000_000,
         StepLimit = 100_000,
         CutOff = 0.01f,
-        Repeats = 2,
+        Repeats = 1,
         InitPop = 1000,
-        InitMut = 5,
 
         // Model
         BirthRate = 0.01,
-        MutationRate = 0.001,
-        FitnessMean = 0.01,
-        Confinement = 0.0
+        MutationRate = 0.00016,
+        FitnessMean = 0.5,
+        Confinement = 0.0,
+        InitMut = 0,
     };
 }
 
@@ -118,7 +118,7 @@ try
                 }
 
                 var result = new ResultSummary(repeatId, checkpointId, connectedTree,
-                    aboveCutOff, flatPops.Count, sample.Count, stepNo, popSizes, popCount);
+                    aboveCutOff, flatPops.Count, simulator.AliveSC, sample.Count, stepNo, popSizes, popCount);
                 files.AddToSummary(result);
 
                 // Result
