@@ -20,6 +20,7 @@ public struct SimParams
     public double Confinement;
     public double MutationProb;
     public double FitnessMean;
+    public double Depth;
     public uint InitMut;
 
     // Function    

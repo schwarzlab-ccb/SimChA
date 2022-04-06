@@ -33,8 +33,9 @@ public class Simulator
         {
             initFit = BumpFitness(initFit, SimParams, Rnd);
         }
+
         var primeval = new SubClone(0, -1, 0, initFit);
-        Clones = new List<SubClone> {primeval};
+        Clones = new List<SubClone> { primeval };
     }
 
     private static double BumpFitness(double original, SimParams simParams, Random rnd)
@@ -64,20 +65,17 @@ public class Simulator
             }
         }
 
-        foreach (var subClone in Clones.Where(sc => sc.SampleCount > 0))
+
+        foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
             AliveSC++;
 
             // Kill cells
-            double deathRate = Math.Clamp(SimParams.Turnover * (1 - divisionFraction), 0.0, 1.0);
-            int newDead = ExtremeBinDist.Sample(Rnd, (int) subClone.AliveCount, deathRate);
-            
+            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.Turnover);
+
             // Create new cells
             double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
-            int newCellsCount = ExtremeBinDist.Sample(Rnd, (int) subClone.AliveCount, divRate);
-
-            // Decay cells 
-            int decayedCount = ExtremeBinDist.Sample(Rnd, (int) subClone.DeadCount, SimParams.Turnover);
+            int newCellsCount = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, divRate);
 
             // Mutate some of the cells
             int newMutantCount = ExtremeBinDist.Sample(Rnd, newCellsCount * 2, SimParams.MutationProb);
@@ -90,9 +88,8 @@ public class Simulator
             }
 
             subClone.NewGen(
-                (uint) (subClone.AliveCount + newCellsCount - newMutantCount - newDead),
-                (uint) (subClone.DeadCount + newDead - decayedCount),
-                (uint) (subClone.DecayedCount + decayedCount));
+                (uint)(subClone.AliveCount + newCellsCount - newMutantCount - newDead),
+                (uint)(subClone.DeadCount + newDead));
         }
 
         Clones.AddRange(newClones);

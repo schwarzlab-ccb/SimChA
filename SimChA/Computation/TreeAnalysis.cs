@@ -75,14 +75,14 @@ public class TreeAnalysis
 
     public static double ComputeClonalDiversity(List<SubClone> subClones)
     {
-        long totalPop = subClones.Select(clone => clone.SampleCount).Sum();
-        double clonalDiversity = 1 / subClones.Select(clone => Math.Pow((float)clone.SampleCount / totalPop, 2)).Sum();
+        long totalPop = subClones.Select(clone => clone.AliveCount).Sum();
+        double clonalDiversity = 1 / subClones.Select(clone => Math.Pow((float)clone.AliveCount / totalPop, 2)).Sum();
         return clonalDiversity;
     }
 
     public static double ComputeMeanDriversPerCell(List<SubClone> subClones)
-        => subClones.Select(clone => (double)clone.SampleCount * clone.NumberDrivers).Sum()
-           / subClones.Select(clone => (double)clone.SampleCount).Sum();
+        => subClones.Select(clone => (double)clone.AliveCount * clone.NumberDrivers).Sum()
+           / subClones.Select(clone => (double)clone.AliveCount).Sum();
 
     private static Dictionary<int, List<int>> TreeToBranches(ParentTree pt)
     {

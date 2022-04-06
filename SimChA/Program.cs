@@ -38,9 +38,9 @@ else
         // Model
         Turnover = 0.01,
         MutationProb = 0.00008,
-        FitnessMean = 0.5,
-        Confinement = 0.05,
-        InitMut = 1,
+        FitnessMean = 1,
+        Confinement = 0.1,
+        InitMut = 1
     };
 }
 
@@ -73,7 +73,7 @@ try
         int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
         var checkpoints = Utility.CreateCheckpoints(simParams);
-        var popSizes = new List<(long total, long sample, long alive)> { CellSampling.PopState(simulator.Clones) };
+        var popSizes = new List<(long total, long alive)> { CellSampling.PopState(simulator.Clones) };
         var EndCondFunc = () =>
             !(popSizes.Last().total <= simParams.PopLimit
               && popSizes.Last().alive > 0
@@ -91,7 +91,6 @@ try
                            $"subClones: {simulator.Clones.Count}, " +
                            $"alive SC: {simulator.AliveSC}, " +
                            $"cells: {popSizes.Last().total:N0}, " +
-                           $"sample: {popSizes.Last().sample:N0}, " +
                            $"alive: {popSizes.Last().alive:N0}").PadRight(160) +
                           (options.Value.Newline ? "\n" : "\r"));
 
@@ -99,7 +98,7 @@ try
             {
                 // Analysis
                 var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
-                var aboveCutOff = simulator.Clones.Where(sc => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.SampleAtGen(g))).ToList();
+                var aboveCutOff = simulator.Clones.Where(sc => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
                 var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
                 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
                 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();

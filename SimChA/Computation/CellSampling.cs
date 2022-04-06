@@ -12,13 +12,11 @@ public static class CellSampling
 
     public static long AliveCount(IEnumerable<SubClone> population)
         => population.Sum(sc => sc.AliveCount);
-    
-    public static long SampleCount(IEnumerable<SubClone> population)
-        => population.Sum(sc => sc.SampleCount);
+
     
     public static IEnumerable<SubClone> Flatten(IEnumerable<IEnumerable<SubClone>> populations) 
         => populations.SelectMany(x => x);
 
-    public static (long, long, long) PopState(List<SubClone> populations) =>
-        (PopulationSize(populations), SampleCount(populations), AliveCount(populations));
+    public static (long, long) PopState(List<SubClone> populations) =>
+        (PopulationSize(populations),  AliveCount(populations));
 }
