@@ -39,7 +39,7 @@ else
         Turnover = 0.01,
         MutationProb = 0.00008,
         FitnessMean = 0.5,
-        Confinement = 0.1,
+        Confinement = 0.05,
         InitMut = 1,
     };
 }
@@ -70,7 +70,6 @@ try
         watch.Start();
 
         // Simulation
-        int stepNo = 0;
         int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
         var checkpoints = Utility.CreateCheckpoints(simParams);
@@ -78,7 +77,7 @@ try
         var EndCondFunc = () =>
             !(popSizes.Last().total <= simParams.PopLimit
               && popSizes.Last().alive > 0
-              && stepNo < simParams.StepLimit);
+              && simulator.StepNo < simParams.StepLimit);
         do
         {
             simulator.Step();
@@ -88,7 +87,7 @@ try
                 break;
             }
             Console.Write(($"Sim: {repeatId + 1}.{tryOut}/{simParams.Repeats}, "+
-                           $"step: {++stepNo:D3}, " +
+                           $"step: {simulator.StepNo:D3}, " +
                            $"subClones: {simulator.Clones.Count}, " +
                            $"alive SC: {simulator.AliveSC}, " +
                            $"cells: {popSizes.Last().total:N0}, " +
@@ -114,7 +113,7 @@ try
                 }
 
                 var result = new ResultSummary(repeatId, checkpointId, connectedTree,
-                    aboveCutOff, simulator.Clones.Count, simulator.AliveSC, sample.Count, stepNo, popSizes);
+                    aboveCutOff, simulator.Clones.Count, simulator.AliveSC, sample.Count, simulator.StepNo, popSizes);
                 files.AddToSummary(result);
 
                 // Result

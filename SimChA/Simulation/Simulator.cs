@@ -15,7 +15,7 @@ public class Simulator
     private int newId;
     private int GetNewId() => ++newId;
 
-    private int _generation;
+    public int StepNo;
     private Random Rnd { get; }
 
     private const int INIT_POP = 1;
@@ -24,6 +24,7 @@ public class Simulator
 
     public Simulator(SimParams simParams, Random rnd)
     {
+        StepNo = 0;
         SimParams = simParams;
         Rnd = rnd;
 
@@ -47,14 +48,14 @@ public class Simulator
 
     public void Step()
     {
-        _generation++;
         AliveSC = 0;
+        StepNo++;
 
         List<SubClone> newClones = new();
         long popSize = CellSampling.PopulationSize(Clones);
         long aliveCount = CellSampling.AliveCount(Clones);
         double divisionFraction = 1;
-        if (SimParams.Confinement > 0 && aliveCount > 1 / SimParams.Confinement)
+        if (SimParams.Confinement > 0)
         {
             double divisible = Math.Round(Math.Pow(popSize, TWO_THIRD)) / SimParams.Confinement;
             if (aliveCount > divisible && aliveCount > 0)
@@ -68,7 +69,8 @@ public class Simulator
             AliveSC++;
 
             // Kill cells
-            int newDead = ExtremeBinDist.Sample(Rnd, (int) subClone.AliveCount, SimParams.Turnover);
+            double deathRate = Math.Clamp(SimParams.Turnover * (1 - divisionFraction), 0.0, 1.0);
+            int newDead = ExtremeBinDist.Sample(Rnd, (int) subClone.AliveCount, deathRate);
             
             // Create new cells
             double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
@@ -78,14 +80,12 @@ public class Simulator
             int decayedCount = ExtremeBinDist.Sample(Rnd, (int) subClone.DeadCount, SimParams.Turnover);
 
             // Mutate some of the cells
-            int newMutantCount = SimParams.MutationProb > 0
-                ? ExtremeBinDist.Sample(Rnd, newCellsCount * 2, SimParams.MutationProb)
-                : 0;
+            int newMutantCount = ExtremeBinDist.Sample(Rnd, newCellsCount * 2, SimParams.MutationProb);
 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
                 double newDivision = BumpFitness(subClone.DivisionRate, SimParams, Rnd);
-                var childClone = subClone.CreateChild(GetNewId(), _generation, newDivision, subClone.NumberDrivers + 1);
+                var childClone = subClone.CreateChild(GetNewId(), StepNo, newDivision, subClone.NumberDrivers + 1);
                 newClones.Add(childClone);
             }
 
