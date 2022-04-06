@@ -14,14 +14,13 @@ public struct SimParams
     public uint StepLimit;
     public double CutOff;
     public uint InitPop;
-    public uint InitMut;
 
     // Model
     public double BirthRate;
     public double Confinement;
     public double MutationRate;
-    public double SplitRate;
     public double FitnessMean;
+    public uint InitMut;
 
     // Function    
     public bool MultiplicativeFitness;

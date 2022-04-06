@@ -7,7 +7,6 @@ namespace SimChA.DataTypes;
 public struct ResultSummary
 {
     public int RepeatId;
-    public int PopCount;
     public int GenerationId;
     public int Generations;
     public long AliveCount;
@@ -32,12 +31,12 @@ public struct ResultSummary
 
     public override string ToString()
         =>
-            $"{RepeatId},{GenerationId},{PopCount},{AliveCount},{TotalCount},{Generations},{TreeDepth}," +
+            $"{RepeatId},{GenerationId},{AliveCount},{TotalCount},{Generations},{TreeDepth}," +
             $"{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneAlive},{SubcloneSelect},{ClonalDiversity}," + 
             $"{TreeBalance},{MeanDriversPerCell}";
 
     public static string Header()
-        => "RepeatId,GenerationId,popCount,aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
+        => "RepeatId,GenerationId,aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
            "subcloneTotal,subcloneAlive,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell";
 
     public string ToText()
@@ -46,11 +45,10 @@ public struct ResultSummary
 
 
     public ResultSummary(int repeatId, int generationId, ParentTree connectedTree, List<SubClone> aboveCutOff,
-        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes, int popCount)
+        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
-        PopCount = popCount;
         (NodeCount, LeafCount, TreeDepth, Branching)
             = TreeAnalysis.ComputeTreeSize(connectedTree);
         TreeBalance = TreeAnalysis.ComputeTreeBalance(LeafCount, connectedTree);

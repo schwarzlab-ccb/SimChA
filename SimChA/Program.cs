@@ -74,7 +74,7 @@ try
         int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
         var checkpoints = Utility.CreateCheckpoints(simParams);
-        var popSizes = new List<(long total, long alive)> { CellSampling.PopState(simulator.FlatPops.ToList()) };
+        var popSizes = new List<(long total, long alive)> { CellSampling.PopState(simulator.Clones) };
         var EndCondFunc = () =>
             !(popSizes.Last().total <= simParams.PopLimit
               && popSizes.Last().alive > 0
@@ -82,18 +82,14 @@ try
         do
         {
             simulator.Step();
-            
-            var flatPops = simulator.FlatPops.ToList();
-            int popCount = simulator.Populations.Count;
-            popSizes.Add(CellSampling.PopState(flatPops));
+            popSizes.Add(CellSampling.PopState(simulator.Clones));
             if (popSizes.Last().alive <= 0 && popSizes.Last().total < simParams.InitPop)
             {
                 break;
             }
             Console.Write(($"Sim: {repeatId + 1}.{tryOut}/{simParams.Repeats}, "+
                            $"step: {++stepNo:D3}, " +
-                           $"populations: {popCount}, " +
-                           $"subClones: {flatPops.Count}, " +
+                           $"subClones: {simulator.Clones.Count}, " +
                            $"alive SC: {simulator.AliveSC}, " +
                            $"cells: {popSizes.Last().total:N0}, " +
                            $"alive: {popSizes.Last().alive:N0}").PadRight(160) +
@@ -103,12 +99,12 @@ try
             {
                 // Analysis
                 var cutOff = popSizes.Select(pair => (long)Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
-                var aboveCutOff = simulator.FlatPops.Where(sc
+                var aboveCutOff = simulator.Clones.Where(sc
                     => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
-                var lcaTree = LCATreeBuilder.Builtree(simulator.FlatPops, aboveCutOff);
-                var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.FlatPops, aboveCutOff);
+                var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
+                var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
                 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
-                var sample = simulator.FlatPops.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+                var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
 
                 // Summary
                 if (checkpoints.Any())
@@ -118,7 +114,7 @@ try
                 }
 
                 var result = new ResultSummary(repeatId, checkpointId, connectedTree,
-                    aboveCutOff, flatPops.Count, simulator.AliveSC, sample.Count, stepNo, popSizes, popCount);
+                    aboveCutOff, simulator.Clones.Count, simulator.AliveSC, sample.Count, stepNo, popSizes);
                 files.AddToSummary(result);
 
                 // Result
