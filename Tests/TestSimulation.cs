@@ -20,8 +20,8 @@ public class TestSimulation
     {
         _simParams = new SimParams
         {
-            BirthRate = 0.1f, 
-            MutationRate = 0.01f,
+            Turnover = 0.1f, 
+            MutationProb = 0.01f,
             // AberrationRates =
             // {
             //     [AberrationEnum.InternalDeletion] = 50f,

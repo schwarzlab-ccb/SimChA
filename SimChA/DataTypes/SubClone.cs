@@ -9,15 +9,13 @@ public class SubClone
     public int ParentId { get; }
     public double DivisionRate { get; }
     public int NumberDrivers { get; }
-    private List<(long Alive, long Dead)> Cells { get; }
-    public double ToDivide { get; set; }
-    public double ToDie { get; set; }
+    private List<(long Alive, long Dead, long Decayed)> Cells { get; }
     
-    // public Karyotype Karyotype { get; }
-
     public long AliveCount => Cells.Last().Alive;
     public long DeadCount => Cells.Last().Dead;
-    public long TotalCount => AliveCount + DeadCount;
+    public long DecayedCount => Cells.Last().Decayed;
+    public long SampleCount => AliveCount + DeadCount;
+    public long TotalCount => AliveCount + DeadCount + DecayedCount;
     public int LastGen => FirstGen + Cells.Count;
     
     public SubClone(int cloneId, int parentId, int generation, double divisionRate, int numberDrivers = 1, uint popSize = 1) 
@@ -25,12 +23,9 @@ public class SubClone
         CloneId = cloneId;
         ParentId = parentId;
         NumberDrivers = numberDrivers;
-        // Karyotype = new Karyotype(karyotype);
         DivisionRate = Math.Clamp(divisionRate, 0, 1);
         FirstGen = generation;
-        Cells = new List<(long, long)> { (popSize, 0) };
-        ToDivide = 0;
-        ToDie = 0;
+        Cells = new List<(long, long, long)> { (popSize, 0, 0) };
     }
     
     public SubClone CreateChild(int newId, int generation, double divRateChange, int numberDrivers)
@@ -40,6 +35,9 @@ public class SubClone
         => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, " +
            $"Dead: {DeadCount}, Drivers: {NumberDrivers}, DivisionRate: {DivisionRate}";
 
+    public long SampleAtGen(int gen)
+        => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive + Cells[gen - FirstGen].Dead : 0;
+    
     public long AliveAtGen(int gen)
         => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive : 0;
 
@@ -57,6 +55,6 @@ public class SubClone
         return Cells[gen - FirstGen].Alive + Cells[gen - FirstGen].Dead;
     }
     
-    public void NewGen(uint genAlive, uint genDead) 
-        => Cells.Add((genAlive, genDead));
+    public void NewGen(uint genAlive, uint genDead, uint decayed) 
+        => Cells.Add((genAlive, genDead, decayed));
 }

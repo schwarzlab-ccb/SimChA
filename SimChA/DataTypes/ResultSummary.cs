@@ -11,6 +11,7 @@ public struct ResultSummary
     public int Generations;
     public long AliveCount;
     public long TotalCount;
+    public long SampleCount;
     public int TreeDepth;
     public int NodeCount;
     public int LeafCount;
@@ -45,7 +46,7 @@ public struct ResultSummary
 
 
     public ResultSummary(int repeatId, int generationId, ParentTree connectedTree, List<SubClone> aboveCutOff,
-        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes)
+        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long sample, long alive)> popSizes)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
@@ -58,7 +59,8 @@ public struct ResultSummary
         SubcloneSelect = sampleCount;
         SubcloneAlive = aliveCount;
         Generations = stepNo;
-        AliveCount = popSizes.Last().alive;
         TotalCount = popSizes.Last().total;
+        SampleCount = popSizes.Last().sample;
+        AliveCount = popSizes.Last().alive;
     }
 }

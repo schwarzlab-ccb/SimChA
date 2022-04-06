@@ -16,9 +16,9 @@ public struct SimParams
     public uint InitPop;
 
     // Model
-    public double BirthRate;
+    public double Turnover;
     public double Confinement;
-    public double MutationRate;
+    public double MutationProb;
     public double FitnessMean;
     public uint InitMut;
 

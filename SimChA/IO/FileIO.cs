@@ -103,7 +103,7 @@ public class FileIO
     //     }
     // }
 
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree, bool useAlive)
+    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {
         string popPath = Path.Combine(Path.GetFullPath(RootFolder), POPULATIONS_DF_FILENAME);
         string adjPath = Path.Combine(Path.GetFullPath(RootFolder), ADJACENCY_DF_FILENAME);
@@ -117,7 +117,7 @@ public class FileIO
             // int end = subClone.LastGen;
             for (int gen = start; gen < lastGen; gen++)
             {
-                long totalCells = useAlive ?  subClone.AliveAtGen(gen) : subClone.TotalAtGen(gen);
+                long totalCells = subClone.SampleAtGen(gen);
                 if (totalCells > 0)
                 {
                     popFile.WriteLine($"{subClone.CloneId},{gen},{totalCells},{subClone.NumberDrivers}");
@@ -273,13 +273,13 @@ public class FileIO
 
     public void WriteFinalOutput(int repeatID, IEnumerable<SubClone> subClones, ParentTree lcaTree, 
         IEnumerable<SubClone> aboveCutOff, ParentTree connectedTree, 
-        Dictionary<int, long> vaf, long totalSize, bool useAlive)
+        Dictionary<int, long> vaf, long totalSize)
     {
         try
         {
             WriteSubClones(subClones);
             WriteParentTree(lcaTree);
-            WriteMullerDataFrames(aboveCutOff, connectedTree, useAlive);
+            WriteMullerDataFrames(aboveCutOff, connectedTree);
             WriteCCF(vaf, totalSize);
             StoreCopy(repeatID);
 
