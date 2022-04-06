@@ -37,10 +37,10 @@ else
 
         // Model
         BirthRate = 0.01,
-        MutationRate = 0.00016,
+        MutationRate = 0.00008,
         FitnessMean = 0.5,
-        Confinement = 0.0,
-        InitMut = 0,
+        Confinement = 0.1,
+        InitMut = 1,
     };
 }
 

@@ -30,7 +30,12 @@ public class Simulator
         // var refKaryotype = new Karyotype(simParams.IsFemale, Rnd);
         // int popSize = (int)Math.Round(1 / SimParams.MutationRate);
         // popSize = simParams.InitialPop;
-        var primeval = new SubClone(0, -1, 0, BumpFitness(SimParams.BirthRate + (SimParams.FitnessMean * SimParams.InitMut * SimParams.BirthRate), SimParams, Rnd));
+        double initFit = SimParams.BirthRate;
+        for (int i = 0; i < SimParams.InitMut; i++)
+        {
+            initFit = BumpFitness(initFit, SimParams, Rnd);
+        }
+        var primeval = new SubClone(0, -1, 0, initFit);
         // var primeval = new SubClone(0, -1, 0, BumpFitness(SimParams.BirthRate, SimParams, Rnd));
         Populations = new List<List<SubClone>> { new() { primeval } };
     }
@@ -109,7 +114,7 @@ public class Simulator
 
                 // Mutate some of the cells
                 int newMutantCount = SimParams.MutationRate > 0 
-                    ?  ExtremeBinDist.Sample(Rnd, newCellsCount, SimParams.MutationRate) : 0;
+                    ?  ExtremeBinDist.Sample(Rnd, newCellsCount * 2, SimParams.MutationRate) : 0;
 
                 for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
                 {
