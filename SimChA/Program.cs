@@ -33,7 +33,7 @@ else
         StepLimit = 100_000,
         CutOff = 0.01f,
         Repeats = 1,
-        InitPop = 1000,
+        InitPop = 100,
 
         // Model
         Turnover = 0.01,
