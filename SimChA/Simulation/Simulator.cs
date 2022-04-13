@@ -34,7 +34,7 @@ public class Simulator
             initFit = BumpFitness(initFit, SimParams, Rnd);
         }
 
-        var primeval = new SubClone(0, -1, 0, initFit);
+        var primeval = new SubClone(0, -1, 0, initFit, SimParams.InitMut, SimParams.InitPop);
         Clones = new List<SubClone> { primeval };
     }
 

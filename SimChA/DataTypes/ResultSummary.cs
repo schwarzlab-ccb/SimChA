@@ -20,6 +20,8 @@ public struct ResultSummary
 
     public int SubcloneSelect;
 
+    public string Time;
+
     // public double treeBalance;
     public double TreeBalance;
 
@@ -33,11 +35,11 @@ public struct ResultSummary
         =>
             $"{RepeatId},{GenerationId},{AliveCount},{TotalCount},{Generations},{TreeDepth}," +
             $"{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneAlive},{SubcloneSelect},{ClonalDiversity}," + 
-            $"{TreeBalance},{MeanDriversPerCell}";
+            $"{TreeBalance},{MeanDriversPerCell},{Time}";
 
     public static string Header()
         => "RepeatId,GenerationId,aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
-           "subcloneTotal,subcloneAlive,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell";
+           "subcloneTotal,subcloneAlive,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell,time";
 
     public string ToText()
         => "\t" + string.Join(",\n\t",
@@ -45,7 +47,7 @@ public struct ResultSummary
 
 
     public ResultSummary(int repeatId, int generationId, ParentTree connectedTree, List<SubClone> aboveCutOff,
-        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes)
+        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes, string timeElapsed)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
@@ -60,5 +62,6 @@ public struct ResultSummary
         Generations = stepNo;
         TotalCount = popSizes.Last().total;
         AliveCount = popSizes.Last().alive;
+        Time = timeElapsed;
     }
 }
