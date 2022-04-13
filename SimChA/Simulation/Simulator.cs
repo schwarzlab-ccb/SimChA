@@ -78,7 +78,7 @@ public class Simulator
             int newCellsCount = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, divRate);
 
             // Mutate some of the cells
-            int newMutantCount = ExtremeBinDist.Sample(Rnd, newCellsCount * 2, SimParams.MutationProb);
+            int newMutantCount = ExtremeBinDist.Sample(Rnd, newCellsCount, Math.Clamp(SimParams.MutationProb * 2, 0.0, 1.0));
 
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
