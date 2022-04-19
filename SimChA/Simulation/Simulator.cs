@@ -53,8 +53,9 @@ public class Simulator
         StepNo++;
 
         List<SubClone> newClones = new();
-        long popSize = CellSampling.PopulationSize(Clones);
+        long deadCount = CellSampling.DeadCount(Clones);
         long aliveCount = CellSampling.AliveCount(Clones);
+        long popSize = deadCount + aliveCount;
         double divisionFraction = 1;
         if (SimParams.Confinement > 0)
         {
@@ -65,13 +66,21 @@ public class Simulator
             }
         }
 
+        double dieFraction = 1;
+        if (SimParams.Radius > 0)
+        {
+            double toDie = Math.Pow(Math.Pow(popSize, THIRD) * SimParams.Radius, 3);
+            dieFraction = Math.Clamp((toDie - deadCount)/aliveCount, 0, 1);
+        }
 
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
             AliveSC++;
 
             // Kill cells
-            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.Turnover);
+            int newDead = dieFraction <= 0 
+                ? 0 
+                : ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.Turnover * dieFraction);
 
             // Create new cells
             double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);

@@ -21,6 +21,7 @@ public struct SimParams
     public double MutationProb;
     public double FitnessMean;
     public double Depth;
+    public double Radius;
     public int InitMut;
 
     // Function    

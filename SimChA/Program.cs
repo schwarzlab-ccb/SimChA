@@ -22,25 +22,26 @@ else
     simParams = new SimParams
     {
         AliveOnly = true,
-        Checkpoints = true,
+        Checkpoints = false,
         // Function
-        MultiplicativeFitness = false,
+        MultiplicativeFitness = true,
         StochasticCellLife = true,
         FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_073_741_824,
-        StepLimit = 1_000_000,
-        CutOff = 0.001f,
+        PopLimit = 1_03_741_824,
+        StepLimit = 100_000,
+        CutOff = 0.01f,
         Repeats = 1,
-        InitPop = 100,
+        InitPop = 1,
 
         // Model
         Turnover = 0.01,
-        MutationProb = 0.00004,
-        FitnessMean = 0.5,
-        Confinement = 0.05,
-        InitMut = 1
+        MutationProb = 0.0001,
+        FitnessMean = 1,
+        Confinement = 1,
+        InitMut = 0,
+        Radius = .8,
     };
 }
 
