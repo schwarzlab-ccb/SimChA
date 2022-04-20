@@ -56,6 +56,7 @@ public class Simulator
         long deadCount = CellSampling.DeadCount(Clones);
         long aliveCount = CellSampling.AliveCount(Clones);
         long popSize = deadCount + aliveCount;
+        
         double divisionFraction = 1;
         if (SimParams.Confinement > 0)
         {

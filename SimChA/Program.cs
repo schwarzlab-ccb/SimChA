@@ -25,7 +25,6 @@ else
         Checkpoints = false,
         // Function
         MultiplicativeFitness = true,
-        StochasticCellLife = true,
         FitnessType = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
@@ -33,15 +32,15 @@ else
         StepLimit = 100_000,
         CutOff = 0.01f,
         Repeats = 1,
-        InitPop = 1,
+        InitPop = 100,
 
         // Model
         Turnover = 0.01,
         MutationProb = 0.0001,
-        FitnessMean = 1,
-        Confinement = 1,
+        FitnessMean = .75,
+        Confinement = .5,
         InitMut = 0,
-        Radius = .8,
+        Radius = 0.8,
     };
 }
 

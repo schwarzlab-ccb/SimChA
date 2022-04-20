@@ -8,7 +8,10 @@ public static class Utility
 {
     public static List<uint> CreateCheckpoints(SimParams simParams)
     {
-        var checkpoints =new List<uint> { simParams.InitPop };
+        if (!simParams.Checkpoints)
+            return new List<uint>();
+        
+        var checkpoints = new List<uint> { simParams.InitPop };
         while (checkpoints.Last() < simParams.PopLimit)
         {
             checkpoints.Add(checkpoints.Last() * 2);
