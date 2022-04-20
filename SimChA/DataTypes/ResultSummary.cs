@@ -17,6 +17,7 @@ public struct ResultSummary
     public float Branching;
     public int SubcloneTotal;
     public int SubcloneAlive;
+    public long LostCount;
 
     public int SubcloneSelect;
 
@@ -33,12 +34,12 @@ public struct ResultSummary
 
     public override string ToString()
         =>
-            $"{RepeatId},{GenerationId},{AliveCount},{TotalCount},{Generations},{TreeDepth}," +
+            $"{RepeatId},{GenerationId},{AliveCount},{TotalCount},{LostCount},{Generations},{TreeDepth}," +
             $"{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneAlive},{SubcloneSelect},{ClonalDiversity}," + 
             $"{TreeBalance},{MeanDriversPerCell},{Time}";
 
     public static string Header()
-        => "RepeatId,GenerationId,aliveCount,totalCount,generations,treeDepth,nodeCount,leafCount,branching," +
+        => "RepeatId,GenerationId,aliveCount,totalCount,lostCount,generations,treeDepth,nodeCount,leafCount,branching," +
            "subcloneTotal,subcloneAlive,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell,time";
 
     public string ToText()
@@ -47,7 +48,7 @@ public struct ResultSummary
 
 
     public ResultSummary(int repeatId, int generationId, ParentTree connectedTree, List<SubClone> aboveCutOff,
-        int cloneCount, int aliveCount, int sampleCount, int stepNo, List<(long total, long alive)> popSizes, string timeElapsed)
+        int cloneCount, int aliveSubclones, int sampleCount, int stepNo, List<(long total, long alive, long lost)> popSizes, string timeElapsed)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
@@ -58,10 +59,11 @@ public struct ResultSummary
         MeanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
         SubcloneTotal = cloneCount;
         SubcloneSelect = sampleCount;
-        SubcloneAlive = aliveCount;
+        SubcloneAlive = aliveSubclones;
         Generations = stepNo;
         TotalCount = popSizes.Last().total;
         AliveCount = popSizes.Last().alive;
+        LostCount = popSizes.Last().lost;
         Time = timeElapsed;
     }
 }

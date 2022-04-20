@@ -15,13 +15,15 @@ public class SubClone
     public long DeadCount => Cells.Last().Dead;
     public long TotalCount => AliveCount + DeadCount;
     public int LastGen => FirstGen + Cells.Count;
+
+    public long Lost { get; private set; }
     
     public SubClone(int cloneId, int parentId, int generation, double divisionRate, int numberDrivers = 1, uint popSize = 1) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         NumberDrivers = numberDrivers;
-        DivisionRate = Math.Clamp(divisionRate, 0, 1);
+        DivisionRate = divisionRate;
         FirstGen = generation;
         Cells = new List<(long, long)> { (popSize, 0) };
     }
@@ -49,7 +51,10 @@ public class SubClone
 
         return Cells[gen - FirstGen].Alive + Cells[gen - FirstGen].Dead;
     }
-    
-    public void NewGen(uint genAlive, uint genDead) 
-        => Cells.Add((genAlive, genDead));
+
+    public void NewGen(uint genAlive, uint genDead, uint genDis)
+    {
+        Cells.Add((genAlive, genDead));
+        Lost += genDis;
+    }
 }

@@ -34,7 +34,6 @@ public class TestSimulation
             //     [AberrationEnum.Duplication] = 5f,
             //     [AberrationEnum.Chromothripsis] = 1f
             // }
-            StochasticCellLife = false,
             MultiplicativeFitness = false
         };
         _sim = new Simulator(_simParams, new Random(0));

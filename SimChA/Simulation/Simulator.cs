@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.Distributions;
-using SimChA.Computation;
+﻿using SimChA.Computation;
 using SimChA.DataTypes;
 using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
 
@@ -20,7 +19,6 @@ public class Simulator
 
     private const int INIT_POP = 1;
     const double THIRD = 1.0 / 3.0;
-    const double TWO_THIRD = 2.0 / 3.0;
 
     public Simulator(SimParams simParams, Random rnd)
     {
@@ -28,7 +26,7 @@ public class Simulator
         SimParams = simParams;
         Rnd = rnd;
 
-        double initFit = SimParams.Turnover;
+        double initFit = 1;
         for (int i = 0; i < SimParams.InitMut; i++)
         {
             initFit = BumpFitness(initFit, SimParams, Rnd);
@@ -43,7 +41,7 @@ public class Simulator
         double divChange = FitnessFunction.SampleFitness(simParams, rnd);
         double newFitness = simParams.MultiplicativeFitness
             ? original * (1 + divChange)
-            : original + divChange * simParams.Turnover;
+            : original + divChange;
         return newFitness;
     }
 
@@ -68,24 +66,17 @@ public class Simulator
             }
         }
 
-        double dieFraction = 1;
-        if (SimParams.Radius > 0)
-        {
-            double toDie = Math.Pow(Math.Pow(popSize, THIRD) * SimParams.Radius, 3);
-            dieFraction = Math.Clamp((toDie - deadCount)/aliveCount, 0, 1);
-        }
-
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
         {
             AliveSC++;
 
             // Kill cells
-            int newDead = dieFraction <= 0 
-                ? 0 
-                : ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.Turnover * dieFraction);
+            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, SimParams.Turnover);
+            int newNecrotic = (int) Math.Round(newDead * SimParams.Necrosis);
+            int disappeared = newDead - newNecrotic;
 
             // Create new cells
-            double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction, 0.0, 1.0);
+            double divRate = Math.Clamp(subClone.DivisionRate * divisionFraction * SimParams.Turnover, 0.0, 1.0);
             int newCellsCount = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, divRate);
 
             // Mutate some of the cells
@@ -100,7 +91,8 @@ public class Simulator
 
             subClone.NewGen(
                 (uint)(subClone.AliveCount + newCellsCount - newMutantCount - newDead),
-                (uint)(subClone.DeadCount + newDead));
+                (uint)(subClone.DeadCount + newNecrotic),
+                (uint) disappeared);
         }
 
         Clones.AddRange(newClones);

@@ -37,10 +37,11 @@ else
         // Model
         Turnover = 0.01,
         MutationProb = 0.0001,
-        FitnessMean = .75,
-        Confinement = .5,
-        InitMut = 0,
-        Radius = 0.8,
+        FitnessMean = .25,
+        Confinement = .1,
+        Necrosis = 0.5,
+        
+        InitMut = 1,
     };
 }
 
@@ -72,7 +73,7 @@ try
         int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
         var checkpoints = Utility.CreateCheckpoints(simParams);
-        var popSizes = new List<(long total, long alive)> {CellSampling.PopState(simulator.Clones)};
+        var popSizes = new List<(long total, long alive, long lost)> {CellSampling.PopState(simulator.Clones)};
         var EndCondFunc = () =>
             !(popSizes.Last().total <= simParams.PopLimit
               && popSizes.Last().alive > 0
@@ -91,7 +92,8 @@ try
                            $"subClones: {simulator.Clones.Count}, " +
                            $"alive SC: {simulator.AliveSC}, " +
                            $"cells: {popSizes.Last().total:N0}, " +
-                           $"alive: {popSizes.Last().alive:N0}").PadRight(160) +
+                           $"alive: {popSizes.Last().alive:N0}, " +
+                           $"lost: {popSizes.Last().lost:N0}").PadRight(160) +
                           (options.Value.Newline ? "\n" : "\r"));
 
             if (EndCondFunc() || checkpoints.Any() && popSizes.Last().total > checkpoints.First())
