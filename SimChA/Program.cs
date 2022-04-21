@@ -24,8 +24,8 @@ else
         AliveOnly = true,
         Checkpoints = false,
         // Function
-        MultiplicativeFitness = true,
-        FitnessType = FitnessSampleType.Constant,
+        FitnessAcc = FitnessAccType.Eth,
+        FitnessDist = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
         PopLimit = 1_03_741_824,
@@ -36,10 +36,10 @@ else
 
         // Model
         Turnover = 0.01,
+        
         MutationProb = 0.0001,
         FitnessMean = .25,
         Confinement = .1,
-        Necrosis = 0.5,
         
         InitMut = 1,
     };

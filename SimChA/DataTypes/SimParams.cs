@@ -20,12 +20,11 @@ public struct SimParams
     public double Confinement;
     public double MutationProb;
     public double FitnessMean;
-    public double Necrosis;
     public int InitMut;
 
     // Function    
-    public bool MultiplicativeFitness;
-    public FitnessSampleType FitnessType;
+    public FitnessAccType FitnessAcc;
+    public FitnessSampleType FitnessDist;
     
     // Output
     public bool AliveOnly;
