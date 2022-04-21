@@ -21,25 +21,25 @@ else
 {
     simParams = new SimParams
     {
-        Checkpoints = false,
+        Checkpoints = true,
         // Function
-        FitnessAcc = FitnessAccType.Eth,
+        FitnessAcc = FitnessAccType.Mul,
         FitnessDist = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_03_741_824,
+        PopLimit = 1004_857_600,
         StepLimit = 1_000_000,
         CutOff = 0.01f,
         Repeats = 1,
-        InitPop = 100,
+        InitPop = 1000,
 
         // Model
         Turnover = 0.01,
         MutationProb = 0.0001,
-        
-        FitnessMean = .2,
-        Confinement = .25,
-        
+
+        FitnessMean = .25,
+        Confinement = .1,
+
         InitMut = 1,
     };
 }
@@ -91,12 +91,12 @@ try
                            $"lost: {popSizes.Last().lost:N0}").PadRight(160) +
                           (options.Value.Newline ? "\n" : "\r"));
 
-            if (EndCondFunc() || (checkpoints.Any() && popSizes.Last().total > checkpoints.First()))
+            if ((EndCondFunc() && popSizes.Last().total >= simParams.InitPop)
+                || (checkpoints.Any() && popSizes.Last().total > checkpoints.First()))
             {
                 // Analysis
-                var cutOff = popSizes.Select(pair => (long) Math.Ceiling(pair.alive * simParams.CutOff)).ToList();
-                var aboveCutOff = simulator.Clones
-                    .Where(sc => Enumerable.Range(0, popSizes.Count).Any(g => cutOff[g] <= sc.AliveAtGen(g))).ToList();
+                double cutOff = popSizes.Last().alive * simParams.CutOff;
+                var aboveCutOff = simulator.Clones.Where(sc => sc.AliveCount > cutOff).ToList();
                 var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
                 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
                 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
@@ -110,24 +110,32 @@ try
                 }
 
                 string time = TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds).ToString();
-                var result = new ResultSummary(repeatId, checkpointId, connectedTree, aboveCutOff, 
-                    simulator.Clones.Count, simulator.AliveSC, sample.Count, simulator.StepNo, popSizes,
-                    time);
+                var result = new ResultSummary(repeatId, checkpointId, simulator.StepNo, time,
+                    connectedTree, aboveCutOff, simulator.Clones, popSizes);
                 files.AddToSummary(result);
 
                 // Result
                 if (EndCondFunc() && popSizes.Last().total >= simParams.InitPop)
                 {
-                    
                     var vaf = TreeAnalysis.ComputeVAF(connectedTree);
-                    files.WriteFinalOutput(repeatId, sample, lcaTree, aboveCutOff, connectedTree, vaf,
-                        popSizes.Last().total);
+                    files.WriteSubClones(sample);
+                    files.WriteParentTree(lcaTree);
+                    files.WriteCCF(vaf, popSizes.Last().total);
+                    var cutOffList = popSizes.Select(pair => pair.alive * 0.01).ToList();
+                    int firstPop = cutOffList.FindIndex(minPop => minPop > 0);
+                    var mullerPops = simulator.Clones.Where(sc =>
+                        sc.FirstGen <= firstPop || Enumerable.Range(firstPop, popSizes.Count)
+                            .Any(g => cutOffList[g] <= sc.AliveAtGen(g))).ToList();
+                    var mullerTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, mullerPops);
+                    files.WriteMullerDataFrames(mullerPops, mullerTree);
+                    files.StoreCopy(repeatId);
                     Console.WriteLine($"Sim: {repeatId + 1}.{tryNo}/{simParams.Repeats} result:".PadRight(160));
                     Console.WriteLine(result.ToText());
                 }
             }
         } while (!EndCondFunc());
 
+        // Skip on failure
         if (popSizes.Last().total < simParams.InitPop)
         {
             tryNo++;

@@ -1,6 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using SimChA.Computation;
+using static System.String;
 
 namespace SimChA.DataTypes;
 
@@ -9,61 +10,59 @@ public struct ResultSummary
     public int RepeatId;
     public int GenerationId;
     public int Generations;
-    public long AliveCount;
-    public long TotalCount;
+    public string Time;
+
+    public int SubcloneSelect;
+    public int SubcloneAlive;
+    public int SubcloneTotal;
+
+    public long CellSelectCount;
+    public long CellAliveCount;
+    public long CellTotalCount;
+    public long CellLostCount;
+
+    public double MeanDriversPerCell;
+    public double ClonalDiversity;
+    public double TreeBalance;
     public int TreeDepth;
     public int NodeCount;
     public int LeafCount;
     public float Branching;
-    public int SubcloneTotal;
-    public int SubcloneAlive;
-    public long LostCount;
 
-    public int SubcloneSelect;
+    public override string ToString() => ToString(this);
 
-    public string Time;
+    private static string ToString(ResultSummary rs)
+        => Join(",", rs.GetType().GetFields().Select(f => f.GetValue(rs).ToString()));
 
-    // public double treeBalance;
-    public double TreeBalance;
-
-    // public double clonalDiversity;
-    public double ClonalDiversity;
-
-    // public double meanDriversPerCell;
-    public double MeanDriversPerCell;
-
-    public override string ToString()
-        =>
-            $"{RepeatId},{GenerationId},{AliveCount},{TotalCount},{LostCount},{Generations},{TreeDepth}," +
-            $"{NodeCount},{LeafCount},{Branching},{SubcloneTotal},{SubcloneAlive},{SubcloneSelect},{ClonalDiversity}," + 
-            $"{TreeBalance},{MeanDriversPerCell},{Time}";
-
-    public static string Header()
-        => "RepeatId,GenerationId,aliveCount,totalCount,lostCount,generations,treeDepth,nodeCount,leafCount,branching," +
-           "subcloneTotal,subcloneAlive,subcloneSelect,clonalDiversity,treeBalance,meanDriversPerCell,time";
-
+    public static string Header() 
+        => Join(",", typeof(ResultSummary).GetFields().Select(f => f.Name));
+    
     public string ToText()
-        => "\t" + string.Join(",\n\t",
+        => "\t" + Join(",\n\t",
             Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}: {val}"));
 
 
-    public ResultSummary(int repeatId, int generationId, ParentTree connectedTree, List<SubClone> aboveCutOff,
-        int cloneCount, int aliveSubclones, int sampleCount, int stepNo, List<(long total, long alive, long lost)> popSizes, string timeElapsed)
+    public ResultSummary(int repeatId, int generationId, int stepNo, string timeElapsed, ParentTree connectedTree,
+        List<SubClone> aboveCutOff, List<SubClone> clones, List<(long total, long alive, long lost)> popSizes)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
+        Time = timeElapsed;
+        Generations = stepNo;
+        
+        SubcloneTotal = clones.Count;
+        SubcloneSelect = aboveCutOff.Count;
+        SubcloneAlive = clones.Count(sc => sc.AliveCount > 0);
+        
+        CellTotalCount = popSizes.Last().total;
+        CellAliveCount = clones.Sum(sc => sc.AliveCount);
+        CellLostCount = popSizes.Last().lost;
+        CellSelectCount = aboveCutOff.Sum(sc => sc.AliveCount);
+        
         (NodeCount, LeafCount, TreeDepth, Branching)
             = TreeAnalysis.ComputeTreeSize(connectedTree);
         TreeBalance = TreeAnalysis.ComputeTreeBalance(LeafCount, connectedTree);
         ClonalDiversity = TreeAnalysis.ComputeClonalDiversity(aboveCutOff);
         MeanDriversPerCell = TreeAnalysis.ComputeMeanDriversPerCell(aboveCutOff);
-        SubcloneTotal = cloneCount;
-        SubcloneSelect = sampleCount;
-        SubcloneAlive = aliveSubclones;
-        Generations = stepNo;
-        TotalCount = popSizes.Last().total;
-        AliveCount = popSizes.Last().alive;
-        LostCount = popSizes.Last().lost;
-        Time = timeElapsed;
     }
 }
