@@ -21,20 +21,7 @@ public class TestSimulation
         _simParams = new SimParams
         {
             Turnover = 0.1f, 
-            MutationProb = 0.01f,
-            // AberrationRates =
-            // {
-            //     [AberrationEnum.InternalDeletion] = 50f,
-            //     [AberrationEnum.InternalDuplication] = 50f,
-            //     [AberrationEnum.Translocation] = 20f,
-            //     [AberrationEnum.TailDeletion] = 15f,
-            //     [AberrationEnum.BreakageFusionBridge] = 10f,
-            //     [AberrationEnum.Inversion] = 10f,
-            //     [AberrationEnum.Missegregation] = 5f,
-            //     [AberrationEnum.Duplication] = 5f,
-            //     [AberrationEnum.Chromothripsis] = 1f
-            // }
-            FitnessAcc = false
+            MutationProb = 0.01f
         };
         _sim = new Simulator(_simParams, new Random(0));
     }

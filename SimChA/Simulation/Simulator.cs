@@ -17,8 +17,7 @@ public class Simulator
     public int StepNo;
     private Random Rnd { get; }
 
-    private const int INIT_POP = 1;
-    const double THIRD = 1.0 / 3.0;
+    private const double MAX_FIT = 10.0;
 
     public Simulator(SimParams simParams, Random rnd)
     {
@@ -43,7 +42,7 @@ public class Simulator
         {
             FitnessAccType.Add => original + divChange,
             FitnessAccType.Mul => original * (1 + divChange),
-            FitnessAccType.Eth => original * (1 + divChange * ( 1 - original / 10.0)),
+            FitnessAccType.Eth => Math.Clamp(original * (1 + divChange * ( 1 - original / 10.0)), 0.0, MAX_FIT),
             _ => throw new ArgumentOutOfRangeException()
         };
         return newFitness;
@@ -62,11 +61,11 @@ public class Simulator
         double unconfined = popSize;
         if (SimParams.Confinement > 0)
         {
-            double r = Math.Pow((3.0 * popSize) / (4.0 * Math.PI), 1.0 / 3.0);
+            double r = Math.Pow((3.0/4.0) * (popSize/Math.PI), 1.0/3.0);
             double reminder = r - (1 / SimParams.Confinement);
             if (reminder > 0)
             {
-                double blockedPop = 4.0 / 3.0 * Math.PI * Math.Pow(reminder, 3);
+                double blockedPop = 4.0/3.0 * Math.PI * Math.Pow(reminder, 3);
                 unconfined = popSize - blockedPop;
             }
         }

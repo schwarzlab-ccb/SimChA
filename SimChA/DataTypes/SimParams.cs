@@ -27,7 +27,6 @@ public struct SimParams
     public FitnessSampleType FitnessDist;
     
     // Output
-    public bool AliveOnly;
     public bool Checkpoints;
 
     // public SimParams()

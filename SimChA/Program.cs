@@ -21,15 +21,14 @@ else
 {
     simParams = new SimParams
     {
-        AliveOnly = true,
         Checkpoints = false,
         // Function
-        FitnessAcc = FitnessAccType.Eth,
+        FitnessAcc = FitnessAccType.Mul,
         FitnessDist = FitnessSampleType.Constant,
         Seed = new Random().Next(),
         // Experiment
         PopLimit = 1_03_741_824,
-        StepLimit = 100_000,
+        StepLimit = 1_000_000,
         CutOff = 0.01f,
         Repeats = 1,
         InitPop = 100,
@@ -38,7 +37,7 @@ else
         Turnover = 0.01,
         
         MutationProb = 0.0001,
-        FitnessMean = .25,
+        FitnessMean = .1,
         Confinement = .1,
         
         InitMut = 1,

@@ -1,4 +1,5 @@
 ﻿namespace SimChA.DataTypes;
 
 public enum FitnessSampleType { Constant, Normal, Exponential, Beta, Uniform }
-public enum FitnessAccType { Add, Mul, Eth } // Additive, Multiplicative, ETH paper
+public enum FitnessAccType { Mul, Add, Eth } // Multiplicative, Additive, ETH paper
+public enum FitnessEffectType { Increase, Decrease, Both }
