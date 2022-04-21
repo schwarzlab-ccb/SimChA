@@ -58,11 +58,16 @@ public class Simulator
         double divisionFraction = 1;
         if (SimParams.Confinement > 0)
         {
-            double surface = Math.Round(4.0 * Math.PI * Math.Pow(3.0 * popSize / (4.0 * Math.PI), 2.0 / 3.0));
-            double divisible =  surface / SimParams.Confinement;
-            if (aliveCount > divisible && aliveCount > 0)
+            double r = Math.Pow((3.0 * popSize) / (4.0 * Math.PI), 1.0 / 3.0);
+            double reminder = r - (1 / SimParams.Confinement);
+            if (reminder > 0)
             {
-                divisionFraction = Math.Clamp(divisible / aliveCount, 0.0, 1.0);
+                double blockedPop = 4.0 / 3.0 * Math.PI * Math.Pow(reminder, 3);
+                double divisible = popSize - blockedPop;
+                if (aliveCount > divisible && aliveCount > 0)
+                {
+                    divisionFraction = Math.Clamp(divisible / aliveCount, 0.0, 1.0);
+                }
             }
         }
 
