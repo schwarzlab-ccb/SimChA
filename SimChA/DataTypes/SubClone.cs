@@ -7,7 +7,8 @@ public class SubClone
     public int FirstGen { get; }
     public int CloneId { get; }
     public int ParentId { get; }
-    public double DivisionRate { get; }
+    public double BirthRate { get; }
+    public double DeathRate { get; }
     public int NumberDrivers { get; }
     private List<(long Alive, long Dead)> Cells { get; }
     
@@ -18,22 +19,23 @@ public class SubClone
 
     public long Lost { get; private set; }
     
-    public SubClone(int cloneId, int parentId, int generation, double divisionRate, int numberDrivers = 1, uint popSize = 1) 
+    public SubClone(int cloneId, int parentId, int generation, double birthRate, double deathRate, int numberDrivers = 1, uint popSize = 1) 
     {
         CloneId = cloneId;
         ParentId = parentId;
         NumberDrivers = numberDrivers;
-        DivisionRate = divisionRate;
+        BirthRate = birthRate;
+        DeathRate = deathRate;
         FirstGen = generation;
         Cells = new List<(long, long)> { (popSize, 0) };
     }
     
-    public SubClone CreateChild(int newId, int generation, double divRateChange, int numberDrivers)
-        => new(newId, CloneId, generation, divRateChange, numberDrivers);
+    public SubClone CreateChild(int newId, int generation, double divRateChange, double deathChange, int numberDrivers)
+        => new(newId, CloneId, generation, divRateChange, deathChange, numberDrivers);
     
     public override string ToString() 
-        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, " +
-           $"Dead: {DeadCount}, Drivers: {NumberDrivers}, DivisionRate: {DivisionRate}";
+        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}" +
+           $"Drivers: {NumberDrivers}, DivisionRate: {BirthRate}, DeathRate: {DeathRate}";
     
     public long AliveAtGen(int gen)
         => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive : 0;

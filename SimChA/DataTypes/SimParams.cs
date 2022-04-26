@@ -25,6 +25,7 @@ public struct SimParams
     // Function    
     public FitnessAccType FitnessAcc;
     public FitnessSampleType FitnessDist;
+    public FitnessEffectType FitnessEffect;
     
     // Output
     public bool Checkpoints;
