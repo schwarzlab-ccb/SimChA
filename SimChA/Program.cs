@@ -25,10 +25,10 @@ else
         // Function
         FitnessAcc = FitnessAccType.Mul,
         FitnessDist = FitnessSampleType.Constant,
-        FitnessEffect = FitnessEffectType.Both,
+        FitnessEffect = FitnessEffectType.Birth,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_048_576_00,
+        PopLimit = 1_048_576_000,
         StepLimit = 1_000_000,
         CutOff = 0.001f,
         Repeats = 1,
@@ -39,7 +39,7 @@ else
         MutationProb = 0.0001,
 
         FitnessMean = .25,
-        Confinement = .5,
+        Confinement = .1,
 
         InitMut = 1,
     };

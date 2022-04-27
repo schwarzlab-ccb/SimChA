@@ -31,7 +31,7 @@ public class Simulator
         {
             double divChange = FitnessFunction.SampleFitness(simParams, rnd);
             initFit = BumpFitness(initFit, SimParams, divChange);
-            deathRate = BumpFitness(deathRate, SimParams, divChange);
+            deathRate = BumpDeath(deathRate, SimParams, divChange);
         }
 
         var primeval = new SubClone(0, -1, 0, initFit, deathRate, SimParams.InitMut);

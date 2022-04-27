@@ -17,7 +17,7 @@ public class SubClone
     public long TotalCount => AliveCount + DeadCount;
     public int LastGen => FirstGen + Cells.Count;
 
-    public long Lost { get; private set; }
+    public long LostCount { get; private set; }
     
     public SubClone(int cloneId, int parentId, int generation, double birthRate, double deathRate, int numberDrivers = 1, uint popSize = 1) 
     {
@@ -34,7 +34,7 @@ public class SubClone
         => new(newId, CloneId, generation, divRateChange, deathChange, numberDrivers);
     
     public override string ToString() 
-        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}" +
+        => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Dead: {DeadCount}, Lost: {LostCount}, " +
            $"Drivers: {NumberDrivers}, DivisionRate: {BirthRate}, DeathRate: {DeathRate}";
     
     public long AliveAtGen(int gen)
@@ -57,6 +57,6 @@ public class SubClone
     public void NewGen(uint genAlive, uint genDead, uint genDis)
     {
         Cells.Add((genAlive, genDead));
-        Lost += genDis;
+        LostCount += genDis;
     }
 }
