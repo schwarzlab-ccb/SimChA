@@ -7,6 +7,8 @@ public struct SimParams
 {
     // Simulator
     public int Seed;
+    public int StartMut;
+    public int StartPop;
 
     // Experiment
     public uint Repeats;
@@ -20,7 +22,7 @@ public struct SimParams
     public double Confinement;
     public double MutationProb;
     public double FitnessMean;
-    public int InitMut;
+
 
     // Function    
     public FitnessAccType FitnessAcc;

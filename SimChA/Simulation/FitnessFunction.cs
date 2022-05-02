@@ -1,8 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using MathNet.Numerics.Distributions;
 using SimChA.DataTypes;
-
+using Dist = Extreme.Statistics.Distributions;
 namespace SimChA.Simulation;
 
 public static class FitnessFunction
@@ -12,16 +11,16 @@ public static class FitnessFunction
         switch (simParams.FitnessDist)
         {
             case FitnessSampleType.Exponential:
-                return Exponential.Sample(rnd, 1/simParams.FitnessMean);
+                return Extreme.Statistics.Distributions.ExponentialDistribution.Sample(rnd, 1/simParams.FitnessMean);
             
             case FitnessSampleType.Beta:
-                return Beta.Sample(rnd, 1, 1/simParams.FitnessMean - 1);
+                return Dist.BetaDistribution.Sample(rnd, 1, 1/simParams.FitnessMean - 1);
                 
             case FitnessSampleType.Normal:
-                return Math.Max(Normal.Sample(rnd, simParams.FitnessMean, simParams.FitnessMean/2.0), 0);
+                return Math.Max(Dist.NormalDistribution.Sample(rnd, simParams.FitnessMean, simParams.FitnessMean/2.0), 0);
             
             case FitnessSampleType.Uniform:
-                return ContinuousUniform.Sample(rnd, 0, simParams.FitnessMean * 2.0);
+                return Dist.ContinuousUniformDistribution.Sample(rnd, 0, simParams.FitnessMean * 2.0);
 
             case FitnessSampleType.Constant:
             default:

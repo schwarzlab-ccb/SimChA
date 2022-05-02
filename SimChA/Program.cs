@@ -32,16 +32,18 @@ else
         MaxPop = 1_048_576_000,
         MaxSteps = 1_000_000,
         CutOff = 0.001f,
-        Repeats = 1,
+        Repeats = 100,
 
         // Model
         Turnover = 0.01,
-        MutationProb = 0.0001,
+        MutationProb = 0.1,
 
-        FitnessMean = .25,
-        Confinement = .1,
+        FitnessMean = .0,
+        Confinement = .0,
 
-        InitMut = 1,
+        // Initialization
+        StartMut = 1,
+        StartPop = 1000
     };
 }
 
@@ -74,7 +76,7 @@ try
         int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
         var checkpoints = Utility.CreateCheckpoints(simParams);
-        var popSizes = new List<(long total, long alive, long lost)> { CellSampling.PopState(simulator.Clones) };
+        var popSizes = new List<(long total, long alive, long necro)> { CellSampling.PopState(simulator.Clones) };
         var EndCondFunc = () =>
             !(popSizes.Last().total <= simParams.MaxPop
               && popSizes.Last().alive > 0
@@ -83,13 +85,13 @@ try
         {
             simulator.Step();
             popSizes.Add(CellSampling.PopState(simulator.Clones));
-            Console.Write(($"Sim: {repeatId + 1}.{tryNo}/{simParams.Repeats}, " +
+            Console.Write(($"sim: {repeatId + 1}.{tryNo}/{simParams.Repeats}, " +
                            $"step: {simulator.StepNo:D3}, " +
-                           $"subClones: {simulator.Clones.Count}, " +
-                           $"alive SC: {simulator.AliveSC}, " +
-                           $"cells: {popSizes.Last().total:N0}, " +
-                           $"alive: {popSizes.Last().alive:N0}, " +
-                           $"lost: {popSizes.Last().lost:N0}").PadRight(160) +
+                           $"SC_total: {simulator.Clones.Count}, " +
+                           $"SC_alive: {simulator.AliveSC}, " +
+                           $"C_total: {popSizes.Last().total:N0}, " +
+                           $"C_alive: {popSizes.Last().alive:N0}, " +
+                           $"C_necro: {popSizes.Last().necro:N0}").PadRight(160) +
                           (options.Value.Newline ? "\n" : "\r"));
 
             if ((EndCondFunc() && popSizes.Last().total >= simParams.MinPop)
