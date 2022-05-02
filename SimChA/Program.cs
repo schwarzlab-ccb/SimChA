@@ -32,18 +32,18 @@ else
         MaxPop = 1_048_576_000,
         MaxSteps = 1_000_000,
         CutOff = 0.001f,
-        Repeats = 100,
+        Repeats = 1,
 
         // Model
         Turnover = 0.01,
-        MutationProb = 0.1,
+        MutationProb = 0.0001,
 
-        FitnessMean = .0,
-        Confinement = .0,
+        FitnessMean = .125,
+        Confinement = .1,
 
         // Initialization
         StartMut = 1,
-        StartPop = 1000
+        StartPop = 1
     };
 }
 

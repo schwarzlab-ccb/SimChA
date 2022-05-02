@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-DEFAULT_METRICS = ["clonalDiversity", "treeBalance", "meanDriversPerCell"]
+DEFAULT_METRICS = ["ClonalDiversity", "TreeBalance", "MeanDriversPerCell"]
 
 
 if __name__ == "__main__":
