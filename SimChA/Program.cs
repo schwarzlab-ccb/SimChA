@@ -160,7 +160,7 @@ try
 }
 catch (Exception e)
 {
-    Console.WriteLine($"Failed with exception {e.Message}");
+    Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
 }
 
 return 0;

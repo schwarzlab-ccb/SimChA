@@ -35,6 +35,10 @@ public class TreeAnalysis
     // Returns number of nodes, number of leafs, depth, mean child count
     public static (int, int, int, float) ComputeTreeSize(ParentTree parentTree)
     {
+        if (parentTree.Nodes.Count == 0)
+        {
+            return (0, 0, 0, 0);
+        }
         TreeSizeData data = new();
         var branches = TreeToBranches(parentTree);
         int depth = CountNodes(branches, data, parentTree.RootId, 0);
