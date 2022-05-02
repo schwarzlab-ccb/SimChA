@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using SimChA.Computation;
 using SimChA.DataTypes;
 
 namespace SimChA.IO;
@@ -88,21 +87,7 @@ public class FileIO
 
         outputFile.WriteLine("}");
     }
-
-    // public void WriteCopyNumbers(IEnumerable<SubClone> subClones)
-    // {
-    //     string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
-    //     Console.WriteLine($"Writing CopyNumbers to file {outPath}");
-    //     using var outputFile = new StreamWriter(outPath);
-    //     
-    //     outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
-    //     foreach (var subClone in subClones)
-    //     {
-    //         var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-    //         outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
-    //     }
-    // }
-
+    
     public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {
         string popPath = Path.Combine(Path.GetFullPath(RootFolder), POPULATIONS_DF_FILENAME);
@@ -151,52 +136,7 @@ public class FileIO
             outputFile.WriteLine($"{id},{pop},{(float)pop / totalSize}");
         }
     }
-
-    // public void WriteRawData(Random rnd, IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
-    // {
-    //     var outputbaf = new List<string>();
-    //     outputbaf.Add("\tchrom\tpos");
-    //
-    //     foreach (var snp in snps)
-    //     {
-    //         outputbaf.Add($"{snp.Id}\t{snp.Chrom}\t{snp.Pos}");
-    //     }
-    //     var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
-    //     foreach (var subClone in subClones)
-    //     {
-    //         var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-    //         var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers, snps, isFemale);
-    //         outputbaf[0] += $"\t{subClone.CloneId}";
-    //         outputlogr[0] += $"\t{subClone.CloneId}";
-    //         for (int i = 0; i < rawdata.Count; i++)
-    //         {
-    //             outputbaf[i + 1] += $"\t{rawdata[i].Baf}";
-    //             outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
-    //         }
-    //     }
-    //
-    //     string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), BAF_FILENAME);
-    //     Console.WriteLine($"Writing BAF to file {outPathBAF}");
-    //     using var outputFileBAF = new StreamWriter(outPathBAF);
-    //     outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
-    //
-    //     string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), LOGR_FILENAME);
-    //     Console.WriteLine($"Writing LogR to file {outPathLogR}");
-    //     using var outputFileLogR = new StreamWriter(outPathLogR);
-    //     outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
-    // }
-
-    public void WriteRawData(List<SNPData> rawData, int subcloneId)
-    {
-        string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{BAF_FILENAME}");
-        using var outputFileBAF = new StreamWriter(outPathBAF);
-        outputFileBAF.Write(SNPMetrics.PrintBAF(rawData) + "\n");
-
-        string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{LOGR_FILENAME}");
-        using var outputFileLogR = new StreamWriter(outPathLogR);
-        outputFileLogR.Write(SNPMetrics.PrintLogR(rawData) + "\n");
-    }
-
+    
     public void WriteSimParams(SimParams simParams)
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME);

@@ -28,11 +28,11 @@ else
         FitnessEffect = FitnessEffectType.Birth,
         Seed = new Random().Next(),
         // Experiment
-        PopLimit = 1_048_576_000,
-        StepLimit = 1_000_000,
+        MinPop = 1000,
+        MaxPop = 1_048_576_000,
+        MaxSteps = 1_000_000,
         CutOff = 0.001f,
         Repeats = 1,
-        InitPop = 1000,
 
         // Model
         Turnover = 0.01,
@@ -76,9 +76,9 @@ try
         var checkpoints = Utility.CreateCheckpoints(simParams);
         var popSizes = new List<(long total, long alive, long lost)> { CellSampling.PopState(simulator.Clones) };
         var EndCondFunc = () =>
-            !(popSizes.Last().total <= simParams.PopLimit
+            !(popSizes.Last().total <= simParams.MaxPop
               && popSizes.Last().alive > 0
-              && simulator.StepNo < simParams.StepLimit);
+              && simulator.StepNo < simParams.MaxSteps);
         do
         {
             simulator.Step();
@@ -92,7 +92,7 @@ try
                            $"lost: {popSizes.Last().lost:N0}").PadRight(160) +
                           (options.Value.Newline ? "\n" : "\r"));
 
-            if ((EndCondFunc() && popSizes.Last().total >= simParams.InitPop)
+            if ((EndCondFunc() && popSizes.Last().total >= simParams.MinPop)
                 || (checkpoints.Any() && popSizes.Last().total > checkpoints.First()))
             {
                 // Analysis
@@ -116,7 +116,7 @@ try
                 files.AddToSummary(result);
 
                 // Result
-                if (EndCondFunc() && popSizes.Last().total >= simParams.InitPop)
+                if (EndCondFunc() && popSizes.Last().total >= simParams.MinPop)
                 {
                     var vaf = TreeAnalysis.ComputeVAF(connectedTree);
                     files.WriteSubClones(sample);
@@ -137,7 +137,7 @@ try
         } while (!EndCondFunc());
 
         // Skip on failure
-        if (popSizes.Last().total < simParams.InitPop)
+        if (popSizes.Last().total < simParams.MinPop)
         {
             tryNo++;
             repeatId--;

@@ -11,8 +11,8 @@ public static class Utility
         if (!simParams.Checkpoints)
             return new List<uint>();
         
-        var checkpoints = new List<uint> { simParams.InitPop };
-        while (checkpoints.Last() < simParams.PopLimit)
+        var checkpoints = new List<uint> { simParams.MinPop };
+        while (checkpoints.Last() < simParams.MaxPop)
         {
             checkpoints.Add(checkpoints.Last() * 2);
         }

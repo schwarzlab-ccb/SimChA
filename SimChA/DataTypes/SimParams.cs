@@ -10,10 +10,10 @@ public struct SimParams
 
     // Experiment
     public uint Repeats;
-    public long PopLimit;
-    public uint StepLimit;
+    public long MaxPop;
+    public uint MaxSteps;
     public double CutOff;
-    public uint InitPop;
+    public uint MinPop;
 
     // Model
     public double Turnover;
