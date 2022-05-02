@@ -29,14 +29,15 @@ public struct ResultSummary
     public int LeafCount;
     public float Branching;
 
-    public override string ToString() => ToString(this);
+    public override string ToString()
+        => ToString(this);
 
     private static string ToString(ResultSummary rs)
         => Join(",", rs.GetType().GetFields().Select(f => f.GetValue(rs).ToString()));
 
-    public static string Header() 
+    public static string Header()
         => Join(",", typeof(ResultSummary).GetFields().Select(f => f.Name));
-    
+
     public string ToText()
         => "\t" + Join(",\n\t",
             Header().Split(",").Zip(ToString().Split(","), (label, val) => $"{label}: {val}"));
@@ -49,16 +50,16 @@ public struct ResultSummary
         GenerationId = generationId;
         Time = timeElapsed;
         Generations = stepNo;
-        
+
         SubcloneTotal = clones.Count;
         SubcloneSelect = aboveCutOff.Count;
         SubcloneAlive = clones.Count(sc => sc.AliveCount > 0);
-        
+
         CellTotalCount = popSizes.Last().total;
         CellAliveCount = clones.Sum(sc => sc.AliveCount);
         CellLostCount = popSizes.Last().lost;
         CellSelectCount = aboveCutOff.Sum(sc => sc.AliveCount);
-        
+
         (NodeCount, LeafCount, TreeDepth, Branching)
             = TreeAnalysis.ComputeTreeSize(connectedTree);
         TreeBalance = TreeAnalysis.ComputeTreeBalance(LeafCount, connectedTree);

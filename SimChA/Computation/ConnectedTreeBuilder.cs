@@ -22,7 +22,7 @@ public static class ConnectedTreeBuilder
 
         return new TreeEdge { Distance = dist, SourceId = source, TargetId = id };
     }
-    
+
     // Construct a parent tree with each child being either parent of a present predecessor, or -1 if none exists.
     public static ParentTree BuildTree(IEnumerable<SubClone> allSubClones, List<SubClone> selection)
     {

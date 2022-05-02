@@ -6,18 +6,13 @@ namespace SimChA.Simulation;
 
 public class Simulator
 {
-    public List<SubClone> Clones { get; }
-    public SimParams SimParams { get; }
+    private const double MAX_FIT = 10.0;
 
     public int AliveSC;
 
     private int newId;
-    private int GetNewId() => ++newId;
 
     public int StepNo;
-    private Random Rnd { get; }
-
-    private const double MAX_FIT = 10.0;
 
     public Simulator(SimParams simParams, Random rnd)
     {
@@ -37,6 +32,12 @@ public class Simulator
         var primeval = new SubClone(0, -1, 0, initFit, deathRate, SimParams.StartMut, SimParams.StartPop);
         Clones = new List<SubClone> { primeval };
     }
+
+    public List<SubClone> Clones { get; }
+    public SimParams SimParams { get; }
+    private Random Rnd { get; }
+
+    private int GetNewId() => ++newId;
 
     private static double BumpFitness(double original, SimParams simParams, double divChange)
     {

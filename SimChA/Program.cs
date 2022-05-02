@@ -1,8 +1,9 @@
-﻿using SimChA.DataTypes;
-using SimChA.Simulation;
+﻿using System.Diagnostics;
 using CommandLine;
 using SimChA.Computation;
+using SimChA.DataTypes;
 using SimChA.IO;
+using SimChA.Simulation;
 
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
@@ -63,13 +64,13 @@ catch (Exception e)
 
 try
 {
-    var globalWatch = new System.Diagnostics.Stopwatch();
+    var globalWatch = new Stopwatch();
     globalWatch.Start();
 
     int tryNo = 0;
     for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
     {
-        var watch = new System.Diagnostics.Stopwatch();
+        var watch = new Stopwatch();
         watch.Start();
 
         // Simulation

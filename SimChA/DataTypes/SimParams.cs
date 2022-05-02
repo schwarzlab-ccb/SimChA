@@ -28,16 +28,7 @@ public struct SimParams
     public FitnessAccType FitnessAcc;
     public FitnessSampleType FitnessDist;
     public FitnessEffectType FitnessEffect;
-    
+
     // Output
     public bool Checkpoints;
-
-    // public SimParams()
-    // {
-    // AberrationRates = Enum.GetValues<AberrationEnum>().ToDictionary(a => a, _ => 1.0);
-    // }
-
-    // public Dictionary<AberrationEnum, double> AberrationRates { get; }
-
-    // public double SumRates() => AberrationRates.Sum(ar => ar.Value);
 }

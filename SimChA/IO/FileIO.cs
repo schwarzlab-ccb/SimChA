@@ -10,19 +10,11 @@ public class FileIO
 
     private const string SUBCLONES_FILENAME = "subclones.out";
 
-    // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
-    private const string BAF_FILENAME = "baf.out";
-    private const string LOGR_FILENAME = "logr.out";
     private const string POPULATIONS_DF_FILENAME = "populations.csv";
     private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string CCF_FILENAME = "ccf.csv";
     private const string SUMMARY_FILENAME = "summary.csv";
-    private string Timestamp { get; }
-    private string RootFolder { get; }
-    private string ExperimentFolder { get; }
-
-    private bool IsRepeated { get; }
 
     public FileIO(string rootFolder, bool isRepeated)
     {
@@ -57,6 +49,12 @@ public class FileIO
         CreateSummary();
     }
 
+    private string Timestamp { get; }
+    private string RootFolder { get; }
+    private string ExperimentFolder { get; }
+
+    private bool IsRepeated { get; }
+
     public void WriteSubClones(IEnumerable<SubClone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
@@ -87,7 +85,7 @@ public class FileIO
 
         outputFile.WriteLine("}");
     }
-    
+
     public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
     {
         string popPath = Path.Combine(Path.GetFullPath(RootFolder), POPULATIONS_DF_FILENAME);
@@ -136,7 +134,7 @@ public class FileIO
             outputFile.WriteLine($"{id},{pop},{(float)pop / totalSize}");
         }
     }
-    
+
     public void WriteSimParams(SimParams simParams)
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME);
@@ -153,6 +151,7 @@ public class FileIO
         {
             throw new Exception($"Configuration file {fileFullPath} does not exist");
         }
+
         try
         {
             string serializedJSON = File.ReadAllText(fileFullPath);
@@ -162,6 +161,7 @@ public class FileIO
             {
                 simParams.Seed = new Random().Next();
             }
+
             return simParams;
         }
         catch (Exception e)
@@ -187,7 +187,10 @@ public class FileIO
 
     public void StoreCopy(int runId)
     {
-        if (!IsRepeated) return;
+        if (!IsRepeated)
+        {
+            return;
+        }
 
         string copyFolder = Path.Join(ExperimentFolder, runId.ToString());
         Directory.CreateDirectory(copyFolder);
@@ -200,7 +203,10 @@ public class FileIO
 
     public void CopySummary()
     {
-        if (!IsRepeated) return;
+        if (!IsRepeated)
+        {
+            return;
+        }
 
         File.Copy(
             Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME),
@@ -210,4 +216,4 @@ public class FileIO
             Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME),
             Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
     }
-    }
+}

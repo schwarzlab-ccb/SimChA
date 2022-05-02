@@ -5,19 +5,17 @@ namespace SimChA.Computation;
 public class TreeAnalysis
 {
     private static long SubtreeCellCount(ParentTree parentTree, TreeNode subtreeRoot)
-        => subtreeRoot.Size + parentTree.Edges
+    {
+        return subtreeRoot.Size + parentTree.Edges
             .Where(e => e.SourceId == subtreeRoot.Id)
             .Select(e => SubtreeCellCount(parentTree, parentTree.Nodes
                 .Find(n => n.Id == e.TargetId)))
             .Sum();
+    }
 
     public static Dictionary<int, long> ComputeVAF(ParentTree parentTree)
-        => parentTree.Nodes.ToDictionary(node => node.Id, node => SubtreeCellCount(parentTree, node));
-
-    class TreeSizeData
     {
-        internal int leafCount;
-        internal int childCount;
+        return parentTree.Nodes.ToDictionary(node => node.Id, node => SubtreeCellCount(parentTree, node));
     }
 
     private static int CountNodes(Dictionary<int, List<int>> branches, TreeSizeData data, int id, int depth)
@@ -28,6 +26,7 @@ public class TreeAnalysis
             data.childCount += children.Count;
             return children.Select(c => CountNodes(branches, data, c, depth + 1)).Max();
         }
+
         data.leafCount += 1;
         return depth;
     }
@@ -39,6 +38,7 @@ public class TreeAnalysis
         {
             return (0, 0, 0, 0);
         }
+
         TreeSizeData data = new();
         var branches = TreeToBranches(parentTree);
         int depth = CountNodes(branches, data, parentTree.RootId, 0);
@@ -50,7 +50,10 @@ public class TreeAnalysis
 
     public static float ComputeTreeBalance(int leafCount, ParentTree parentTree)
     {
-        if (leafCount == 1) return 0;
+        if (leafCount == 1)
+        {
+            return 0;
+        }
 
         float treeBalance = 0;
         long Sdash_i_sum = 0;
@@ -61,7 +64,11 @@ public class TreeAnalysis
         {
             int nChildren = branches[node.Id].Count;
             long S_i = subtreeCount[node.Id];
-            if (S_i == 0) continue;
+            if (S_i == 0)
+            {
+                continue;
+            }
+
             long Sdash_i = S_i - node.Size;
             Sdash_i_sum += Sdash_i;
 
@@ -85,8 +92,10 @@ public class TreeAnalysis
     }
 
     public static double ComputeMeanDriversPerCell(List<SubClone> subClones)
-        => subClones.Select(clone => (double)clone.AliveCount * clone.NumberDrivers).Sum()
-           / subClones.Select(clone => (double)clone.AliveCount).Sum();
+    {
+        return subClones.Select(clone => (double)clone.AliveCount * clone.NumberDrivers).Sum()
+               / subClones.Select(clone => (double)clone.AliveCount).Sum();
+    }
 
     private static Dictionary<int, List<int>> TreeToBranches(ParentTree pt)
     {
@@ -98,5 +107,11 @@ public class TreeAnalysis
         }
 
         return branches;
+    }
+
+    private class TreeSizeData
+    {
+        internal int childCount;
+        internal int leafCount;
     }
 }

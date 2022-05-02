@@ -4,7 +4,8 @@ namespace SimChA.Computation;
 
 public static class LCATreeBuilder
 {
-    private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<SubClone> selection, List<int> internalNodes, int id)
+    private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<SubClone> selection, List<int> internalNodes,
+        int id)
     {
         int dist = 0;
         int source = id;
@@ -16,7 +17,7 @@ public static class LCATreeBuilder
 
         return new TreeEdge { Distance = dist, SourceId = source, TargetId = id };
     }
-    
+
     private static List<int> FindInternalNodes(Dictionary<int, int> parentMap, List<SubClone> selection)
     {
         Dictionary<int, int> internalNodes = new();
@@ -31,13 +32,15 @@ public static class LCATreeBuilder
                     internalNodes[curNode]++;
                     break;
                 }
+
                 internalNodes[curNode] = 0;
                 curNode = parentMap[curNode];
             }
         }
+
         return internalNodes.Where(n => n.Value > 0 || n.Key == 0).Select(n => n.Key).ToList();
     }
-    
+
     // Construct a parent tree with lowest common ancestor (LCA) for each pair of children
     public static ParentTree Builtree(IEnumerable<SubClone> allSubClones, List<SubClone> selection)
     {
@@ -52,6 +55,7 @@ public static class LCATreeBuilder
             nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.AliveCount });
             edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
         }
+
         foreach (int internalNode in internalNodes)
         {
             nodes.Add(new TreeNode { Id = internalNode, Size = 0 });

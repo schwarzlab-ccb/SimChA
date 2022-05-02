@@ -4,7 +4,7 @@ namespace SimChA.DataTypes;
 
 public class TreeEdge
 {
+    public int Distance;
     public int SourceId;
     public int TargetId;
-    public int Distance;
 }
