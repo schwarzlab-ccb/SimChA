@@ -14,9 +14,6 @@ public static class FitnessFunction
             case FitnessSampleType.Exponential:
                 return Dist.ExponentialDistribution.Sample(rnd, 1 / simParams.FitnessMean);
 
-            case FitnessSampleType.Beta:
-                return Dist.BetaDistribution.Sample(rnd, 1, 1 / simParams.FitnessMean - 1);
-
             case FitnessSampleType.Normal:
                 return Math.Max(Dist.NormalDistribution.Sample(rnd, simParams.FitnessMean, simParams.FitnessMean / 2.0),
                     0);

@@ -5,6 +5,5 @@ public enum FitnessSampleType
     Constant,
     Normal,
     Exponential,
-    Beta,
     Uniform
 }
