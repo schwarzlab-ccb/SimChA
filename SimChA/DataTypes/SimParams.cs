@@ -11,7 +11,7 @@ public struct SimParams
     public int StartPop;
 
     // Experiment
-    public uint Repeats;
+    public uint Reps;
     public long MaxPop;
     public uint MaxSteps;
     public double CutOff;

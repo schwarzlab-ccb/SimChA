@@ -33,7 +33,7 @@ else
         MaxPop = 1_048_576_000,
         MaxSteps = 1_000_000,
         CutOff = 0.001f,
-        Repeats = 1,
+        Reps = 1,
 
         // Model
         Turnover = 0.01,
@@ -50,7 +50,7 @@ else
 
 var random = new Random(simParams.Seed);
 FileIO files;
-bool isRepeated = simParams.Repeats > 1;
+bool isRepeated = simParams.Reps > 1;
 try
 {
     files = new FileIO(options.Value.OutputPath, isRepeated);
@@ -68,7 +68,7 @@ try
     globalWatch.Start();
 
     int tryNo = 0;
-    for (int repeatId = 0; repeatId < simParams.Repeats; repeatId++)
+    for (int repeatId = 0; repeatId < simParams.Reps; repeatId++)
     {
         var watch = new Stopwatch();
         watch.Start();
@@ -89,7 +89,7 @@ try
             popSizes.Add(CellSampling.PopState(simulator.Clones));
             int lastSize = lastLine.Length; // Only pad what you need
             double prog = (double)popSizes.Last().Tumor / simParams.MaxPop;
-            lastLine = $"sim: {repeatId + 1}.{tryNo}/{simParams.Repeats}, " +
+            lastLine = $"sim: {repeatId + 1}.{tryNo}/{simParams.Reps}, " +
                        $"step: {simulator.StepNo:D3}, " +
                        $"prog: {prog:P}, " +
                        $"SC_total: {simulator.Clones.Count}, " +
@@ -131,7 +131,7 @@ try
                     var mullerTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, mullerPops);
                     files.WriteMullerDataFrames(mullerPops, mullerTree);
                     files.StoreCopy(repeatId);
-                    Console.WriteLine($"Sim: {repeatId + 1}.{tryNo}/{simParams.Repeats} result:".PadRight(160));
+                    Console.WriteLine($"Sim: {repeatId + 1}.{tryNo}/{simParams.Reps} result:".PadRight(160));
                     Console.WriteLine(result.ToText());
                     GC.Collect();
                 }
