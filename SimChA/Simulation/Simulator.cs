@@ -21,15 +21,12 @@ public class Simulator
         Rnd = rnd;
 
         double initFit = 1;
-        double deathRate = 1;
         for (int i = 0; i < SimParams.StartMut; i++)
         {
-            double divChange = FitnessFunction.SampleFitness(simParams, rnd);
-            initFit = BumpFitness(initFit, SimParams, divChange, true);
-            deathRate = BumpFitness(deathRate, SimParams, divChange, false);
+            double sample = FitnessFunction.SampleFitness(simParams, rnd);
+            initFit = AccFitness(initFit, sample, SimParams.FitnessAcc);
         }
-
-        var primeval = new SubClone(0, -1, 0, initFit, deathRate, SimParams.StartMut, SimParams.StartPop);
+        var primeval = new SubClone(0, -1, 0, initFit, SimParams.StartMut, SimParams.StartPop);
         Clones = new List<SubClone> { primeval };
     }
 
@@ -48,41 +45,44 @@ public class Simulator
             _ => original
         };
 
-    private static double BumpFitness(double original, SimParams simParams, double divChange, bool isBirth) 
-        => simParams.FitnessEffect switch
-        {
-            FitnessEffectType.Birth when isBirth => AccFitness(original, divChange, simParams.FitnessAcc),
-            FitnessEffectType.Death when !isBirth => AccFitness(original, divChange, simParams.FitnessAcc),
-            FitnessEffectType.Both => AccFitness(original, divChange / 2, simParams.FitnessAcc),
-            FitnessEffectType.Death when isBirth => original,
-            FitnessEffectType.Birth when !isBirth => original,
-            _ => original
+    private static double GetBirth(double fitness, FitnessEffectType effect)
+        => effect switch {
+            FitnessEffectType.Birth => fitness,
+            FitnessEffectType.Death => 1,
+            FitnessEffectType.Both => (fitness + 1) / 2,
+            _ => throw new ArgumentOutOfRangeException(nameof(effect), effect, null)
         };
-
+    
+    private static double GetDeath(double fitness, FitnessEffectType effect)
+        => effect switch {
+            FitnessEffectType.Death => 1 / fitness,
+            FitnessEffectType.Birth => 1,
+            FitnessEffectType.Both => 2 / (fitness + 1),
+            _ => throw new ArgumentOutOfRangeException(nameof(effect), effect, null)
+        };
+    
     public void Step()
     {
         AliveSC = 0;
         StepNo++;
 
         List<SubClone> newClones = new();
-        long deadCount = CellSampling.NecroCount(Clones);
-        long aliveCount = CellSampling.AliveCount(Clones);
-        long popSize = deadCount + aliveCount;
+        var popState = CellSampling.PopState(Clones);
 
-        double unconfined = popSize;
+        double unconfined = popState.Tumor;
         if (SimParams.Confinement > 0)
         {
-            double r = Math.Pow(3.0 / 4.0 * (popSize / Math.PI), 1.0 / 3.0);
+            double r = Math.Pow(3.0 / 4.0 * (popState.Tumor / Math.PI), 1.0 / 3.0);
             double reminder = r - 1.0 / SimParams.Confinement;
             if (reminder > 0)
             {
                 double blockedPop = 4.0 / 3.0 * Math.PI * Math.Pow(reminder, 3.0);
-                unconfined = popSize - blockedPop;
+                unconfined = popState.Tumor - blockedPop;
             }
         }
 
-        double divFraction = aliveCount > unconfined && aliveCount > 0
-            ? Math.Clamp(unconfined / aliveCount, 0.0, 1.0)
+        double divFraction = popState.Alive > unconfined && popState.Alive > 0
+            ? Math.Clamp(unconfined / popState.Alive, 0.0, 1.0)
             : 1.0;
 
         foreach (var subClone in Clones.Where(sc => sc.AliveCount > 0))
@@ -90,13 +90,15 @@ public class Simulator
             AliveSC++;
 
             // Kill cells
-            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, (1 / subClone.DeathRate) * SimParams.Turnover);
+            double deathFit = GetDeath(subClone.Fitness, SimParams.FitnessEffect);
+            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, deathFit * SimParams.Turnover);
             int newNecrotic = (int)Math.Round(newDead * (1 - divFraction));
             int disappeared = newDead - newNecrotic;
 
             // Create new cells
-            double divRate = Math.Clamp(subClone.BirthRate * divFraction * SimParams.Turnover, 0.0, 1.0);
-            int newCellsCount = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, divRate);
+            double birthFit = GetBirth(subClone.Fitness, SimParams.FitnessEffect);
+            double birthProb = Math.Clamp(birthFit * divFraction * SimParams.Turnover, 0.0, 1.0);
+            int newCellsCount = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, birthProb);
 
             // Mutate some of the cells
             int newMutantCount =
@@ -105,10 +107,8 @@ public class Simulator
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
                 double divChange = FitnessFunction.SampleFitness(SimParams, Rnd);
-                double newDivision = BumpFitness(subClone.BirthRate, SimParams, divChange, true);
-                double newDeath = BumpFitness(subClone.DeathRate, SimParams, divChange, false);
-                var childClone = subClone.CreateChild(GetNewId(), StepNo, newDivision, newDeath,
-                    subClone.NumberDrivers + 1);
+                double newDivision = AccFitness(subClone.Fitness, divChange, SimParams.FitnessAcc);
+                var childClone = subClone.CreateChild(GetNewId(), StepNo, newDivision, subClone.NumberDrivers + 1);
                 newClones.Add(childClone);
             }
 

@@ -26,11 +26,11 @@ else
         // Function
         FitnessAcc = FitnessAccType.Mul,
         FitnessDist = FitnessSampleType.Constant,
-        FitnessEffect = FitnessEffectType.Death,
+        FitnessEffect = FitnessEffectType.Birth,
         Seed = new Random().Next(),
         // Experiment
         MinPop = 1000,
-        MaxPop = 1_08_576_000,
+        MaxPop = 1_048_576_000,
         MaxSteps = 1_000_000,
         CutOff = 0.001f,
         Repeats = 1,
@@ -74,73 +74,72 @@ try
         watch.Start();
 
         // Simulation
+        string lastLine = "";
         int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
         var checkpoints = Utility.CreateCheckpoints(simParams);
-        var popSizes = new List<(long total, long alive, long necro)> { CellSampling.PopState(simulator.Clones) };
+        var popSizes = new List<PopulationState> {CellSampling.PopState(simulator.Clones)};
         var EndCondFunc = () =>
-            !(popSizes.Last().total <= simParams.MaxPop
-              && popSizes.Last().alive > 0
+            !(popSizes.Last().Tumor <= simParams.MaxPop
+              && popSizes.Last().Alive > 0
               && simulator.StepNo < simParams.MaxSteps);
         do
         {
             simulator.Step();
             popSizes.Add(CellSampling.PopState(simulator.Clones));
-            Console.Write(($"sim: {repeatId + 1}.{tryNo}/{simParams.Repeats}, " +
-                           $"step: {simulator.StepNo:D3}, " +
-                           $"SC_total: {simulator.Clones.Count}, " +
-                           $"SC_alive: {simulator.AliveSC}, " +
-                           $"C_total: {popSizes.Last().total:N0}, " +
-                           $"C_alive: {popSizes.Last().alive:N0}, " +
-                           $"C_necro: {popSizes.Last().necro:N0}").PadRight(160) +
-                          (options.Value.Newline ? "\n" : "\r"));
+            int lastSize = lastLine.Length; // Only pad what you need
+            double prog = (double)popSizes.Last().Tumor / simParams.MaxPop;
+            lastLine = $"sim: {repeatId + 1}.{tryNo}/{simParams.Repeats}, " +
+                       $"step: {simulator.StepNo:D3}, " +
+                       $"prog: {prog:P}, " +
+                       $"SC_total: {simulator.Clones.Count}, " +
+                       $"SC_alive: {simulator.AliveSC}, " +
+                       $"C_alive: {popSizes.Last().Alive:N0}, " +
+                       $"C_necro: {popSizes.Last().Necro:N0}, " +
+                       $"C_lost: {popSizes.Last().Lost:N0}";
+            Console.Write(lastLine.PadRight(lastSize) + (options.Value.Newline ? "\n" : "\r"));
 
-            if ((EndCondFunc() && popSizes.Last().total >= simParams.MinPop)
-                || (checkpoints.Any() && popSizes.Last().total > checkpoints.First()))
+            if ((EndCondFunc() && popSizes.Last().Total >= simParams.MinPop)
+                || (checkpoints.Any() && popSizes.Last().Tumor > checkpoints[checkpointId]))
             {
                 // Analysis
-                double cutOff = popSizes.Last().alive * simParams.CutOff;
+                double cutOff = popSizes.Last().Alive * simParams.CutOff;
                 var aboveCutOff = simulator.Clones.Where(sc => sc.AliveCount > cutOff).ToList();
                 var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
                 var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
                 var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
                 var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
-
-                // Summary
-                if (checkpoints.Any())
-                {
-                    checkpointId++;
-                    checkpoints.RemoveAt(0);
-                }
-
+                
                 string time = TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds).ToString();
                 var result = new ResultSummary(repeatId, checkpointId, simulator.StepNo, time,
-                    connectedTree, aboveCutOff, simulator.Clones, popSizes);
+                    connectedTree, aboveCutOff, simulator.Clones, popSizes.Last());
                 files.AddToSummary(result);
+                checkpointId++;
 
                 // Result
-                if (EndCondFunc() && popSizes.Last().total >= simParams.MinPop)
+                if (EndCondFunc())
                 {
                     var vaf = TreeAnalysis.ComputeVAF(connectedTree);
                     files.WriteSubClones(sample);
                     files.WriteParentTree(lcaTree);
-                    files.WriteCCF(vaf, popSizes.Last().total);
-                    var cutOffList = popSizes.Select(pair => pair.alive * 0.01).ToList();
-                    int firstPop = cutOffList.FindIndex(minPop => minPop > 0);
+                    files.WriteCCF(vaf, popSizes.Last().Tumor);
+                    var mullerSelect = popSizes.Select(pair => pair.Alive * 0.01).ToList();
+                    int firstPop = mullerSelect.FindIndex(minPop => minPop > 0);
                     var mullerPops = simulator.Clones.Where(sc =>
                         sc.FirstGen <= firstPop || Enumerable.Range(firstPop, popSizes.Count)
-                            .Any(g => cutOffList[g] <= sc.AliveAtGen(g))).ToList();
+                            .Any(g => mullerSelect[g] <= sc.AliveAtGen(g))).ToList();
                     var mullerTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, mullerPops);
                     files.WriteMullerDataFrames(mullerPops, mullerTree);
                     files.StoreCopy(repeatId);
                     Console.WriteLine($"Sim: {repeatId + 1}.{tryNo}/{simParams.Repeats} result:".PadRight(160));
                     Console.WriteLine(result.ToText());
+                    GC.Collect();
                 }
             }
         } while (!EndCondFunc());
 
         // Skip on failure
-        if (popSizes.Last().total < simParams.MinPop)
+        if (popSizes.Last().Total < simParams.MinPop)
         {
             tryNo++;
             repeatId--;
@@ -162,6 +161,7 @@ try
 catch (Exception e)
 {
     Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
+    return e.HResult;
 }
 
 return 0;

@@ -2,23 +2,20 @@
 
 public class SubClone
 {
-    public SubClone(int cloneId, int parentId, int generation, double birthRate, double deathRate,
-        int numberDrivers = 1, int popSize = 1)
+    public SubClone(int cloneId, int parentId, int generation, double fitness, int numberDrivers, long popSize)
     {
         CloneId = cloneId;
         ParentId = parentId;
         NumberDrivers = numberDrivers;
-        BirthRate = birthRate;
-        DeathRate = deathRate;
+        Fitness = fitness;
         FirstGen = generation;
-        Cells = new List<(long, long)> { (popSize, 0) };
+        Cells = new List<(long Alive, long Necro)> { (popSize, 0) };
     }
 
     public int FirstGen { get; }
     public int CloneId { get; }
     public int ParentId { get; }
-    public double BirthRate { get; }
-    public double DeathRate { get; }
+    public double Fitness { get; }
     public int NumberDrivers { get; }
     private List<(long Alive, long Necro)> Cells { get; }
 
@@ -30,32 +27,15 @@ public class SubClone
 
     public long LostCount { get; private set; }
 
-    public long TotalCount => AliveCount + NecroCount + LostCount;
-
-    public SubClone CreateChild(int newId, int generation, double divRateChange, double deathChange, int numberDrivers)
-        => new(newId, CloneId, generation, divRateChange, deathChange, numberDrivers);
+    public SubClone CreateChild(int newId, int generation, double fitness, int numberDrivers)
+        => new(newId, CloneId, generation, fitness, numberDrivers, 1);
 
     public override string ToString()
         => $"ID:{CloneId}, Parent:{ParentId}, Alive: {AliveCount}, Necrotic: {NecroCount}, Lost: {LostCount}, " +
-           $"Drivers: {NumberDrivers}, DivisionRate: {BirthRate}, DeathRate: {DeathRate}";
+           $"Drivers: {NumberDrivers}, Fitness: {Fitness}";
 
     public long AliveAtGen(int gen)
         => gen >= FirstGen && gen < LastGen ? Cells[gen - FirstGen].Alive : 0;
-
-    public long TotalAtGen(int gen)
-    {
-        if (gen < FirstGen)
-        {
-            return 0;
-        }
-
-        if (gen >= LastGen)
-        {
-            return Cells.Last().Alive + Cells.Last().Necro;
-        }
-
-        return Cells[gen - FirstGen].Alive + Cells[gen - FirstGen].Necro;
-    }
 
     public void NewGen(uint genAlive, uint genDead, uint genDis)
     {

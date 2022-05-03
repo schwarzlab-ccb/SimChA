@@ -18,8 +18,10 @@ public struct ResultSummary
 
     public long CellSelectCount;
     public long CellAliveCount;
-    public long CellTotalCount;
+    public long CellNecroCount;
+    public long CellTumorCount;
     public long CellLostCount;
+    public long CellTotalCount;
 
     public double MeanDriversPerCell;
     public double ClonalDiversity;
@@ -44,7 +46,7 @@ public struct ResultSummary
 
 
     public ResultSummary(int repeatId, int generationId, int stepNo, string timeElapsed, ParentTree connectedTree,
-        List<SubClone> aboveCutOff, List<SubClone> clones, List<(long total, long alive, long lost)> popSizes)
+        List<SubClone> aboveCutOff, List<SubClone> clones, PopulationState popState)
     {
         RepeatId = repeatId;
         GenerationId = generationId;
@@ -55,9 +57,11 @@ public struct ResultSummary
         SubcloneSelect = aboveCutOff.Count;
         SubcloneAlive = clones.Count(sc => sc.AliveCount > 0);
 
-        CellTotalCount = popSizes.Last().total;
-        CellAliveCount = clones.Sum(sc => sc.AliveCount);
-        CellLostCount = popSizes.Last().lost;
+        CellTotalCount = popState.Total;
+        CellTumorCount = popState.Tumor;
+        CellAliveCount = popState.Alive;
+        CellLostCount = popState.Lost;
+        CellNecroCount = popState.Necro;
         CellSelectCount = aboveCutOff.Sum(sc => sc.AliveCount);
 
         (NodeCount, LeafCount, TreeDepth, Branching)
