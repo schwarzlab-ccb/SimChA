@@ -25,8 +25,8 @@ public class Simulator
         for (int i = 0; i < SimParams.StartMut; i++)
         {
             double divChange = FitnessFunction.SampleFitness(simParams, rnd);
-            initFit = BumpFitness(initFit, SimParams, divChange);
-            deathRate = BumpDeath(deathRate, SimParams, divChange);
+            initFit = BumpFitness(initFit, SimParams, divChange, true);
+            deathRate = BumpFitness(deathRate, SimParams, divChange, false);
         }
 
         var primeval = new SubClone(0, -1, 0, initFit, deathRate, SimParams.StartMut, SimParams.StartPop);
@@ -39,45 +39,25 @@ public class Simulator
 
     private int GetNewId() => ++newId;
 
-    private static double BumpFitness(double original, SimParams simParams, double divChange)
-    {
-        switch (simParams.FitnessEffect)
+    private static double AccFitness(double original, double change, FitnessAccType type) 
+        => type switch
         {
-            case FitnessEffectType.Death:
-                return original;
-            case FitnessEffectType.Both:
-                divChange /= 2;
-                break;
-            case FitnessEffectType.Birth:
-                break;
-        }
-
-        double newFitness = simParams.FitnessAcc switch
-        {
-            FitnessAccType.Add => original + divChange,
-            FitnessAccType.Mul => original * (1 + divChange),
-            FitnessAccType.Eth => Math.Clamp(original * (1 + divChange * (1 - original / 10.0)), 0.0, MAX_FIT),
-            _ => throw new ArgumentOutOfRangeException()
+            FitnessAccType.Add => original + change,
+            FitnessAccType.Mul => original * (1 + change),
+            FitnessAccType.Eth => Math.Clamp(original * (1 + change * (1 - original / MAX_FIT)), 0.0, MAX_FIT),
+            _ => original
         };
-        return newFitness;
-    }
 
-    private static double BumpDeath(double original, SimParams simParams, double divChange)
-    {
-        switch (simParams.FitnessEffect)
+    private static double BumpFitness(double original, SimParams simParams, double divChange, bool isBirth) 
+        => simParams.FitnessEffect switch
         {
-            case FitnessEffectType.Birth:
-                return original;
-            case FitnessEffectType.Both:
-                divChange /= 2;
-                break;
-            case FitnessEffectType.Death:
-                break;
-        }
-
-        double newFitness = original / (1 + divChange);
-        return newFitness;
-    }
+            FitnessEffectType.Birth when isBirth => AccFitness(original, divChange, simParams.FitnessAcc),
+            FitnessEffectType.Death when !isBirth => AccFitness(original, divChange, simParams.FitnessAcc),
+            FitnessEffectType.Both => AccFitness(original, divChange / 2, simParams.FitnessAcc),
+            FitnessEffectType.Death when isBirth => original,
+            FitnessEffectType.Birth when !isBirth => original,
+            _ => original
+        };
 
     public void Step()
     {
@@ -110,7 +90,7 @@ public class Simulator
             AliveSC++;
 
             // Kill cells
-            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, subClone.DeathRate * SimParams.Turnover);
+            int newDead = ExtremeBinDist.Sample(Rnd, (int)subClone.AliveCount, (1 / subClone.DeathRate) * SimParams.Turnover);
             int newNecrotic = (int)Math.Round(newDead * (1 - divFraction));
             int disappeared = newDead - newNecrotic;
 
@@ -125,8 +105,8 @@ public class Simulator
             for (int mutationI = 0; mutationI < newMutantCount; mutationI++)
             {
                 double divChange = FitnessFunction.SampleFitness(SimParams, Rnd);
-                double newDivision = BumpFitness(subClone.BirthRate, SimParams, divChange);
-                double newDeath = BumpDeath(subClone.DeathRate, SimParams, divChange);
+                double newDivision = BumpFitness(subClone.BirthRate, SimParams, divChange, true);
+                double newDeath = BumpFitness(subClone.DeathRate, SimParams, divChange, false);
                 var childClone = subClone.CreateChild(GetNewId(), StepNo, newDivision, newDeath,
                     subClone.NumberDrivers + 1);
                 newClones.Add(childClone);

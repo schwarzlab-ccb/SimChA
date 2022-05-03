@@ -26,11 +26,11 @@ else
         // Function
         FitnessAcc = FitnessAccType.Mul,
         FitnessDist = FitnessSampleType.Constant,
-        FitnessEffect = FitnessEffectType.Birth,
+        FitnessEffect = FitnessEffectType.Death,
         Seed = new Random().Next(),
         // Experiment
         MinPop = 1000,
-        MaxPop = 1_048_576_000,
+        MaxPop = 1_08_576_000,
         MaxSteps = 1_000_000,
         CutOff = 0.001f,
         Repeats = 1,
