@@ -14,8 +14,6 @@ public class FileIO
     // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
-    private const string POPULATIONS_DF_FILENAME = "populations.csv";
-    private const string ADJACENCY_DF_FILENAME = "parent_tree.csv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string CCF_FILENAME = "ccf.csv";
     private const string SUMMARY_FILENAME = "summary.csv";
@@ -54,11 +52,9 @@ public class FileIO
         {
             ExperimentFolder = RootFolder;
         }
-
-        CreateSummary();
     }
 
-    public void WriteSubClones(IEnumerable<SubClone> subClones)
+    public void WriteClones(IEnumerable<SubClone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
         using var outputFile = new StreamWriter(outPath);
@@ -102,45 +98,7 @@ public class FileIO
     //         outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
     //     }
     // }
-
-    public void WriteMullerDataFrames(IEnumerable<SubClone> subClones, ParentTree tree)
-    {
-        string popPath = Path.Combine(Path.GetFullPath(RootFolder), POPULATIONS_DF_FILENAME);
-        string adjPath = Path.Combine(Path.GetFullPath(RootFolder), ADJACENCY_DF_FILENAME);
-
-        using var popFile = new StreamWriter(popPath);
-        popFile.WriteLine("Id,Step,Pop,Drivers");
-        int lastGen = subClones.Max(sc => sc.LastGen);
-        foreach (var subClone in subClones)
-        {
-            int start = subClone.FirstGen;
-            // int end = subClone.LastGen;
-            for (int gen = start; gen < lastGen; gen++)
-            {
-                long totalCells = subClone.AliveAtGen(gen);
-                if (totalCells > 0)
-                {
-                    popFile.WriteLine($"{subClone.CloneId},{gen},{totalCells},{subClone.NumberDrivers}");
-                }
-            }
-        }
-
-        using var adjFile = new StreamWriter(adjPath);
-        adjFile.WriteLine("ParentId,ChildId");
-
-        if (tree.Edges.Any())
-        {
-            foreach (var edge in tree.Edges)
-            {
-                adjFile.WriteLine($"\t{edge.SourceId},{edge.TargetId}");
-            }
-        }
-        else
-        {
-            adjFile.WriteLine($"\t-1,{subClones.First().CloneId}");
-        }
-    }
-
+    
     public void WriteCCF(Dictionary<int, long> vaf, long totalSize)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), CCF_FILENAME);
@@ -231,22 +189,7 @@ public class FileIO
             throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
         }
     }
-
-    private void CreateSummary()
-    {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
-        using var file = new StreamWriter(filePath);
-        file.WriteLine(ResultSummary.Header());
-    }
-
-    public void AddToSummary(ResultSummary resultSummary)
-    {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME);
-        using var file = new StreamWriter(filePath, true);
-        file.WriteLine(resultSummary.ToString());
-        file.Flush();
-    }
-
+    
     public void StoreCopy(int runId)
     {
         if (!IsRepeated)

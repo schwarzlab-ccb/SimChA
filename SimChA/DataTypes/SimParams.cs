@@ -12,23 +12,11 @@ public struct SimParams
 
     // Experiment
     public uint Reps;
-    public long MaxPop;
+    public long CloneTarget;
     public uint MaxSteps;
-    public double CutOff;
-    public uint MinPop;
 
     // Model
     public double Turnover;
-    public double Confinement;
     public double MutationProb;
-    public double FitnessMean;
-
-
-    // Function    
-    public FitnessAccType FitnessAcc;
-    public FitnessSampleType FitnessDist;
-    public FitnessEffectType FitnessEffect;
-
-    // Output
-    public bool Checkpoints;
+    public double DeathRate;
 }

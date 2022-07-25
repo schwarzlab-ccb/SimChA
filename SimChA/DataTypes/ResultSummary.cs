@@ -55,14 +55,14 @@ public struct ResultSummary
 
         SubcloneTotal = clones.Count;
         SubcloneSelect = aboveCutOff.Count;
-        SubcloneAlive = clones.Count(sc => sc.AliveCount > 0);
+        SubcloneAlive = clones.Count(sc => sc.CellCount > 0);
 
         CellTotalCount = popState.Total;
         CellTumorCount = popState.Tumor;
         CellAliveCount = popState.Alive;
         CellLostCount = popState.Lost;
         CellNecroCount = popState.Necro;
-        CellSelectCount = aboveCutOff.Sum(sc => sc.AliveCount);
+        CellSelectCount = aboveCutOff.Sum(sc => sc.CellCount);
 
         (NodeCount, LeafCount, TreeDepth, Branching)
             = TreeAnalysis.ComputeTreeSize(connectedTree);

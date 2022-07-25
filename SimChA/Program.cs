@@ -22,25 +22,16 @@ else
 {
     simParams = new SimParams
     {
-        Checkpoints = true,
-        // Function
-        FitnessAcc = FitnessAccType.Mul,
-        FitnessDist = FitnessSampleType.Constant,
-        FitnessEffect = FitnessEffectType.Birth,
         Seed = new Random().Next(),
         // Experiment
-        MinPop = 1000,
-        MaxPop = 1_048_576_000,
-        MaxSteps = 1_000_000,
-        CutOff = 0.001f,
+        CloneTarget = (int)Math.Pow(2, 16),
+        MaxSteps = 100_000,
         Reps = 1,
 
         // Model
         Turnover = 0.01,
-        MutationProb = 0.0001,
-
-        FitnessMean = .125,
-        Confinement = .1,
+        MutationProb = 0.25,
+        DeathRate = 0.99,
 
         // Initialization
         StartMut = 1,
@@ -72,84 +63,42 @@ try
     {
         var watch = new Stopwatch();
         watch.Start();
-
         // Simulation
+
         string lastLine = "";
-        int checkpointId = 0;
         var simulator = new Simulator(simParams, random);
-        var checkpoints = Utility.CreateCheckpoints(simParams);
-        var popSizes = new List<PopulationState> {CellSampling.PopState(simulator.Clones)};
-        var EndCondFunc = () =>
-            !(popSizes.Last().Tumor <= simParams.MaxPop
-              && popSizes.Last().Alive > 0
-              && simulator.StepNo < simParams.MaxSteps);
+        var cloneCounts = new List<int>();
         do
         {
             simulator.Step();
-            popSizes.Add(CellSampling.PopState(simulator.Clones));
+            cloneCounts.Add(simulator.Clones.Count);
             int lastSize = lastLine.Length; // Only pad what you need
-            double prog = (double)popSizes.Last().Tumor / simParams.MaxPop;
-            lastLine = $"sim: {repeatId + 1}.{tryNo}/{simParams.Reps}, " +
+            double prog = (double)simulator.Clones.Count / simParams.CloneTarget;
+            lastLine = $"sim: {repeatId}.{tryNo}/{simParams.Reps}, " +
                        $"step: {simulator.StepNo:D3}, " +
                        $"prog: {prog:P}, " +
                        $"SC_total: {simulator.Clones.Count}, " +
-                       $"SC_alive: {simulator.AliveSC}, " +
-                       $"C_alive: {popSizes.Last().Alive:N0}, " +
-                       $"C_necro: {popSizes.Last().Necro:N0}, " +
-                       $"C_lost: {popSizes.Last().Lost:N0}";
+                       $"SC_alive: {simulator.AliveClones},";
             Console.Write(lastLine.PadRight(lastSize) + (options.Value.Newline ? "\n" : "\r"));
+        } while (simulator.Clones.Count < simParams.CloneTarget && simulator.StepNo < simParams.MaxSteps && simulator.AliveClones > 0);
 
-            if ((EndCondFunc() && popSizes.Last().Tumor >= simParams.MinPop)
-                || (checkpoints.Any() && popSizes.Last().Tumor > checkpoints[checkpointId]))
-            {
-                // Analysis
-                double cutOff = popSizes.Last().Alive * simParams.CutOff;
-                var aboveCutOff = simulator.Clones.Where(sc => sc.AliveCount > cutOff).ToList();
-                var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aboveCutOff);
-                var connectedTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, aboveCutOff);
-                var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
-                var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
-                
-                string time = TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds).ToString();
-                var result = new ResultSummary(repeatId, checkpointId, simulator.StepNo, time,
-                    connectedTree, aboveCutOff, simulator.Clones, popSizes.Last());
-                files.AddToSummary(result);
-                checkpointId++;
-
-                // Result
-                if (EndCondFunc())
-                {
-                    var vaf = TreeAnalysis.ComputeVAF(connectedTree);
-                    files.WriteSubClones(sample);
-                    files.WriteParentTree(lcaTree);
-                    files.WriteCCF(vaf, popSizes.Last().Tumor);
-                    var mullerSelect = popSizes.Select(pair => pair.Alive * 0.01).ToList();
-                    int firstPop = mullerSelect.FindIndex(minPop => minPop > 0);
-                    var mullerPops = simulator.Clones.Where(sc =>
-                        sc.FirstGen <= firstPop || Enumerable.Range(firstPop, popSizes.Count)
-                            .Any(g => mullerSelect[g] <= sc.AliveAtGen(g))).ToList();
-                    var mullerTree = ConnectedTreeBuilder.BuildTree(simulator.Clones, mullerPops);
-                    files.WriteMullerDataFrames(mullerPops, mullerTree);
-                    files.StoreCopy(repeatId);
-                    Console.WriteLine($"Sim: {repeatId + 1}.{tryNo}/{simParams.Reps} result:".PadRight(160));
-                    Console.WriteLine(result.ToText());
-                }
-            }
-        } while (!EndCondFunc());
-
-        // Skip on failure
-        if (popSizes.Last().Tumor < simParams.MinPop)
+        if (simulator.AliveClones <= 0)
         {
-            tryNo++;
             repeatId--;
+            tryNo++;
+            continue;
         }
-        else
-        {
-            tryNo = 0;
-            watch.Stop();
-            Console.WriteLine($"Execution Time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-            Console.WriteLine(string.Join("", Enumerable.Repeat("*", 100)));
-        }
+
+        // Analysis
+        var aliveClones = simulator.Clones.Where(c => c.IsAlive).ToList();
+        var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aliveClones);
+        var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
+        var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+
+        files.WriteClones(sample);
+        files.WriteParentTree(lcaTree);
+        files.StoreCopy(repeatId);
+        Console.WriteLine($"\nFinished");
     }
 
     files.CopySummary();
@@ -157,6 +106,7 @@ try
 
     Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(globalWatch.ElapsedMilliseconds)}");
 }
+
 catch (Exception e)
 {
     Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
