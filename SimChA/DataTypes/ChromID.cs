@@ -1,0 +1,26 @@
+﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
+
+namespace SimChA.DataTypes;
+
+public struct ChromID
+{
+    public ChromNum ChromNum;
+    public bool Parent;
+
+    public ChromID(ChromNum num, bool parent)
+    {
+        ChromNum = num;
+        Parent = parent;
+    }
+
+    public bool Equals(ChromID other)
+    {
+        return ChromNum == other.ChromNum && Parent == other.Parent;
+    }
+    
+    public override string ToString()
+    {
+        string parentIdentifier = Parent ? "H1" : "H2";
+        return $"({ChromNum.ToString()},{parentIdentifier})";
+    }
+}

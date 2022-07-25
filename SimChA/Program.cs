@@ -133,7 +133,6 @@ try
                     files.StoreCopy(repeatId);
                     Console.WriteLine($"Sim: {repeatId + 1}.{tryNo}/{simParams.Reps} result:".PadRight(160));
                     Console.WriteLine(result.ToText());
-                    GC.Collect();
                 }
             }
         } while (!EndCondFunc());
