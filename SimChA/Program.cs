@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CommandLine;
+using SimChA;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
@@ -24,18 +25,33 @@ else
     {
         Seed = new Random().Next(),
         // Experiment
-        CloneTarget = (int)Math.Pow(2, 16),
+        CloneTarget = (int)Math.Pow(2, 15),
+        SelectionSize = 32,
         MaxSteps = 100_000,
         Reps = 1,
 
         // Model
+        IsFemale = true,
         Turnover = 0.01,
         MutationProb = 0.25,
         DeathRate = 0.99,
 
         // Initialization
         StartMut = 1,
-        StartPop = 1
+        StartPop = 1,
+        AberrationRates =
+        {
+            [AberrationEnum.InternalDeletion] = 50f,
+            [AberrationEnum.InternalDuplication] = 50f,
+            [AberrationEnum.Translocation] = 20f,
+            [AberrationEnum.TailDeletion] = 15f,
+            [AberrationEnum.BreakageFusionBridge] = 10f,
+            [AberrationEnum.Inversion] = 10f,
+            [AberrationEnum.Missegregation] = 5f,
+            [AberrationEnum.Duplication] = 5f,
+            [AberrationEnum.Chromothripsis] = 1f,
+            [AberrationEnum.WholeGenomeDoubling] = 1f
+        }
     };
 }
 
@@ -67,11 +83,9 @@ try
 
         string lastLine = "";
         var simulator = new Simulator(simParams, random);
-        var cloneCounts = new List<int>();
         do
         {
             simulator.Step();
-            cloneCounts.Add(simulator.Clones.Count);
             int lastSize = lastLine.Length; // Only pad what you need
             double prog = (double)simulator.Clones.Count / simParams.CloneTarget;
             lastLine = $"sim: {repeatId}.{tryNo}/{simParams.Reps}, " +
@@ -90,15 +104,23 @@ try
         }
 
         // Analysis
-        var aliveClones = simulator.Clones.Where(c => c.IsAlive).ToList();
-        var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, aliveClones);
+        var selectClones = simulator.Clones
+            .Where(c => c.IsAlive)
+            .Shuffle(random)
+            .Take(simParams.SelectionSize)
+            .ToList();
+        var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, selectClones);
         var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
         var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
+        var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
 
+        Console.Write("".PadRight(lastLine.Length) + "\r");
         files.WriteClones(sample);
         files.WriteParentTree(lcaTree);
         files.StoreCopy(repeatId);
-        Console.WriteLine($"\nFinished");
+        files.WriteClones(sample);
+        files.WriteRawData(random, sample, snps, simParams.IsFemale);
+        files.WriteCopyNumbers(sample);
     }
 
     files.CopySummary();

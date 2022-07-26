@@ -3,12 +3,13 @@
 namespace SimChA.DataTypes;
 
 [Serializable]
-public struct SimParams
+public class SimParams
 {
     // Simulator
     public int Seed;
     public int StartMut;
     public int StartPop;
+    public int SelectionSize;
 
     // Experiment
     public uint Reps;
@@ -19,4 +20,11 @@ public struct SimParams
     public double Turnover;
     public double MutationProb;
     public double DeathRate;
+    public bool IsFemale;
+    
+    public readonly Dictionary<AberrationEnum, double> AberrationRates =
+        Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
+
+    public double SumRates()
+        => AberrationRates.Sum(ar => ar.Value);
 }

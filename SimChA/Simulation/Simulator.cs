@@ -7,9 +7,14 @@ namespace SimChA.Simulation;
 
 public class Simulator
 {
+    public List<Clone> Clones { get; }
+    public SimParams SimParams { get; }
+    private Random Rnd { get; }
     public int AliveClones => Clones.Count(c => c.IsAlive);
-    public int StepNo;
-    private int LastId;
+    public int StepNo { get; private set; }
+    private int LastId { get; set; }
+    private int GetNewId() => ++LastId;
+    public long CellCount => Clones.Sum(clone => clone.CellCount);
 
     public Simulator(SimParams simParams, Random rnd)
     {
@@ -17,22 +22,16 @@ public class Simulator
         StepNo = 0;
         LastId = -1;
         SimParams = simParams;
-        var primeval = new SubClone(GetNewId(), -1, SimParams.StartMut, SimParams.StartPop);
-        Clones = new List<SubClone> { primeval };
+        var initialKaryotype = new Karyotype(simParams.IsFemale, rnd);
+        var primeval = new Clone(GetNewId(), -1, SimParams.StartMut, SimParams.StartPop, initialKaryotype);
+        Clones = new List<Clone> { primeval };
     }
-
-    public List<SubClone> Clones { get; }
-    public long CellCount => Clones.Sum(clone => clone.CellCount);
-    public SimParams SimParams { get; }
-    private Random Rnd { get; }
-
-    private int GetNewId() => ++LastId;
-
+    
     public void Step()
     {
         StepNo++;
 
-        List<SubClone> newClones = new();
+        List<Clone> newClones = new();
 
         foreach (var clone in Clones.Where(c => c.IsAlive))
         {
@@ -42,10 +41,29 @@ public class Simulator
             clone.CellCount = Math.Max(0, clone.CellCount + divisions - newDead - mutations);
             for (int i = 0; i < mutations; i++)
             {
-                newClones.Add(clone.CreateChild(GetNewId()));
+                var newClone = clone.CreateChild(GetNewId());
+                var abberation = SelectMutation();
+                newClone.Karyotype.ApplyAbberation(abberation);
+                newClones.Add(newClone);
             }
         }
 
         Clones.AddRange(newClones);
+    }
+    
+    private AberrationEnum SelectMutation()
+    {
+        double ratesSum = SimParams.SumRates();
+        double sample = Extreme.Statistics.Distributions.ContinuousUniformDistribution.Sample(Rnd, 0, ratesSum);
+        foreach (var rate in SimParams.AberrationRates)
+        {
+            if (sample <= rate.Value) 
+            {
+                return rate.Key;
+            }
+            sample -= rate.Value;
+        }
+        // In case float-point calculations would cause jumping out of the loop
+        return SimParams.AberrationRates.Last().Key;
     }
 }

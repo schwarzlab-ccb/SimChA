@@ -10,6 +10,7 @@ public class FileIO
     private const string DOT_FILENAME = "parent_graph.dot";
 
     private const string SUBCLONES_FILENAME = "subclones.out";
+    private const string COPYNUMBERS_FILENAME = "copynumbers.out";
 
     // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
@@ -54,7 +55,7 @@ public class FileIO
         }
     }
 
-    public void WriteClones(IEnumerable<SubClone> subClones)
+    public void WriteClones(IEnumerable<Clone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
         using var outputFile = new StreamWriter(outPath);
@@ -85,19 +86,19 @@ public class FileIO
         outputFile.WriteLine("}");
     }
 
-    // public void WriteCopyNumbers(IEnumerable<SubClone> subClones)
-    // {
-    //     string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
-    //     Console.WriteLine($"Writing CopyNumbers to file {outPath}");
-    //     using var outputFile = new StreamWriter(outPath);
-    //     
-    //     outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
-    //     foreach (var subClone in subClones)
-    //     {
-    //         var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-    //         outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
-    //     }
-    // }
+    public void WriteCopyNumbers(IEnumerable<Clone> subClones)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
+        Console.WriteLine($"Writing CopyNumbers to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        
+        outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
+        foreach (var subClone in subClones)
+        {
+            var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
+            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
+        }
+    }
     
     public void WriteCCF(Dictionary<int, long> vaf, long totalSize)
     {
@@ -110,39 +111,39 @@ public class FileIO
         }
     }
 
-    // public void WriteRawData(Random rnd, IEnumerable<SubClone> subClones, List<SNP> snps, bool isFemale)
-    // {
-    //     var outputbaf = new List<string>();
-    //     outputbaf.Add("\tchrom\tpos");
-    //
-    //     foreach (var snp in snps)
-    //     {
-    //         outputbaf.Add($"{snp.Id}\t{snp.Chrom}\t{snp.Pos}");
-    //     }
-    //     var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
-    //     foreach (var subClone in subClones)
-    //     {
-    //         var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-    //         var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers, snps, isFemale);
-    //         outputbaf[0] += $"\t{subClone.CloneId}";
-    //         outputlogr[0] += $"\t{subClone.CloneId}";
-    //         for (int i = 0; i < rawdata.Count; i++)
-    //         {
-    //             outputbaf[i + 1] += $"\t{rawdata[i].Baf}";
-    //             outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
-    //         }
-    //     }
-    //
-    //     string outPathBAF = Path.Combine(Path.GetFullPath(OutFolder), BAF_FILENAME);
-    //     Console.WriteLine($"Writing BAF to file {outPathBAF}");
-    //     using var outputFileBAF = new StreamWriter(outPathBAF);
-    //     outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
-    //
-    //     string outPathLogR = Path.Combine(Path.GetFullPath(OutFolder), LOGR_FILENAME);
-    //     Console.WriteLine($"Writing LogR to file {outPathLogR}");
-    //     using var outputFileLogR = new StreamWriter(outPathLogR);
-    //     outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
-    // }
+    public void WriteRawData(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
+    {
+        var outputbaf = new List<string>();
+        outputbaf.Add("\tchrom\tpos");
+    
+        foreach (var snp in snps)
+        {
+            outputbaf.Add($"{snp.Id}\t{snp.Chrom}\t{snp.Pos}");
+        }
+        var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
+        foreach (var subClone in subClones)
+        {
+            var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
+            var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers, snps, isFemale);
+            outputbaf[0] += $"\t{subClone.CloneId}";
+            outputlogr[0] += $"\t{subClone.CloneId}";
+            for (int i = 0; i < rawdata.Count; i++)
+            {
+                outputbaf[i + 1] += $"\t{rawdata[i].Baf}";
+                outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
+            }
+        }
+    
+        string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
+        Console.WriteLine($"Writing BAF to file {outPathBAF}");
+        using var outputFileBAF = new StreamWriter(outPathBAF);
+        outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
+    
+        string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
+        Console.WriteLine($"Writing LogR to file {outPathLogR}");
+        using var outputFileLogR = new StreamWriter(outPathLogR);
+        outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
+    }
 
     public void WriteRawData(List<SNPData> rawData, int subcloneId)
     {

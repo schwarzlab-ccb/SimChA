@@ -6,10 +6,10 @@ namespace SimChA.Computation;
 
 public static class ConnectedTreeBuilder
 {
-    public static Dictionary<int, int> CreateParentMap(IEnumerable<SubClone> subClones)
+    public static Dictionary<int, int> CreateParentMap(IEnumerable<Clone> subClones)
         => subClones.ToDictionary(sc => sc.CloneId, sc => sc.ParentId);
 
-    private static TreeEdge FindEdgeToParent(Dictionary<int, int> parentMap, List<SubClone> selection, int id)
+    private static TreeEdge FindEdgeToParent(Dictionary<int, int> parentMap, List<Clone> selection, int id)
     {
         int dist = 0;
         int source = id;
@@ -24,7 +24,7 @@ public static class ConnectedTreeBuilder
     }
 
     // Construct a parent tree with each child being either parent of a present predecessor, or -1 if none exists.
-    public static ParentTree BuildTree(IEnumerable<SubClone> allSubClones, List<SubClone> selection)
+    public static ParentTree BuildTree(IEnumerable<Clone> allSubClones, List<Clone> selection)
     {
         var parentMap = CreateParentMap(allSubClones);
         List<TreeNode> nodes = new();
