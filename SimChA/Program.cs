@@ -25,8 +25,8 @@ else
     {
         Seed = new Random().Next(),
         // Experiment
-        CloneTarget = (int)Math.Pow(2, 15),
-        SelectionSize = 32,
+        CloneTarget = 10_000,
+        SelectionSize = 25,
         MaxSteps = 100_000,
         Reps = 1,
 
@@ -34,7 +34,7 @@ else
         IsFemale = true,
         Turnover = 0.01,
         MutationProb = 0.25,
-        DeathRate = 0.99,
+        DeathRate = 0.95,
 
         // Initialization
         StartMut = 1,

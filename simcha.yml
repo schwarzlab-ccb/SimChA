@@ -1,0 +1,13 @@
+name: simcha
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - dotnet>=6.0.201
+  - python>=3.8
+  - pandas
+  - numpy
+  - seaborn
+  - graphviz
+  - biopython

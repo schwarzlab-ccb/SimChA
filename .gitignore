@@ -1,6 +1,5 @@
 # Output files (anywhere)
 out*/
-*.png
 
 # Input files
 sim_params.json
