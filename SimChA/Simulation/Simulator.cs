@@ -27,7 +27,8 @@ public class Simulator
         Clones = new List<Clone> { primeval };
     }
     
-    public void Step()
+
+    public void StepTree()
     {
         StepNo++;
 
@@ -46,11 +47,27 @@ public class Simulator
                 newClone.Karyotype.ApplyAbberation(abberation);
                 newClones.Add(newClone);
             }
+            
         }
 
         Clones.AddRange(newClones);
     }
     
+    public void GetMutations(Clone clone){
+        if(Clones.Where(c => c.ParentId == clone.CloneId).FirstOrDefault() != null){
+            foreach(var child in Clones.Where(c => c.ParentId == clone.CloneId)){
+                child.Karyotype = clone.SetKaryotype();
+                var abberation = SelectMutation();
+                child.Karyotype.ApplyAbberation(abberation);
+                Console.Write("Creating Mutations for Clone " + child.CloneId + "  \r");
+                GetMutations(child);
+            }
+        }
+        
+    }
+
+    
+
     private AberrationEnum SelectMutation()
     {
         double ratesSum = SimParams.SumRates();
@@ -65,5 +82,62 @@ public class Simulator
         }
         // In case float-point calculations would cause jumping out of the loop
         return SimParams.AberrationRates.Last().Key;
+    }
+
+    public Clone CreateNodes(string newickNode, int parentId){
+        string[] cloneString = newickNode.Split(':');
+        Clone clone = new Clone(Int32.Parse(cloneString[0].Split('-')[0]), parentId, Int32.Parse(cloneString[1]), Int32.Parse(cloneString[0].Split('-')[1]), new Karyotype(SimParams.IsFemale, Rnd));
+        return clone;
+    }
+
+    public void BuildCloneFromNewick(string[] newickString){
+        Clones.Clear();
+        List<int> parentIds = new List<int>();
+            parentIds.Add(-1);
+            bool rootSet = false;
+            for(int i = 0; i < newickString.Count(); i++){
+                string test = newickString[i];
+                switch(newickString[i]){
+                    case "(":
+                        if(newickString[i-1] == ""){
+                            parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
+                            break;
+                        }
+                        Clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                        parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
+                        break;
+                    case ")":
+                        if(rootSet){
+                            Clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                            parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
+                        }
+                        else{
+                            
+                        }
+                        break;
+                    case ",":
+                        if(!rootSet){
+                            Clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                            parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
+                            rootSet = true;
+                        }
+                        else
+                            Clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                        break;
+                    default:
+                        break;
+                }
+            }
+    }
+
+    public void GetMutationsNewick(Clone newickClone){
+        foreach(var clone in Clones.Where(c => c.ParentId==newickClone.CloneId)){
+            clone.Karyotype = newickClone.SetKaryotype();
+            for(int i = 0; i < clone.MutCount; i++){
+                var abberation = SelectMutation();
+                clone.Karyotype.ApplyAbberation(abberation);
+            }
+            GetMutationsNewick(clone);
+        }
     }
 }

@@ -15,4 +15,8 @@ public class CmdOptions
     [Option('N', Required = false, Default = false,
         HelpText = "Use newline in logs (useful for batch execution)")]
     public bool Newline { get; set; }
+
+    [Option('I', Required = false, Default="",
+        HelpText= "A .new file to get mutations on instead of creating clones.")]
+    public string NewickFile{ get; set; }
 }

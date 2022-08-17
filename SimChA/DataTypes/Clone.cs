@@ -9,9 +9,10 @@ public class Clone
     public int MutCount { get; }
     public int CellCount { set; get; }
     public bool IsAlive => CellCount > 0;
-    public Karyotype Karyotype { get; }
+    public Karyotype? Karyotype { set;  get; }
 
-    public Clone(int cloneId, int parentId, int mutCount, int popSize, Karyotype refKaryotype)
+
+    public Clone(int cloneId, int parentId, int mutCount, int popSize, Karyotype? refKaryotype)
     {
         CloneId = cloneId;
         ParentId = parentId;
@@ -25,4 +26,11 @@ public class Clone
 
     public override string ToString()
         => $"ID:{CloneId}, Parent:{ParentId}, Cells: {CellCount}, Muts: {MutCount}, Karyotype: {Karyotype}";
+    
+
+    public Karyotype SetKaryotype(){
+        return new Karyotype(Karyotype);
     }
+        
+}
+    

@@ -2,6 +2,7 @@
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using System.Text;
 
 namespace SimChA.IO;
 
@@ -214,12 +215,82 @@ public class FileIO
             return;
         }
 
-        File.Copy(
+        /*File.Copy(
             Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME),
-            Path.Combine(Path.GetFullPath(RootFolder), SUMMARY_FILENAME));
+            Path.Combine(Path.GetFullPath(RootFolder), SUMMARY_FILENAME));*/
 
         File.Copy(
             Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME),
             Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
+    }
+    
+    public static List<Clone> CreateTree(string[] newickString){
+        List<Clone> clones = new List<Clone>();
+        List<int> parentIds = new List<int>();
+        parentIds.Add(-1);
+        bool rootSet = false;
+        for(int i = 0; i < newickString.Count(); i++){
+            string test = newickString[i];
+            switch(newickString[i]){
+                case "(":
+                    if(newickString[i-1] == ""){
+                        parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
+                        break;
+                    }
+                    clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                    parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
+                    break;
+                case ")":
+                    if(rootSet){
+                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                        parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
+                    }
+                    else{
+                        
+                    }
+                    break;
+                case ",":
+                    if(!rootSet){
+                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                        parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
+                        rootSet = true;
+                    }
+                    else
+                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                    break;
+                default:
+                    break;
+            }
+        }
+        return  clones;
+    }
+
+
+    public static Clone CreateNodes(string newickNode, int parentId){
+        string[] cloneString = newickNode.Split(':');
+        Clone clone = new Clone(Int32.Parse(cloneString[0].Split('-')[0]), parentId, Int32.Parse(cloneString[1]), Int32.Parse(cloneString[0].Split('-')[1]), null);
+        return clone;
+    }
+
+    public static string[] GetStringFromNewick(string newickFile){
+        string fileFullPath = Path.GetFullPath(newickFile);
+        var clones = new List<Clone>();
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"Configuration file {fileFullPath} does not exist");
+        }
+
+        try
+        {
+
+            StringBuilder newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
+            newickBuild.Replace(", (", "(");
+            return newickBuild.ToString().Replace(")", "|)|").Replace("(", "|(|").Replace(",", "|,|").Split('|').Reverse().ToArray();
+            
+        }
+        catch(Exception e){
+            throw new Exception($"Failed to read newick file from the file {fileFullPath}. Error {e.Message}");
+        }
+
     }
 }

@@ -22,7 +22,7 @@ public class SimParams
     public double DeathRate;
     public bool IsFemale;
     
-    public readonly Dictionary<AberrationEnum, double> AberrationRates =
+    public Dictionary<AberrationEnum, double> AberrationRates =
         Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
 
     public double SumRates()

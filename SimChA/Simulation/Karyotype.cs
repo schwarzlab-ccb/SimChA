@@ -6,13 +6,14 @@ namespace SimChA.Simulation;
 
 public class Karyotype
 {
-    private List<Chromosome> Chromosomes { get; }
+    private List<Chromosome> Chromosomes { set; get; }
 
-    private Random Rnd { get; }
+    private Random Rnd { set; get; }
     
-    public bool IsFemale { get; }
+    public bool IsFemale { set; get; }
 
     public int ChromCount => Chromosomes.Count;
+
 
     public Karyotype(bool isFemale, Random random)
     {
@@ -143,5 +144,11 @@ public class Karyotype
             default:
                 return this;
         }
+    }
+
+    public Karyotype(List<Chromosome> chromosomes, Random rnd, bool isFemale){
+        this.Chromosomes = chromosomes;
+        this.Rnd = rnd;
+        this.IsFemale = isFemale;
     }
 }
