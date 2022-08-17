@@ -208,17 +208,12 @@ public class FileIO
         }
     }
 
-    public void CopySummary()
+    public void RetrieveConfig()
     {
         if (!IsRepeated)
         {
             return;
         }
-
-        /*File.Copy(
-            Path.Combine(Path.GetFullPath(ExperimentFolder), SUMMARY_FILENAME),
-            Path.Combine(Path.GetFullPath(RootFolder), SUMMARY_FILENAME));*/
-
         File.Copy(
             Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME),
             Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
