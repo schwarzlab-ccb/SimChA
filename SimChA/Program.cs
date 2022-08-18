@@ -131,7 +131,7 @@ try
             files.WriteCopyNumbers(sample);
         }
 
-        files.CopySummary();
+        files.RetrieveConfig();
         globalWatch.Stop();
 
         Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(globalWatch.ElapsedMilliseconds)}");
