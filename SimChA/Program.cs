@@ -138,6 +138,7 @@ try
     }
     else{
         var watch = new Stopwatch();
+        LCATreeBuilder.isNewick = true;
         watch.Start();
         var simulator = new Simulator(simParams, random);
         simulator.BuildCloneFromNewick(newickString);

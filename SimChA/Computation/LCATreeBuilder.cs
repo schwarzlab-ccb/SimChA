@@ -4,6 +4,8 @@ namespace SimChA.Computation;
 
 public static class LCATreeBuilder
 {
+
+    public static bool isNewick {get; set; } = false;
     private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<Clone> selection, List<int> internalNodes,
         int id)
     {
@@ -53,13 +55,24 @@ public static class LCATreeBuilder
         foreach (var subClone in selection)
         {
             nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.CellCount });
-            edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
+            if(!isNewick){
+                edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
+            }
+            else{
+                edges.Add(new TreeEdge {Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId});
+            }
         }
 
         foreach (int internalNode in internalNodes)
         {
             nodes.Add(new TreeNode { Id = internalNode, Size = 0 });
-            edges.Add(FindEdge(parentMap, selection, internalNodes, internalNode));
+            if(!isNewick){
+                edges.Add(FindEdge(parentMap, selection, internalNodes, internalNode));
+            }
+            else{
+                Clone currentPos = allSubClones.Where(id => id.CloneId == internalNode).First();
+                edges.Add(new TreeEdge {Distance = currentPos.MutCount, SourceId = currentPos.ParentId, TargetId = internalNode});
+            }
         }
 
         return new ParentTree { RootId = 0, Nodes = nodes, Edges = edges.Where(e => e.TargetId != 0).ToList() };
