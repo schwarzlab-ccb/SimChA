@@ -147,7 +147,6 @@ try
         var selectClones = simulator.Clones
                 .Where(c => c.IsAlive)
                 .Shuffle(random)
-                .Take(simParams.SelectionSize)
                 .ToList();        
         var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, selectClones);
         var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
