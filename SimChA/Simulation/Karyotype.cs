@@ -1,20 +1,12 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
 
 namespace SimChA.Simulation;
 
 public class Karyotype
 {
-    private List<Chromosome> Chromosomes { set; get; }
-
-    private Random Rnd { set; get; }
-
-    public bool IsFemale { set; get; }
-
-    public int ChromCount => Chromosomes.Count;
-
-
     public Karyotype(bool isFemale, Random random)
     {
         var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
@@ -41,6 +33,18 @@ public class Karyotype
         Rnd = other.Rnd;
     }
 
+    public Karyotype(List<Chromosome> chromosomes, Random rnd, bool isFemale)
+    {
+        Chromosomes = chromosomes;
+        Rnd = rnd;
+        IsFemale = isFemale;
+    }
+
+    private List<Chromosome> Chromosomes { get; }
+    private Random Rnd { get; }
+    public bool IsFemale { get; }
+    public int ChromCount => Chromosomes.Count;
+
     public List<Region> GetAllRegions()
     {
         var regions = new List<Region>();
@@ -62,9 +66,9 @@ public class Karyotype
     // Get two positions within the chromosome (boundaries are excluded)
     private (int start, int end) GetGammaFraction(Chromosome chr)
     {
-        double fraction = Math.Clamp(Extreme.Statistics.Distributions.GammaDistribution.Sample(Rnd, 1, 1) / 10, 0, 1);
+        double fraction = Math.Clamp(GammaDistribution.Sample(Rnd, 1, 1) / 10, 0, 1);
         int segLength = Math.Min((int)(fraction * chr.Length()), chr.Length() - 1);
-        int start = Extreme.Statistics.Distributions.DiscreteUniformDistribution.Sample(Rnd, 1,
+        int start = DiscreteUniformDistribution.Sample(Rnd, 1,
             chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
@@ -138,12 +142,5 @@ public class Karyotype
             default:
                 return this;
         }
-    }
-
-    public Karyotype(List<Chromosome> chromosomes, Random rnd, bool isFemale)
-    {
-        Chromosomes = chromosomes;
-        Rnd = rnd;
-        IsFemale = isFemale;
     }
 }

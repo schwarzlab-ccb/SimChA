@@ -1,77 +1,32 @@
-﻿using SimChA.Computation;
+﻿using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
-using static Extreme.Statistics.Distributions.BinomialDistribution;
 using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
 
 namespace SimChA.Simulation;
 
 public class Simulator
 {
-    public List<Clone> Clones { get; }
-    public SimParams SimParams { get; }
-    private Random Rnd { get; }
-    public int AliveClones => Clones.Count(c => c.IsAlive);
-    public int StepNo { get; private set; }
-    private int LastId { get; set; }
-    private int GetNewId() => ++LastId;
-    public long CellCount => Clones.Sum(clone => clone.CellCount);
-
     public Simulator(SimParams simParams, Random rnd)
     {
         Rnd = rnd;
-        StepNo = 0;
         LastId = -1;
         SimParams = simParams;
         var initialKaryotype = new Karyotype(simParams.IsFemale, rnd);
-        var primeval = new Clone(GetNewId(), -1, SimParams.StartMut, SimParams.StartPop, initialKaryotype);
+        var primeval = new Clone(GetNewId(), -1, 0, 0, initialKaryotype);
         Clones = new List<Clone> { primeval };
     }
 
-
-    public void StepTree()
-    {
-        StepNo++;
-
-        List<Clone> newClones = new();
-
-        foreach (var clone in Clones.Where(c => c.IsAlive))
-        {
-            int newDead = Sample(Rnd, clone.CellCount, SimParams.DeathRate * SimParams.Turnover);
-            int divisions = Sample(Rnd, clone.CellCount, SimParams.Turnover);
-            int mutations = Sample(Rnd, 2 * divisions, SimParams.MutationProb);
-            clone.CellCount = Math.Max(0, clone.CellCount + divisions - newDead - mutations);
-            for (int i = 0; i < mutations; i++)
-            {
-                var newClone = clone.CreateChild(GetNewId());
-                var abberation = SelectMutation();
-                newClone.Karyotype.ApplyAbberation(abberation);
-                newClones.Add(newClone);
-            }
-        }
-
-        Clones.AddRange(newClones);
-    }
-
-    public void GetMutations(Clone clone)
-    {
-        if (Clones.Where(c => c.ParentId == clone.CloneId).FirstOrDefault() != null)
-        {
-            foreach (var child in Clones.Where(c => c.ParentId == clone.CloneId))
-            {
-                child.Karyotype = clone.SetKaryotype();
-                var abberation = SelectMutation();
-                child.Karyotype.ApplyAbberation(abberation);
-                Console.Write("Creating Mutations for Clone " + child.CloneId + "  \r");
-                GetMutations(child);
-            }
-        }
-    }
+    public List<Clone> Clones { get; }
+    public SimParams SimParams { get; }
+    private Random Rnd { get; }
+    private int LastId { get; set; }
+    private int GetNewId() => ++LastId;
 
 
     private AberrationEnum SelectMutation()
     {
         double ratesSum = SimParams.SumRates();
-        double sample = Extreme.Statistics.Distributions.ContinuousUniformDistribution.Sample(Rnd, 0, ratesSum);
+        double sample = ContinuousUniformDistribution.Sample(Rnd, 0, ratesSum);
         foreach (var rate in SimParams.AberrationRates)
         {
             if (sample <= rate.Value)
@@ -86,7 +41,7 @@ public class Simulator
         return SimParams.AberrationRates.Last().Key;
     }
 
-    public Clone CreateNodes(string newickNode, int parentId)
+    private Clone CreateNodes(string newickNode, int parentId)
     {
         string[] cloneString = newickNode.Split(':');
         var clone = new Clone(int.Parse(cloneString[0].Split('-')[0]), parentId, int.Parse(cloneString[1]),
@@ -100,9 +55,8 @@ public class Simulator
         var parentIds = new List<int>();
         parentIds.Add(-1);
         bool rootSet = false;
-        for (int i = 0; i < newickString.Count(); i++)
+        for (int i = 0; i < newickString.Length; i++)
         {
-            string test = newickString[i];
             switch (newickString[i])
             {
                 case "(":
@@ -121,9 +75,6 @@ public class Simulator
                         Clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
                         parentIds.Add(int.Parse(newickString[i - 1].Split('-')[0]));
                     }
-                    else
-                    {
-                    }
 
                     break;
                 case ",":
@@ -139,8 +90,6 @@ public class Simulator
                     }
 
                     break;
-                default:
-                    break;
             }
         }
     }
@@ -152,8 +101,8 @@ public class Simulator
             clone.Karyotype = newickClone.SetKaryotype();
             for (int i = 0; i < clone.MutCount; i++)
             {
-                var abberation = SelectMutation();
-                clone.Karyotype.ApplyAbberation(abberation);
+                var aberration = SelectMutation();
+                clone.Karyotype.ApplyAbberation(aberration);
             }
 
             GetMutationsNewick(clone);

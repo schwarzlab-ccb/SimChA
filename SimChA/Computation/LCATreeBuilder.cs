@@ -2,9 +2,12 @@
 
 namespace SimChA.Computation;
 
-public static class LCATreeBuilder
+public static class LcaTreeBuilder
 {
-    public static bool isNewick { get; set; } = false;
+    public static bool IsNewick { get; set; }
+    
+    public static Dictionary<int, int> CreateParentMap(IEnumerable<Clone> subClones)
+        => subClones.ToDictionary(sc => sc.CloneId, sc => sc.ParentId); 
 
     private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<Clone> selection, List<int> internalNodes,
         int id)
@@ -44,9 +47,10 @@ public static class LCATreeBuilder
     }
 
     // Construct a parent tree with lowest common ancestor (LCA) for each pair of children
-    public static ParentTree Builtree(IEnumerable<Clone> allSubClones, List<Clone> selection)
+    public static ParentTree BuildTree(IEnumerable<Clone> allSubClones, List<Clone> selection)
     {
-        var parentMap = ConnectedTreeBuilder.CreateParentMap(allSubClones);
+        var subClones = allSubClones as Clone[] ?? allSubClones.ToArray();
+        var parentMap = CreateParentMap(subClones);
         var internalNodes = FindInternalNodes(parentMap, selection);
 
         List<TreeNode> nodes = new();
@@ -55,7 +59,7 @@ public static class LCATreeBuilder
         foreach (var subClone in selection)
         {
             nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.CellCount });
-            if (!isNewick)
+            if (!IsNewick)
             {
                 edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
             }
@@ -68,16 +72,24 @@ public static class LCATreeBuilder
 
         foreach (int internalNode in internalNodes)
         {
-            nodes.Add(new TreeNode { Id = internalNode, Size = 0 });
-            if (!isNewick)
+            nodes.Add(new TreeNode
+            {
+                Id = internalNode,
+                Size = 0
+            });
+            if (!IsNewick)
             {
                 edges.Add(FindEdge(parentMap, selection, internalNodes, internalNode));
             }
             else
             {
-                var currentPos = allSubClones.Where(id => id.CloneId == internalNode).First();
+                var currentPos = subClones.First(id => id.CloneId == internalNode);
                 edges.Add(new TreeEdge
-                    { Distance = currentPos.MutCount, SourceId = currentPos.ParentId, TargetId = internalNode });
+                {
+                    Distance = currentPos.MutCount,
+                    SourceId = currentPos.ParentId,
+                    TargetId = internalNode
+                });
             }
         }
 
