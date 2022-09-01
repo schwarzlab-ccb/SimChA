@@ -12,11 +12,7 @@ public class CmdOptions
         HelpText = "A json file with configuration of the experiment.")]
     public string ConfigFile { get; set; }
 
-    [Option('N', Required = false, Default = false,
-        HelpText = "Use newline in logs (useful for batch execution)")]
-    public bool Newline { get; set; }
-
-    [Option('I', Required = false, Default = "",
-        HelpText = "A .new file to get mutations on instead of creating clones.")]
+    [Option('I', Required = true, Default = "",
+        HelpText = "Newic file that describes the tree to be built.")]
     public string NewickFile { get; set; }
 }
