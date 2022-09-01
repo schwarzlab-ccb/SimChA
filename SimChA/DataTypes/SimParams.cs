@@ -21,7 +21,7 @@ public class SimParams
     public double MutationProb;
     public double DeathRate;
     public bool IsFemale;
-    
+
     public Dictionary<AberrationEnum, double> AberrationRates =
         Enum.GetValues<AberrationEnum>().ToDictionary(a => a, a => 1.0);
 

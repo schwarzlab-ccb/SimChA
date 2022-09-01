@@ -13,7 +13,7 @@ public static class CopyNumbers
         return copyNumbers;
         // TODO: Merge neighboring segments that have the same copy numbers
     }
-    
+
     // Minimum consistent segmentation
     private static List<CopyNumber> CalcSegmentation(IList<Region> allRegs, IEnumerable<ChromNum> refChroms)
     {
@@ -41,6 +41,7 @@ public static class CopyNumbers
                 result.Add(cn);
             }
         }
+
         return result;
     }
 
@@ -53,12 +54,13 @@ public static class CopyNumbers
 
         return ploidy;
     }
+
     private static string FirstLine(bool withSample, bool isFirst)
         => isFirst ? (withSample ? "sample_id\t" : "") + "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
 
-    public static string ToTSV(List<CopyNumber> copyNumbers, bool isFirst) 
+    public static string ToTSV(List<CopyNumber> copyNumbers, bool isFirst)
         => FirstLine(false, isFirst) + string.Join("\n", copyNumbers);
 
-    public static string ToTSV(List<CopyNumber> copyNumbers, string sampleId, bool isFirst) 
+    public static string ToTSV(List<CopyNumber> copyNumbers, string sampleId, bool isFirst)
         => FirstLine(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn}"));
 }

@@ -55,8 +55,9 @@ else
     };
 }
 
-string[] newickString = {};
-if(options.Value.NewickFile != ""){
+string[] newickString = { };
+if (options.Value.NewickFile != "")
+{
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
 
@@ -78,7 +79,8 @@ try
 {
     var globalWatch = new Stopwatch();
     globalWatch.Start();
-    if(options.Value.NewickFile == ""){
+    if (options.Value.NewickFile == "")
+    {
         int tryNo = 0;
         for (int repeatId = 0; repeatId < simParams.Reps; repeatId++)
         {
@@ -94,12 +96,13 @@ try
                 int lastSize = lastLine.Length; // Only pad what you need
                 double prog = (double)simulator.Clones.Count / simParams.CloneTarget;
                 lastLine = $"sim: {repeatId}.{tryNo}/{simParams.Reps}, " +
-                        $"step: {simulator.StepNo:D3}, " +
-                        $"prog: {prog:P}, " +
-                        $"SC_total: {simulator.Clones.Count}, " +
-                        $"SC_alive: {simulator.AliveClones},";
+                           $"step: {simulator.StepNo:D3}, " +
+                           $"prog: {prog:P}, " +
+                           $"SC_total: {simulator.Clones.Count}, " +
+                           $"SC_alive: {simulator.AliveClones},";
                 Console.Write(lastLine.PadRight(lastSize) + (options.Value.Newline ? "\n" : "\r"));
-            } while (simulator.Clones.Count < simParams.CloneTarget && simulator.StepNo < simParams.MaxSteps && simulator.AliveClones > 0);
+            } while (simulator.Clones.Count < simParams.CloneTarget && simulator.StepNo < simParams.MaxSteps &&
+                     simulator.AliveClones > 0);
 
             if (simulator.AliveClones <= 0)
             {
@@ -120,7 +123,8 @@ try
             var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, selectClones);
             var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
             var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();
-            var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale, 100); // snps are shared between all subclones and therefore are created only once
+            var snps = SNPBuilder.CreateSNPs(random, simParams.IsFemale,
+                100); // snps are shared between all subclones and therefore are created only once
 
             Console.Write("".PadRight(lastLine.Length) + "\r");
             files.WriteClones(sample);
@@ -136,7 +140,8 @@ try
 
         Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(globalWatch.ElapsedMilliseconds)}");
     }
-    else{
+    else
+    {
         var watch = new Stopwatch();
         LCATreeBuilder.isNewick = true;
         watch.Start();
@@ -145,9 +150,9 @@ try
         simulator.GetMutationsNewick(simulator.Clones[0]);
         Console.WriteLine("Mutations generated");
         var selectClones = simulator.Clones
-                .Where(c => c.IsAlive)
-                .Shuffle(random)
-                .ToList();        
+            .Where(c => c.IsAlive)
+            .Shuffle(random)
+            .ToList();
         var lcaTree = LCATreeBuilder.Builtree(simulator.Clones, selectClones);
         var treeNodes = lcaTree.Nodes.Select(n => n.Id).ToList();
         var sample = simulator.Clones.Where(sc => treeNodes.Contains(sc.CloneId)).ToList();

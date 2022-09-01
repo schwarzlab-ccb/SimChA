@@ -4,11 +4,11 @@ namespace SimChA.IO;
 
 public class CmdOptions
 {
-    [Option('O', "output", Required = false, Default = "../out", 
+    [Option('O', "output", Required = false, Default = "../out",
         HelpText = "The path to the output files.")]
     public string OutputPath { get; set; }
 
-    [Option('C', "config", Required = false, Default = "", 
+    [Option('C', "config", Required = false, Default = "",
         HelpText = "A json file with configuration of the experiment.")]
     public string ConfigFile { get; set; }
 
@@ -16,7 +16,7 @@ public class CmdOptions
         HelpText = "Use newline in logs (useful for batch execution)")]
     public bool Newline { get; set; }
 
-    [Option('I', Required = false, Default="",
-        HelpText= "A .new file to get mutations on instead of creating clones.")]
-    public string NewickFile{ get; set; }
+    [Option('I', Required = false, Default = "",
+        HelpText = "A .new file to get mutations on instead of creating clones.")]
+    public string NewickFile { get; set; }
 }

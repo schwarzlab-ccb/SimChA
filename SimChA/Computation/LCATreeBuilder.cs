@@ -4,8 +4,8 @@ namespace SimChA.Computation;
 
 public static class LCATreeBuilder
 {
+    public static bool isNewick { get; set; } = false;
 
-    public static bool isNewick {get; set; } = false;
     private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<Clone> selection, List<int> internalNodes,
         int id)
     {
@@ -55,23 +55,29 @@ public static class LCATreeBuilder
         foreach (var subClone in selection)
         {
             nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.CellCount });
-            if(!isNewick){
+            if (!isNewick)
+            {
                 edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
             }
-            else{
-                edges.Add(new TreeEdge {Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId});
+            else
+            {
+                edges.Add(new TreeEdge
+                    { Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId });
             }
         }
 
         foreach (int internalNode in internalNodes)
         {
             nodes.Add(new TreeNode { Id = internalNode, Size = 0 });
-            if(!isNewick){
+            if (!isNewick)
+            {
                 edges.Add(FindEdge(parentMap, selection, internalNodes, internalNode));
             }
-            else{
-                Clone currentPos = allSubClones.Where(id => id.CloneId == internalNode).First();
-                edges.Add(new TreeEdge {Distance = currentPos.MutCount, SourceId = currentPos.ParentId, TargetId = internalNode});
+            else
+            {
+                var currentPos = allSubClones.Where(id => id.CloneId == internalNode).First();
+                edges.Add(new TreeEdge
+                    { Distance = currentPos.MutCount, SourceId = currentPos.ParentId, TargetId = internalNode });
             }
         }
 

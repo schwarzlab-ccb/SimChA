@@ -109,8 +109,8 @@ public static class ReferenceGenome
     private static IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
     {
         var nonGender = Enum.GetValues<ChromNum>().Take(22);
-        var sexChr = (isFirstHaplotype | isFemale) ? ChromNum.chrX : ChromNum.chrY;
-        var all = nonGender.Concat(new[] {sexChr});
+        var sexChr = isFirstHaplotype | isFemale ? ChromNum.chrX : ChromNum.chrY;
+        var all = nonGender.Concat(new[] { sexChr });
         return all.Select(num => GetRegion(num, isFirstHaplotype));
     }
 
@@ -134,7 +134,7 @@ public static class ReferenceGenome
         => isFemale ? GenotypeF : GenotypeM;
 
     public static long TotalLength(bool isFemale)
-        => GetChromosomes(isFemale).Select(chrom => (long) ChromosomeLengthMap[chrom]).Sum();
+        => GetChromosomes(isFemale).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
 
     public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
         => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);

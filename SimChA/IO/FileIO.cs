@@ -92,7 +92,7 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing CopyNumbers to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        
+
         outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
         foreach (var subClone in subClones)
         {
@@ -100,7 +100,7 @@ public class FileIO
             outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
         }
     }
-    
+
     public void WriteCCF(Dictionary<int, long> vaf, long totalSize)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), CCF_FILENAME);
@@ -116,11 +116,12 @@ public class FileIO
     {
         var outputbaf = new List<string>();
         outputbaf.Add("\tchrom\tpos");
-    
+
         foreach (var snp in snps)
         {
             outputbaf.Add($"{snp.Id}\t{snp.Chrom}\t{snp.Pos}");
         }
+
         var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
         foreach (var subClone in subClones)
         {
@@ -134,12 +135,12 @@ public class FileIO
                 outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
             }
         }
-    
+
         string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
         using var outputFileBAF = new StreamWriter(outPathBAF);
         outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
-    
+
         string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
@@ -191,7 +192,7 @@ public class FileIO
             throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
         }
     }
-    
+
     public void StoreCopy(int runId)
     {
         if (!IsRepeated)
@@ -214,60 +215,76 @@ public class FileIO
         {
             return;
         }
+
         File.Copy(
             Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME),
             Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
     }
-    
-    public static List<Clone> CreateTree(string[] newickString){
-        List<Clone> clones = new List<Clone>();
-        List<int> parentIds = new List<int>();
+
+    public static List<Clone> CreateTree(string[] newickString)
+    {
+        var clones = new List<Clone>();
+        var parentIds = new List<int>();
         parentIds.Add(-1);
         bool rootSet = false;
-        for(int i = 0; i < newickString.Count(); i++){
+        for (int i = 0; i < newickString.Count(); i++)
+        {
             string test = newickString[i];
-            switch(newickString[i]){
+            switch (newickString[i])
+            {
                 case "(":
-                    if(newickString[i-1] == ""){
+                    if (newickString[i - 1] == "")
+                    {
                         parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
                         break;
                     }
-                    clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+
+                    clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
                     parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
                     break;
                 case ")":
-                    if(rootSet){
-                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
-                        parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
+                    if (rootSet)
+                    {
+                        clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                        parentIds.Add(int.Parse(newickString[i - 1].Split('-')[0]));
                     }
-                    else{
-                        
+                    else
+                    {
                     }
+
                     break;
                 case ",":
-                    if(!rootSet){
-                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
-                        parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
+                    if (!rootSet)
+                    {
+                        clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                        parentIds.Add(int.Parse(newickString[i - 1].Split('-')[0]));
                         rootSet = true;
                     }
                     else
-                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
+                    {
+                        clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                    }
+
                     break;
                 default:
                     break;
             }
         }
-        return  clones;
+
+        return clones;
     }
 
 
-    public static Clone CreateNodes(string newickNode, int parentId){
+    public static Clone CreateNodes(string newickNode, int parentId)
+    {
         string[] cloneString = newickNode.Split(':');
-        Clone clone = new Clone(Int32.Parse(cloneString[0].Split('-')[0]), parentId, Int32.Parse(cloneString[1]), Int32.Parse(cloneString[0].Split('-')[1]), null);
+        var clone = new Clone(int.Parse(cloneString[0].Split('-')[0]), parentId, int.Parse(cloneString[1]),
+            int.Parse(cloneString[0].Split('-')[1]), null);
         return clone;
     }
 
-    public static string[] GetStringFromNewick(string newickFile){
+    public static string[] GetStringFromNewick(string newickFile)
+    {
         string fileFullPath = Path.GetFullPath(newickFile);
         var clones = new List<Clone>();
         if (!File.Exists(fileFullPath))
@@ -277,15 +294,14 @@ public class FileIO
 
         try
         {
-
-            StringBuilder newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
+            var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
             newickBuild.Replace(", (", "(");
-            return newickBuild.ToString().Replace(")", "|)|").Replace("(", "|(|").Replace(",", "|,|").Split('|').Reverse().ToArray();
-            
+            return newickBuild.ToString().Replace(")", "|)|").Replace("(", "|(|").Replace(",", "|,|").Split('|')
+                .Reverse().ToArray();
         }
-        catch(Exception e){
+        catch (Exception e)
+        {
             throw new Exception($"Failed to read newick file from the file {fileFullPath}. Error {e.Message}");
         }
-
     }
 }

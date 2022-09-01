@@ -8,7 +8,6 @@ public static class Utility
 {
     public static List<uint> CreateCheckpoints(uint lowerBound, uint upperBound)
     {
-
         var checkpoints = new List<uint> { lowerBound };
         while (checkpoints.Last() < upperBound)
         {

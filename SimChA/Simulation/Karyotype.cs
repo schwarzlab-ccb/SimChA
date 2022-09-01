@@ -9,7 +9,7 @@ public class Karyotype
     private List<Chromosome> Chromosomes { set; get; }
 
     private Random Rnd { set; get; }
-    
+
     public bool IsFemale { set; get; }
 
     public int ChromCount => Chromosomes.Count;
@@ -29,7 +29,7 @@ public class Karyotype
         IsFemale = other.IsFemale;
         Rnd = other.Rnd;
     }
-    
+
     // Specifically used in to remove a chromosome lost during division (mis-segregation / BFB)
     public Karyotype(Karyotype other, Chromosome removed)
     {
@@ -48,36 +48,30 @@ public class Karyotype
         {
             regions.AddRange(chrom.GetAllRegions());
         }
+
         return regions;
     }
 
-    private Chromosome RandomChr()
-    {
-        return Chromosomes.Shuffle(Rnd).First();
-    }
+    private Chromosome RandomChr() => Chromosomes.Shuffle(Rnd).First();
 
-    private List<Chromosome> RandomChrs(int count)
-    {
-        return Chromosomes.Shuffle(Rnd).Take(count).ToList();
-    }
+    private List<Chromosome> RandomChrs(int count) => Chromosomes.Shuffle(Rnd).Take(count).ToList();
 
     public override string ToString()
-    {
-        return Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
-    }
+        => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
 
     // Get two positions within the chromosome (boundaries are excluded)
     private (int start, int end) GetGammaFraction(Chromosome chr)
     {
         double fraction = Math.Clamp(Extreme.Statistics.Distributions.GammaDistribution.Sample(Rnd, 1, 1) / 10, 0, 1);
-        int segLength = Math.Min((int) (fraction * chr.Length()), chr.Length() - 1);
-        int start = Extreme.Statistics.Distributions.DiscreteUniformDistribution.Sample(Rnd, 1, chr.Length() - segLength);
+        int segLength = Math.Min((int)(fraction * chr.Length()), chr.Length() - 1);
+        int start = Extreme.Statistics.Distributions.DiscreteUniformDistribution.Sample(Rnd, 1,
+            chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
     }
 
     // Get two positions within the chromosome (boundaries are excluded)
-    private int GetUniformPos(Chromosome chr) 
+    private int GetUniformPos(Chromosome chr)
         => Rnd.Next(1, chr.Length() - 1);
 
     public Karyotype ApplyAbberation(AberrationEnum aberration)
@@ -118,7 +112,7 @@ public class Karyotype
                 (int invStart, int invEnd) = GetGammaFraction(chr1);
                 chr1.InvertRange(invStart, invEnd);
                 return this;
-            
+
             case AberrationEnum.Duplication:
                 var baseKaryotype = new Karyotype(this);
                 Chromosomes.Add(new Chromosome(chr1));
@@ -130,7 +124,7 @@ public class Karyotype
                 return loseKaryotype;
 
             case AberrationEnum.Chromothripsis:
-                int shardCount = Rnd.Next(1, (int) Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
+                int shardCount = Rnd.Next(1, (int)Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
                 var positions = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr1)).Distinct().ToList();
                 positions.Sort();
                 int count = Rnd.Next(1, positions.Count);
@@ -146,9 +140,10 @@ public class Karyotype
         }
     }
 
-    public Karyotype(List<Chromosome> chromosomes, Random rnd, bool isFemale){
-        this.Chromosomes = chromosomes;
-        this.Rnd = rnd;
-        this.IsFemale = isFemale;
+    public Karyotype(List<Chromosome> chromosomes, Random rnd, bool isFemale)
+    {
+        Chromosomes = chromosomes;
+        Rnd = rnd;
+        IsFemale = isFemale;
     }
 }
