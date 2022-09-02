@@ -54,39 +54,15 @@ Use `dotnet run -- [options]` to specify any of the following:
 ```
   -O, --output    (Default: ./out) The path to the output files.
   -C, --config    (Default: ) A json file with configuration of the experiment.
-  -N              (Default: false) Use newline in logs (useful for batch execution)
+  -I --input      A path to a newick file with the phylogenetic tree.
 ```
 
 ## Parameters
 
 The following parameter values can be set in the configuration file:
 
-### Simulation options
- * `Seed: int` The random seed for the simulation.
-
-### Control variables
-* `CloneTarget: uint` The number of clones that must be reached.
-* `SelectionSize: uint` The number of clones selected for output.
-* `MaxSteps: uint` The simulation stops at this step.
-* `Reps: uint` How many times the simulation runs.
-
-### Model
-* `Turnover: [0.0-1.0]`  The fraction of cells dividing per step (should be considerably smaller than 1).
-* `MutationProb: [0.0-1.0]` The probability of a mutation per daugther cell.
-* `DeathRate: [0.0-1.0]` The probability of death related to the birth pro.
+* `Seed: int` The random seed for mutations generator.
 * `IsFemale: bool` The higher the confinement the stronger the competition between clones.
-
-### Initialization
-* `StartMut: uint` The number of mutation of the cells in the first clone at the start.
-* `StartPop: uint` The number of cells in the the first clone at the start.
-
-## Test
-
-A test set with minimum simulation is provided. The test is conducted by output comparison. Run:
-
-```
-./plots.sh
-```
 
 ## Output
 
@@ -141,8 +117,6 @@ An evolutionary tree describing the individual sampled clones and their total po
 The copy number tracks
 
 ![ParentGraph](./doc/img/copy_numbers.png)
-
-
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, adam.streck@mdc-berlin.de.
