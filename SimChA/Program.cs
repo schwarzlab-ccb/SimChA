@@ -34,8 +34,8 @@ else
             [AberrationEnum.TailDeletion] = 15f,
             [AberrationEnum.BreakageFusionBridge] = 10f,
             [AberrationEnum.Inversion] = 10f,
-            [AberrationEnum.Missegregation] = 5f,
-            [AberrationEnum.Duplication] = 5f,
+            [AberrationEnum.ChromDeletion] = 5f,
+            [AberrationEnum.ChromDuplication] = 5f,
             [AberrationEnum.Chromothripsis] = 1f,
             [AberrationEnum.WholeGenomeDoubling] = 1f
         }

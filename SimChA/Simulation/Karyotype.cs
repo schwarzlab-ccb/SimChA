@@ -21,25 +21,17 @@ public class Karyotype
         IsFemale = other.IsFemale;
         Rnd = other.Rnd;
     }
-
-    // Specifically used in to remove a chromosome lost during division (mis-segregation / BFB)
-    public Karyotype(Karyotype other, Chromosome removed)
-    {
-        Chromosomes = other.Chromosomes
-            .Where(ch => ch != removed)
-            .Select(ch => new Chromosome(ch))
-            .ToList();
-        IsFemale = other.IsFemale;
-        Rnd = other.Rnd;
-    }
-
+    
     public Karyotype(List<Chromosome> chromosomes, Random rnd, bool isFemale)
     {
         Chromosomes = chromosomes;
         Rnd = rnd;
         IsFemale = isFemale;
     }
-
+    
+    public override string ToString()
+        => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
+    
     private List<Chromosome> Chromosomes { get; }
     private Random Rnd { get; }
     public bool IsFemale { get; }
@@ -48,11 +40,7 @@ public class Karyotype
     public List<Region> GetAllRegions()
     {
         var regions = new List<Region>();
-        foreach (var chrom in Chromosomes)
-        {
-            regions.AddRange(chrom.GetAllRegions());
-        }
-
+        Chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
         return regions;
     }
 
@@ -60,16 +48,12 @@ public class Karyotype
 
     private List<Chromosome> RandomChrs(int count) => Chromosomes.Shuffle(Rnd).Take(count).ToList();
 
-    public override string ToString()
-        => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
-
     // Get two positions within the chromosome (boundaries are excluded)
     private (int start, int end) GetGammaFraction(Chromosome chr)
     {
         double fraction = Math.Clamp(GammaDistribution.Sample(Rnd, 1, 1) / 10, 0, 1);
         int segLength = Math.Min((int)(fraction * chr.Length()), chr.Length() - 1);
-        int start = DiscreteUniformDistribution.Sample(Rnd, 1,
-            chr.Length() - segLength);
+        int start = DiscreteUniformDistribution.Sample(Rnd, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
     }
@@ -78,69 +62,80 @@ public class Karyotype
     private int GetUniformPos(Chromosome chr)
         => Rnd.Next(1, chr.Length() - 1);
 
-    public Karyotype ApplyAbberation(AberrationEnum aberration)
+    // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
+    private int GetChromoplexySiteCount()
+        => Rnd.NextSingle() switch
+        {
+            var n when n < .46 => 3,
+            var n when n < .64 => 4,
+            var n when n < .74 => 5,
+            var n when n < .79 => 6,
+            _ => 2
+        };
+
+    // Needs better estimation
+    private int GetChromotripsisSiteCount(Chromosome chr) 
+        => Rnd.Next(1, (int)Math.Pow(chr.Length(), 1 / 3f)); 
+
+    public void ApplyAbberation(AberrationEnum aberration)
     {
-        var selectChrs = RandomChrs(2);
-        var chr1 = selectChrs[0]; // just a shortcut
+        var chr = RandomChr();
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
-                chr1.Split(GetUniformPos(chr1), Rnd.CoinFlip());
-                return this;
+                chr.Split(GetUniformPos(chr), Rnd.CoinFlip());
+                break;
 
-            case AberrationEnum.Missegregation:
-                var misKaryotype = new Karyotype(this, chr1);
-                Chromosomes.Add(chr1);
-                return misKaryotype;
-
+            case AberrationEnum.ChromDeletion:
+                Chromosomes.Remove(chr);
+                break;
+            
             case AberrationEnum.InternalDuplication:
-                (int dupStart, int dupEnd) = GetGammaFraction(chr1);
-                chr1.DuplicateRange(dupStart, dupEnd);
-                return this;
+                (int dupStart, int dupEnd) = GetGammaFraction(chr);
+                chr.DuplicateRange(dupStart, dupEnd);
+                break;
 
             case AberrationEnum.InternalDeletion:
-                (int delStart, int delEnd) = GetGammaFraction(chr1);
-                chr1.DeleteRange(delStart, delEnd);
-                return this;
+                (int delStart, int delEnd) = GetGammaFraction(chr);
+                chr.DeleteRange(delStart, delEnd);
+                break;
 
             case AberrationEnum.Translocation:
+                var chrPair = RandomChrs(2);
                 var splits
-                    = selectChrs.Select(chr
-                        => chr.Split(GetUniformPos(chr), Rnd.CoinFlip())
+                    = chrPair.Select(c => c.Split(GetUniformPos(c), Rnd.CoinFlip())
                     ).ToList();
-                selectChrs[0].Join(splits[1], Rnd.CoinFlip());
-                selectChrs[1].Join(splits[0], Rnd.CoinFlip());
-                return this;
+                chrPair[0].Join(splits[1], Rnd.CoinFlip());
+                chrPair[1].Join(splits[0], Rnd.CoinFlip());
+                break;
 
             case AberrationEnum.Inversion:
-                (int invStart, int invEnd) = GetGammaFraction(chr1);
-                chr1.InvertRange(invStart, invEnd);
-                return this;
+                (int invStart, int invEnd) = GetGammaFraction(chr);
+                chr.InvertRange(invStart, invEnd);
+                break;
 
-            case AberrationEnum.Duplication:
-                var baseKaryotype = new Karyotype(this);
-                Chromosomes.Add(new Chromosome(chr1));
-                return baseKaryotype;
+            case AberrationEnum.ChromDuplication:
+                Chromosomes.Add(new Chromosome(chr));
+                break;
 
             case AberrationEnum.BreakageFusionBridge:
-                var loseKaryotype = new Karyotype(this, chr1);
-                chr1.Bridge(GetUniformPos(chr1), Rnd.CoinFlip());
-                return loseKaryotype;
-
-            case AberrationEnum.Chromothripsis:
-                int shardCount = Rnd.Next(1, (int)Math.Pow(chr1.Length(), 1 / 3f)); // Needs better estimation
-                var positions = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr1)).Distinct().ToList();
-                positions.Sort();
-                int count = Rnd.Next(1, positions.Count);
-                chr1.ScatterAndGather(positions, count, Rnd);
-                return this;
+                chr.Bridge(GetUniformPos(chr), Rnd.CoinFlip());
+                break;
 
             case AberrationEnum.WholeGenomeDoubling:
                 Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
-                return this;
-
+                break;
+            
+            case AberrationEnum.Chromothripsis:
+                int shardCount = GetChromotripsisSiteCount(chr);
+                var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr)).Distinct().ToList();
+                stops.Sort();
+                int count = Rnd.Next(1, stops.Count);
+                chr.ScatterAndGather(stops, count, Rnd);
+                break;
+            
             default:
-                return this;
+                throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
     }
 }

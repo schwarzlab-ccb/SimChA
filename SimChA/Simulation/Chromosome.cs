@@ -10,7 +10,7 @@ public class Chromosome
 
     public Chromosome(Region initialRegion) => _regions = new List<Region> { initialRegion };
 
-    public Chromosome(IEnumerable<Region> regions)
+    private Chromosome(IEnumerable<Region> regions)
     {
         _regions = regions.Where(r => r.Length > 0).ToList();
     }
