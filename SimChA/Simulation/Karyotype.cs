@@ -48,11 +48,17 @@ public class Karyotype
 
     private List<Chromosome> RandomChrs(int count) => Chromosomes.Shuffle(Rnd).Take(count).ToList();
 
-    // Get two positions within the chromosome (boundaries are excluded)
-    private (int start, int end) GetGammaFraction(Chromosome chr)
+    // Segment is at most 2 bases shorter than chr
+    private int GetSegLen(Chromosome chr)
     {
-        double fraction = Math.Clamp(GammaDistribution.Sample(Rnd, 1, 1) / 10, 0, 1);
-        int segLength = Math.Min((int)(fraction * chr.Length()), chr.Length() - 1);
+        double fraction = BetaDistribution.Sample(Rnd, 1, chr.Length());
+        return Math.Min((int)(fraction * chr.Length()), chr.Length() - 2); 
+    }
+    
+    // Get two positions within the chromosome (boundaries are excluded)
+    private (int start, int end) GetInternalRange(Chromosome chr)
+    {
+        int segLength = GetSegLen(chr);   
         int start = DiscreteUniformDistribution.Sample(Rnd, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
@@ -74,7 +80,7 @@ public class Karyotype
         };
 
     // Needs better estimation
-    private int GetChromotripsisSiteCount(Chromosome chr) 
+    private int GetChromothripsisSiteCount(Chromosome chr) 
         => Rnd.Next(1, (int)Math.Pow(chr.Length(), 1 / 3f)); 
 
     public void ApplyAbberation(AberrationEnum aberration)
@@ -91,26 +97,26 @@ public class Karyotype
                 break;
             
             case AberrationEnum.InternalDuplication:
-                (int dupStart, int dupEnd) = GetGammaFraction(chr);
+                (int dupStart, int dupEnd) = GetInternalRange(chr);
                 chr.DuplicateRange(dupStart, dupEnd);
                 break;
 
             case AberrationEnum.InternalDeletion:
-                (int delStart, int delEnd) = GetGammaFraction(chr);
+                (int delStart, int delEnd) = GetInternalRange(chr);
                 chr.DeleteRange(delStart, delEnd);
                 break;
 
             case AberrationEnum.Translocation:
                 var chrPair = RandomChrs(2);
-                var splits
-                    = chrPair.Select(c => c.Split(GetUniformPos(c), Rnd.CoinFlip())
-                    ).ToList();
+                var splits = chrPair
+                    .Select(c => c.Split(GetUniformPos(c), Rnd.CoinFlip()))
+                    .ToList();
                 chrPair[0].Join(splits[1], Rnd.CoinFlip());
                 chrPair[1].Join(splits[0], Rnd.CoinFlip());
                 break;
 
             case AberrationEnum.Inversion:
-                (int invStart, int invEnd) = GetGammaFraction(chr);
+                (int invStart, int invEnd) = GetInternalRange(chr);
                 chr.InvertRange(invStart, invEnd);
                 break;
 
@@ -127,7 +133,7 @@ public class Karyotype
                 break;
             
             case AberrationEnum.Chromothripsis:
-                int shardCount = GetChromotripsisSiteCount(chr);
+                int shardCount = GetChromothripsisSiteCount(chr);
                 var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(chr)).Distinct().ToList();
                 stops.Sort();
                 int count = Rnd.Next(1, stops.Count);
