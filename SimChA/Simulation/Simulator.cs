@@ -6,23 +6,6 @@ namespace SimChA.Simulation;
 
 public static class Simulator
 {
-    private static AberrationEnum SelectMutation(AberrationsInfo aberrationsInfo, Random rnd)
-    {
-        double ratesSum = aberrationsInfo.RatesSum;
-        double sample = ContinuousUniformDistribution.Sample(rnd, 0, ratesSum);
-        foreach (var rate in aberrationsInfo.Map)
-        {
-            if (sample <= rate.Value.Likelihood)
-            {
-                return rate.Key;
-            }
-            sample -= rate.Value.Likelihood;
-        }
-
-        // In the case that float-point calculations would cause jumping out of the loop, use the last one
-        return aberrationsInfo.Map.Last().Key;
-    }
-
     private static Clone CreateNodes(string newickNode, int parentId, bool isFemale, Random rnd)
     {
         string[] cloneString = newickNode.Split(':');
@@ -80,12 +63,13 @@ public static class Simulator
 
     public static void GetMutationsNewick(Clone newickClone, List<Clone> clones, AberrationsInfo aberrationsInfo, Random rnd)
     {
+        // TODO this is still square complexity, fix! (should use a tree structure)
         foreach (var clone in clones.Where(c => c.ParentId == newickClone.CloneId))
         {
             clone.Karyotype = newickClone.SetKaryotype();
             for (int i = 0; i < clone.MutCount; i++)
             {
-                var aberration = SelectMutation(aberrationsInfo, rnd);
+                var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 clone.Karyotype.ApplyAberration(aberration, aberrationsInfo.Map[aberration]);
             }
             GetMutationsNewick(clone, clones, aberrationsInfo, rnd);

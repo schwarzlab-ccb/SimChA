@@ -8,14 +8,14 @@ public class Chromosome
 {
     private List<Region> _regions;
 
-    public Chromosome(Region initialRegion) => _regions = new List<Region> { initialRegion };
+    public Chromosome(Region initialRegion) 
+        => _regions = new List<Region> { initialRegion };
 
     private Chromosome(IEnumerable<Region> regions)
-    {
-        _regions = regions.Where(r => r.Length > 0).ToList();
-    }
+        => _regions = regions.Where(r => r.Length > 0).ToList();
 
-    public Chromosome(Chromosome other) => _regions = new List<Region>(other._regions);
+    public Chromosome(Chromosome other) 
+        => _regions = new List<Region>(other._regions);
 
     public int Length() => Length(_regions);
 

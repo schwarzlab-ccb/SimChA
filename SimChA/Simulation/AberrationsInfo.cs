@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
 using SimChA.IO;
 
@@ -42,4 +43,20 @@ public class AberrationsInfo
             [AberrationEnum.BreakageFusionBridge] = new FractionAbbP(1, .1),
             [AberrationEnum.WholeGenomeDoubling] = new BaseAbbP( 1),
         };
+    public AberrationEnum PickRandomMutation(Random rnd)
+    {
+        double ratesSum = RatesSum;
+        double sample = ContinuousUniformDistribution.Sample(rnd, 0, ratesSum);
+        foreach (var rate in Map)
+        {
+            if (sample <= rate.Value.Likelihood)
+            {
+                return rate.Key;
+            }
+            sample -= rate.Value.Likelihood;
+        }
+
+        // In the case that float-point calculations would cause jumping out of the loop, use the last one
+        return Map.Last().Key;
+    }
 }
