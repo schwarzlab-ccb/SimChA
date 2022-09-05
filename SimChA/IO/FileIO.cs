@@ -17,7 +17,6 @@ public class FileIo
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
-
     public FileIo(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
@@ -50,7 +49,6 @@ public class FileIo
     private string Timestamp { get; }
     private string RootFolder { get; }
     private string ExperimentFolder { get; }
-
     private bool IsRepeated { get; }
 
     public void WriteClones(IEnumerable<Clone> subClones)

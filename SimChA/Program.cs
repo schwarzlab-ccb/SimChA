@@ -6,7 +6,7 @@ using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
 
-var options = Parser.Default.ParseArguments<CmdOptions>(args);
+ParserResult<CmdOptions>? options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
     Console.WriteLine("Exiting");
@@ -72,7 +72,7 @@ try
     simulator.GetMutationsNewick(simulator.Clones[0]);
     Console.WriteLine("Mutations generated");
     var selectClones = simulator.Clones.Where(c => c.IsAlive).Shuffle(random).ToList();
-    var lcaTree = LcaTreeBuilder.BuildTree(simulator.Clones, selectClones);
+    ParentTree lcaTree = LcaTreeBuilder.BuildTree(simulator.Clones, selectClones);
 
     files.WriteClones(simulator.Clones);
     files.WriteCopyNumbers(simulator.Clones);

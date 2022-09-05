@@ -22,7 +22,6 @@ public class Simulator
     private int LastId { get; set; }
     private int GetNewId() => ++LastId;
 
-
     private AberrationEnum SelectMutation()
     {
         double ratesSum = SimParams.SumRates();
