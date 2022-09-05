@@ -14,7 +14,7 @@ public class TestIO
     [Test]
     public void TestConfigSerialization()
     {
-        var defaultAberrations = Aberrations.DefaultAberrations();
+        var defaultAberrations = AberrationsInfo.DefaultAberrations();
         var simParams = SimParams.CreateSimParams(0, true, defaultAberrations);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);

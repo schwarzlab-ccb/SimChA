@@ -2,6 +2,7 @@
 
 using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
+using SimChA.IO;
 
 namespace SimChA.Simulation;
 
@@ -49,16 +50,16 @@ public class Karyotype
     private List<Chromosome> RandomChrs(int count) => Chromosomes.Shuffle(Rnd).Take(count).ToList();
 
     // Segment is at most 2 bases shorter than chr
-    private int GetSegLen(Chromosome chr)
+    private int GetSegLen(Chromosome chr, double meanLen)
     {
-        double fraction = BetaDistribution.Sample(Rnd, 1, chr.Length());
+        double fraction = ExponentialDistribution.Sample(Rnd, 1 / meanLen);
         return Math.Min((int)(fraction * chr.Length()), chr.Length() - 2); 
     }
     
     // Get two positions within the chromosome (boundaries are excluded)
-    private (int start, int end) GetInternalRange(Chromosome chr)
+    private (int start, int end) GetInternalRange(Chromosome chr, double meanLen)
     {
-        int segLength = GetSegLen(chr);   
+        int segLength = GetSegLen(chr, meanLen);   
         int start = DiscreteUniformDistribution.Sample(Rnd, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
@@ -67,6 +68,14 @@ public class Karyotype
     // Get two positions within the chromosome (boundaries are excluded)
     private int GetUniformPos(Chromosome chr)
         => Rnd.Next(1, chr.Length() - 1);
+    
+    private (int, bool) GetTail(Chromosome chr, double meanLen)
+    {
+        int segLength = GetSegLen(chr, meanLen);
+        bool fromStart = Rnd.CoinFlip();
+        int pos = fromStart ? segLength - 1 : chr.Length() - segLength - 1;
+        return (pos, fromStart);
+    }
 
     // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
     private int GetChromoplexySiteCount()
@@ -83,13 +92,14 @@ public class Karyotype
     private int GetChromothripsisSiteCount(Chromosome chr) 
         => Rnd.Next(1, (int)Math.Pow(chr.Length(), 1 / 3f)); 
 
-    public void ApplyAbberation(AberrationEnum aberration)
+    public void ApplyAberration(AberrationEnum aberration, BaseAbbP p_abber)
     {
         var chr = RandomChr();
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
-                chr.Split(GetUniformPos(chr), Rnd.CoinFlip());
+                (int delSplit, bool delFromStart) = GetTail(chr, p_abber.Likelihood);
+                chr.Split(delSplit, delFromStart);
                 break;
 
             case AberrationEnum.ChromDeletion:
@@ -97,12 +107,12 @@ public class Karyotype
                 break;
             
             case AberrationEnum.InternalDuplication:
-                (int dupStart, int dupEnd) = GetInternalRange(chr);
+                (int dupStart, int dupEnd) = GetInternalRange(chr, p_abber.Likelihood);
                 chr.DuplicateRange(dupStart, dupEnd);
                 break;
 
             case AberrationEnum.InternalDeletion:
-                (int delStart, int delEnd) = GetInternalRange(chr);
+                (int delStart, int delEnd) = GetInternalRange(chr, p_abber.Likelihood);
                 chr.DeleteRange(delStart, delEnd);
                 break;
 
@@ -116,7 +126,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.Inversion:
-                (int invStart, int invEnd) = GetInternalRange(chr);
+                (int invStart, int invEnd) = GetInternalRange(chr, p_abber.Likelihood);
                 chr.InvertRange(invStart, invEnd);
                 break;
 
@@ -125,7 +135,8 @@ public class Karyotype
                 break;
 
             case AberrationEnum.BreakageFusionBridge:
-                chr.Bridge(GetUniformPos(chr), Rnd.CoinFlip());
+                (int bfbPos, bool bfbFromStart) = GetTail(chr, p_abber.Likelihood);
+                chr.Bridge(bfbPos, bfbFromStart);
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:

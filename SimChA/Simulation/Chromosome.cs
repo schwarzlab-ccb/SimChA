@@ -38,7 +38,7 @@ public class Chromosome
     {
         _regions = RegionOps.DeleteRange(_regions, start, end);
     }
-
+    
     public Chromosome Split(int pos, bool keepFirst)
     {
         var (first, second) = RegionOps.SplitRegions(_regions, pos);

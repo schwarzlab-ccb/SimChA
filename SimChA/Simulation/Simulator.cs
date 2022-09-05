@@ -1,33 +1,16 @@
 ﻿using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
-using SimChA.IO;
 using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
 
 namespace SimChA.Simulation;
 
-public class Simulator
+public static class Simulator
 {
-    public Simulator(SimParams simParams, Random rnd)
+    private static AberrationEnum SelectMutation(AberrationsInfo aberrationsInfo, Random rnd)
     {
-        Rnd = rnd;
-        LastId = -1;
-        Aberrations = new Aberrations(simParams);
-        IsFemale = simParams.IsFemale;
-        Clones = new List<Clone>();
-    }
-
-    private bool IsFemale;
-    public List<Clone> Clones { get; }
-    public Aberrations Aberrations { get; }
-    private Random Rnd { get; }
-    private int LastId { get; set; }
-    private int GetNewId() => ++LastId;
-
-    private AberrationEnum SelectMutation()
-    {
-        double ratesSum = Aberrations.RatesSum;
-        double sample = ContinuousUniformDistribution.Sample(Rnd, 0, ratesSum);
-        foreach (var rate in Aberrations.Map)
+        double ratesSum = aberrationsInfo.RatesSum;
+        double sample = ContinuousUniformDistribution.Sample(rnd, 0, ratesSum);
+        foreach (var rate in aberrationsInfo.Map)
         {
             if (sample <= rate.Value.Likelihood)
             {
@@ -36,23 +19,25 @@ public class Simulator
             sample -= rate.Value.Likelihood;
         }
 
-        // In case float-point calculations would cause jumping out of the loop
-        return Aberrations.Map.Last().Key;
+        // In the case that float-point calculations would cause jumping out of the loop, use the last one
+        return aberrationsInfo.Map.Last().Key;
     }
 
-    private Clone CreateNodes(string newickNode, int parentId)
+    private static Clone CreateNodes(string newickNode, int parentId, bool isFemale, Random rnd)
     {
         string[] cloneString = newickNode.Split(':');
         // TODO: split below in individual assignments
         var clone = new Clone(int.Parse(cloneString[0].Split('-')[0]), parentId, int.Parse(cloneString[1]),
-            int.Parse(cloneString[0].Split('-')[1]), new Karyotype(IsFemale, Rnd));
+            int.Parse(cloneString[0].Split('-')[1]), new Karyotype(isFemale, rnd));
         return clone;
     }
 
-    public void BuildCloneFromNewick(string[] newickString)
+    public static List<Clone> BuildCloneFromNewick(string[] newickString, bool isFemale, Random rnd)
     {
+        List<Clone> clones = new();
         var parentIds = new List<int> { -1 };
         bool rootSet = false;
+        // TODO: Multiple code repetitions below, fix
         for (int i = 0; i < newickString.Length; i++)
         {
             switch (newickString[i])
@@ -64,13 +49,13 @@ public class Simulator
                         break;
                     }
 
-                    Clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                    clones.Add(CreateNodes(newickString[i - 1], parentIds.Last(), isFemale, rnd));
                     parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
                     break;
                 case ")":
                     if (rootSet)
                     {
-                        Clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                        clones.Add(CreateNodes(newickString[i - 1], parentIds.Last(), isFemale, rnd));
                         parentIds.Add(int.Parse(newickString[i - 1].Split('-')[0]));
                     }
 
@@ -78,32 +63,32 @@ public class Simulator
                 case ",":
                     if (!rootSet)
                     {
-                        Clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                        clones.Add(CreateNodes(newickString[i - 1], parentIds.Last(), isFemale, rnd));
                         parentIds.Add(int.Parse(newickString[i - 1].Split('-')[0]));
                         rootSet = true;
                     }
                     else
                     {
-                        Clones.Add(CreateNodes(newickString[i - 1], parentIds.Last()));
+                        clones.Add(CreateNodes(newickString[i - 1], parentIds.Last(), isFemale, rnd));
                     }
 
                     break;
             }
         }
+        return clones;
     }
 
-    public void GetMutationsNewick(Clone newickClone)
+    public static void GetMutationsNewick(Clone newickClone, List<Clone> clones, AberrationsInfo aberrationsInfo, Random rnd)
     {
-        foreach (var clone in Clones.Where(c => c.ParentId == newickClone.CloneId))
+        foreach (var clone in clones.Where(c => c.ParentId == newickClone.CloneId))
         {
             clone.Karyotype = newickClone.SetKaryotype();
             for (int i = 0; i < clone.MutCount; i++)
             {
-                var aberration = SelectMutation();
-                clone.Karyotype.ApplyAbberation(aberration);
+                var aberration = SelectMutation(aberrationsInfo, rnd);
+                clone.Karyotype.ApplyAberration(aberration, aberrationsInfo.Map[aberration]);
             }
-
-            GetMutationsNewick(clone);
+            GetMutationsNewick(clone, clones, aberrationsInfo, rnd);
         }
     }
 }

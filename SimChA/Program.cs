@@ -2,11 +2,10 @@
 using CommandLine;
 using SimChA;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
 
-ParserResult<CmdOptions>? options = Parser.Default.ParseArguments<CmdOptions>(args);
+var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
     Console.WriteLine("Exiting");
@@ -21,7 +20,7 @@ if (options.Value.ConfigFile != "")
 }
 else
 {
-    var aberrations = Aberrations.DefaultAberrations();
+    var aberrations = AberrationsInfo.DefaultAberrations();
     simParams = SimParams.CreateSimParams(new Random().Next(), true, aberrations);
 }
 
@@ -50,16 +49,18 @@ try
     watch.Start();
 
     LcaTreeBuilder.IsNewick = true;
-    var simulator = new Simulator(simParams, random);
-    simulator.BuildCloneFromNewick(newickString);
-    simulator.GetMutationsNewick(simulator.Clones[0]);
+    var clones = Simulator.BuildCloneFromNewick(newickString, simParams.IsFemale, random);
+    var aberrations = new AberrationsInfo(simParams);
+    Simulator.GetMutationsNewick(clones[0], clones, aberrations, random);
     Console.WriteLine("Mutations generated");
-    var selectClones = simulator.Clones.Where(c => c.IsAlive).Shuffle(random).ToList();
-    var lcaTree = LcaTreeBuilder.BuildTree(simulator.Clones, selectClones);
+    
+    var selectClones = clones.Where(c => c.IsAlive).Shuffle(random).ToList();
+    var lcaTree = LcaTreeBuilder.BuildTree(clones, selectClones);
 
-    files.WriteClones(simulator.Clones);
-    files.WriteCopyNumbers(simulator.Clones);
+    files.WriteClones(clones);
+    files.WriteCopyNumbers(clones);
     files.WriteParentTree(lcaTree);
+    
     watch.Stop();
     Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
 }

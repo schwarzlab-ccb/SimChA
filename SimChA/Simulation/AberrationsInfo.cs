@@ -5,12 +5,12 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class Aberrations
+public class AberrationsInfo
 {
     public Dictionary<AberrationEnum, BaseAbbP> Map { get; }
     public double RatesSum { get; }
 
-    public Aberrations(SimParams simParams)
+    public AberrationsInfo(SimParams simParams)
     {
         Map = new Dictionary<AberrationEnum, BaseAbbP>
         {

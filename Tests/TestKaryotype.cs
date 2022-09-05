@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using SimChA.DataTypes;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -19,21 +20,21 @@ public class TestKaryotype
     [Test]
     public void TestDeletion()
     {
-        _kar.ApplyAbberation(AberrationEnum.ChromDeletion);
+        _kar.ApplyAberration(AberrationEnum.ChromDeletion, new BaseAbbP(1f));
         Assert.AreEqual(45, _kar.ChromCount);
     }
     
     [Test]
     public void TestDuplication()
     {
-        _kar.ApplyAbberation(AberrationEnum.ChromDuplication);
+        _kar.ApplyAberration(AberrationEnum.ChromDuplication, new BaseAbbP(1f));
         Assert.AreEqual(47, _kar.ChromCount);
     }
     
     [Test]
     public void TestBFB()
     {
-        _kar.ApplyAbberation(AberrationEnum.BreakageFusionBridge);
+        _kar.ApplyAberration(AberrationEnum.BreakageFusionBridge, new FractionAbbP(1f, .1f));
         Assert.AreEqual(46, _kar.ChromCount);
     }
     
@@ -42,7 +43,7 @@ public class TestKaryotype
     {
         for (int i = 0; i < 46; i++)
         {
-            _kar.ApplyAbberation(AberrationEnum.ChromDeletion);
+            _kar.ApplyAberration(AberrationEnum.ChromDeletion, new BaseAbbP(1f));
         }
         Assert.AreEqual("[]", _kar.ToString());
     }
