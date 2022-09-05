@@ -152,9 +152,8 @@ public class FileIo
             var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
             if (simParams.Seed < 0)
             {
-                simParams.Seed = new Random().Next();
+                return simParams with { Seed = new Random().Next() };
             }
-
             return simParams;
         }
         catch (Exception e)

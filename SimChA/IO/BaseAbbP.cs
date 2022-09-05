@@ -4,9 +4,4 @@ using SimChA.DataTypes;
 
 namespace SimChA.IO;
 
-[Serializable]
-public class BaseAbbP
-{
-    public AberrationEnum Aberration;
-    public float Likelihood;
-}
+public record BaseAbbP(double Likelihood);

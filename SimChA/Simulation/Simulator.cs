@@ -1,5 +1,6 @@
 ﻿using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
+using SimChA.IO;
 using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
 
 namespace SimChA.Simulation;
@@ -10,49 +11,47 @@ public class Simulator
     {
         Rnd = rnd;
         LastId = -1;
-        SimParams = simParams;
-        var initialKaryotype = new Karyotype(simParams.IsFemale, rnd);
-        var primeval = new Clone(GetNewId(), -1, 0, 0, initialKaryotype);
-        Clones = new List<Clone> { primeval };
+        Aberrations = new Aberrations(simParams);
+        IsFemale = simParams.IsFemale;
+        Clones = new List<Clone>();
     }
 
+    private bool IsFemale;
     public List<Clone> Clones { get; }
-    public SimParams SimParams { get; }
+    public Aberrations Aberrations { get; }
     private Random Rnd { get; }
     private int LastId { get; set; }
     private int GetNewId() => ++LastId;
 
     private AberrationEnum SelectMutation()
     {
-        double ratesSum = SimParams.SumRates();
+        double ratesSum = Aberrations.RatesSum;
         double sample = ContinuousUniformDistribution.Sample(Rnd, 0, ratesSum);
-        foreach (var rate in SimParams.AberrationRates)
+        foreach (var rate in Aberrations.Map)
         {
-            if (sample <= rate.Value)
+            if (sample <= rate.Value.Likelihood)
             {
                 return rate.Key;
             }
-
-            sample -= rate.Value;
+            sample -= rate.Value.Likelihood;
         }
 
         // In case float-point calculations would cause jumping out of the loop
-        return SimParams.AberrationRates.Last().Key;
+        return Aberrations.Map.Last().Key;
     }
 
     private Clone CreateNodes(string newickNode, int parentId)
     {
         string[] cloneString = newickNode.Split(':');
+        // TODO: split below in individual assignments
         var clone = new Clone(int.Parse(cloneString[0].Split('-')[0]), parentId, int.Parse(cloneString[1]),
-            int.Parse(cloneString[0].Split('-')[1]), new Karyotype(SimParams.IsFemale, Rnd));
+            int.Parse(cloneString[0].Split('-')[1]), new Karyotype(IsFemale, Rnd));
         return clone;
     }
 
     public void BuildCloneFromNewick(string[] newickString)
     {
-        Clones.Clear();
-        var parentIds = new List<int>();
-        parentIds.Add(-1);
+        var parentIds = new List<int> { -1 };
         bool rootSet = false;
         for (int i = 0; i < newickString.Length; i++)
         {

@@ -21,25 +21,8 @@ if (options.Value.ConfigFile != "")
 }
 else
 {
-    simParams = new SimParams
-    {
-        Seed = new Random().Next(),
-        IsFemale = true,
-
-        AberrationRates =
-        {
-            [AberrationEnum.InternalDeletion] = 50f,
-            [AberrationEnum.InternalDuplication] = 50f,
-            [AberrationEnum.Translocation] = 20f,
-            [AberrationEnum.TailDeletion] = 15f,
-            [AberrationEnum.BreakageFusionBridge] = 10f,
-            [AberrationEnum.Inversion] = 10f,
-            [AberrationEnum.ChromDeletion] = 5f,
-            [AberrationEnum.ChromDuplication] = 5f,
-            [AberrationEnum.Chromothripsis] = 1f,
-            [AberrationEnum.WholeGenomeDoubling] = 1f
-        }
-    };
+    var aberrations = Aberrations.DefaultAberrations();
+    simParams = SimParams.CreateSimParams(new Random().Next(), true, aberrations);
 }
 
 string[] newickString = Array.Empty<string>();
@@ -72,7 +55,7 @@ try
     simulator.GetMutationsNewick(simulator.Clones[0]);
     Console.WriteLine("Mutations generated");
     var selectClones = simulator.Clones.Where(c => c.IsAlive).Shuffle(random).ToList();
-    ParentTree lcaTree = LcaTreeBuilder.BuildTree(simulator.Clones, selectClones);
+    var lcaTree = LcaTreeBuilder.BuildTree(simulator.Clones, selectClones);
 
     files.WriteClones(simulator.Clones);
     files.WriteCopyNumbers(simulator.Clones);

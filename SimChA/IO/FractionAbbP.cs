@@ -1,9 +1,8 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using SimChA.DataTypes;
+
 namespace SimChA.IO;
 
 [Serializable]
-public class FractionAbbP : BaseAbbP
-{
-    public float MeanLength;
-}
+public record FractionAbbP(double Likelihood, double MeanLength) : BaseAbbP(Likelihood);
