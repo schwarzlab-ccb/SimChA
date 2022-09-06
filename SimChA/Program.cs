@@ -16,53 +16,46 @@ options.WithNotParsed(o =>
 SimParams simParams;
 if (options.Value.ConfigFile != "")
 {
-    simParams = FileIo.SimParamsFromFile(options.Value.ConfigFile);
+    simParams = FileIO.SimParamsFromFile(options.Value.ConfigFile);
 }
 else
 {
-    var aberrations = AberrationsInfo.DefaultAberrations();
-    simParams = SimParams.CreateSimParams(new Random().Next(), true, aberrations);
+    var defaultAberrs = AberrationsInfo.DefaultAberrations();
+    simParams = SimParams.CreateSimParams(new Random().Next(), true, defaultAberrs);
 }
 
 string[] newickString = Array.Empty<string>();
 if (options.Value.NewickFile != "")
 {
-    newickString = FileIo.GetStringFromNewick(options.Value.NewickFile);
+    newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
+
+Console.WriteLine("Computing mutations.");
+var watch = new Stopwatch();
+watch.Start();
 
 var random = new Random(simParams.Seed);
-FileIo files;
-try
-{
-    files = new FileIo(options.Value.OutputPath);
-    files.WriteSimParams(simParams);
-}
-catch (Exception e)
-{
-    Console.WriteLine($"Failed to write to disk with error: {e.Message}");
-    return 2;
-}
+var files = new FileIO(options.Value.OutputPath);
 
-try
-{
-    var watch = new Stopwatch();
-    watch.Start();
+var clones = (options.Value.NewickFile != "")
+    ? Newick.ParseNewickString(newickString, simParams.IsFemale)
+    : Simulator.GetClonePair(options.Value.Distance , true);
+var aberrationsIfo = new AberrationsInfo(simParams);
+Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsIfo, random);
 
-    LcaTreeBuilder.IsNewick = true;
-    var clones = Newick.ParseNewickTree(newickString, simParams.IsFemale);
-    var aberrations = new AberrationsInfo(simParams);
-    Simulator.GetMutationsNewick(clones[0], clones, aberrations, random);
-    Console.WriteLine("Mutations generated");
+var selectClones = clones.Where(c => c.IsAlive).Shuffle(random).ToList();
+var lcaTree = LcaTreeBuilder.BuildTree(clones, selectClones);
     
-    var selectClones = clones.Where(c => c.IsAlive).Shuffle(random).ToList();
-    var lcaTree = LcaTreeBuilder.BuildTree(clones, selectClones);
+watch.Stop();
+Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
 
+Console.WriteLine("Writing to disk.");
+try
+{
     files.WriteClones(clones);
     files.WriteCopyNumbers(clones);
     files.WriteParentTree(lcaTree);
-    
-    watch.Stop();
-    Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
+    files.WriteSimParams(simParams);
 }
 catch (Exception e)
 {

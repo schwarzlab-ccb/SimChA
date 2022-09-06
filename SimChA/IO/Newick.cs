@@ -14,7 +14,7 @@ public static class Newick
         return clone;
     }
 
-    public static List<Clone> ParseNewickTree(string[] newickString, bool isFemale)
+    public static List<Clone> ParseNewickString(string[] newickString, bool isFemale)
     {
         List<Clone> clones = new();
         var parentIds = new List<int> { -1 };

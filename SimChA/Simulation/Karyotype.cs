@@ -50,8 +50,8 @@ public class Karyotype
     // Segment is at most 2 bases shorter than chr
     private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
     {
-        double fraction = ExponentialDistribution.Sample(rnd, 1 / meanLen);
-        return Math.Min((int)(fraction * chr.Length()), chr.Length() - 2); 
+        double fraction = Math.Clamp(ExponentialDistribution.Sample(rnd, meanLen), 0, 1);
+        return Math.Min((int)Math.Round(fraction * chr.Length()), chr.Length() - 2); 
     }
     
     // Get two positions within the chromosome (boundaries are excluded)

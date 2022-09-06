@@ -6,18 +6,25 @@ namespace SimChA.Simulation;
 
 public static class Simulator
 {
-    public static void GetMutationsNewick(Clone newickClone, List<Clone> clones, AberrationsInfo aberrationsInfo, Random rnd)
+    public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, AberrationsInfo aberrationsInfo, Random rnd)
     {
         // TODO this is still square complexity, fix! (should use a tree structure)
-        foreach (var clone in clones.Where(c => c.ParentId == newickClone.CloneId))
+        foreach (var clone in clones.Where(c => c.ParentId == currentClone.CloneId))
         {
-            clone.Karyotype = newickClone.SetKaryotype();
+            clone.Karyotype = currentClone.SetKaryotype();
             for (int i = 0; i < clone.MutCount; i++)
             {
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 clone.Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
             }
-            GetMutationsNewick(clone, clones, aberrationsInfo, rnd);
+            AssignMutationsRecursive(clone, clones, aberrationsInfo, rnd);
         }
+    }
+
+    public static List<Clone> GetClonePair(int distance, bool isFemale)
+    {
+        var parent = new Clone(0, -1, 0, 1, new Karyotype(isFemale));
+        var child = new Clone(1, 0, distance, 1, new Karyotype(isFemale));
+        return new List<Clone> {parent, child};
     }
 }

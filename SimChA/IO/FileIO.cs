@@ -6,7 +6,7 @@ using SimChA.DataTypes;
 
 namespace SimChA.IO;
 
-public class FileIo
+public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
 
@@ -17,7 +17,7 @@ public class FileIo
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
-    public FileIo(string rootFolder)
+    public FileIO(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -165,12 +165,10 @@ public class FileIo
     public static string[] GetStringFromNewick(string newickFile)
     {
         string fileFullPath = Path.GetFullPath(newickFile);
-        var clones = new List<Clone>();
         if (!File.Exists(fileFullPath))
         {
             throw new Exception($"Configuration file {fileFullPath} does not exist");
         }
-
         try
         {
             var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
