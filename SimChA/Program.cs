@@ -9,7 +9,7 @@ var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
     Console.WriteLine("Exiting");
-    o.ToList().ForEach(Console.Write); // Write out errors
+    o.ToList().ForEach(Console.WriteLine); // Write out errors
     Environment.Exit(1);
 });
 

@@ -54,7 +54,8 @@ Use `dotnet run -- [options]` to specify any of the following:
 ```
   -O, --output    (Default: ./out) The path to the output files.
   -C, --config    (Default: ) A json file with configuration of the experiment.
-  -I --input      A path to a newick file with the phylogenetic tree.
+  -N --newick     (Default: ) A path to a newick file with the phylogenetic tree.
+  -D --distance   (Default: 1) A number of mutations (mutation distance) to simulate if a newick file is not provided.
 ```
 
 ## Parameters
@@ -107,11 +108,6 @@ where `*` is either `+` for 5' to 3' or `-` for 3' to 5'.
 The start position is inclusive, the end exclusive.
 
 ### Plots (created by `./plots.sh`)
-
-#### `parent_tree.png` 
-An evolutionary tree describing the individual sampled clones and their total population (labelled nodes), together with their evolutionary distance from the parent (labelled edges).
-
-![ParentGraph](./doc/img/parent_tree.png)
 
 #### `copy_numbers.png` 
 The copy number tracks

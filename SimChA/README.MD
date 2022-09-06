@@ -1,2 +1,2 @@
-# Simulation of Chromosomal Abberation for copy number analysis
+# Simulation of Chromosomal Aberration for copy number analysis
 

@@ -10,9 +10,9 @@ public class CmdOptions
     [Option('C', "config", Required = false, Default = "", HelpText = "A json file with configuration of the experiment.")]
     public string ConfigFile { get; set; }
 
-    [Option('I', Required = false, Default = "", HelpText = "Newick file that describes the tree to be built.")]
+    [Option('N', "newick", Required = false, Default = "", HelpText = "Newick file that describes the tree to be built.")]
     public string NewickFile { get; set; }
     
-    [Option('D', Required = false, Default = 1, HelpText = "Number of mutations to generate.")]
+    [Option('D', "distance", Required = false, Default = 1, HelpText = "Number of mutations to generate.")]
     public int Distance { get; set; }
 }
