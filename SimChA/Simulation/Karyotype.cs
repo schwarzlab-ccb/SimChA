@@ -20,16 +20,16 @@ public class Karyotype
         Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
         IsFemale = other.IsFemale;
     }
-    
+
     public Karyotype(List<Chromosome> chromosomes, bool isFemale)
     {
         Chromosomes = chromosomes;
         IsFemale = isFemale;
     }
-    
+
     public override string ToString()
         => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
-    
+
     private List<Chromosome> Chromosomes { get; }
     public bool IsFemale { get; }
     public int ChromCount => Chromosomes.Count;
@@ -40,24 +40,24 @@ public class Karyotype
         Chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
         return regions;
     }
-    
-    private Chromosome RandomChr(Random rnd) 
+
+    private Chromosome RandomChr(Random rnd)
         => Chromosomes.Shuffle(rnd).First();
 
-    private List<Chromosome> RandomChrs(Random rnd, int count) 
+    private List<Chromosome> RandomChrs(Random rnd, int count)
         => Chromosomes.Shuffle(rnd).Take(count).ToList();
 
     // Segment is at most 2 bases shorter than chr
     private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
     {
         double fraction = Math.Clamp(ExponentialDistribution.Sample(rnd, meanLen), 0, 1);
-        return Math.Min((int)Math.Round(fraction * chr.Length()), chr.Length() - 2); 
+        return Math.Min((int) Math.Round(fraction * chr.Length()), chr.Length() - 2);
     }
-    
+
     // Get two positions within the chromosome (boundaries are excluded)
     private static (int start, int end) GetInternalRange(Random rnd, Chromosome chr, double meanLen)
     {
-        int segLength = GetSegLen(rnd, chr, meanLen);   
+        int segLength = GetSegLen(rnd, chr, meanLen);
         int start = DiscreteUniformDistribution.Sample(rnd, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
@@ -66,7 +66,7 @@ public class Karyotype
     // Get two positions within the chromosome (boundaries are excluded)
     private static int GetUniformPos(Random rnd, Chromosome chr)
         => rnd.Next(1, chr.Length() - 1);
-    
+
     private static (int, bool) GetTail(Random rnd, Chromosome chr, double meanLen)
     {
         int segLength = GetSegLen(rnd, chr, meanLen);
@@ -87,8 +87,8 @@ public class Karyotype
         };
 
     // Needs better estimation
-    private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr) 
-        => rnd.Next(1, (int)Math.Pow(chr.Length(), 1 / 3f)); 
+    private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
+        => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
 
     public void ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
@@ -103,7 +103,7 @@ public class Karyotype
             case AberrationEnum.ChromDeletion:
                 Chromosomes.Remove(chr);
                 break;
-            
+
             case AberrationEnum.InternalDuplication:
                 (int dupStart, int dupEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.DuplicateRange(dupStart, dupEnd);
@@ -116,11 +116,9 @@ public class Karyotype
 
             case AberrationEnum.Translocation:
                 var chrPair = RandomChrs(rnd, 2);
-                var splits = chrPair
-                    .Select(c => c.Split(GetUniformPos(rnd, c), rnd.CoinFlip()))
-                    .ToList();
-                chrPair[0].Join(splits[1], rnd.CoinFlip());
-                chrPair[1].Join(splits[0], rnd.CoinFlip());
+                var splits = chrPair.Select(c => c.Split(GetUniformPos(rnd, c), true)).ToList();
+                chrPair[0].Join(splits[1]);
+                chrPair[1].Join(splits[0]);
                 break;
 
             case AberrationEnum.Inversion:
@@ -140,7 +138,7 @@ public class Karyotype
             case AberrationEnum.WholeGenomeDoubling:
                 Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
                 break;
-            
+
             case AberrationEnum.Chromothripsis:
                 int shardCount = GetChromothripsisSiteCount(rnd, chr);
                 var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(rnd, chr)).Distinct().ToList();
@@ -148,7 +146,7 @@ public class Karyotype
                 int count = rnd.Next(1, stops.Count);
                 chr.ScatterAndGather(stops, count, rnd);
                 break;
-            
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }

@@ -46,12 +46,9 @@ public class Chromosome
         return new Chromosome(keepFirst ? second : first);
     }
 
-    public void Join(Chromosome other, bool prepend)
+    public void Join(Chromosome other)
     {
-        if (prepend)
-        {
-            _regions = RegionOps.ConcatRegions(other._regions, _regions);
-        }
+        _regions = RegionOps.ConcatRegions(_regions, other._regions);
     }
 
     public void InvertRange(int invStart, int invEnd)

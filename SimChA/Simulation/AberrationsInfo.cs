@@ -32,7 +32,7 @@ public class AberrationsInfo
     public static Dictionary<AberrationEnum, BaseAbbP> DefaultAberrations()
         => new()
         {
-            [AberrationEnum.Chromothripsis] = new BaseAbbP(1),
+            [AberrationEnum.Chromothripsis] = new BaseAbbP(0),
             [AberrationEnum.Inversion] = new FractionAbbP( 1, .01),
             [AberrationEnum.Translocation] = new FractionAbbP(1, .1),
             [AberrationEnum.ChromDeletion] = new BaseAbbP( 1),

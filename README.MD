@@ -60,10 +60,105 @@ Use `dotnet run -- [options]` to specify any of the following:
 
 ## Parameters
 
-The following parameter values can be set in the configuration file:
+Default parameters are found in the file: `default_params.json`.
+
+We simulate a complex set of chromosomal aberrations (copy number changes), whose parametrizations are provided by the configuration file. 
+
+The parameters change based on the nature of the aberration. 
+
+### Likelihood 
+
+A common to all aberrations is `Likelihood`. This is scaled across all aberrations, the probability that an abberation x is selected is the `Likelihood` of x divided by the sum of `Likelihood` across all aberrations.
+
+### Other parameters
+
+The following general parameters are set in the config file.
 
 * `Seed: int` The random seed for mutations generator.
 * `IsFemale: bool` The higher the confinement the stronger the competition between clones.
+
+## Aberrations
+
+### MeanLength
+
+For aberrations that affect a subsection of a chromosome, the length of this subsection is sampled from an exponential distribution with `Lambda = 1 / MeanLength`, meaning that the average length of the subsection is the number of bases of the chromosome times `MeanLength`.
+
+The lenght of the selected segment is always at most the length of the chromosome - 2.
+
+**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
+
+### Chromosome Deletion
+
+A single chromosome is selected at random and removed.
+
+##### Params:
+* `Likelihood: float`.
+
+
+### Chromosome Duplication
+
+A single chromosome is selected at random and duplicated.
+
+##### Params:
+* `Likelihood: float`.
+
+### Tail Deletion
+
+A single chromosome is selected, then an either end thereof, lastly a length of the segmend. The segment is then removed from the end of the chromosome.
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Internal Deletion
+
+A single chromosome is selected, then a length of the segmend. This segment is then removed from a uniformly distrubuted position on the chromosome excluding the first and the last base.
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### InternalDuplication
+A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Inversion
+A single chromosome is selected, then a length of the segmend. This segment is then cut and pasted to the original position in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Translocation
+Two chromosomes are selected and on each of those a single uniformly distributed position. 
+
+Each of the choromosomes is split on the position. The first part of the first chromosome is then attached to the second part of the second chromosome and vice versa.
+
+##### Params:
+* `Likelihood: float`.
+
+### BreakageFusionBridge
+
+A chromosome and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### WholeGenomeDoubling
+
+All the existing chromosomes are duplicated.
+
+##### Params:
+* `Likelihood: float`.
+
+
+### Chromothripsis
+
+TODO
 
 ## Output
 
