@@ -49,7 +49,7 @@ try
     watch.Start();
 
     LcaTreeBuilder.IsNewick = true;
-    var clones = Simulator.BuildCloneFromNewick(newickString, simParams.IsFemale, random);
+    var clones = Newick.ParseNewickTree(newickString, simParams.IsFemale);
     var aberrations = new AberrationsInfo(simParams);
     Simulator.GetMutationsNewick(clones[0], clones, aberrations, random);
     Console.WriteLine("Mutations generated");
