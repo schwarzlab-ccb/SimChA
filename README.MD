@@ -137,12 +137,17 @@ Two chromosomes are selected and on each of those a single uniformly distributed
 
 Each of the choromosomes is split on the position. The first part of the first chromosome is then attached to the second part of the second chromosome and vice versa.
 
+![Translocation Cartoon](./doc/img/translocation.png)
+
 ##### Params:
 * `Likelihood: float`.
 
 ### BreakageFusionBridge
 
 A chromosome and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
+
+
+![Translocation Cartoon](./doc/img/BFB_cartoon.png)
 
 ##### Params:
 * `Likelihood: float`,
