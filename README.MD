@@ -76,8 +76,9 @@ For aberrations that affect a subsection of a chromosome, the length of this sub
 
 The lenght of the selected segment is always at most the length of the chromosome - 2.
 
-**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
+![MeanLength distribution plot](./doc/img/tailLength.png)
 
+**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
 
 ### Other parameters
 
