@@ -121,6 +121,8 @@ A single chromosome is selected, then a length of the segmend. This segment is t
 ### InternalDuplication
 A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
 
+![Translocation Cartoon](./doc/img/InternalDuplication.png)
+
 ##### Params:
 * `Likelihood: float`,
 * `MeanLength: float`.
@@ -178,8 +180,10 @@ B-allele frequency of the selected clones. Used for copy number calculation in A
 CN output in the format :
 
 
-| sample_id | chrom | start | end | cn_a | cn_b |
-|-----------|-------|-------|-----|------|------|
+| sample_id | chrom | start | end   | cn_a | cn_b |
+|-----------|-------|-------|-------|------|------|
+|0          |	chr1  |	24721 |	98434 |	1    |   	4 |
+
 
 #### `logr.out`
 
