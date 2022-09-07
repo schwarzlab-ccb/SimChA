@@ -70,6 +70,15 @@ The parameters change based on the nature of the aberration.
 
 A common to all aberrations is `Likelihood`. This is scaled across all aberrations, the probability that an abberation x is selected is the `Likelihood` of x divided by the sum of `Likelihood` across all aberrations.
 
+### MeanLength
+
+For aberrations that affect a subsection of a chromosome, the length of this subsection is sampled from an exponential distribution with `Lambda = 1 / MeanLength`, meaning that the average length of the subsection is the number of bases of the chromosome times `MeanLength`.
+
+The lenght of the selected segment is always at most the length of the chromosome - 2.
+
+**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
+
+
 ### Other parameters
 
 The following general parameters are set in the config file.
@@ -78,14 +87,6 @@ The following general parameters are set in the config file.
 * `IsFemale: bool` The higher the confinement the stronger the competition between clones.
 
 ## Aberrations
-
-### MeanLength
-
-For aberrations that affect a subsection of a chromosome, the length of this subsection is sampled from an exponential distribution with `Lambda = 1 / MeanLength`, meaning that the average length of the subsection is the number of bases of the chromosome times `MeanLength`.
-
-The lenght of the selected segment is always at most the length of the chromosome - 2.
-
-**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
 
 ### Chromosome Deletion
 
@@ -177,7 +178,7 @@ B-allele frequency of the selected clones. Used for copy number calculation in A
 
 #### `copynumbers.out`
 
-CN output in the format :
+CN output in the format examplifed as:
 
 
 | sample_id | chrom | start | end   | cn_a | cn_b |
