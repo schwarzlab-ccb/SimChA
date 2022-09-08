@@ -52,8 +52,8 @@ Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMillisec
 Console.WriteLine("Writing to disk.");
 try
 {
-    files.WriteClones(clones);
-    files.WriteCopyNumbers(clones);
+    files.WriteClones(selectClones);
+    files.WriteCopyNumbers(selectClones);
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
 }
