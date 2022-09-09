@@ -7,6 +7,7 @@ public static class Newick
 {
     private static Clone CreateNodes(string newickNode, int parentId, bool isFemale)
     {
+        // TODO: all nodes should be considered alive / don't parse population size
         string[] cloneString = newickNode.Split(':');
         // TODO: split below in individual assignments
         var clone = new Clone(int.Parse(cloneString[0].Split('-')[0]), parentId, int.Parse(cloneString[1]),

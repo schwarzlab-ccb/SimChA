@@ -43,6 +43,7 @@ var clones = (options.Value.NewickFile != "")
 var aberrationsIfo = new AberrationsInfo(simParams);
 Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsIfo, random);
 
+// TODO: Output all clones if Newick file was provided?
 var selectClones = clones.Where(c => c.IsAlive).Shuffle(random).ToList();
 var lcaTree = LcaTreeBuilder.BuildTree(clones, selectClones);
     
@@ -52,8 +53,8 @@ Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMillisec
 Console.WriteLine("Writing to disk.");
 try
 {
-    files.WriteClones(clones);
-    files.WriteCopyNumbers(clones);
+    files.WriteClones(selectClones);
+    files.WriteCopyNumbers(selectClones);
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
 }
