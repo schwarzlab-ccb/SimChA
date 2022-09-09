@@ -167,7 +167,7 @@ public class FileIO
         string fileFullPath = Path.GetFullPath(newickFile);
         if (!File.Exists(fileFullPath))
         {
-            throw new Exception($"Configuration file {fileFullPath} does not exist");
+            throw new Exception($"Newick file {fileFullPath} does not exist");
         }
         try
         {
