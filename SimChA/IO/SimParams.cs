@@ -13,7 +13,7 @@ public record SimParams(
     FractionAbbP p_InternalDeletion,
     FractionAbbP p_InternalDuplication,
     FractionAbbP p_InternalInversion,
-    FractionAbbP p_Translocation,
+    BaseAbbP p_Translocation,
     FractionAbbP p_BreakageFusionBridge,
     BaseAbbP p_WholeGenomeDoubling,
     BaseAbbP p_Chromothripsis)
@@ -28,7 +28,7 @@ public record SimParams(
             (FractionAbbP) aberrations[AberrationEnum.InternalDeletion],
             (FractionAbbP) aberrations[AberrationEnum.InternalDuplication],
             (FractionAbbP) aberrations[AberrationEnum.InternalInversion],
-            (FractionAbbP) aberrations[AberrationEnum.Translocation],
+            (BaseAbbP) aberrations[AberrationEnum.Translocation],
             (FractionAbbP) aberrations[AberrationEnum.BreakageFusionBridge],
             (BaseAbbP) aberrations[AberrationEnum.WholeGenomeDoubling],
             (BaseAbbP) aberrations[AberrationEnum.Chromothripsis]);

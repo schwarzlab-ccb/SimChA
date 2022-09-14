@@ -34,7 +34,7 @@ public class AberrationsInfo
         {
             [AberrationEnum.Chromothripsis] = new BaseAbbP(0),
             [AberrationEnum.InternalInversion] = new FractionAbbP( 1, .01),
-            [AberrationEnum.Translocation] = new FractionAbbP(1, .1),
+            [AberrationEnum.Translocation] = new BaseAbbP(1),
             [AberrationEnum.ChromDeletion] = new BaseAbbP( 1),
             [AberrationEnum.ChromDuplication] = new BaseAbbP(1),
             [AberrationEnum.InternalDeletion] = new FractionAbbP(1, .01),
