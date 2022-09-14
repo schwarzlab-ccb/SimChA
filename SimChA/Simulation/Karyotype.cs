@@ -115,6 +115,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.Translocation:
+                // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
                 var chrPair = RandomChrs(rnd, 2);
                 var splits = chrPair.Select(c => c.Split(GetUniformPos(rnd, c), true)).ToList();
                 chrPair[0].Join(splits[1]);

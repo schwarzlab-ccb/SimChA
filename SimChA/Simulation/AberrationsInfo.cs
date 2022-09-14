@@ -9,7 +9,7 @@ namespace SimChA.Simulation;
 public class AberrationsInfo
 {
     public Dictionary<AberrationEnum, BaseAbbP> Map { get; }
-    public double RatesSum { get; }
+    private double RatesSum { get; }
 
     public AberrationsInfo(SimParams simParams)
     {
@@ -43,10 +43,10 @@ public class AberrationsInfo
             [AberrationEnum.BreakageFusionBridge] = new FractionAbbP(1, .1),
             [AberrationEnum.WholeGenomeDoubling] = new BaseAbbP( 1),
         };
+    
     public AberrationEnum PickRandomMutation(Random rnd)
     {
-        double ratesSum = RatesSum;
-        double sample = ContinuousUniformDistribution.Sample(rnd, 0, ratesSum);
+        double sample = ContinuousUniformDistribution.Sample(rnd, 0, RatesSum);
         foreach (var rate in Map)
         {
             if (sample <= rate.Value.Likelihood)

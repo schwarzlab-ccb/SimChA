@@ -12,11 +12,10 @@ public class FileIO
 
     private const string SUBCLONES_FILENAME = "subclones.out";
     private const string COPYNUMBERS_FILENAME = "copynumbers.out";
-
-    // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
+    
     public FileIO(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");

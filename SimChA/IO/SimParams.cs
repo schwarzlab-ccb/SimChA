@@ -18,10 +18,10 @@ public record SimParams(
     FractionAbbP p_BreakageFusionBridge,
     BaseAbbP p_WholeGenomeDoubling)
 {
-    public static SimParams CreateSimParams(int Seed, bool IsFemale, Dictionary<AberrationEnum, BaseAbbP> aberrations)
+    public static SimParams CreateSimParams(int seed, bool isFemale, Dictionary<AberrationEnum, BaseAbbP> aberrations)
         => new(
-            Seed,
-            IsFemale,
+            seed,
+            isFemale,
             aberrations[AberrationEnum.Chromothripsis],
             (FractionAbbP)aberrations[AberrationEnum.Inversion],
             (FractionAbbP)aberrations[AberrationEnum.Translocation],

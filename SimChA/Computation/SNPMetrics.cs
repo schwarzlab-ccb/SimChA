@@ -55,7 +55,7 @@ public static class SNPMetrics
 
     public static void CalcMultipleSubclones()
     {
-        // TODO: Should take multiple subclones as input and mix them
+        // TODO: Should take multiple clones as input and mix them
         throw new NotImplementedException();
     }
 
