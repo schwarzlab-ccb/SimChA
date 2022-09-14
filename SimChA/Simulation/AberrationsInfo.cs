@@ -16,7 +16,7 @@ public class AberrationsInfo
         Map = new Dictionary<AberrationEnum, BaseAbbP>
         {
             [AberrationEnum.Chromothripsis] = simParams.p_Chromothripsis,
-            [AberrationEnum.Inversion] = simParams.p_Inversion,
+            [AberrationEnum.InternalInversion] = simParams.p_InternalInversion,
             [AberrationEnum.Translocation] = simParams.p_Translocation,
             [AberrationEnum.ChromDeletion] = simParams.p_ChromDeletion,
             [AberrationEnum.ChromDuplication] = simParams.p_ChromDuplication,
@@ -33,7 +33,7 @@ public class AberrationsInfo
         => new()
         {
             [AberrationEnum.Chromothripsis] = new BaseAbbP(0),
-            [AberrationEnum.Inversion] = new FractionAbbP( 1, .01),
+            [AberrationEnum.InternalInversion] = new FractionAbbP( 1, .01),
             [AberrationEnum.Translocation] = new FractionAbbP(1, .1),
             [AberrationEnum.ChromDeletion] = new BaseAbbP( 1),
             [AberrationEnum.ChromDuplication] = new BaseAbbP(1),

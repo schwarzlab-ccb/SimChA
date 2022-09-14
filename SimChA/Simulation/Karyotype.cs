@@ -122,7 +122,7 @@ public class Karyotype
                 chrPair[1].Join(splits[0]);
                 break;
 
-            case AberrationEnum.Inversion:
+            case AberrationEnum.InternalInversion:
                 (int invStart, int invEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.InvertRange(invStart, invEnd);
                 break;

@@ -9,7 +9,7 @@ public enum AberrationEnum
     TailDeletion,
     InternalDeletion,
     InternalDuplication,
-    Inversion,
+    InternalInversion,
     Translocation,
     BreakageFusionBridge,
     WholeGenomeDoubling,

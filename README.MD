@@ -120,7 +120,7 @@ A single chromosome is selected, then a length of the segmend. This segment is t
 * `Likelihood: float`,
 * `MeanLength: float`.
 
-### InternalDuplication
+### Internal Duplication
 A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
 
 ![Translocation Cartoon](./doc/img/InternalDuplication.png)
@@ -129,7 +129,7 @@ A single chromosome is selected, then a length of the segmend. This segment is t
 * `Likelihood: float`,
 * `MeanLength: float`.
 
-### Inversion
+### Internal Inversion
 A single chromosome is selected, then a length of the segmend. This segment is then cut and pasted to the original position in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
 
 ##### Params:
