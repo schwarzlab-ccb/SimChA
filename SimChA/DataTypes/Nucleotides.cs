@@ -2,5 +2,8 @@
 
 public enum Nucleotides
 {
-    G, T, C, A
+    G,
+    T,
+    C,
+    A
 }

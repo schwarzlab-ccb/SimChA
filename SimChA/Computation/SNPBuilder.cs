@@ -14,13 +14,14 @@ public static class SNPBuilder
         foreach (var chrom in referenceChromosomes)
         {
             int chromLength = ReferenceGenome.ChromosomeLengthMap[chrom];
-            int nrChromSnps = (int) Math.Floor((double) nrsnps * chromLength / totGenomeLength);
+            int nrChromSnps = (int)Math.Floor((double)nrsnps * chromLength / totGenomeLength);
             for (int i = 0; i < nrChromSnps; i++)
             {
                 int pos = random.Next(1, chromLength - 1);
                 bool isHet = random.NextDouble() < hetrate;
                 snps.Add(new SNP(chrom, pos, isHet, snpId));
             }
+
             snpId += nrChromSnps;
         }
 

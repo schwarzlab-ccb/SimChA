@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using System.Text;
 
 namespace SimChA.IO;
 
@@ -12,20 +12,11 @@ public class FileIO
 
     private const string SUBCLONES_FILENAME = "subclones.out";
     private const string COPYNUMBERS_FILENAME = "copynumbers.out";
-
-    // private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
-    private const string CCF_FILENAME = "ccf.csv";
-    private const string SUMMARY_FILENAME = "summary.csv";
-    private string Timestamp { get; }
-    private string RootFolder { get; }
-    private string ExperimentFolder { get; }
-
-    private bool IsRepeated { get; }
-
-    public FileIO(string rootFolder, bool isRepeated)
+    
+    public FileIO(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -42,9 +33,7 @@ public class FileIO
         {
             Directory.CreateDirectory(RootFolder);
         }
-
-        IsRepeated = isRepeated;
-
+        
         if (IsRepeated)
         {
             ExperimentFolder = Path.Join(RootFolder, Timestamp);
@@ -55,6 +44,11 @@ public class FileIO
             ExperimentFolder = RootFolder;
         }
     }
+
+    private string Timestamp { get; }
+    private string RootFolder { get; }
+    private string ExperimentFolder { get; }
+    private bool IsRepeated { get; }
 
     public void WriteClones(IEnumerable<Clone> subClones)
     {
@@ -92,7 +86,7 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing CopyNumbers to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        
+
         outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
         foreach (var subClone in subClones)
         {
@@ -101,26 +95,13 @@ public class FileIO
         }
     }
     
-    public void WriteCCF(Dictionary<int, long> vaf, long totalSize)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), CCF_FILENAME);
-        using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("id,pop,ccf");
-        foreach ((int id, long pop) in vaf)
-        {
-            outputFile.WriteLine($"{id},{pop},{(float)pop / totalSize}");
-        }
-    }
-
     public void WriteRawData(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
     {
         var outputbaf = new List<string>();
         outputbaf.Add("\tchrom\tpos");
-    
-        foreach (var snp in snps)
-        {
-            outputbaf.Add($"{snp.Id}\t{snp.Chrom}\t{snp.Pos}");
-        }
+
+        outputbaf.AddRange(snps.Select(snp => $"{snp.Id}\t{snp.Chrom}\t{snp.Pos}"));
+
         var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
         foreach (var subClone in subClones)
         {
@@ -134,27 +115,16 @@ public class FileIO
                 outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
             }
         }
-    
+
         string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
         using var outputFileBAF = new StreamWriter(outPathBAF);
         outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
-    
+
         string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
         outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
-    }
-
-    public void WriteRawData(List<SNPData> rawData, int subcloneId)
-    {
-        string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{BAF_FILENAME}");
-        using var outputFileBAF = new StreamWriter(outPathBAF);
-        outputFileBAF.Write(SNPMetrics.PrintBAF(rawData) + "\n");
-
-        string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), $"{subcloneId}_{LOGR_FILENAME}");
-        using var outputFileLogR = new StreamWriter(outPathLogR);
-        outputFileLogR.Write(SNPMetrics.PrintLogR(rawData) + "\n");
     }
 
     public void WriteSimParams(SimParams simParams)
@@ -181,9 +151,8 @@ public class FileIO
             var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
             if (simParams.Seed < 0)
             {
-                simParams.Seed = new Random().Next();
+                return simParams with { Seed = new Random().Next() };
             }
-
             return simParams;
         }
         catch (Exception e)
@@ -191,101 +160,24 @@ public class FileIO
             throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
         }
     }
-    
-    public void StoreCopy(int runId)
+
+    public static string[] GetStringFromNewick(string newickFile)
     {
-        if (!IsRepeated)
-        {
-            return;
-        }
-
-        string copyFolder = Path.Join(ExperimentFolder, runId.ToString());
-        Directory.CreateDirectory(copyFolder);
-
-        foreach (var file in new DirectoryInfo(RootFolder).GetFiles())
-        {
-            file.CopyTo(Path.Join(copyFolder, file.Name));
-        }
-    }
-
-    public void RetrieveConfig()
-    {
-        if (!IsRepeated)
-        {
-            return;
-        }
-        File.Copy(
-            Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME),
-            Path.Combine(Path.GetFullPath(RootFolder), SIM_PARAMS_FILENAME));
-    }
-    
-    public static List<Clone> CreateTree(string[] newickString){
-        List<Clone> clones = new List<Clone>();
-        List<int> parentIds = new List<int>();
-        parentIds.Add(-1);
-        bool rootSet = false;
-        for(int i = 0; i < newickString.Count(); i++){
-            string test = newickString[i];
-            switch(newickString[i]){
-                case "(":
-                    if(newickString[i-1] == ""){
-                        parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
-                        break;
-                    }
-                    clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
-                    parentIds = parentIds.Where(p => p != parentIds.Last()).ToList();
-                    break;
-                case ")":
-                    if(rootSet){
-                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
-                        parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
-                    }
-                    else{
-                        
-                    }
-                    break;
-                case ",":
-                    if(!rootSet){
-                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
-                        parentIds.Add(Int32.Parse(newickString[i-1].Split('-')[0]));
-                        rootSet = true;
-                    }
-                    else
-                        clones.Add(CreateNodes(newickString[i-1], parentIds.Last()));
-                    break;
-                default:
-                    break;
-            }
-        }
-        return  clones;
-    }
-
-
-    public static Clone CreateNodes(string newickNode, int parentId){
-        string[] cloneString = newickNode.Split(':');
-        Clone clone = new Clone(Int32.Parse(cloneString[0].Split('-')[0]), parentId, Int32.Parse(cloneString[1]), Int32.Parse(cloneString[0].Split('-')[1]), null);
-        return clone;
-    }
-
-    public static string[] GetStringFromNewick(string newickFile){
         string fileFullPath = Path.GetFullPath(newickFile);
-        var clones = new List<Clone>();
         if (!File.Exists(fileFullPath))
         {
-            throw new Exception($"Configuration file {fileFullPath} does not exist");
+            throw new Exception($"Newick file {fileFullPath} does not exist");
         }
-
         try
         {
-
-            StringBuilder newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
+            var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
             newickBuild.Replace(", (", "(");
-            return newickBuild.ToString().Replace(")", "|)|").Replace("(", "|(|").Replace(",", "|,|").Split('|').Reverse().ToArray();
-            
+            return newickBuild.ToString().Replace(")", "|)|").Replace("(", "|(|").Replace(",", "|,|").Split('|')
+                .Reverse().ToArray();
         }
-        catch(Exception e){
+        catch (Exception e)
+        {
             throw new Exception($"Failed to read newick file from the file {fileFullPath}. Error {e.Message}");
         }
-
     }
 }

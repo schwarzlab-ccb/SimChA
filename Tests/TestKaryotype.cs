@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using SimChA.DataTypes;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -9,35 +10,34 @@ namespace Tests;
 public class TestKaryotype
 {
     private Karyotype _kar;
+    private Random _rnd;
     
     [SetUp]
     public void Setup()
     {
-        _kar = new Karyotype(false, new Random(0));
+        _kar = new Karyotype(false);
+        _rnd = new Random(0);
     }
 
     [Test]
-    public void TestMissegration()
+    public void TestDeletion()
     {
-        var res = _kar.ApplyAbberation(AberrationEnum.Missegregation);
-        Assert.AreEqual(47, _kar.ChromCount);
-        Assert.AreEqual(45, res.ChromCount);
+        _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+        Assert.AreEqual(45, _kar.ChromCount);
     }
     
     [Test]
     public void TestDuplication()
     {
-        var res = _kar.ApplyAbberation(AberrationEnum.Duplication);
+        _kar.ApplyAberration(_rnd, AberrationEnum.ChromDuplication, new BaseAbbP(1f));
         Assert.AreEqual(47, _kar.ChromCount);
-        Assert.AreEqual(46, res.ChromCount);
     }
     
     [Test]
     public void TestBFB()
     {
-        var res = _kar.ApplyAbberation(AberrationEnum.BreakageFusionBridge);
+        _kar.ApplyAberration(_rnd, AberrationEnum.BreakageFusionBridge, new FractionAbbP(1f, .1f));
         Assert.AreEqual(46, _kar.ChromCount);
-        Assert.AreEqual(45, res.ChromCount);
     }
     
     [Test]
@@ -45,7 +45,7 @@ public class TestKaryotype
     {
         for (int i = 0; i < 46; i++)
         {
-            _kar = _kar.ApplyAbberation(AberrationEnum.Missegregation);
+            _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
         }
         Assert.AreEqual("[]", _kar.ToString());
     }

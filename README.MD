@@ -54,39 +54,120 @@ Use `dotnet run -- [options]` to specify any of the following:
 ```
   -O, --output    (Default: ./out) The path to the output files.
   -C, --config    (Default: ) A json file with configuration of the experiment.
-  -N              (Default: false) Use newline in logs (useful for batch execution)
+  -N --newick     (Default: ) A path to a newick file with the phylogenetic tree.
+  -D --distance   (Default: 1) A number of mutations (mutation distance) to simulate if a newick file is not provided.
 ```
 
 ## Parameters
 
-The following parameter values can be set in the configuration file:
+Default parameters are found in the file: `default_params.json`.
 
-### Simulation options
- * `Seed: int` The random seed for the simulation.
+We simulate a complex set of chromosomal aberrations (copy number changes), whose parametrizations are provided by the configuration file. 
 
-### Control variables
-* `CloneTarget: uint` The number of clones that must be reached.
-* `SelectionSize: uint` The number of clones selected for output.
-* `MaxSteps: uint` The simulation stops at this step.
-* `Reps: uint` How many times the simulation runs.
+The parameters change based on the nature of the aberration. 
 
-### Model
-* `Turnover: [0.0-1.0]`  The fraction of cells dividing per step (should be considerably smaller than 1).
-* `MutationProb: [0.0-1.0]` The probability of a mutation per daugther cell.
-* `DeathRate: [0.0-1.0]` The probability of death related to the birth pro.
+### Likelihood 
+
+A common to all aberrations is `Likelihood`. This is scaled across all aberrations, the probability that an abberation x is selected is the `Likelihood` of x divided by the sum of `Likelihood` across all aberrations.
+
+### MeanLength
+
+For aberrations that affect a subsection of a chromosome, the length of this subsection is sampled from an exponential distribution with `Lambda = 1 / MeanLength`, meaning that the average length of the subsection is the number of bases of the chromosome times `MeanLength`.
+
+The lenght of the selected segment is always at most the length of the chromosome - 2.
+
+![MeanLength distribution plot](./doc/img/tailLength.png)
+
+**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
+
+### Other parameters
+
+The following general parameters are set in the config file.
+
+* `Seed: int` The random seed for mutations generator.
 * `IsFemale: bool` The higher the confinement the stronger the competition between clones.
 
-### Initialization
-* `StartMut: uint` The number of mutation of the cells in the first clone at the start.
-* `StartPop: uint` The number of cells in the the first clone at the start.
+## Aberrations
 
-## Test
+### Chromosome Deletion
 
-A test set with minimum simulation is provided. The test is conducted by output comparison. Run:
+A single chromosome is selected at random and removed.
 
-```
-./plots.sh
-```
+##### Params:
+* `Likelihood: float`.
+
+
+### Chromosome Duplication
+
+A single chromosome is selected at random and duplicated.
+
+##### Params:
+* `Likelihood: float`.
+
+### Tail Deletion
+
+A single chromosome is selected, then an either end thereof, lastly a length of the segmend. The segment is then removed from the end of the chromosome.
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Internal Deletion
+
+A single chromosome is selected, then a length of the segmend. This segment is then removed from a uniformly distrubuted position on the chromosome excluding the first and the last base.
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Internal Duplication
+A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+
+![Translocation Cartoon](./doc/img/InternalDuplication.png)
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Internal Inversion
+A single chromosome is selected, then a length of the segmend. This segment is then cut and pasted to the original position in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### Translocation
+Two chromosomes are selected and on each of those a single uniformly distributed position. 
+
+Each of the choromosomes is split on the position. The first part of the first chromosome is then attached to the second part of the second chromosome and vice versa.
+
+![Translocation Cartoon](./doc/img/translocation.png)
+
+##### Params:
+* `Likelihood: float`.
+
+### BreakageFusionBridge
+
+A chromosome and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
+
+
+![Translocation Cartoon](./doc/img/BFB_cartoon.png)
+
+##### Params:
+* `Likelihood: float`,
+* `MeanLength: float`.
+
+### WholeGenomeDoubling
+
+All the existing chromosomes are duplicated.
+
+##### Params:
+* `Likelihood: float`.
+
+
+### Chromothripsis
+
+TODO
 
 ## Output
 
@@ -98,11 +179,13 @@ B-allele frequency of the selected clones. Used for copy number calculation in A
 
 #### `copynumbers.out`
 
-CN output in the format :
+CN output in the format examplifed as:
 
 
-| sample_id | chrom | start | end | cn_a | cn_b |
-|-----------|-------|-------|-----|------|------|
+| sample_id | chrom | start | end   | cn_a | cn_b |
+|-----------|-------|-------|-------|------|------|
+|0          |	chr1  |	24721 |	98434 |	1    |   	4 |
+
 
 #### `logr.out`
 
@@ -132,17 +215,10 @@ The start position is inclusive, the end exclusive.
 
 ### Plots (created by `./plots.sh`)
 
-#### `parent_tree.png` 
-An evolutionary tree describing the individual sampled clones and their total population (labelled nodes), together with their evolutionary distance from the parent (labelled edges).
-
-![ParentGraph](./doc/img/parent_tree.png)
-
 #### `copy_numbers.png` 
 The copy number tracks
 
 ![ParentGraph](./doc/img/copy_numbers.png)
-
-
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, adam.streck@mdc-berlin.de.

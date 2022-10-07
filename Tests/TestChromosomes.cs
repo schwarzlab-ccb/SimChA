@@ -34,7 +34,7 @@ public class TestChromosomes
     public void TestJoin()
     {
         int combinedLen = _chr1.Length() + _chrX.Length(); 
-        _chr1.Join(_chrX, true);
+        _chr1.Join(_chrX);
         Assert.AreEqual(combinedLen, _chr1.Length());
     }
 

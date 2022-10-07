@@ -20,6 +20,7 @@ public struct SNP
         Heterozygous = heterozygous;
         Id = id;
     }
+
     public SNP(ChromNum chrom, int pos, bool heterozygous, int id)
     {
         Chrom = chrom;

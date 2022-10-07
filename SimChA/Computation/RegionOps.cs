@@ -11,7 +11,7 @@ public static class RegionOps
             regions.Add(region);
         }
     }
-    
+
     public static List<Region> DeleteRange(List<Region> regions, int start, int end)
     {
         var newRegions = new List<Region>();
@@ -28,7 +28,6 @@ public static class RegionOps
             }
             else if (start < seekPos && end > seekPos + region.Length) // Whole region inside deletion
             {
-                
             }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
@@ -45,15 +44,17 @@ public static class RegionOps
             else // Both coordinates inside of the region
             {
                 var firstRegion = region;
-                firstRegion.End = region.End + start - seekPos - region.Length; 
+                firstRegion.End = region.End + start - seekPos - region.Length;
                 AddIfNotEmpty(newRegions, firstRegion);
-                
+
                 var secondRegion = region;
                 secondRegion.Start = region.Start - seekPos + end;
                 AddIfNotEmpty(newRegions, secondRegion);
             }
+
             seekPos += region.Length;
         }
+
         return newRegions;
     }
 
@@ -93,8 +94,10 @@ public static class RegionOps
                 newRegion.End = newRegion.Start + end - start;
                 AddIfNotEmpty(newRegions, newRegion);
             }
+
             seekPos += region.Length;
         }
+
         return newRegions;
     }
 
@@ -122,23 +125,23 @@ public static class RegionOps
                 secondPart.Start += pos - seekPos;
                 AddIfNotEmpty(afterRegions, secondPart);
             }
+
             seekPos += region.Length;
         }
+
         return (beforeRegions, afterRegions);
     }
-    
+
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
     {
-        return regions.Select(r => r with { Forward = false }).Reverse().ToList(); 
+        return regions.Select(r => r with { Forward = false }).Reverse().ToList();
     }
-    
+
     public static List<Region> ConcatRegions(IEnumerable<IEnumerable<Region>> listOfRegions)
     {
         return listOfRegions.SelectMany(x => x).ToList();
     }
-    
+
     public static List<Region> ConcatRegions(IEnumerable<Region> first, IEnumerable<Region> second)
-    {
-        return first.Concat(second).ToList();
-    }
+        => first.Concat(second).ToList();
 }

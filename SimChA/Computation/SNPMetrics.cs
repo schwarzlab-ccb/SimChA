@@ -25,18 +25,20 @@ public static class SNPMetrics
                 ReferenceGenome.ChromosomeStartMap[cn.Segment.ChromId.ChromNum] + cn.Segment.End > snp.AbsPos);
 
             if (copyNumbers[curSegmentId].CNH1 + copyNumbers[curSegmentId].CNH2 <= 0)
+            {
                 continue;
+            }
 
-            int readsNormal = (int)Math.Round(Math.Max(0, 
+            int readsNormal = (int)Math.Round(Math.Max(0,
                 Sample(rnd, 2 * readdepth, readstd)));
-            int readsH1 =  (int)Math.Round(Math.Max(0, 
+            int readsH1 = (int)Math.Round(Math.Max(0,
                 Sample(rnd, copyNumbers[curSegmentId].CNH1 * readdepth, readstd)));
-            int readsH2 =  (int)Math.Round(Math.Max(0, 
+            int readsH2 = (int)Math.Round(Math.Max(0,
                 Sample(rnd, copyNumbers[curSegmentId].CNH2 * readdepth, readstd)));
 
             float compPurity = 1f - purity;
             int readsTotal = readsH1 + readsH2;
-            float r = (2 * compPurity * readdepth + purity * readsTotal) / 
+            float r = (2 * compPurity * readdepth + purity * readsTotal) /
                       (2 * compPurity * readdepth + readdepth * purity * tumorPloidy);
             float logr = gamma * (float)Math.Log2(r);
             float baf = snp.Heterozygous && readsTotal > 0
@@ -53,7 +55,7 @@ public static class SNPMetrics
 
     public static void CalcMultipleSubclones()
     {
-        // TODO: Should take multiple subclones as input and mix them
+        // TODO: Should take multiple clones as input and mix them
         throw new NotImplementedException();
     }
 

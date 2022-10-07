@@ -4,14 +4,15 @@ namespace SimChA.DataTypes;
 
 public enum AberrationEnum
 {
-    Missegregation,
-    InternalDuplication,
-    Chromothripsis,
-    Translocation,
-    InternalDeletion,
-    Inversion,
-    BreakageFusionBridge,
+    ChromDeletion,
+    ChromDuplication,
     TailDeletion,
-    Duplication,
-    WholeGenomeDoubling
+    InternalDeletion,
+    InternalDuplication,
+    InternalInversion,
+    Translocation,
+    BreakageFusionBridge,
+    WholeGenomeDoubling,
+    Chromothripsis,
+    Chromoplexy,
 }

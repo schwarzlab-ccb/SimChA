@@ -2,10 +2,11 @@
 
 namespace SimChA.Computation;
 
-public static class LCATreeBuilder
+public static class LcaTreeBuilder
 {
+    public static Dictionary<int, int> CreateParentMap(IEnumerable<Clone> subClones)
+        => subClones.ToDictionary(sc => sc.CloneId, sc => sc.ParentId);
 
-    public static bool isNewick {get; set; } = false;
     private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<Clone> selection, List<int> internalNodes,
         int id)
     {
@@ -17,7 +18,7 @@ public static class LCATreeBuilder
             source = parentMap[source];
         } while (source != -1 && selection.All(sc => sc.CloneId != source) && internalNodes.All(n => n != source));
 
-        return new TreeEdge { Distance = dist, SourceId = source, TargetId = id };
+        return new TreeEdge {Distance = dist, SourceId = source, TargetId = id};
     }
 
     private static List<int> FindInternalNodes(Dictionary<int, int> parentMap, List<Clone> selection)
@@ -44,9 +45,10 @@ public static class LCATreeBuilder
     }
 
     // Construct a parent tree with lowest common ancestor (LCA) for each pair of children
-    public static ParentTree Builtree(IEnumerable<Clone> allSubClones, List<Clone> selection)
+    public static ParentTree BuildTree(IEnumerable<Clone> allSubClones, List<Clone> selection)
     {
-        var parentMap = ConnectedTreeBuilder.CreateParentMap(allSubClones);
+        var subClones = allSubClones as Clone[] ?? allSubClones.ToArray();
+        var parentMap = CreateParentMap(subClones);
         var internalNodes = FindInternalNodes(parentMap, selection);
 
         List<TreeNode> nodes = new();
@@ -54,27 +56,27 @@ public static class LCATreeBuilder
 
         foreach (var subClone in selection)
         {
-            nodes.Add(new TreeNode { Id = subClone.CloneId, Size = subClone.CellCount });
-            if(!isNewick){
-                edges.Add(FindEdge(parentMap, selection, internalNodes, subClone.CloneId));
-            }
-            else{
-                edges.Add(new TreeEdge {Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId});
-            }
+            nodes.Add(new TreeNode {Id = subClone.CloneId, Size = subClone.CellCount});
+            edges.Add(new TreeEdge
+                {Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId});
         }
 
         foreach (int internalNode in internalNodes)
         {
-            nodes.Add(new TreeNode { Id = internalNode, Size = 0 });
-            if(!isNewick){
-                edges.Add(FindEdge(parentMap, selection, internalNodes, internalNode));
-            }
-            else{
-                Clone currentPos = allSubClones.Where(id => id.CloneId == internalNode).First();
-                edges.Add(new TreeEdge {Distance = currentPos.MutCount, SourceId = currentPos.ParentId, TargetId = internalNode});
-            }
+            nodes.Add(new TreeNode
+            {
+                Id = internalNode,
+                Size = 0
+            });
+            var currentPos = subClones.First(id => id.CloneId == internalNode);
+            edges.Add(new TreeEdge
+            {
+                Distance = currentPos.MutCount,
+                SourceId = currentPos.ParentId,
+                TargetId = internalNode
+            });
         }
 
-        return new ParentTree { RootId = 0, Nodes = nodes, Edges = edges.Where(e => e.TargetId != 0).ToList() };
+        return new ParentTree {RootId = 0, Nodes = nodes, Edges = edges.Where(e => e.TargetId != 0).ToList()};
     }
 }
