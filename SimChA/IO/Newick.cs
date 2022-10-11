@@ -1,5 +1,6 @@
 ﻿using SimChA.DataTypes;
 using SimChA.Simulation;
+using System.Text.RegularExpressions;
 
 namespace SimChA.IO;
 
@@ -15,6 +16,13 @@ public static class Newick
         return clone;
     }
 
+
+    public static List<Clone> ParseNewick(string newickString, bool isFemale){
+        List<Clone> clones = new();
+        string[] newickRegex = Regex.Split(newickString, @"(\()|(\))|([0-9a-zA-Z-_.]+)|(\:)|(\\n)|(\;)|(\,)");
+        Console.WriteLine(newickRegex);
+        return clones;
+    }
     public static List<Clone> ParseNewickString(string[] newickString, bool isFemale)
     {
         List<Clone> clones = new();
