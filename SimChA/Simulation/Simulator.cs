@@ -23,8 +23,8 @@ public static class Simulator
 
     public static List<Clone> GetClonePair(int distance, bool isFemale)
     {
-        var parent = new Clone(0, -1, 0, 0, new Karyotype(isFemale));
-        var child = new Clone(1, 0, distance, 1, new Karyotype(isFemale));
+        var parent = new Clone(0, -1, "1", 0, 0, new Karyotype(isFemale));
+        var child = new Clone(1, 0, "2", distance, 1, new Karyotype(isFemale));
         return new List<Clone> {parent, child};
     }
 }
