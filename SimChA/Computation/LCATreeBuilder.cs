@@ -56,7 +56,7 @@ public static class LcaTreeBuilder
 
         foreach (var subClone in selection)
         {
-            nodes.Add(new TreeNode {Id = subClone.CloneId, Size = subClone.CellCount});
+            nodes.Add(new TreeNode {Id = subClone.CloneId, Name = subClone.Name});
             edges.Add(new TreeEdge
                 {Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId});
         }
@@ -65,8 +65,8 @@ public static class LcaTreeBuilder
         {
             nodes.Add(new TreeNode
             {
-                Id = internalNode,
-                Size = 0
+                Id = subClones[internalNode].CloneId,
+                Name = subClones[internalNode].Name
             });
             var currentPos = subClones.First(id => id.CloneId == internalNode);
             edges.Add(new TreeEdge

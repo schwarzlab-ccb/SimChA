@@ -24,7 +24,7 @@ else
     simParams = SimParams.CreateSimParams(new Random().Next(), true, defaultAberrs);
 }
 
-string[] newickString = Array.Empty<string>();
+string newickString = "";
 if (options.Value.NewickFile != "")
 {
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
@@ -38,14 +38,13 @@ var random = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
 
 var clones = (options.Value.NewickFile != "")
-    ? Newick.ParseNewickString(newickString, simParams.IsFemale)
+    ? Newick.ParseNewick(newickString, simParams.IsFemale)
     : Simulator.GetClonePair(options.Value.Distance , true);
 var aberrationsIfo = new AberrationsInfo(simParams);
 Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsIfo, random);
 
 // TODO: Output all clones if Newick file was provided?
-var selectClones = clones.Where(c => c.IsAlive).Shuffle(random).ToList();
-var lcaTree = LcaTreeBuilder.BuildTree(clones, selectClones);
+var lcaTree = LcaTreeBuilder.BuildTree(clones, clones);
     
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
@@ -53,8 +52,8 @@ Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMillisec
 Console.WriteLine("Writing to disk.");
 try
 {
-    files.WriteClones(selectClones);
-    files.WriteCopyNumbers(selectClones);
+    files.WriteClones(clones);
+    files.WriteCopyNumbers(clones);
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
 }

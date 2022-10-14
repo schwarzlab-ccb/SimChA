@@ -9,22 +9,22 @@ public static class Simulator
     public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, AberrationsInfo aberrationsInfo, Random rnd)
     {
         // TODO this is still square complexity, fix! (should use a tree structure)
-        foreach (var clone in clones.Where(c => c.ParentId == currentClone.CloneId))
+        foreach (int cloneId in currentClone.ChildrenIDs)
         {
-            clone.Karyotype = currentClone.SetKaryotype();
-            for (int i = 0; i < clone.MutCount; i++)
+            clones[cloneId].Karyotype = currentClone.SetKaryotype();
+            for (int i = 0; i < clones[cloneId].MutCount; i++)
             {
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
-                clone.Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
+                clones[cloneId].Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
             }
-            AssignMutationsRecursive(clone, clones, aberrationsInfo, rnd);
+            AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd);
         }
     }
 
     public static List<Clone> GetClonePair(int distance, bool isFemale)
     {
-        var parent = new Clone(0, -1, "1", 0, 0, new Karyotype(isFemale));
-        var child = new Clone(1, 0, "2", distance, 1, new Karyotype(isFemale));
+        var parent = new Clone(0, -1, "1", 0, new Karyotype(isFemale));
+        var child = new Clone(1, 0, "2", distance, new Karyotype(isFemale));
         return new List<Clone> {parent, child};
     }
 }

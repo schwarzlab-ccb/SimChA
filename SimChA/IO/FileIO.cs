@@ -69,8 +69,8 @@ public class FileIO
         outputFile.WriteLine("Digraph SimChA {");
         foreach (var node in tree.Nodes)
         {
-            double size = Math.Round(.25 * (1 + Math.Log(1 + node.Size)), 2);
-            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Id}:{node.Size}\", width={size}, height={size * .6}];");
+            double size = Math.Round(.25 * (1 + Math.Log(1 + 0)), 2);
+            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Name}\", width={size}, height={size * .6}];");
         }
 
         foreach (var edge in tree.Edges)
@@ -161,7 +161,7 @@ public class FileIO
         }
     }
 
-    public static string[] GetStringFromNewick(string newickFile)
+    public static string GetStringFromNewick(string newickFile)
     {
         string fileFullPath = Path.GetFullPath(newickFile);
         if (!File.Exists(fileFullPath))
@@ -171,9 +171,7 @@ public class FileIO
         try
         {
             var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
-            newickBuild.Replace(", (", "(");
-            return newickBuild.ToString().Replace(")", "|)|").Replace("(", "|(|").Replace(",", "|,|").Split('|')
-                .Reverse().ToArray();
+            return newickBuild.ToString();
         }
         catch (Exception e)
         {
