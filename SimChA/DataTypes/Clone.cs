@@ -21,12 +21,8 @@ public class Clone
     public List<int> ChildrenIDs { set; get; }
     public string Name { set; get; }
 
-    public Clone CreateChild(int newId)
-        => new(newId, CloneId, newId.ToString(), MutCount + 1, Karyotype);
-
     public override string ToString()
         => $"ID:{CloneId}, Name:{Name} Parent:{ParentId},  Muts: {MutCount}, Karyotype: {Karyotype}";
-
 
     public Karyotype SetKaryotype() => new(Karyotype);
 }

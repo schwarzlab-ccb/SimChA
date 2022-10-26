@@ -25,6 +25,7 @@ public static class Simulator
     {
         var parent = new Clone(0, -1, "1", 0, new Karyotype(isFemale));
         var child = new Clone(1, 0, "2", distance, new Karyotype(isFemale));
+        parent.ChildrenIDs.Add(child.CloneId);
         return new List<Clone> {parent, child};
     }
 }

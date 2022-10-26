@@ -4,23 +4,6 @@ namespace SimChA.Computation;
 
 public static class LcaTreeBuilder
 {
-    public static Dictionary<int, int> CreateParentMap(IEnumerable<Clone> subClones)
-        => subClones.ToDictionary(sc => sc.CloneId, sc => sc.ParentId);
-
-    private static TreeEdge FindEdge(Dictionary<int, int> parentMap, List<Clone> selection, List<int> internalNodes,
-        int id)
-    {
-        int dist = 0;
-        int source = id;
-        do
-        {
-            dist++;
-            source = parentMap[source];
-        } while (source != -1 && selection.All(sc => sc.CloneId != source) && internalNodes.All(n => n != source));
-
-        return new TreeEdge {Distance = dist, SourceId = source, TargetId = id};
-    }
-
     private static List<int> FindInternalNodes(Dictionary<int, int> parentMap, List<Clone> selection)
     {
         Dictionary<int, int> internalNodes = new();
@@ -45,38 +28,20 @@ public static class LcaTreeBuilder
     }
 
     // Construct a parent tree with lowest common ancestor (LCA) for each pair of children
-    public static ParentTree BuildTree(IEnumerable<Clone> allSubClones, List<Clone> selection)
+    public static ParentTree BuildTree(List<Clone> selection)
     {
-        var subClones = allSubClones as Clone[] ?? allSubClones.ToArray();
-        var parentMap = CreateParentMap(subClones);
-        var internalNodes = FindInternalNodes(parentMap, selection);
-
         List<TreeNode> nodes = new();
         List<TreeEdge> edges = new();
 
         foreach (var subClone in selection)
         {
             nodes.Add(new TreeNode {Id = subClone.CloneId, Name = subClone.Name});
-            edges.Add(new TreeEdge
-                {Distance = subClone.MutCount, SourceId = subClone.ParentId, TargetId = subClone.CloneId});
+            foreach(var childId in subClone.ChildrenIDs){
+                edges.Add(new TreeEdge{
+                    Distance = selection[childId].MutCount, SourceId = subClone.Name, TargetId = selection[childId].Name});
+            }
         }
 
-        foreach (int internalNode in internalNodes)
-        {
-            nodes.Add(new TreeNode
-            {
-                Id = subClones[internalNode].CloneId,
-                Name = subClones[internalNode].Name
-            });
-            var currentPos = subClones.First(id => id.CloneId == internalNode);
-            edges.Add(new TreeEdge
-            {
-                Distance = currentPos.MutCount,
-                SourceId = currentPos.ParentId,
-                TargetId = internalNode
-            });
-        }
-
-        return new ParentTree {RootId = 0, Nodes = nodes, Edges = edges.Where(e => e.TargetId != 0).ToList()};
+        return new ParentTree {RootName = selection[0].Name, Nodes = nodes, Edges = edges};
     }
 }

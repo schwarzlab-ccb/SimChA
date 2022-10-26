@@ -9,7 +9,7 @@ namespace SimChA.IO;
 public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
-
+    private const string NEWICK_FILENAME = "parent_graph.new";
     private const string SUBCLONES_FILENAME = "subclones.out";
     private const string COPYNUMBERS_FILENAME = "copynumbers.out";
     private const string BAF_FILENAME = "baf.out";
@@ -81,6 +81,28 @@ public class FileIO
         outputFile.WriteLine("}");
     }
 
+    public void WriteNewickFile(List<Clone> clones)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(RootFolder), NEWICK_FILENAME);
+        using var outputFile = new StreamWriter(outPath);
+        StringBuilder newickString = new StringBuilder(";");
+        newickString.Insert(0, IterateClones(clones[0], clones));
+        outputFile.WriteLine(newickString);
+    }
+
+    public String IterateClones(Clone clone, List<Clone> clones)
+    {
+        StringBuilder newickString = new StringBuilder(":" + clone.MutCount.ToString());
+        newickString.Insert(0, clone.Name);
+        newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? ")":"");
+        foreach(int cloneId in clone.ChildrenIDs){
+            newickString.Insert(0, IterateClones(clones[cloneId], clones));
+            newickString.Insert(0, cloneId != clone.ChildrenIDs.Last() ? "," : "");
+        }
+        newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? "(":"");
+        return newickString.ToString();
+    }
+
     public void WriteCopyNumbers(IEnumerable<Clone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
@@ -91,7 +113,7 @@ public class FileIO
         foreach (var subClone in subClones)
         {
             var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.CloneId.ToString(), false) + "\n");
+            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.Name.ToString(), false) + "\n");
         }
     }
     
