@@ -58,13 +58,7 @@ if __name__ == "__main__":
             if clade.name is not None:
                 clade.name = clade.name.split('-')[0] + '-' + \
                     str(np.round(float(clade.name.split('-')[1])/total_pop, 3))
-
-    normal_sample = [x for x in tree.find_clades(
-    ) if x.name is not None and x.name.split('-')[0] == '0']
-    if len(normal_sample) == 1:
-        normal_sample = normal_sample[0].name
-    else:
-        raise TypeError(f"multiple normal samples: '0' for normal name {normal_sample}")
+    normal_sample = tree.root.name
 
 
     # Figure dimensions
@@ -82,7 +76,7 @@ if __name__ == "__main__":
     tree_ax = fig.add_subplot(gs[0:len(samples), 0])
     cn_axes = [fig.add_subplot(gs[i]) for i in range(1, (2*(nrows))+1, 2)]
     y_posns = _get_y_positions(tree, normal_sample, adjust=True)
-    y_posns = {clade.name.split('-')[0]: y_pos for clade, y_pos in y_posns.items()
+    y_posns = {clade.name: y_pos for clade, y_pos in y_posns.items()
         if clade.name is not None and clade.name != 'root'}
     plot_tree(tree,
               ax=tree_ax,

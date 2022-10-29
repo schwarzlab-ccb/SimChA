@@ -77,7 +77,7 @@ public static class Newick
     private static Clone createClone(int id, int parentId, Match branchLengthMatch, Match nameMatch, bool isFemale, bool branchLength)
     {
         string nameClone = nameMatch.Groups["nodeName"].Value != "" ? nameMatch.Value : 
-            branchLengthMatch.Groups["nodeName"].Value != "" ? branchLengthMatch.Value : id.ToString();
+            branchLengthMatch.Groups["nodeName"].Value != "" ? branchLengthMatch.Value : "C" + id.ToString();
         int mutCount = branchLengthMatch.Groups["branchLength"].Value != "" ? 
             (int)Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0,1))) : branchLength ? 0 : 1;
         var clone = new Clone(id, parentId, nameClone, mutCount, new Karyotype(isFemale));
