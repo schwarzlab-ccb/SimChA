@@ -6,7 +6,7 @@ namespace SimChA.Simulation;
 
 public class Chromosome
 {
-    private List<Region> _regions;
+    public List<Region> _regions;
 
     public Chromosome(Region initialRegion) 
         => _regions = new List<Region> { initialRegion };

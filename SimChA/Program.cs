@@ -42,7 +42,6 @@ var clones = (options.Value.NewickFile != "")
     : Simulator.GetClonePair(options.Value.Distance , true);
 var aberrationsIfo = new AberrationsInfo(simParams);
 Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsIfo, random);
-
 var lcaTree = LcaTreeBuilder.BuildTree(clones);
     
 watch.Stop();
@@ -56,6 +55,7 @@ try
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
     files.WriteNewickFile(clones);
+    files.WriteCSV();
 }
 catch (Exception e)
 {

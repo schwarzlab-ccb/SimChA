@@ -15,7 +15,7 @@ public static class Simulator
             for (int i = 0; i < clones[cloneId].MutCount; i++)
             {
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
-                clones[cloneId].Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
+                clones[cloneId].Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration], clones[cloneId].Name);
             }
             AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd);
         }
