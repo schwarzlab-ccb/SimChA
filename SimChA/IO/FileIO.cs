@@ -56,10 +56,13 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
         using var outputFile = new StreamWriter(outPath);
 
+        StringBuilder clonesString = new StringBuilder();
         foreach (var subClone in subClones)
         {
-            outputFile.WriteLine(subClone);
+            clonesString.AppendLine(subClone.ToString());
         }
+
+        outputFile.Write(clonesString.ToString());
     }
 
     public void WriteParentTree(ParentTree tree)
@@ -67,19 +70,21 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), DOT_FILENAME);
         using var outputFile = new StreamWriter(outPath);
 
-        outputFile.WriteLine("Digraph SimChA {");
+        StringBuilder parentTreeString = new StringBuilder();
+        parentTreeString.AppendLine("Digraph SimChA {");
         foreach (var node in tree.Nodes)
         {
             double size = Math.Round(.25 * (1 + Math.Log(1 + 0)), 2);
-            outputFile.WriteLine($"\t{node.Id} [label=\"{node.Name}\", width={size}, height={size * .6}];");
+            parentTreeString.AppendLine($"\t{node.Id} [label=\"{node.Name}\", width={size}, height={size * .6}];");
         }
 
         foreach (var edge in tree.Edges)
         {
-            outputFile.WriteLine($"\t{edge.SourceId} -> {edge.TargetId} [label=\"{edge.Distance}\"];");
+            parentTreeString.AppendLine($"\t{edge.SourceId} -> {edge.TargetId} [label=\"{edge.Distance}\"];");
         }
 
-        outputFile.WriteLine("}");
+        parentTreeString.AppendLine("}");
+        outputFile.Write(parentTreeString.ToString());
     }
 
     public void WriteNewickFile(List<Clone> clones)
@@ -110,12 +115,15 @@ public class FileIO
         Console.WriteLine($"Writing CopyNumbers to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
-        outputFile.Write("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
+        StringBuilder copyNumbersString = new StringBuilder();
+        copyNumbersString.Append("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
+
         foreach (var subClone in subClones)
         {
             var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-            outputFile.Write(CopyNumbers.ToTSV(copynumbers, subClone.Name.ToString(), false) + "\n");
+            copyNumbersString.Append((CopyNumbers.ToTSV(copynumbers, subClone.Name.ToString(), false) + "\n"));
         }
+        outputFile.Write(copyNumbersString.ToString());
     }
     
     public void WriteRawData(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
