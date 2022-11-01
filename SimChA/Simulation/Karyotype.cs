@@ -97,7 +97,7 @@ public class Karyotype
         {
             case AberrationEnum.TailDeletion:
                 (int delSplit, bool delFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.Split(delSplit, delFromStart);
+                chr.Split(delSplit, !delFromStart);
                 break;
 
             case AberrationEnum.ChromDeletion:
