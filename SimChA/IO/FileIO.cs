@@ -15,7 +15,7 @@ public class FileIO
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
-    private const string CSV_FILENAME = "abberations.csv";
+    private const string TSV_FILENAME = "abberations.tsv";
     
     public FileIO(string rootFolder)
     {
@@ -211,15 +211,14 @@ public class FileIO
     }
 
     public void WriteCSV(){
-        string filePath = Path.Combine(Path.GetFullPath(RootFolder), CSV_FILENAME);
+        string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new StringBuilder();
-        abberationString.Append("sep=;\n");
-        abberationString.Append($"Clone Name;Abberation;Details\n");
+        abberationString.Append($"Clone Name\tAbberation\tDetails\n");
         foreach(Abberation abberation in AbberationList.ListAbberation){
-            abberationString.Append($"\"{abberation.CloneName}\";" + 
-                                    $"\"{abberation.AbberationEnum}\";" +
-                                    $"\"{abberation.Region}\"\n");
+            abberationString.Append($"{abberation.CloneName}\t" + 
+                                    $"{abberation.AbberationEnum}\t" +
+                                    $"{abberation.Region}\n");
         }
         outputFile.Write(abberationString.ToString());
     }
