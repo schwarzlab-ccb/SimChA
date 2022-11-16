@@ -224,18 +224,18 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
 
-    public static List<Gen> ReadGenes(string folder)
+    public static List<List<Gen>> ReadGenes(string folder)
     {
-        List<Gen> genes = new List<Gen>();
+        List<List<Gen>> genes = new List<List<Gen>>();
         string[]files = Directory.GetFiles(Path.GetFullPath("./"));
         if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || !File.Exists(Path.Combine(folder, "essentials.tsv")))
         {
             throw new Exception($"Required files not found in {folder} directory.");
             return null;
         }
-        genes.AddRange(ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true));
-        genes.AddRange(ReadGenesFromFile(Path.Combine(folder, "ogs.tsv")));
-        genes.AddRange(ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true));
+        genes.Add(ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true));
+        genes[0].AddRange(ReadGenesFromFile(Path.Combine(folder, "ogs.tsv")));
+        genes.Add(ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true));
         return genes;
     }
 

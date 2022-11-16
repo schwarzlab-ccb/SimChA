@@ -30,7 +30,7 @@ public class Karyotype
     public override string ToString()
         => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
 
-    private List<Chromosome> Chromosomes { get; }
+    public List<Chromosome> Chromosomes { get; }
     public bool IsFemale { get; }
     public int ChromCount => Chromosomes.Count;
 
@@ -90,10 +90,11 @@ public class Karyotype
     private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
         => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
 
-    public void ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet, string cloneName)
+    public float ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet, string cloneName)
     {
         string region = "";
         var chr = RandomChr(rnd);
+        float deltaFitness = 0;
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
@@ -102,6 +103,7 @@ public class Karyotype
                 chr.Split(delSplit, !delFromStart);
                 region = $"chromosome:{chr._regions[0].ChromId};nucleotides_deleted:" + 
                     $"{(numberNucleotides - delSplit)}{(delFromStart ? " from start":"")}";
+                
                 break;
 
             case AberrationEnum.ChromDeletion:
@@ -169,5 +171,6 @@ public class Karyotype
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
         new Abberation(cloneName, aberration.ToString(), region);
+        return deltaFitness;
     }
 }
