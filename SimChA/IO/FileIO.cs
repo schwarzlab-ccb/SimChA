@@ -210,7 +210,8 @@ public class FileIO
         }
     }
 
-    public void WriteCSV(){
+    public void WriteTSV()
+    {
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new StringBuilder();
@@ -221,5 +222,50 @@ public class FileIO
                                     $"{abberation.Region}\n");
         }
         outputFile.Write(abberationString.ToString());
+    }
+
+    public static List<Gen> ReadGenes(string folder)
+    {
+        List<Gen> genes = new List<Gen>();
+        string[]files = Directory.GetFiles(Path.GetFullPath("./"));
+        if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || !File.Exists(Path.Combine(folder, "essentials.tsv")))
+        {
+            throw new Exception($"Required files not found in {folder} directory.");
+            return null;
+        }
+        genes.AddRange(ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true));
+        genes.AddRange(ReadGenesFromFile(Path.Combine(folder, "ogs.tsv")));
+        genes.AddRange(ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true));
+        return genes;
+    }
+
+    public static List<Gen> ReadGenesFromFile(string file, bool negative = false)
+    {
+        List<Gen> genes = new List<Gen>();
+        string fileContent = File.ReadAllText(Path.GetFullPath(file));
+        string[] genesFromFile = fileContent.Split('\n');
+        foreach(string genFromFile in genesFromFile)
+        {   
+            if(genFromFile!="")
+            {
+                string[] genString = genFromFile.Split('\t');
+                Gen gen = new Gen();
+                gen.name = genString[0];
+                if(negative)
+                {
+                    gen.deltaFitness = -float.Parse(genString[1]);
+                }
+                else
+                {
+                    gen.deltaFitness = float.Parse(genString[1]);
+                }
+                gen.chr = (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]);
+                gen.start = int.Parse(genString[3]);
+                gen.stop = int.Parse(genString[4].Split('\r')[0]);
+                genes.Add(gen);
+            }
+
+        }
+        return genes;
     }
 }

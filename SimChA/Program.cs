@@ -4,6 +4,7 @@ using SimChA;
 using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
+using SimChA.DataTypes;
 
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
@@ -29,6 +30,7 @@ if (options.Value.NewickFile != "")
 {
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
+List<Gen> genes = FileIO.ReadGenes(options.Value.GenesFolder);
 
 Console.WriteLine("Computing mutations.");
 var watch = new Stopwatch();
@@ -55,7 +57,7 @@ try
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
     files.WriteNewickFile(clones);
-    files.WriteCSV();
+    files.WriteTSV();
 }
 catch (Exception e)
 {

@@ -99,7 +99,7 @@ public class Karyotype
             case AberrationEnum.TailDeletion:
                 int numberNucleotides = chr._regions[0].End;
                 (int delSplit, bool delFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.Split(delSplit, delFromStart);
+                chr.Split(delSplit, !delFromStart);
                 region = $"chromosome:{chr._regions[0].ChromId};nucleotides_deleted:" + 
                     $"{(numberNucleotides - delSplit)}{(delFromStart ? " from start":"")}";
                 break;
