@@ -22,7 +22,7 @@ if (options.Value.ConfigFile != "")
 else
 {
     var defaultAberrs = AberrationsInfo.DefaultAberrations();
-    simParams = SimParams.CreateSimParams(new Random().Next(), true, defaultAberrs);
+    simParams = SimParams.CreateSimParams(new Random().Next(), true, 0.00001f, 0.0001f, 0.00001f, defaultAberrs);
 }
 
 string newickString = "";
@@ -52,11 +52,11 @@ Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMillisec
 Console.WriteLine("Writing to disk.");
 try
 {
-    //files.WriteClones(clones);
-    //files.WriteCopyNumbers(clones);
-    //files.WriteParentTree(lcaTree);
-    //files.WriteSimParams(simParams);
-    //files.WriteNewickFile(clones);
+    files.WriteClones(clones);
+    files.WriteCopyNumbers(clones);
+    files.WriteParentTree(lcaTree);
+    files.WriteSimParams(simParams);
+    files.WriteNewickFile(clones);
     files.WriteTSV();
 }
 catch (Exception e)

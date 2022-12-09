@@ -56,6 +56,7 @@ Use `dotnet run -- [options]` to specify any of the following:
   -C, --config    (Default: ) A json file with configuration of the experiment.
   -N --newick     (Default: ) A path to a newick file with the phylogenetic tree.
   -D --distance   (Default: 1) A number of mutations (mutation distance) to simulate if a newick file is not provided.
+  -G --genes (Default: /) The path for the tsv-files with the essential-, tsg- and og-genes with scores
 ```
 
 ## Parameters
