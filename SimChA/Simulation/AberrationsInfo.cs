@@ -20,7 +20,7 @@ public class AberrationsInfo
             [AberrationEnum.Translocation] = simParams.p_Translocation,
             [AberrationEnum.ChromDeletion] = simParams.p_ChromDeletion,
             [AberrationEnum.ChromDuplication] = simParams.p_ChromDuplication,
-            [AberrationEnum.InternalDeletion] = simParams.p_InternalDuplication,
+            [AberrationEnum.InternalDeletion] = simParams.p_InternalDeletion,
             [AberrationEnum.InternalDuplication] = simParams.p_InternalDuplication,
             [AberrationEnum.TailDeletion] = simParams.p_TailDeletion,
             [AberrationEnum.BreakageFusionBridge] = simParams.p_BreakageFusionBridge,

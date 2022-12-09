@@ -221,7 +221,7 @@ public class FileIO
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
                                     $"{abberation.Region}\t" +
-                                    $"{Math.Round((decimal)abberation.DeltaFitness,4).ToString()}\n");
+                                    $"{Math.Round((decimal)abberation.DeltaFitness,8).ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }
@@ -229,7 +229,7 @@ public class FileIO
     public static void ReadGenes(string folder, bool isFemale)
     {
         List<List<Gen>> genes = new List<List<Gen>>();
-        string[]files = Directory.GetFiles(Path.GetFullPath("./"));
+        string[] files = Directory.GetFiles(Path.GetFullPath("./"));
         if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || !File.Exists(Path.Combine(folder, "essentials.tsv")))
         {
             throw new Exception($"Required files not found in {folder} directory.");
