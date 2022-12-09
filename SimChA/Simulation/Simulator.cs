@@ -8,7 +8,7 @@ namespace SimChA.Simulation;
 public static class Simulator
 {
     public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, AberrationsInfo aberrationsInfo,
-        Random rnd)
+        Random rnd, SimParams simParams)
     {
         foreach (int cloneId in currentClone.ChildrenIDs)
         {
@@ -18,12 +18,12 @@ public static class Simulator
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 string region = clones[cloneId].Karyotype.ApplyAberration(rnd, aberration,
                     aberrationsInfo.Map[aberration], clones[cloneId].Name);
-                AssignFitness(clones[cloneId]);
+                AssignFitness(clones[cloneId], simParams);
                 new Abberation(clones[cloneId].Name, aberration.ToString(), region,
                     (float) clones[cloneId].deltaFitness);
             }
 
-            AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd);
+            AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd, simParams);
         }
     }
 
@@ -40,11 +40,12 @@ public static class Simulator
     private static float CalcStress(float stressFactor, int chromCount)
         => stressFactor * (float) Math.Pow(Math.Max(0, chromCount - 46), 2);
 
-    public static void AssignFitness(Clone clone)
+    public static void AssignFitness(Clone clone, SimParams simParams)
     {
+        
         clone.deltaFitness = 0;
         float tsgOgFitness = 0;
-        float stress = CalcStress(0.0001f, clone.Karyotype.ChromCount);
+        float stress = CalcStress(simParams.stressFraction, clone.Karyotype.ChromCount);
 
         var essentialStillThere = new List<Gen>();
         var tsgOgStillThere = new List<Gen>();
@@ -54,12 +55,11 @@ public static class Simulator
             {
                 var chromNum = region.ChromId.ChromNum;
                 essentialStillThere.AddRange(GenList.EssentialList[chromNum]
-                    .FindAll(x => x.start > region.Start && x.stop < region.End));
+                    .FindAll(x => x.region.Start > region.Start && x.region.End < region.End));
                 tsgOgStillThere.AddRange(GenList.TsgOgList[chromNum]
-                    .FindAll(x => x.start > region.Start && x.stop < region.End));
+                    .FindAll(x => x.region.Start > region.Start && x.region.End < region.End));
             }
         }
-
         var essentialsLost = FindMissingGenes(essentialStillThere, GenList.EssentialList);
         var tsgOgLost = FindMissingGenes(tsgOgStillThere, GenList.TsgOgList)
                 .Concat(tsgOgStillThere.GroupBy(x => x).Where(g => g.Count() < 2).Select(g => g.Key));
@@ -74,21 +74,8 @@ public static class Simulator
             tsgOgFitness += tsgOg.deltaFitness;
         }
 
-        clone.deltaFitness = stress + tsgOgFitness + essentialityFitness;
-    }
-
-    public static bool AddIfNotThere<ChromNum, Gen>(this Dictionary<ChromNum, List<Gen>> dict, ChromNum key, Gen value)
-    {
-        if (dict.ContainsKey(key))
-        {
-            dict[key].Add(value);
-        }
-        else
-        {
-            dict.Add(key, new List<Gen> {value});
-        }
-
-        return true;
+        clone.deltaFitness = stress + (simParams.tsgOgFraction*tsgOgFitness) + 
+            (simParams.essentialFraction*essentialityFitness);
     }
 
     private static List<Gen> FindMissingGenes(List<Gen> genes, Dictionary<ChromNum, List<Gen>> dict)

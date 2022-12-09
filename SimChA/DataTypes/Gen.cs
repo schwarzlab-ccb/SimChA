@@ -5,10 +5,6 @@ namespace SimChA.DataTypes;
 
 public class Gen {
     public string name { get; set;}
-
-    // TODO change below to a region
-    public ChromNum chr { get; set;}
-    public int start { get; set;}
-    public int stop { get; set;}
+    public Region region {get; set;}
     public float deltaFitness { get; set;}
 }

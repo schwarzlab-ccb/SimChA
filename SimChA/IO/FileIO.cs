@@ -247,11 +247,12 @@ public class FileIO
         {   
             if(genFromFile!="")
             {
-                string[] genString = genFromFile.Split('\t');
+                var genString = genFromFile.Split('\t');
+                //Don't include Y chromosome in genes list if clone is female
                 if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY){
                     continue;
                 }
-                Gen gen = new Gen();
+                var gen = new Gen();
                 gen.name = genString[0];
                 if(negative)
                 {
@@ -261,16 +262,16 @@ public class FileIO
                 {
                     gen.deltaFitness = float.Parse(genString[1]);
                 }
-                gen.chr = (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]);
-                gen.start = int.Parse(genString[3]);
-                gen.stop = int.Parse(genString[4].Split('\r')[0]);
-                if(genes.ContainsKey(gen.chr))
+                var chromNum = (ChromNum) System.Enum.Parse(typeof(ChromNum), genString[2]);
+                var chromID = new ChromID(chromNum, false);
+                var reg = new Region(int.Parse(genString[3]), int.Parse(genString[4].Split('\r')[0]), chromID);
+                if(genes.ContainsKey(chromNum))
                 {
-                    genes[gen.chr].Add(gen);
+                    genes[chromNum].Add(gen);
                 }
                 else
                 {
-                    genes.Add(gen.chr, new List<Gen> {gen});
+                    genes.Add(chromNum, new List<Gen> {gen});
                 }
             }
 

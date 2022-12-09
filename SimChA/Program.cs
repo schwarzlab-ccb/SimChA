@@ -43,7 +43,7 @@ var clones = (options.Value.NewickFile != "")
     ? Newick.ParseNewick(newickString, simParams.IsFemale)
     : Simulator.GetClonePair(options.Value.Distance , true);
 var aberrationsInfo = new AberrationsInfo(simParams);
-Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsInfo, random);
+Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsInfo, random, simParams);
 var lcaTree = LcaTreeBuilder.BuildTree(clones);
     
 watch.Stop();
