@@ -7,10 +7,12 @@ public class Abberation{
     public string CloneName;
     public string AbberationEnum;
     public string? Region;
-    public Abberation(string cloneName, string abberation, string region = ""){
+    public float? DeltaFitness;
+    public Abberation(string cloneName, string abberation, string region = "", float deltaFitness = 0){
         CloneName = cloneName;
         AbberationEnum = abberation;
         Region = region;
+        DeltaFitness = deltaFitness;
         AbberationList.ListAbberation.Add(this);
     }
 }
