@@ -1,4 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
+// Edited by Felix Schifferdecker to match the GRCh38.p13
 
 namespace SimChA.DataTypes;
 
@@ -8,99 +9,99 @@ public static class ReferenceGenome
     {
         {
             ChromNum.chr1,
-            247_249_719
+            249_956_942
         },
         {
             ChromNum.chr2,
-            242_951_149
+            242_508_799
         },
         {
             ChromNum.chr3,
-            199_501_827
+            198_450_956
         },
         {
             ChromNum.chr4,
-            191_273_063
+            190_424_264
         },
         {
             ChromNum.chr5,
-            180_857_866
+            181_630_948
         },
         {
             ChromNum.chr6,
-            170_899_992
+            170_805_979
         },
         {
             ChromNum.chr7,
-            158_821_424
+            159_345_973
         },
         {
             ChromNum.chr8,
-            146_274_826
+            145_138_636
         },
         {
             ChromNum.chr9,
-            140_273_252
+            138_688_728
         },
         {
             ChromNum.chr10,
-            135_374_737
+            133_797_422
         },
         {
             ChromNum.chr11,
-            134_452_384
+            135_186_938
         },
         {
             ChromNum.chr12,
-            132_349_534
+            133_275_309
         },
         {
             ChromNum.chr13,
-            114_142_980
+            114_364_328
         },
         {
             ChromNum.chr14,
-            106_368_585
+            108_136_338
         },
         {
             ChromNum.chr15,
-            100_338_915
+            102_439_437
         },
         {
             ChromNum.chr16,
-            88_827_254
+            92_211_104
         },
         {
             ChromNum.chr17,
-            78_774_742
+            83_836_422
         },
         {
             ChromNum.chr18,
-            76_117_153
+            80_373_285
         },
         {
             ChromNum.chr19,
-            63_811_651
+            58_617_616
         },
         {
             ChromNum.chr20,
-            62_435_964
+            64_444_167
         },
         {
             ChromNum.chr21,
-            46_944_323
+            46_709_983
         },
         {
             ChromNum.chr22,
-            49_691_432
+            51_857_516
         },
         {
             ChromNum.chrX,
-            154_913_754
+            156_040_895
         },
         {
             ChromNum.chrY,
-            57_772_954
+            57_264_655
         }
     };
 

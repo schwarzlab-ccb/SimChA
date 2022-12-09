@@ -212,36 +212,35 @@ public class FileIO
 
     public void WriteTSV()
     {
+        //TODO: Format output, talk with Tom about readable ideas
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new StringBuilder();
-        abberationString.Append($"Clone Name\tAbberation\tDetails\n");
+        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\n");
         foreach(Abberation abberation in AbberationList.ListAbberation){
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
-                                    $"{abberation.Region}\n");
+                                    $"{abberation.Region}\t" +
+                                    $"{Math.Round((decimal)abberation.DeltaFitness,4).ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }
 
-    public static List<List<Gen>> ReadGenes(string folder)
+    public static void ReadGenes(string folder, bool isFemale)
     {
         List<List<Gen>> genes = new List<List<Gen>>();
         string[]files = Directory.GetFiles(Path.GetFullPath("./"));
         if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || !File.Exists(Path.Combine(folder, "essentials.tsv")))
         {
             throw new Exception($"Required files not found in {folder} directory.");
-            return null;
         }
-        genes.Add(ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true));
-        genes[0].AddRange(ReadGenesFromFile(Path.Combine(folder, "ogs.tsv")));
-        genes.Add(ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true));
-        return genes;
+        ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true, GenList.TsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, "ogs.tsv"), false, GenList.TsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true, GenList.EssentialList, isFemale);        
     }
 
-    public static List<Gen> ReadGenesFromFile(string file, bool negative = false)
+    public static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gen>> genes, bool isFemale)
     {
-        List<Gen> genes = new List<Gen>();
         string fileContent = File.ReadAllText(Path.GetFullPath(file));
         string[] genesFromFile = fileContent.Split('\n');
         foreach(string genFromFile in genesFromFile)
@@ -249,6 +248,9 @@ public class FileIO
             if(genFromFile!="")
             {
                 string[] genString = genFromFile.Split('\t');
+                if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY){
+                    continue;
+                }
                 Gen gen = new Gen();
                 gen.name = genString[0];
                 if(negative)
@@ -262,10 +264,16 @@ public class FileIO
                 gen.chr = (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]);
                 gen.start = int.Parse(genString[3]);
                 gen.stop = int.Parse(genString[4].Split('\r')[0]);
-                genes.Add(gen);
+                if(genes.ContainsKey(gen.chr))
+                {
+                    genes[gen.chr].Add(gen);
+                }
+                else
+                {
+                    genes.Add(gen.chr, new List<Gen> {gen});
+                }
             }
 
         }
-        return genes;
     }
 }
