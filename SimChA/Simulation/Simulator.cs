@@ -21,14 +21,24 @@ public static class Simulator
                 string region = clones[cloneId].Karyotype.ApplyAberration(rnd, aberration,
                     aberrationsInfo.Map[aberration], clones[cloneId].Name);
                 AssignFitness(clones[cloneId], simParams);
-                new Abberation(clones[cloneId].Name, aberration.ToString(), region,
-                    deltaFitness.HasValue ? 
+                new Abberation(clones[cloneId].Name, aberration.ToString(), getMutations(clones[currentClone.CloneId], clones)
+                     + 1+ i, region,  deltaFitness.HasValue ? 
                     (float) (clones[cloneId].deltaFitness - deltaFitness) : (float) clones[cloneId].deltaFitness,
                     (float) (clones[cloneId].deltaFitness));
             }
 
             AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd, simParams);
         }
+    }
+
+    private static int getMutations(Clone clone, List<Clone> clones){
+        var mutCount = 0;
+        if(clone.ParentId != -1)
+        {
+            mutCount = getMutations(clones[clone.ParentId], clones);
+        }
+        mutCount += clone.MutCount;
+        return mutCount;
     }
 
     public static List<Clone> GetClonePair(int distance, bool isFemale)

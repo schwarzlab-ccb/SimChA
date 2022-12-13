@@ -216,13 +216,14 @@ public class FileIO
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new StringBuilder();
-        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\tTotal Fitness\n");
+        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\tTotal Fitness\tNumber of mutations\n");
         foreach(Abberation abberation in AbberationList.ListAbberation){
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
                                     $"{abberation.Region}\t" +
                                     $"{Math.Round((decimal)abberation.DeltaFitness,8).ToString()}\t" +
-                                    $"{Math.Round((decimal)abberation.TotalFitness,8).ToString()}\n");
+                                    $"{Math.Round((decimal)abberation.TotalFitness,8).ToString()}\t" +
+                                    $"{abberation.NrOfMutation.ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }

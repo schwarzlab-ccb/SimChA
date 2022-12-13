@@ -10,10 +10,12 @@ public class Abberation{
     public float? DeltaFitness;
 
     public float? TotalFitness;
-    public Abberation(string cloneName, string abberation, string region = "", float deltaFitness = 0, 
+    public int NrOfMutation;
+    public Abberation(string cloneName, string abberation, int nrOfMutation, string region = "", float deltaFitness = 0, 
         float totalFitness = 0){
         CloneName = cloneName;
         AbberationEnum = abberation;
+        NrOfMutation = nrOfMutation;
         Region = region;
         DeltaFitness = deltaFitness;
         TotalFitness = totalFitness;
