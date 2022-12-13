@@ -8,11 +8,15 @@ public class Abberation{
     public string AbberationEnum;
     public string? Region;
     public float? DeltaFitness;
-    public Abberation(string cloneName, string abberation, string region = "", float deltaFitness = 0){
+
+    public float? TotalFitness;
+    public Abberation(string cloneName, string abberation, string region = "", float deltaFitness = 0, 
+        float totalFitness = 0){
         CloneName = cloneName;
         AbberationEnum = abberation;
         Region = region;
         DeltaFitness = deltaFitness;
+        TotalFitness = totalFitness;
         AbberationList.ListAbberation.Add(this);
     }
 }

@@ -2,8 +2,8 @@
   "Seed": 1368013691,
   "IsFemale": true,
   "StressFraction": 0.0001,
-  "TsgOdFraction": 0.001,
-  "EssentialFraction": 0.0001,
+  "TsgOgFraction": 0.01,
+  "EssentialFraction": 0.001,
   "p_ChromDeletion": {
     "Likelihood": 1
   },

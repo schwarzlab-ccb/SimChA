@@ -13,14 +13,18 @@ public static class Simulator
         foreach (int cloneId in currentClone.ChildrenIDs)
         {
             clones[cloneId].Karyotype = currentClone.SetKaryotype();
+            clones[cloneId].deltaFitness = clones[clones[cloneId].ParentId].deltaFitness;
             for (int i = 0; i < clones[cloneId].MutCount; i++)
-            {
+            {   
+                var deltaFitness = clones[cloneId].deltaFitness;
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 string region = clones[cloneId].Karyotype.ApplyAberration(rnd, aberration,
                     aberrationsInfo.Map[aberration], clones[cloneId].Name);
                 AssignFitness(clones[cloneId], simParams);
                 new Abberation(clones[cloneId].Name, aberration.ToString(), region,
-                    (float) clones[cloneId].deltaFitness);
+                    deltaFitness.HasValue ? 
+                    (float) (clones[cloneId].deltaFitness - deltaFitness) : (float) clones[cloneId].deltaFitness,
+                    (float) (clones[cloneId].deltaFitness));
             }
 
             AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd, simParams);
@@ -45,7 +49,7 @@ public static class Simulator
         
         clone.deltaFitness = 0;
         float tsgOgFitness = 0;
-        float stress = CalcStress(simParams.stressFraction, clone.Karyotype.ChromCount);
+        float stress = CalcStress(simParams.StressFraction, clone.Karyotype.ChromCount);
 
         var essentialStillThere = new List<Gen>();
         var tsgOgStillThere = new List<Gen>();
@@ -74,8 +78,8 @@ public static class Simulator
             tsgOgFitness += tsgOg.deltaFitness;
         }
 
-        clone.deltaFitness = stress + (simParams.tsgOgFraction*tsgOgFitness) + 
-            (simParams.essentialFraction*essentialityFitness);
+        clone.deltaFitness = stress + (simParams.TsgOgFraction*tsgOgFitness) + 
+            (simParams.EssentialFraction*essentialityFitness);
     }
 
     private static List<Gen> FindMissingGenes(List<Gen> genes, Dictionary<ChromNum, List<Gen>> dict)

@@ -216,12 +216,13 @@ public class FileIO
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new StringBuilder();
-        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\n");
+        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\tTotal Fitness\n");
         foreach(Abberation abberation in AbberationList.ListAbberation){
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
                                     $"{abberation.Region}\t" +
-                                    $"{Math.Round((decimal)abberation.DeltaFitness,8).ToString()}\n");
+                                    $"{Math.Round((decimal)abberation.DeltaFitness,8).ToString()}\t" +
+                                    $"{Math.Round((decimal)abberation.TotalFitness,8).ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }
@@ -230,7 +231,8 @@ public class FileIO
     {
         List<List<Gen>> genes = new List<List<Gen>>();
         string[] files = Directory.GetFiles(Path.GetFullPath("./"));
-        if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || !File.Exists(Path.Combine(folder, "essentials.tsv")))
+        if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || 
+            !File.Exists(Path.Combine(folder, "essentials.tsv")))
         {
             throw new Exception($"Required files not found in {folder} directory.");
         }
@@ -265,6 +267,7 @@ public class FileIO
                 var chromNum = (ChromNum) System.Enum.Parse(typeof(ChromNum), genString[2]);
                 var chromID = new ChromID(chromNum, false);
                 var reg = new Region(int.Parse(genString[3]), int.Parse(genString[4].Split('\r')[0]), chromID);
+                gen.region = reg;
                 if(genes.ContainsKey(chromNum))
                 {
                     genes[chromNum].Add(gen);

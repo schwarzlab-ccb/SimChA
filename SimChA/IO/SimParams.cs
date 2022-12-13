@@ -7,9 +7,9 @@ namespace SimChA.IO;
 public record SimParams(
     int Seed,
     bool IsFemale,
-    float stressFraction,
-    float tsgOgFraction,
-    float essentialFraction,
+    float StressFraction,
+    float TsgOgFraction,
+    float EssentialFraction,
     BaseAbbP p_ChromDeletion,
     BaseAbbP p_ChromDuplication,
     FractionAbbP p_TailDeletion,
