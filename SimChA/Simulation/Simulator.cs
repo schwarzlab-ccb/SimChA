@@ -12,25 +12,26 @@ public static class Simulator
     {
         foreach (int cloneId in currentClone.ChildrenIDs)
         {
-            clones[cloneId].Karyotype = currentClone.CopyKaryotype();
-            clones[cloneId].DeltaFitness = currentClone.DeltaFitness;
-            for (int i = 0; i < clones[cloneId].DistToParent; i++)
+            var child = clones[cloneId];
+            child.Karyotype = currentClone.CopyKaryotype();
+            child.Fitness = currentClone.Fitness;
+            int parentMutations = GetMutations(clones[currentClone.CloneId], clones);
+            for (int i = 0; i < child.DistToParent; i++)
             {   
-                float? deltaFitness = clones[cloneId].DeltaFitness;
+                float oldFitness = child.Fitness;
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
-                string eventString = clones[cloneId].Karyotype
-                    .ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
-                AssignFitness(clones[cloneId], simParams);
-                var abberation = new Abberation(clones[cloneId].Name, 
+                string eventString = child.Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
+                child.Fitness = CalcFitness(child, simParams);
+                var abberation = new Abberation(
+                    child.Name, 
                     aberration.ToString(), 
-                    GetMutations(clones[currentClone.CloneId], clones) + 1 + i, 
+                    parentMutations + 1 + i, 
                     eventString,  
-                    deltaFitness.HasValue ? (float) (clones[cloneId].DeltaFitness - deltaFitness) : (float) clones[cloneId].DeltaFitness,
-                    (float) clones[cloneId].DeltaFitness);
+                     child.Fitness - oldFitness,
+                    child.Fitness);
                 abberationsList.Add(abberation);
             }
-        
-            AssignMutationsRecursive(clones[cloneId], clones,  abberationsList, aberrationsInfo, rnd, simParams);
+            AssignMutationsRecursive(child, clones,  abberationsList, aberrationsInfo, rnd, simParams);
         }
     }
 
@@ -54,10 +55,9 @@ public static class Simulator
     private static float CalcStress(float stressFactor, int chromCount)
         => stressFactor * (float) Math.Pow(Math.Max(0, chromCount - 46), 2);
 
-    private static void AssignFitness(Clone clone, SimParams simParams)
+    private static float CalcFitness(Clone clone, SimParams simParams)
     {
         
-        clone.DeltaFitness = 0;
         float tsgOgFitness = 0;
         float stress = CalcStress(simParams.StressFraction, clone.Karyotype.ChromCount);
 
@@ -88,8 +88,7 @@ public static class Simulator
             tsgOgFitness += tsgOg.deltaFitness;
         }
 
-        clone.DeltaFitness = stress + (simParams.TsgOgFraction*tsgOgFitness) + 
-            (simParams.EssentialFraction*essentialityFitness);
+        return stress + simParams.TsgOgFraction * tsgOgFitness + simParams.EssentialFraction * essentialityFitness;
     }
 
     private static List<Gen> FindMissingGenes(List<Gen> genes, Dictionary<ChromNum, List<Gen>> dict)

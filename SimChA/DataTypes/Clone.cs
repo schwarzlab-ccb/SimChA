@@ -20,7 +20,7 @@ public class Clone
     public Karyotype Karyotype { set; get; }
     public List<int> ChildrenIDs { set; get; }
     public string Name { set; get; }
-    public float? DeltaFitness { get; set;}
+    public float Fitness { get; set;}
 
     public override string ToString()
         => $"ID:{CloneId}, Name:{Name} Parent:{ParentId},  Muts: {DistToParent}, Karyotype: {Karyotype}";
