@@ -7,7 +7,8 @@ namespace SimChA.IO;
 public record SimParams(
     int Seed,
     bool IsFemale,
-    float StressFraction,
+    // Multiplicative factors for calculation of fitness 
+    float StressFraction, 
     float TsgOgFraction,
     float EssentialFraction,
     BaseAbbP p_ChromDeletion,

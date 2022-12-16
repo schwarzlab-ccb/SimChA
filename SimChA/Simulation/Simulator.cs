@@ -19,7 +19,7 @@ public static class Simulator
                 var deltaFitness = clones[cloneId].deltaFitness;
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 string region = clones[cloneId].Karyotype.ApplyAberration(rnd, aberration,
-                    aberrationsInfo.Map[aberration], clones[cloneId].Name);
+                    aberrationsInfo.Map[aberration]);
                 AssignFitness(clones[cloneId], simParams);
                 new Abberation(clones[cloneId].Name, aberration.ToString(), getMutations(clones[currentClone.CloneId], clones)
                      + 1+ i, region,  deltaFitness.HasValue ? 
