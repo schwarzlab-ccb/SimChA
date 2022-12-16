@@ -7,41 +7,41 @@ namespace SimChA.Simulation;
 
 public static class Simulator
 {
-    public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, AberrationsInfo aberrationsInfo,
+    public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, List<Abberation> abberationsList, AberrationsInfo aberrationsInfo,
         Random rnd, SimParams simParams)
     {
         foreach (int cloneId in currentClone.ChildrenIDs)
         {
-            clones[cloneId].Karyotype = currentClone.SetKaryotype();
-            clones[cloneId].deltaFitness = clones[clones[cloneId].ParentId].deltaFitness;
-            for (int i = 0; i < clones[cloneId].MutCount; i++)
+            clones[cloneId].Karyotype = currentClone.CopyKaryotype();
+            clones[cloneId].DeltaFitness = currentClone.DeltaFitness;
+            for (int i = 0; i < clones[cloneId].DistToParent; i++)
             {   
-                var deltaFitness = clones[cloneId].deltaFitness;
+                float? deltaFitness = clones[cloneId].DeltaFitness;
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
-                string region = clones[cloneId].Karyotype.ApplyAberration(rnd, aberration,
-                    aberrationsInfo.Map[aberration]);
+                string eventString = clones[cloneId].Karyotype
+                    .ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
                 AssignFitness(clones[cloneId], simParams);
-                new Abberation(clones[cloneId].Name, aberration.ToString(), getMutations(clones[currentClone.CloneId], clones)
-                     + 1+ i, region,  deltaFitness.HasValue ? 
-                    (float) (clones[cloneId].deltaFitness - deltaFitness) : (float) clones[cloneId].deltaFitness,
-                    (float) (clones[cloneId].deltaFitness));
+                var abberation = new Abberation(clones[cloneId].Name, 
+                    aberration.ToString(), 
+                    GetMutations(clones[currentClone.CloneId], clones) + 1 + i, 
+                    eventString,  
+                    deltaFitness.HasValue ? (float) (clones[cloneId].DeltaFitness - deltaFitness) : (float) clones[cloneId].DeltaFitness,
+                    (float) clones[cloneId].DeltaFitness);
+                abberationsList.Add(abberation);
             }
-
-            AssignMutationsRecursive(clones[cloneId], clones, aberrationsInfo, rnd, simParams);
+        
+            AssignMutationsRecursive(clones[cloneId], clones,  abberationsList, aberrationsInfo, rnd, simParams);
         }
     }
 
-    private static int getMutations(Clone clone, List<Clone> clones){
-        var mutCount = 0;
-        if(clone.ParentId != -1)
-        {
-            mutCount = getMutations(clones[clone.ParentId], clones);
-        }
-        mutCount += clone.MutCount;
+    private static int GetMutations(Clone clone, List<Clone> clones) 
+    {
+        int mutCount = clone.ParentId != -1 ? GetMutations(clones[clone.ParentId], clones) : 0;
+        mutCount += clone.DistToParent;
         return mutCount;
     }
 
-    public static List<Clone> GetClonePair(int distance, bool isFemale)
+    public static List<Clone> MakeClonePair(int distance, bool isFemale)
     {
         var parent = new Clone(0, -1, "1", 0, new Karyotype(isFemale));
         var child = new Clone(1, 0, "2", distance, new Karyotype(isFemale));
@@ -54,10 +54,10 @@ public static class Simulator
     private static float CalcStress(float stressFactor, int chromCount)
         => stressFactor * (float) Math.Pow(Math.Max(0, chromCount - 46), 2);
 
-    public static void AssignFitness(Clone clone, SimParams simParams)
+    private static void AssignFitness(Clone clone, SimParams simParams)
     {
         
-        clone.deltaFitness = 0;
+        clone.DeltaFitness = 0;
         float tsgOgFitness = 0;
         float stress = CalcStress(simParams.StressFraction, clone.Karyotype.ChromCount);
 
@@ -88,18 +88,17 @@ public static class Simulator
             tsgOgFitness += tsgOg.deltaFitness;
         }
 
-        clone.deltaFitness = stress + (simParams.TsgOgFraction*tsgOgFitness) + 
+        clone.DeltaFitness = stress + (simParams.TsgOgFraction*tsgOgFitness) + 
             (simParams.EssentialFraction*essentialityFitness);
     }
 
     private static List<Gen> FindMissingGenes(List<Gen> genes, Dictionary<ChromNum, List<Gen>> dict)
     {
-        List<Gen> missingGenes = new List<Gen>();
+        var missingGenes = new List<Gen>();
         foreach (var list in dict)
         {
             missingGenes.AddRange(list.Value.Except(genes));
         }
-
         return missingGenes;
     }
 }

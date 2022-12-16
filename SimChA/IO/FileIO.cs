@@ -98,7 +98,7 @@ public class FileIO
 
     public String IterateClones(Clone clone, List<Clone> clones)
     {
-        StringBuilder newickString = new StringBuilder(":" + clone.MutCount.ToString());
+        StringBuilder newickString = new StringBuilder(":" + clone.DistToParent.ToString());
         newickString.Insert(0, clone.Name);
         newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? ")":"");
         foreach(int cloneId in clone.ChildrenIDs){
@@ -210,14 +210,14 @@ public class FileIO
         }
     }
 
-    public void WriteTSV()
+    public void WriteTSV(List<Abberation> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new StringBuilder();
         abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\tTotal Fitness\tNumber of mutations\n");
-        foreach(Abberation abberation in AbberationList.ListAbberation){
+        foreach(Abberation abberation in abberationList){
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
                                     $"{abberation.Region}\t" +

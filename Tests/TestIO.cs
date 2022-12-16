@@ -72,7 +72,7 @@ public class TestIO
             var clones = Newick.ParseNewick(newickTestStrings[i], true);
             foreach(var clone in clones){
                 Console.WriteLine("String {0}: ID={1}, Name={2}, ParentID={3}, Mutations={4}, Childrencount={5}", 
-                    i, clone.CloneId, clone.Name, clone.ParentId, clone.MutCount, clone.ChildrenIDs.Count);
+                    i, clone.CloneId, clone.Name, clone.ParentId, clone.DistToParent, clone.ChildrenIDs.Count);
                 foreach(int childrenID in clone.ChildrenIDs){
                     Console.WriteLine("   ChildrenID:{0}", childrenID);
                 }

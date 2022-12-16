@@ -38,7 +38,7 @@ public static class LcaTreeBuilder
             nodes.Add(new TreeNode {Id = subClone.CloneId, Name = subClone.Name});
             foreach(var childId in subClone.ChildrenIDs){
                 edges.Add(new TreeEdge{
-                    Distance = selection[childId].MutCount, SourceId = subClone.Name, TargetId = selection[childId].Name});
+                    Distance = selection[childId].DistToParent, SourceId = subClone.Name, TargetId = selection[childId].Name});
             }
         }
 

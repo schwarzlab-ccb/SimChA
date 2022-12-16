@@ -41,9 +41,10 @@ var files = new FileIO(options.Value.OutputPath);
 
 var clones = (options.Value.NewickFile != "")
     ? Newick.ParseNewick(newickString, simParams.IsFemale)
-    : Simulator.GetClonePair(options.Value.Distance , true);
+    : Simulator.MakeClonePair(options.Value.Distance , true);
 var aberrationsInfo = new AberrationsInfo(simParams);
-Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsInfo, random, simParams);
+var abberations = new List<Abberation>();
+Simulator.AssignMutationsRecursive(clones[0], clones, abberations, aberrationsInfo, random, simParams);
 var lcaTree = LcaTreeBuilder.BuildTree(clones);
     
 watch.Stop();
@@ -57,7 +58,7 @@ try
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
     files.WriteNewickFile(clones);
-    files.WriteTSV();
+    files.WriteTSV(abberations);
 }
 catch (Exception e)
 {
