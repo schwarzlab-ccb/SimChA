@@ -56,6 +56,7 @@ Use `dotnet run -- [options]` to specify any of the following:
   -C, --config    (Default: ) A json file with configuration of the experiment.
   -N --newick     (Default: ) A path to a newick file with the phylogenetic tree.
   -D --distance   (Default: 1) A number of mutations (mutation distance) to simulate if a newick file is not provided.
+  -G --genes (Default: /) The path for the tsv-files with the essential-, tsg- and og-genes with scores
 ```
 
 ## Parameters
@@ -86,6 +87,19 @@ The following general parameters are set in the config file.
 
 * `Seed: int` The random seed for mutations generator.
 * `IsFemale: bool` The higher the confinement the stronger the competition between clones.
+
+## Fitness calculation
+
+### TSG/OG/Eseentiality Score
+We use three data files, providing the TSG/OG/Essentiality score. Each file is a TSV with the following columns:
+
+| Gene | Score | Chromosome | Start Position | End Position |
+|------|-------|------------|----------------|--------------|
+
+For each gene, the:
+* TSG score is the probability that the gene is a Tumor Suppresor Gene (TSG)
+* OG score is the probability that the gene is an Oncogene (OG)
+* Essentiality score is the log2 fold change in the reproducibility of a cell after a knock-out of the gene (both alleles).
 
 ## Aberrations
 

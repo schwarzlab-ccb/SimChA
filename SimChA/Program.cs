@@ -4,6 +4,7 @@ using SimChA;
 using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
+using SimChA.DataTypes;
 
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
@@ -21,14 +22,15 @@ if (options.Value.ConfigFile != "")
 else
 {
     var defaultAberrs = AberrationsInfo.DefaultAberrations();
-    simParams = SimParams.CreateSimParams(new Random().Next(), true, defaultAberrs);
+    simParams = SimParams.CreateSimParams(new Random().Next(), true, 0.00001f, 0.0001f, 0.00001f, defaultAberrs);
 }
 
-string[] newickString = Array.Empty<string>();
+string newickString = "";
 if (options.Value.NewickFile != "")
 {
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
+FileIO.ReadGenes(options.Value.GenesFolder, simParams.IsFemale);
 
 Console.WriteLine("Computing mutations.");
 var watch = new Stopwatch();
@@ -38,14 +40,11 @@ var random = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
 
 var clones = (options.Value.NewickFile != "")
-    ? Newick.ParseNewickString(newickString, simParams.IsFemale)
+    ? Newick.ParseNewick(newickString, simParams.IsFemale)
     : Simulator.GetClonePair(options.Value.Distance , true);
-var aberrationsIfo = new AberrationsInfo(simParams);
-Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsIfo, random);
-
-// TODO: Output all clones if Newick file was provided?
-var selectClones = clones.Where(c => c.IsAlive).Shuffle(random).ToList();
-var lcaTree = LcaTreeBuilder.BuildTree(clones, selectClones);
+var aberrationsInfo = new AberrationsInfo(simParams);
+Simulator.AssignMutationsRecursive(clones[0], clones, aberrationsInfo, random, simParams);
+var lcaTree = LcaTreeBuilder.BuildTree(clones);
     
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
@@ -53,10 +52,12 @@ Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMillisec
 Console.WriteLine("Writing to disk.");
 try
 {
-    files.WriteClones(selectClones);
-    files.WriteCopyNumbers(selectClones);
+    files.WriteClones(clones);
+    files.WriteCopyNumbers(clones);
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
+    files.WriteNewickFile(clones);
+    files.WriteTSV();
 }
 catch (Exception e)
 {

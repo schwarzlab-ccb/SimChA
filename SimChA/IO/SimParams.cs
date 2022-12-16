@@ -7,6 +7,9 @@ namespace SimChA.IO;
 public record SimParams(
     int Seed,
     bool IsFemale,
+    float StressFraction,
+    float TsgOgFraction,
+    float EssentialFraction,
     BaseAbbP p_ChromDeletion,
     BaseAbbP p_ChromDuplication,
     FractionAbbP p_TailDeletion,
@@ -18,10 +21,14 @@ public record SimParams(
     BaseAbbP p_WholeGenomeDoubling,
     BaseAbbP p_Chromothripsis)
 {
-    public static SimParams CreateSimParams(int seed, bool isFemale, Dictionary<AberrationEnum, BaseAbbP> aberrations)
+    public static SimParams CreateSimParams(int seed, bool isFemale, float stressFraction, float tsgOgFraction, 
+        float essentialFraction, Dictionary<AberrationEnum, BaseAbbP> aberrations)
         => new(
             seed,
             isFemale,
+            stressFraction,
+            tsgOgFraction,
+            essentialFraction,
             (BaseAbbP) aberrations[AberrationEnum.ChromDeletion],
             (BaseAbbP) aberrations[AberrationEnum.ChromDuplication],
             (FractionAbbP) aberrations[AberrationEnum.TailDeletion],

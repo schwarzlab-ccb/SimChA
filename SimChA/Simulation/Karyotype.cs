@@ -30,7 +30,7 @@ public class Karyotype
     public override string ToString()
         => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
 
-    private List<Chromosome> Chromosomes { get; }
+    public List<Chromosome> Chromosomes { get; }
     public bool IsFemale { get; }
     public int ChromCount => Chromosomes.Count;
 
@@ -90,28 +90,36 @@ public class Karyotype
     private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
         => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
 
-    public void ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
+    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet, string cloneName)
     {
+        string region = "";
         var chr = RandomChr(rnd);
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
+                int numberNucleotides = chr._regions[0].End;
                 (int delSplit, bool delFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.Split(delSplit, !delFromStart);
+                region = $"chromosome:{chr._regions[0].ChromId};nucleotides_deleted:" + 
+                    $"{(numberNucleotides - delSplit)}{(delFromStart ? " from start":"")}";
+                
                 break;
 
             case AberrationEnum.ChromDeletion:
+                region = $"chromosome:{chr._regions[0].ChromId}";
                 Chromosomes.Remove(chr);
                 break;
 
             case AberrationEnum.InternalDuplication:
                 (int dupStart, int dupEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.DuplicateRange(dupStart, dupEnd);
+                region = $"chromosome:{chr._regions[0].ChromId};start:{dupStart};end:{dupEnd}";
                 break;
 
             case AberrationEnum.InternalDeletion:
                 (int delStart, int delEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.DeleteRange(delStart, delEnd);
+                chr.DeleteRange(delStart, delEnd);                
+                region = $"chromosome:{chr._regions[0].ChromId};start:{delStart};end:{delEnd}";
                 break;
 
             case AberrationEnum.Translocation:
@@ -120,20 +128,25 @@ public class Karyotype
                 var splits = chrPair.Select(c => c.Split(GetUniformPos(rnd, c), true)).ToList();
                 chrPair[0].Join(splits[1]);
                 chrPair[1].Join(splits[0]);
+                region = $"chromosome_1:{chrPair[0]._regions[0].ChromId};added_1:{splits[1]._regions[0].ChromId};start_1:{splits[1]._regions[0].Start};end_1:{splits[1]._regions[0].End}" +
+                $"chromosome_2:{chrPair[1]._regions[0].ChromId};added_2:{splits[0]._regions[0].ChromId};start_2:{splits[0]._regions[0].Start};end_2:{splits[0]._regions[0].End}";
                 break;
 
             case AberrationEnum.InternalInversion:
                 (int invStart, int invEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.InvertRange(invStart, invEnd);
+                region = $"chromosome:{chr._regions[0].ChromId};start:{invStart};end{invEnd}";
                 break;
 
             case AberrationEnum.ChromDuplication:
                 Chromosomes.Add(new Chromosome(chr));
+                region = "chromosome:" + chr._regions[0].ChromId;
                 break;
 
             case AberrationEnum.BreakageFusionBridge:
                 (int bfbPos, bool bfbFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.Bridge(bfbPos, bfbFromStart);
+                region = $"chromosome:{chr._regions[0].ChromId};position:{bfbPos}{(bfbFromStart ? " from start":"")}";
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:
@@ -146,10 +159,16 @@ public class Karyotype
                 stops.Sort();
                 int count = rnd.Next(1, stops.Count);
                 chr.ScatterAndGather(stops, count, rnd);
+                region = $"chromosome:{chr._regions[0].ChromId}";
+                foreach (var keptRegion in chr._regions)
+                {
+                    region += $";start:{keptRegion.Start};end:{keptRegion.End}";
+                }
                 break;
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
+        return region.ToString();
     }
 }

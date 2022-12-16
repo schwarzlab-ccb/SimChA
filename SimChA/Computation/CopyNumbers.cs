@@ -56,7 +56,7 @@ public static class CopyNumbers
     }
 
     private static string FirstLine(bool withSample, bool isFirst)
-        => isFirst ? (withSample ? "sample_id\t" : "") + "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
+        => isFirst ? (withSample ? "sample_name\t" : "") + "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
 
     public static string ToTSV(List<CopyNumber> copyNumbers, bool isFirst)
         => FirstLine(false, isFirst) + string.Join("\n", copyNumbers);

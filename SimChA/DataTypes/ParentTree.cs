@@ -4,7 +4,7 @@ namespace SimChA.DataTypes;
 
 public struct ParentTree
 {
-    public int RootId;
+    public String RootName;
     public List<TreeNode> Nodes;
     public List<TreeEdge> Edges;
 }
