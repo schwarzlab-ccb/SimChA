@@ -230,19 +230,19 @@ public class FileIO
 
     public static void ReadGenes(string folder, bool isFemale)
     {
-        List<List<Gen>> genes = new List<List<Gen>>();
+        List<List<Gene>> genes = new List<List<Gene>>();
         string[] files = Directory.GetFiles(Path.GetFullPath("./"));
         if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || 
             !File.Exists(Path.Combine(folder, "essentials.tsv")))
         {
             throw new Exception($"Required files not found in {folder} directory.");
         }
-        ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true, GenList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, "ogs.tsv"), false, GenList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true, GenList.EssentialList, isFemale);        
+        ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true, GeneList.TsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, "ogs.tsv"), false, GeneList.TsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true, GeneList.EssentialList, isFemale);        
     }
 
-    public static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gen>> genes, bool isFemale)
+    public static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
     {
         string fileContent = File.ReadAllText(Path.GetFullPath(file));
         string[] genesFromFile = fileContent.Split('\n');
@@ -255,27 +255,19 @@ public class FileIO
                 if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY){
                     continue;
                 }
-                var gen = new Gen();
-                gen.name = genString[0];
-                if(negative)
-                {
-                    gen.deltaFitness = -float.Parse(genString[1]);
-                }
-                else
-                {
-                    gen.deltaFitness = float.Parse(genString[1]);
-                }
-                var chromNum = (ChromNum) System.Enum.Parse(typeof(ChromNum), genString[2]);
+                string name = genString[0];
+                float fitness = float.Parse(genString[1]);
+                var chromNum = (ChromNum) Enum.Parse(typeof(ChromNum), genString[2]);
                 var chromID = new ChromID(chromNum, false);
-                var reg = new Region(int.Parse(genString[3]), int.Parse(genString[4].Split('\r')[0]), chromID);
-                gen.region = reg;
+                var region = new Region(int.Parse(genString[3]), int.Parse(genString[4].Split('\r')[0]), chromID);
+                var gene = new Gene(name, region, negative ? -fitness : fitness);
                 if(genes.ContainsKey(chromNum))
                 {
-                    genes[chromNum].Add(gen);
+                    genes[chromNum].Add(gene);
                 }
                 else
                 {
-                    genes.Add(chromNum, new List<Gen> {gen});
+                    genes.Add(chromNum, new List<Gene> {gene});
                 }
             }
 

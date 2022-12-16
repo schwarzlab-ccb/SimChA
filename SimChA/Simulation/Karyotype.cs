@@ -166,6 +166,7 @@ public class Karyotype
                 }
                 break;
 
+            case AberrationEnum.Chromoplexy:
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }

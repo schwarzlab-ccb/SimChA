@@ -6,6 +6,7 @@ namespace SimChA.Simulation;
 
 public class Chromosome
 {
+    // TODO: PRIVATE!! :(
     public List<Region> _regions;
 
     public Chromosome(Region initialRegion) 
@@ -28,6 +29,7 @@ public class Chromosome
     public override string ToString()
         => ToString(_regions);
 
+    // TODO: SHould not exist
     public List<Region> GetAllRegions()
         => _regions.ToList();
 
