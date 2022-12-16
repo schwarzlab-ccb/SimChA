@@ -7,12 +7,11 @@ namespace SimChA.Simulation;
 
 public static class Simulator
 {
-    public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, List<Abberation> abberationsList, AberrationsInfo aberrationsInfo,
-        Random rnd, SimParams simParams)
+    public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, List<Abberation> abberationsList, 
+        AberrationsInfo aberrationsInfo, Random rnd, SimParams simParams)
     {
-        foreach (int cloneId in currentClone.ChildrenIDs)
+        foreach (var child in currentClone.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
-            var child = clones[cloneId];
             child.Karyotype = currentClone.CopyKaryotype();
             child.Fitness = currentClone.Fitness;
             int parentMutations = GetMutations(clones[currentClone.CloneId], clones);
@@ -22,13 +21,10 @@ public static class Simulator
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 string eventString = child.Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
                 child.Fitness = CalcFitness(child, simParams);
-                var abberation = new Abberation(
-                    child.Name, 
-                    aberration.ToString(), 
-                    parentMutations + 1 + i, 
-                    eventString,  
-                     child.Fitness - oldFitness,
-                    child.Fitness);
+                int mutationCount = parentMutations + 1 + i;
+                float deltaFitness = child.Fitness - oldFitness;
+                var abberation = new Abberation(child.Name, aberration.ToString(), mutationCount, 
+                    eventString, deltaFitness, child.Fitness);
                 abberationsList.Add(abberation);
             }
             AssignMutationsRecursive(child, clones,  abberationsList, aberrationsInfo, rnd, simParams);
