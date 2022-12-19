@@ -2,9 +2,4 @@
 
 namespace SimChA.DataTypes;
 
-public struct ParentTree
-{
-    public String RootName;
-    public List<TreeNode> Nodes;
-    public List<TreeEdge> Edges;
-}
+public record ParentTree(string RootName, List<TreeNode> Nodes, List<TreeEdge> Edges);

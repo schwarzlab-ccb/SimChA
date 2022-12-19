@@ -152,8 +152,8 @@ public class FileIO
 
         string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
-        using var outputFileBAF = new StreamWriter(outPathBAF);
-        outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
+        using var outFileBAF = new StreamWriter(outPathBAF);
+        outFileBAF.Write(string.Join("\n", outputbaf) + "\n");
 
         string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
         Console.WriteLine($"Writing LogR to file {outPathLogR}");

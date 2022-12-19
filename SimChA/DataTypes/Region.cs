@@ -2,26 +2,15 @@
 
 namespace SimChA.DataTypes;
 
-public struct Region
+// A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
+// TODO: The direction should not be part of the region, should be part of the chromosome
+public record Region(int Start, int End, ChromID ChromId, bool Forward = true)
 {
-    public ChromID ChromId;
-    public int Start; // Zero-based-index of first position
-    public int End; // Zero-based-index of one beyond the last position
-    public bool Forward; // True if the region is placed in the forward direction, false otherwise
-
     public int Length => End - Start;
-
-    public Region(int start, int end, ChromID chromId, bool forward = true)
-    {
-        Start = start;
-        End = end;
-        ChromId = chromId;
-        Forward = forward;
-    }
 
     public bool IsInside(Region other) => Start >= other.Start && End <= other.End;
 
     private string DirString => Forward ? "+" : "-";
-
+    
     public override string ToString() => $"{ChromId}{DirString}[{Start}:{End})";
 }

@@ -170,6 +170,6 @@ public class Karyotype
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
-        return region.ToString();
+        return region;
     }
 }

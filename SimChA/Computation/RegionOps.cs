@@ -31,24 +31,20 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
-                var newRegion = region;
-                newRegion.End = region.End + start - seekPos - region.Length;
+                var newRegion = region with {End = region.End + start - seekPos - region.Length};
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region, end inside the region
             {
-                var newRegion = region;
-                newRegion.Start = region.Start - seekPos + end;
+                var newRegion = region with {Start = region.Start - seekPos + end};
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var firstRegion = region;
-                firstRegion.End = region.End + start - seekPos - region.Length;
+                var firstRegion = region with {End = region.End + start - seekPos - region.Length};
                 AddIfNotEmpty(newRegions, firstRegion);
 
-                var secondRegion = region;
-                secondRegion.Start = region.Start - seekPos + end;
+                var secondRegion = region with {Start = region.Start - seekPos + end};
                 AddIfNotEmpty(newRegions, secondRegion);
             }
 
@@ -77,21 +73,17 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // end outside of region
             {
-                var newRegion = region;
-                newRegion.Start = region.Start + start - seekPos;
+                var newRegion = region with { Start = region.Start + start - seekPos};
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region
             {
-                var newRegion = region;
-                newRegion.End = region.Start + (end - seekPos);
+                var newRegion = region with {End = region.Start + (end - seekPos)};
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var newRegion = region;
-                newRegion.Start = region.Start + start - seekPos;
-                newRegion.End = newRegion.Start + end - start;
+                var newRegion = region with {Start = region.Start + start - seekPos, End = region.Start + end -  seekPos}; 
                 AddIfNotEmpty(newRegions, newRegion);
             }
 
@@ -118,11 +110,9 @@ public static class RegionOps
             }
             else // split inside the region
             {
-                var firstPart = region;
-                firstPart.End = firstPart.Start + pos - seekPos;
+                var firstPart = region with { End = region.Start + pos - seekPos };
                 AddIfNotEmpty(beforeRegions, firstPart);
-                var secondPart = region;
-                secondPart.Start += pos - seekPos;
+                var secondPart = region with { Start = firstPart.End};
                 AddIfNotEmpty(afterRegions, secondPart);
             }
 
@@ -133,14 +123,10 @@ public static class RegionOps
     }
 
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
-    {
-        return regions.Select(r => r with { Forward = false }).Reverse().ToList();
-    }
+        => regions.Select(r => r with { Forward = false }).Reverse().ToList();
 
     public static List<Region> ConcatRegions(IEnumerable<IEnumerable<Region>> listOfRegions)
-    {
-        return listOfRegions.SelectMany(x => x).ToList();
-    }
+        => listOfRegions.SelectMany(x => x).ToList();
 
     public static List<Region> ConcatRegions(IEnumerable<Region> first, IEnumerable<Region> second)
         => first.Concat(second).ToList();

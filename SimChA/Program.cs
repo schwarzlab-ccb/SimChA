@@ -43,7 +43,7 @@ var clones = options.Value.NewickFile != ""
 var aberrationsInfo = new AberrationsInfo(simParams);
 var simulator = new Simulator(aberrationsInfo, rnd, simParams, tsgOgList, essentialsList);
 var aberrations = simulator.AssignMutations(clones[0], clones);
-var lcaTree = LcaTreeBuilder.BuildTree(clones);
+var lcaTree = LCATreeBuilder.BuildTree(clones);
     
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");

@@ -2,7 +2,7 @@
 
 namespace SimChA.Computation;
 
-public static class LcaTreeBuilder
+public static class LCATreeBuilder
 {
     private static List<int> FindInternalNodes(Dictionary<int, int> parentMap, List<Clone> selection)
     {
@@ -35,13 +35,11 @@ public static class LcaTreeBuilder
 
         foreach (var subClone in selection)
         {
-            nodes.Add(new TreeNode {Id = subClone.CloneId, Name = subClone.Name});
-            foreach(var childId in subClone.ChildrenIDs){
-                edges.Add(new TreeEdge{
-                    Distance = selection[childId].DistToParent, SourceId = subClone.Name, TargetId = selection[childId].Name});
-            }
+            nodes.Add(new TreeNode(subClone.CloneId,  subClone.Name));
+            edges.AddRange(subClone.ChildrenIDs.Select(childId 
+                => new TreeEdge(selection[childId].DistToParent, subClone.Name, selection[childId].Name)));
         }
 
-        return new ParentTree {RootName = selection[0].Name, Nodes = nodes, Edges = edges};
+        return new ParentTree(selection[0].Name, nodes, edges);
     }
 }
