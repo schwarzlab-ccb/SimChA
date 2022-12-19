@@ -99,9 +99,9 @@ public class FileIO
         outputFile.WriteLine(newickString);
     }
 
-    public String IterateClones(Clone clone, List<Clone> clones)
+    private static string IterateClones(Clone clone, List<Clone> clones)
     {
-        StringBuilder newickString = new StringBuilder(":" + clone.DistToParent.ToString());
+        var newickString = new StringBuilder(":" + clone.DistToParent);
         newickString.Insert(0, clone.Name);
         newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? ")":"");
         foreach(int cloneId in clone.ChildrenIDs){
@@ -231,8 +231,11 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
 
-    public static void ReadGenes(string folder, bool isFemale)
+    public static (Dictionary<ChromNum, List<Gene>>, Dictionary<ChromNum, List<Gene>>) ReadGenes(string folder, bool isFemale)
     {
+        Dictionary<ChromNum, List<Gene>> tsgOgList = new();
+        Dictionary<ChromNum, List<Gene>> essentialList = new();
+        
         Directory.GetFiles(Path.GetFullPath("./"));
         if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
            || !File.Exists(Path.Combine(folder, OGS_TSV)) 
@@ -240,29 +243,32 @@ public class FileIO
         {
             throw new Exception($"Required files not found in {folder} directory.");
         }
-        ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, GeneList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, GeneList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), true, GeneList.EssentialList, isFemale);        
+        ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, tsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, tsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), true, essentialList, isFemale);        
+        return (tsgOgList, essentialList);
     }
 
-    public static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
+    private static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
     {
         string fileContent = File.ReadAllText(Path.GetFullPath(file));
         string[] genesFromFile = fileContent.Split('\n');
-        foreach(string genFromFile in genesFromFile)
+        foreach(string geneFromFile in genesFromFile)
         {   
-            if(genFromFile!="")
+            if(geneFromFile != "")
             {
-                var genString = genFromFile.Split('\t');
+                string[] genString = geneFromFile.Split('\t');
                 //Don't include Y chromosome in genes list if clone is female
-                if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY){
+                if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY)
+                {
                     continue;
                 }
                 string name = genString[0];
                 float fitness = float.Parse(genString[1]);
                 var chromNum = (ChromNum) Enum.Parse(typeof(ChromNum), genString[2]);
                 var chromID = new ChromID(chromNum, false);
-                var region = new Region(int.Parse(genString[3]), int.Parse(genString[4].Split('\r')[0]), chromID);
+                string[] splits = genString[4].Split('\r');
+                var region = new Region(int.Parse(genString[3]), int.Parse(splits[0]), chromID);
                 var gene = new Gene(name, region, negative ? -fitness : fitness);
                 if(genes.ContainsKey(chromNum))
                 {
