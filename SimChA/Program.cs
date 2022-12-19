@@ -19,8 +19,8 @@ if (options.Value.ConfigFile != "")
 }
 else
 {
-    var defaultAberrs = AberrationsInfo.DefaultAberrations();
-    simParams = SimParams.CreateSimParams(new Random().Next(), true, 0.00001f, 0.0001f, 0.00001f, defaultAberrs);
+    var defaultAberrations = AberrationsInfo.DefaultAberrations();
+    simParams = SimParams.CreateSimParams(new Random().Next(), true, 0.000_01f, 0.000_1f, 0.000_01f, defaultAberrations);
 }
 
 string newickString = "";
@@ -28,7 +28,7 @@ if (options.Value.NewickFile != "")
 {
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
-var (tsgOgList, essentialsList) = FileIO.ReadGenes(options.Value.GenesFolder, simParams.IsFemale);
+var (tsgOgList, essentialsList) = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
 
 Console.WriteLine("Computing mutations.");
 var watch = new Stopwatch();

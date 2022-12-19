@@ -6,7 +6,7 @@ public struct Region
 {
     public ChromID ChromId;
     public int Start; // Zero-based-index of first position
-    public int End; // Zero-based-index of the last position
+    public int End; // Zero-based-index of one beyond the last position
     public bool Forward; // True if the region is placed in the forward direction, false otherwise
 
     public int Length => End - Start;

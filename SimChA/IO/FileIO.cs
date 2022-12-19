@@ -218,20 +218,20 @@ public class FileIO
         //TODO: Format output, talk with Tom about readable ideas
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
-        StringBuilder abberationString = new StringBuilder();
-        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\tTotal Fitness\tNumber of mutations\n");
-        foreach(Abberation abberation in abberationList){
+        StringBuilder abberationString = new ();
+        abberationString.Append("Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
+        foreach(var abberation in abberationList){
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
                                     $"{abberation.Region}\t" +
-                                    $"{Math.Round((decimal)abberation.DeltaFitness,8).ToString()}\t" +
-                                    $"{Math.Round((decimal)abberation.TotalFitness,8).ToString()}\t" +
+                                    $"{Math.Round((decimal)abberation.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
+                                    $"{Math.Round((decimal)abberation.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
                                     $"{abberation.NrOfMutation.ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }
 
-    public static (Dictionary<ChromNum, List<Gene>>, Dictionary<ChromNum, List<Gene>>) ReadGenes(string folder, bool isFemale)
+    public static (Dictionary<ChromNum, List<Gene>>, Dictionary<ChromNum, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
     {
         Dictionary<ChromNum, List<Gene>> tsgOgList = new();
         Dictionary<ChromNum, List<Gene>> essentialList = new();
@@ -249,7 +249,7 @@ public class FileIO
         return (tsgOgList, essentialList);
     }
 
-    private static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
+    private static void ReadGenesFromFile(string file, bool negFit, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
     {
         string fileContent = File.ReadAllText(Path.GetFullPath(file));
         string[] genesFromFile = fileContent.Split('\n');
@@ -259,7 +259,7 @@ public class FileIO
             {
                 string[] genString = geneFromFile.Split('\t');
                 //Don't include Y chromosome in genes list if clone is female
-                if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY)
+                if(isFemale && (ChromNum)Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY)
                 {
                     continue;
                 }
@@ -267,9 +267,9 @@ public class FileIO
                 float fitness = float.Parse(genString[1]);
                 var chromNum = (ChromNum) Enum.Parse(typeof(ChromNum), genString[2]);
                 var chromID = new ChromID(chromNum, false);
-                string[] splits = genString[4].Split('\r');
-                var region = new Region(int.Parse(genString[3]), int.Parse(splits[0]), chromID);
-                var gene = new Gene(name, region, negative ? -fitness : fitness);
+                // Convert to zero-based [start, end) index 
+                var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chromID);
+                var gene = new Gene(name, region, negFit ? -fitness : fitness);
                 if(genes.ContainsKey(chromNum))
                 {
                     genes[chromNum].Add(gene);

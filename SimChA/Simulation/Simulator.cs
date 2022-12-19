@@ -26,34 +26,40 @@ public class Simulator
         _essentialGenes = essentialGenes;
     }
     
+    // calculate the number of nodes in the tree given by clones from the rootClone
+    private static int GetTreeNodeCount(Clone root, List<Clone> clones)
+        => 1 + root.ChildrenIDs.Select(id => GetTreeNodeCount(clones[id], clones)).Sum();
+
     public List<Abberation> AssignMutations(Clone rootClone, List<Clone> clones)
     {
         List<Abberation> abberationList = new();
-        AssignMutationsRecursive(rootClone, clones, abberationList);
+        int numNodes = GetTreeNodeCount(rootClone, clones) - 1;
+        int nodeNo = 1;
+        AssignMutationsRecursive(rootClone, clones, abberationList, ref nodeNo, numNodes);
         return abberationList;
     }
     
-    private void AssignMutationsRecursive(Clone node, List<Clone> clones, List<Abberation> abberationList)
+    private void AssignMutationsRecursive(Clone node, List<Clone> clones, List<Abberation> abberationList, ref int cloneNo, int numNodes)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
-            child.Fitness = node.Fitness;
+            float oldFitness = child.Fitness = node.Fitness;
             int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
-                Console.Write($"Clone {child.CloneId}, Mut {i+1}/{child.DistToParent}.\r");
-                float oldFitness = child.Fitness;
+                Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
                 var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
                 child.Fitness = CalcFitness(child);
-                int mutationCount = parentMutations + 1 + i;
                 float deltaFitness = child.Fitness - oldFitness;
+                oldFitness = child.Fitness;
+                int mutationCount = parentMutations + 1 + i;
                 var abberation = new Abberation(child.Name, aberration.ToString(), mutationCount,
                     eventString, deltaFitness, child.Fitness);
                 abberationList.Add(abberation);
             }
-            AssignMutationsRecursive(child, clones, abberationList);
+            AssignMutationsRecursive(child, clones, abberationList, ref cloneNo, numNodes);
         }
     }
 
@@ -87,11 +93,8 @@ public class Simulator
             foreach (var region in chr.GetAllRegions())
             {
                 var chromNum = region.ChromId.ChromNum;
-                // TODO use overlap
-                essentialFound.AddRange(_essentialGenes[chromNum]
-                    .FindAll(x => x.Region.Start > region.Start && x.Region.End < region.End));
-                tsgOgFound.AddRange(_tsgOgGenes[chromNum]
-                    .FindAll(x => x.Region.Start > region.Start && x.Region.End < region.End));
+                essentialFound.AddRange(_essentialGenes[chromNum].FindAll(g =>  g.Region.IsInside(region)));
+                tsgOgFound.AddRange(_tsgOgGenes[chromNum].FindAll(g =>  g.Region.IsInside(region)));
             }
         }
         var essentialsMissing = FindMissingGenes(essentialFound, _essentialGenes);

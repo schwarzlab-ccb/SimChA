@@ -1,6 +1,6 @@
 ﻿using SimChA.DataTypes;
 
-namespace SimChA.Simulation;
+namespace SimChA.Computation;
 
 public static class RegionOps
 {
