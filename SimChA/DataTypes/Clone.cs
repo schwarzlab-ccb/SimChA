@@ -17,10 +17,10 @@ public class Clone
     public int CloneId { get; }
     public int ParentId { get; }
     public int DistToParent { get; }
-    public Karyotype Karyotype { set; get; }
-    public List<int> ChildrenIDs { set; get; }
-    public string Name { set; get; }
+    public List<int> ChildrenIDs { get; }
+    public string Name { get; }
     public float Fitness { get; set;}
+    public Karyotype Karyotype { set; get; }
 
     public override string ToString()
         => $"ID:{CloneId}, Name:{Name} Parent:{ParentId},  Muts: {DistToParent}, Karyotype: {Karyotype}";

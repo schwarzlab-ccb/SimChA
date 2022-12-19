@@ -16,7 +16,10 @@ public class FileIO
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string TSV_FILENAME = "abberations.tsv";
-    
+    private const string ESSENTIALS_TSV = "essentials.tsv";
+    private const string OGS_TSV = "ogs.tsv";
+    private const string TSGS_TSV = "tsgs.tsv";
+
     public FileIO(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
@@ -230,16 +233,16 @@ public class FileIO
 
     public static void ReadGenes(string folder, bool isFemale)
     {
-        List<List<Gene>> genes = new List<List<Gene>>();
-        string[] files = Directory.GetFiles(Path.GetFullPath("./"));
-        if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || 
-            !File.Exists(Path.Combine(folder, "essentials.tsv")))
+        Directory.GetFiles(Path.GetFullPath("./"));
+        if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
+           || !File.Exists(Path.Combine(folder, OGS_TSV)) 
+           || !File.Exists(Path.Combine(folder, ESSENTIALS_TSV)))
         {
             throw new Exception($"Required files not found in {folder} directory.");
         }
-        ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true, GeneList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, "ogs.tsv"), false, GeneList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true, GeneList.EssentialList, isFemale);        
+        ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, GeneList.TsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, GeneList.TsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), true, GeneList.EssentialList, isFemale);        
     }
 
     public static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)

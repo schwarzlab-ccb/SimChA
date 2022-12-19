@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using CommandLine;
-using SimChA;
 using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
-using SimChA.DataTypes;
 
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
@@ -43,8 +41,7 @@ var clones = (options.Value.NewickFile != "")
     ? Newick.ParseNewick(newickString, simParams.IsFemale)
     : Simulator.MakeClonePair(options.Value.Distance , true);
 var aberrationsInfo = new AberrationsInfo(simParams);
-var abberations = new List<Abberation>();
-Simulator.AssignMutationsRecursive(clones[0], clones, abberations, aberrationsInfo, random, simParams);
+var aberrations = Simulator.AssignMutations(clones[0], clones, aberrationsInfo, random, simParams);
 var lcaTree = LcaTreeBuilder.BuildTree(clones);
     
 watch.Stop();
@@ -58,7 +55,7 @@ try
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
     files.WriteNewickFile(clones);
-    files.WriteTSV(abberations);
+    files.WriteTSV(aberrations);
 }
 catch (Exception e)
 {

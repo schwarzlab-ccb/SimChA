@@ -1,5 +1,4 @@
-﻿using Extreme.Statistics.Distributions;
-using SimChA.DataTypes;
+﻿using SimChA.DataTypes;
 using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
 using SimChA.IO;
 
@@ -7,16 +6,24 @@ namespace SimChA.Simulation;
 
 public static class Simulator
 {
-    public static void AssignMutationsRecursive(Clone currentClone, List<Clone> clones, List<Abberation> abberationList,
-        AberrationsInfo aberrationsInfo, Random rnd, SimParams simParams)
+    public static List<Abberation> AssignMutations(Clone rootClone, List<Clone> clones, AberrationsInfo aberrationsInfo, Random rnd, SimParams simParams)
     {
-        foreach (var child in currentClone.ChildrenIDs.Select(cloneId => clones[cloneId]))
+        List<Abberation> abberationList = new();
+        AssignMutationsRecursive(rootClone, clones, aberrationsInfo, rnd, simParams, abberationList);
+        return abberationList;
+    }
+    
+    private static void AssignMutationsRecursive(Clone node, List<Clone> clones, 
+        AberrationsInfo aberrationsInfo, Random rnd, SimParams simParams, List<Abberation> abberationList)
+    {
+        foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
-            child.Karyotype = currentClone.CopyKaryotype();
-            child.Fitness = currentClone.Fitness;
-            int parentMutations = GetMutations(clones[currentClone.CloneId], clones);
+            child.Karyotype = node.CopyKaryotype();
+            child.Fitness = node.Fitness;
+            int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
+                Console.Write($"Clone {child.CloneId}, Mut {i+1}/{child.DistToParent}.\r");
                 float oldFitness = child.Fitness;
                 var aberration = aberrationsInfo.PickRandomMutation(rnd);
                 string eventString = child.Karyotype.ApplyAberration(rnd, aberration, aberrationsInfo.Map[aberration]);
@@ -27,7 +34,7 @@ public static class Simulator
                     eventString, deltaFitness, child.Fitness);
                 abberationList.Add(abberation);
             }
-            AssignMutationsRecursive(child, clones, abberationList, aberrationsInfo, rnd, simParams);
+            AssignMutationsRecursive(child, clones, aberrationsInfo, rnd, simParams, abberationList);
         }
     }
 
