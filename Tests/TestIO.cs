@@ -16,7 +16,7 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var defaultAberrations = AberrationsInfo.DefaultAberrations();
-        var simParams = SimParams.CreateSimParams(0, true, defaultAberrations);
+        var simParams = SimParams.CreateSimParams(0, true, 0.00001f, 0.0001f, 0.00001f, defaultAberrations);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);
@@ -52,6 +52,7 @@ public class TestIO
             "(6582-1:14, (5385-1:1, 6129-1:1, 6745-1:5)4070-0:5)1882-0:2)858-0:9)130-0:3)55-0:5, ((6794-1:1)5640-1:22, ((5707-1:17, ((4555-1:4, 6122-1:6, 6676-1:8)3281-0:2, "+
             "((5051-1:4, 6459-1:11)3563-0:2, ((6841-1:1)5163-1:1, 6756-1:2)4571-0:9)2687-0:4)2183-0:7)635-0:2, (6740-1:6, 6830-1:3)3456-0:12)571-0:1)535-0:7)1-0:1, 0-0:0):0;"
         };
+        
         int[] cloneCounts = {
             0,
             6,
@@ -65,18 +66,26 @@ public class TestIO
             9,
             174
         };
+        
         for(int i = 0; i < newickTestStrings.Length; i++)
         {
             var clones = Newick.ParseNewick(newickTestStrings[i], true);
-            foreach(Clone clone in clones){
-                Console.WriteLine("String {0}: ID={1}, Name={2}, ParentID={3}, Mutations={4}, Childrencount={5}", 
-                    i, clone.CloneId, clone.Name, clone.ParentId, clone.MutCount, clone.ChildrenIDs.Count);
-                foreach(int childrenID in clone.ChildrenIDs){
-                    Console.WriteLine("   ChildrenID:{0}", childrenID);
+            foreach(var clone in clones)
+            {
+                Console.WriteLine($"String {i}: " +
+                                  $"ID={clone.CloneId}, " +
+                                  $"Name={clone.Name}, " +
+                                  $"ParentID={clone.ParentId}, " +
+                                  $"Mutations={clone.DistToParent}, " +
+                                  $"ChildrenCount={clone.ChildrenIDs.Count}");
+                foreach(int childrenID in clone.ChildrenIDs)
+                {
+                    Console.WriteLine($"\tChildID:{childrenID}");
                 }
+                Console.WriteLine();
             }
             Assert.AreEqual(clones.Count, cloneCounts[i]);
-            Console.WriteLine("\n");
+            Console.WriteLine();
         }
     }
 }

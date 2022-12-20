@@ -16,7 +16,10 @@ public class FileIO
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string TSV_FILENAME = "abberations.tsv";
-    
+    private const string ESSENTIALS_TSV = "essentials.tsv";
+    private const string OGS_TSV = "ogs.tsv";
+    private const string TSGS_TSV = "tsgs.tsv";
+
     public FileIO(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
@@ -96,9 +99,9 @@ public class FileIO
         outputFile.WriteLine(newickString);
     }
 
-    public String IterateClones(Clone clone, List<Clone> clones)
+    private static string IterateClones(Clone clone, List<Clone> clones)
     {
-        StringBuilder newickString = new StringBuilder(":" + clone.MutCount.ToString());
+        var newickString = new StringBuilder(":" + clone.DistToParent);
         newickString.Insert(0, clone.Name);
         newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? ")":"");
         foreach(int cloneId in clone.ChildrenIDs){
@@ -149,8 +152,8 @@ public class FileIO
 
         string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
-        using var outputFileBAF = new StreamWriter(outPathBAF);
-        outputFileBAF.Write(string.Join("\n", outputbaf) + "\n");
+        using var outFileBAF = new StreamWriter(outPathBAF);
+        outFileBAF.Write(string.Join("\n", outputbaf) + "\n");
 
         string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
@@ -210,72 +213,70 @@ public class FileIO
         }
     }
 
-    public void WriteTSV()
+    public void WriteTSV(List<Abberation> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
         using var outputFile = new StreamWriter(filePath);
-        StringBuilder abberationString = new StringBuilder();
-        abberationString.Append($"Clone Name\tAbberation\tEventString\tdelta Fitness\tTotal Fitness\tNumber of mutations\n");
-        foreach(Abberation abberation in AbberationList.ListAbberation){
+        StringBuilder abberationString = new ();
+        abberationString.Append("Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
+        foreach(var abberation in abberationList){
             abberationString.Append($"{abberation.CloneName}\t" + 
                                     $"{abberation.AbberationEnum}\t" +
                                     $"{abberation.Region}\t" +
-                                    $"{Math.Round((decimal)abberation.DeltaFitness,8).ToString()}\t" +
-                                    $"{Math.Round((decimal)abberation.TotalFitness,8).ToString()}\t" +
+                                    $"{Math.Round((decimal)abberation.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
+                                    $"{Math.Round((decimal)abberation.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
                                     $"{abberation.NrOfMutation.ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }
 
-    public static void ReadGenes(string folder, bool isFemale)
+    public static (Dictionary<ChromNum, List<Gene>>, Dictionary<ChromNum, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
     {
-        List<List<Gen>> genes = new List<List<Gen>>();
-        string[] files = Directory.GetFiles(Path.GetFullPath("./"));
-        if(!File.Exists(Path.Combine(folder, "tsgs.tsv")) || !File.Exists(Path.Combine(folder, "ogs.tsv")) || 
-            !File.Exists(Path.Combine(folder, "essentials.tsv")))
+        Dictionary<ChromNum, List<Gene>> tsgOgList = new();
+        Dictionary<ChromNum, List<Gene>> essentialList = new();
+        
+        Directory.GetFiles(Path.GetFullPath("./"));
+        if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
+           || !File.Exists(Path.Combine(folder, OGS_TSV)) 
+           || !File.Exists(Path.Combine(folder, ESSENTIALS_TSV)))
         {
             throw new Exception($"Required files not found in {folder} directory.");
         }
-        ReadGenesFromFile(Path.Combine(folder, "tsgs.tsv"), true, GenList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, "ogs.tsv"), false, GenList.TsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, "essentials.tsv"), true, GenList.EssentialList, isFemale);        
+        ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, tsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, tsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), true, essentialList, isFemale);        
+        return (tsgOgList, essentialList);
     }
 
-    public static void ReadGenesFromFile(string file, bool negative, Dictionary<ChromNum, List<Gen>> genes, bool isFemale)
+    private static void ReadGenesFromFile(string file, bool negFit, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
     {
         string fileContent = File.ReadAllText(Path.GetFullPath(file));
         string[] genesFromFile = fileContent.Split('\n');
-        foreach(string genFromFile in genesFromFile)
+        foreach(string geneFromFile in genesFromFile)
         {   
-            if(genFromFile!="")
+            if(geneFromFile != "")
             {
-                var genString = genFromFile.Split('\t');
+                string[] genString = geneFromFile.Split('\t');
                 //Don't include Y chromosome in genes list if clone is female
-                if(isFemale && (ChromNum)System.Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY){
+                if(isFemale && (ChromNum)Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY)
+                {
                     continue;
                 }
-                var gen = new Gen();
-                gen.name = genString[0];
-                if(negative)
-                {
-                    gen.deltaFitness = -float.Parse(genString[1]);
-                }
-                else
-                {
-                    gen.deltaFitness = float.Parse(genString[1]);
-                }
-                var chromNum = (ChromNum) System.Enum.Parse(typeof(ChromNum), genString[2]);
+                string name = genString[0];
+                float fitness = float.Parse(genString[1]);
+                var chromNum = (ChromNum) Enum.Parse(typeof(ChromNum), genString[2]);
                 var chromID = new ChromID(chromNum, false);
-                var reg = new Region(int.Parse(genString[3]), int.Parse(genString[4].Split('\r')[0]), chromID);
-                gen.region = reg;
+                // Convert to zero-based [start, end) index 
+                var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chromID);
+                var gene = new Gene(name, region, negFit ? -fitness : fitness);
                 if(genes.ContainsKey(chromNum))
                 {
-                    genes[chromNum].Add(gen);
+                    genes[chromNum].Add(gene);
                 }
                 else
                 {
-                    genes.Add(chromNum, new List<Gen> {gen});
+                    genes.Add(chromNum, new List<Gene> {gene});
                 }
             }
 

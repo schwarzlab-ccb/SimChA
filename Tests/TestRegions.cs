@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 

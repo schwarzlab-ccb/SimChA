@@ -49,7 +49,7 @@ public static class CopyNumbers
     {
         long totalLength = ReferenceGenome.TotalLength(isFemale);
         float ploidy = copyNumbers
-            .Select(c => (float)(c.Segment.End - c.Segment.Start) * (c.CNH1 + c.CNH2) / totalLength)
+            .Select(c => (float)c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength)
             .Sum();
 
         return ploidy;
@@ -59,8 +59,8 @@ public static class CopyNumbers
         => isFirst ? (withSample ? "sample_name\t" : "") + "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
 
     public static string ToTSV(List<CopyNumber> copyNumbers, bool isFirst)
-        => FirstLine(false, isFirst) + string.Join("\n", copyNumbers);
+        => FirstLine(false, isFirst) + string.Join("\n", copyNumbers.Select(cn => cn.ToTSV()));
 
     public static string ToTSV(List<CopyNumber> copyNumbers, string sampleId, bool isFirst)
-        => FirstLine(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn}"));
+        => FirstLine(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 }

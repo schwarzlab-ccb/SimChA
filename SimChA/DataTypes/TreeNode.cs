@@ -2,8 +2,4 @@
 
 namespace SimChA.DataTypes;
 
-public struct TreeNode
-{
-    public int Id;
-    public string Name;
-}
+public record TreeNode(int Id, string Name);

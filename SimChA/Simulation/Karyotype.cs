@@ -90,7 +90,7 @@ public class Karyotype
     private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
         => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
 
-    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet, string cloneName)
+    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
         string region = "";
         var chr = RandomChr(rnd);
@@ -166,9 +166,10 @@ public class Karyotype
                 }
                 break;
 
+            case AberrationEnum.Chromoplexy:
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
-        return region.ToString();
+        return region;
     }
 }
