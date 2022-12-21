@@ -100,13 +100,11 @@ public class Simulator
         var essentialsMissing = FindMissingGenes(essentialFound, _essentialGenes);
         var tsgOgMissing = FindMissingGenes(tsgOgFound, _tsgOgGenes);
         var tsgOgCounts = tsgOgFound.GroupBy(x => x).ToList();
-        var tsgOgInsufficient = tsgOgCounts.Where(g => g.Count() < 2).Select(g => g.Key);
-        // TODO: This is probably not correct! The delta will be the same for ploidy 0 and 1!
-        var tsgOgLost = tsgOgMissing.Concat(tsgOgInsufficient);
-        var tsgOgDuplicated = tsgOgCounts.Where(g => g.Count() > 2).Select(g => g.Key);
         float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
-        float tsgOgFitness = tsgOgLost.Sum(g => g.DeltaFitness) - tsgOgDuplicated.Sum(g => g.DeltaFitness);
-
+        // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
+        // n - 2 for each overrepresented gene (ploidy 2+)
+        float tsgOgFitness = 2* tsgOgMissing.Sum(g => g.DeltaFitness) 
+                             - tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
         // parametrized linear combination of factors
         return stress + _simParams.TsgOgFraction * tsgOgFitness + _simParams.EssentialFraction * essentialityFitness;
     }
