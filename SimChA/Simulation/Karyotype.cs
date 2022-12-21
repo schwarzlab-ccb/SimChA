@@ -30,7 +30,7 @@ public class Karyotype
     public override string ToString()
         => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
 
-    public List<Chromosome> Chromosomes { get; }
+    private List<Chromosome> Chromosomes { get; }
     public bool IsFemale { get; }
     public int ChromCount => Chromosomes.Count;
 
@@ -171,5 +171,19 @@ public class Karyotype
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
         return region;
+    }
+
+    public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
+    {
+        List<Gene> presentGenes = new();
+        foreach (var chr in Chromosomes)
+        {
+            foreach (var region in chr.GetAllRegions())
+            {
+                var chromNum = region.ChromId.ChromNum;
+                presentGenes.AddRange(geneLists[chromNum].FindAll(g =>  g.Region.IsInside(region)));
+            }
+        }
+        return presentGenes;
     }
 }
