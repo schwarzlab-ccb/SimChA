@@ -5,10 +5,10 @@ namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static List<CopyNumber> CalcCopyNumbers(Karyotype karyotype)
+    public static List<CopyNumber> CalcCopyNumbers(Karyotype karyotype, bool isFemale)
     {
         var allRegions = karyotype.GetAllRegions();
-        var reference = ReferenceGenome.GetChromosomes(karyotype.IsFemale);
+        var reference = ReferenceGenome.GetChromosomes(isFemale);
         var copyNumbers = CalcSegmentation(allRegions, reference);
         return copyNumbers;
         // TODO: Merge neighboring segments that have the same copy numbers

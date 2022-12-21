@@ -8,44 +8,34 @@ namespace SimChA.Simulation;
 
 public class Karyotype
 {
+    private readonly List<Chromosome> _chromosomes;
+    public int ChromCount => _chromosomes.Count;
+    
     public Karyotype(bool isFemale)
     {
-        var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
-        Chromosomes = new List<Chromosome>(reference);
-        IsFemale = isFemale;
+        _chromosomes = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region)).ToList();
     }
 
     public Karyotype(Karyotype other)
     {
-        Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
-        IsFemale = other.IsFemale;
-    }
-
-    public Karyotype(List<Chromosome> chromosomes, bool isFemale)
-    {
-        Chromosomes = chromosomes;
-        IsFemale = isFemale;
+        _chromosomes = other._chromosomes.Select(ch => new Chromosome(ch)).ToList();
     }
 
     public override string ToString()
-        => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
-
-    private List<Chromosome> Chromosomes { get; }
-    public bool IsFemale { get; }
-    public int ChromCount => Chromosomes.Count;
+        => _chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", _chromosomes) + "\n]\n" : "[]";
 
     public List<Region> GetAllRegions()
     {
         var regions = new List<Region>();
-        Chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
+        _chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
         return regions;
     }
 
     private Chromosome RandomChr(Random rnd)
-        => Chromosomes.Shuffle(rnd).First();
+        => _chromosomes.Shuffle(rnd).First();
 
     private List<Chromosome> RandomChrs(Random rnd, int count)
-        => Chromosomes.Shuffle(rnd).Take(count).ToList();
+        => _chromosomes.Shuffle(rnd).Take(count).ToList();
 
     // Segment is at most 2 bases shorter than chr
     private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
@@ -107,7 +97,7 @@ public class Karyotype
 
             case AberrationEnum.ChromDeletion:
                 region = $"chromosome:{chr._regions[0].ChromId}";
-                Chromosomes.Remove(chr);
+                _chromosomes.Remove(chr);
                 break;
 
             case AberrationEnum.InternalDuplication:
@@ -139,7 +129,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.ChromDuplication:
-                Chromosomes.Add(new Chromosome(chr));
+                _chromosomes.Add(new Chromosome(chr));
                 region = "chromosome:" + chr._regions[0].ChromId;
                 break;
 
@@ -150,7 +140,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:
-                Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
+                _chromosomes.AddRange(_chromosomes.Select(ch => new Chromosome(ch)).ToList());
                 break;
 
             case AberrationEnum.Chromothripsis:
@@ -176,7 +166,7 @@ public class Karyotype
     public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
-        foreach (var chr in Chromosomes)
+        foreach (var chr in _chromosomes)
         {
             foreach (var region in chr.GetAllRegions())
             {
