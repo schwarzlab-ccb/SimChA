@@ -137,6 +137,7 @@ public static class ReferenceGenome
     public static long TotalLength(bool isFemale)
         => GetChromosomes(isFemale).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
 
+    // TODO: Is this what we want? - it only produces a haploid!
     public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
         => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);
 
