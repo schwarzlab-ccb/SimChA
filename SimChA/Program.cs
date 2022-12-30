@@ -52,7 +52,7 @@ Console.WriteLine("Writing to disk.");
 try
 {
     files.WriteClones(clones);
-    files.WriteCopyNumbers(clones);
+    files.WriteCopyNumbers(clones, simParams.IsFemale);
     files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
     files.WriteNewickFile(clones);

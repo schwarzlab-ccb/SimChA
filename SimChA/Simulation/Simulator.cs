@@ -51,7 +51,7 @@ public class Simulator
                 Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
                 var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
-                child.Fitness = CalcFitness(child);
+                child.Fitness = CalcFitness(child.Karyotype);
                 float deltaFitness = child.Fitness - oldFitness;
                 oldFitness = child.Fitness;
                 int mutationCount = parentMutations + 1 + i;
@@ -83,30 +83,19 @@ public class Simulator
     private static float CalcStress(float stressFactor, int chromCount)
         => stressFactor * (float)Math.Pow(Math.Max(0, chromCount - 46), 2);
 
-    private float CalcFitness(Clone clone)
+    private float CalcFitness(Karyotype kar)
     {
-        float stress = CalcStress(_simParams.StressFraction, clone.Karyotype.ChromCount);
-        List<Gene> essentialFound = new();
-        List<Gene> tsgOgFound = new();
-        foreach (var chr in clone.Karyotype.Chromosomes)
-        {
-            foreach (var region in chr.GetAllRegions())
-            {
-                var chromNum = region.ChromId.ChromNum;
-                essentialFound.AddRange(_essentialGenes[chromNum].FindAll(g =>  g.Region.IsInside(region)));
-                tsgOgFound.AddRange(_tsgOgGenes[chromNum].FindAll(g =>  g.Region.IsInside(region)));
-            }
-        }
+        float stress = CalcStress(_simParams.StressFraction, kar.ChromCount);
+        var essentialFound = kar.GetPresentGenes(_essentialGenes);
+        var tsgOgFound = kar.GetPresentGenes(_tsgOgGenes);
         var essentialsMissing = FindMissingGenes(essentialFound, _essentialGenes);
         var tsgOgMissing = FindMissingGenes(tsgOgFound, _tsgOgGenes);
         var tsgOgCounts = tsgOgFound.GroupBy(x => x).ToList();
-        var tsgOgInsufficient = tsgOgCounts.Where(g => g.Count() < 2).Select(g => g.Key);
-        // TODO: This is probably not correct! The delta will be the same for ploidy 0 and 1!
-        var tsgOgLost = tsgOgMissing.Concat(tsgOgInsufficient);
-        var tsgOgDuplicated = tsgOgCounts.Where(g => g.Count() > 2).Select(g => g.Key);
         float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
-        float tsgOgFitness = tsgOgLost.Sum(g => g.DeltaFitness) - tsgOgDuplicated.Sum(g => g.DeltaFitness);
-
+        // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
+        // n - 2 for each overrepresented gene (ploidy 2+)
+        float tsgOgFitness = 2*tsgOgMissing.Sum(g => g.DeltaFitness) 
+                             -tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
         // parametrized linear combination of factors
         return stress + _simParams.TsgOgFraction * tsgOgFitness + _simParams.EssentialFraction * essentialityFitness;
     }

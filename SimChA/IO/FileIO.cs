@@ -112,7 +112,7 @@ public class FileIO
         return newickString.ToString();
     }
 
-    public void WriteCopyNumbers(IEnumerable<Clone> subClones)
+    public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing CopyNumbers to file {outPath}");
@@ -123,8 +123,8 @@ public class FileIO
 
         foreach (var subClone in subClones)
         {
-            var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
-            copyNumbersString.Append((CopyNumbers.ToTSV(copynumbers, subClone.Name.ToString(), false) + "\n"));
+            var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
+            copyNumbersString.Append((CopyNumbers.ToTSV(copynumbers, subClone.Name, false) + "\n"));
         }
         outputFile.Write(copyNumbersString.ToString());
     }
@@ -139,7 +139,7 @@ public class FileIO
         var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
         foreach (var subClone in subClones)
         {
-            var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype);
+            var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
             var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers, snps, isFemale);
             outputbaf[0] += $"\t{subClone.CloneId}";
             outputlogr[0] += $"\t{subClone.CloneId}";
