@@ -236,7 +236,6 @@ public class FileIO
         Dictionary<ChromNum, List<Gene>> tsgOgList = new();
         Dictionary<ChromNum, List<Gene>> essentialList = new();
         
-        Directory.GetFiles(Path.GetFullPath("./"));
         if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
            || !File.Exists(Path.Combine(folder, OGS_TSV)) 
            || !File.Exists(Path.Combine(folder, ESSENTIALS_TSV)))

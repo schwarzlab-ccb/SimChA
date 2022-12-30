@@ -4,7 +4,7 @@ namespace SimChA.DataTypes;
 
 public class Clone
 {
-    public Clone(int cloneId, int parentId, string name, int distToParent, Karyotype refKaryotype)
+    public Clone(int cloneId, int parentId, string name, int distToParent, Karyotype refKaryotype, int totalMutations)
     {
         CloneId = cloneId;
         ParentId = parentId;
@@ -12,6 +12,7 @@ public class Clone
         DistToParent = distToParent;
         Karyotype = new Karyotype(refKaryotype);
         ChildrenIDs = new List<int>();
+        TotalMutations = totalMutations;
     }
 
     public int CloneId { get; }
@@ -21,6 +22,7 @@ public class Clone
     public string Name { get; }
     public float Fitness { get; set;}
     public Karyotype Karyotype { set; get; }
+    public int TotalMutations { get; }
 
     public override string ToString()
         => $"ID:{CloneId}, Name:{Name} Parent:{ParentId},  Muts: {DistToParent}, Karyotype: {Karyotype}";
