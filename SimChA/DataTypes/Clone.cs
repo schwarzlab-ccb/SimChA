@@ -19,7 +19,6 @@ public class Clone
     public int DistToParent { get; }
     public List<int> ChildrenIDs { get; }
     public string Name { get; }
-    public float Fitness { get; set;}
     public Karyotype Karyotype { set; get; }
 
     public override string ToString()
