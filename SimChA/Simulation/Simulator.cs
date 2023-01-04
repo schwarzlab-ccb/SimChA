@@ -44,19 +44,19 @@ public class Simulator
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
-            float oldFitness = child.Fitness = node.Fitness;
+            float oldFitness = child.Karyotype.Fitness = node.Karyotype.Fitness;
             int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
                 Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
                 var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
-                string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
-                child.Fitness = CalcFitness(child.Karyotype);
-                float deltaFitness = child.Fitness - oldFitness;
-                oldFitness = child.Fitness;
+                string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration], 
+                _simParams, _essentialGenes, _tsgOgGenes);
+                float deltaFitness = child.Karyotype.Fitness - oldFitness;
+                oldFitness = child.Karyotype.Fitness;
                 int mutationCount = parentMutations + 1 + i;
                 var abberation = new Abberation(child.Name, aberration.ToString(), mutationCount,
-                    eventString, deltaFitness, child.Fitness);
+                    eventString, deltaFitness, child.Karyotype.Fitness);
                 abberationList.Add(abberation);
             }
             AssignMutationsRecursive(child, clones, abberationList, ref cloneNo, numNodes);
@@ -76,37 +76,5 @@ public class Simulator
         var child = new Clone(1, 0, "2", distance, new Karyotype(isFemale), distance);
         parent.ChildrenIDs.Add(child.CloneId);
         return new List<Clone> { parent, child };
-    }
-
-    // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
-    // TODO: This needs to be validated
-    private static float CalcStress(float stressFactor, int chromCount)
-        => stressFactor * (float)Math.Pow(Math.Max(0, chromCount - 46), 2);
-
-    private float CalcFitness(Karyotype kar)
-    {
-        float stress = CalcStress(_simParams.StressFraction, kar.ChromCount);
-        var essentialFound = kar.GetPresentGenes(_essentialGenes);
-        var tsgOgFound = kar.GetPresentGenes(_tsgOgGenes);
-        var essentialsMissing = FindMissingGenes(essentialFound, _essentialGenes);
-        var tsgOgMissing = FindMissingGenes(tsgOgFound, _tsgOgGenes);
-        var tsgOgCounts = tsgOgFound.GroupBy(x => x).ToList();
-        float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
-        // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
-        // n - 2 for each overrepresented gene (ploidy 2+)
-        float tsgOgFitness = 2*tsgOgMissing.Sum(g => g.DeltaFitness) 
-                             -tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
-        // parametrized linear combination of factors
-        return stress + _simParams.TsgOgFraction * tsgOgFitness + _simParams.EssentialFraction * essentialityFitness;
-    }
-
-    private static List<Gene> FindMissingGenes(List<Gene> presentGenes, Dictionary<ChromNum, List<Gene>> geneList)
-    {
-        var missingGenes = new List<Gene>();
-        foreach (var (_, allGenes) in geneList)
-        {
-            missingGenes.AddRange(allGenes.Except(presentGenes));
-        }
-        return missingGenes;
     }
 }
