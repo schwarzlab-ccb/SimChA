@@ -10,7 +10,7 @@ public class Karyotype
 {
     private readonly List<Chromosome> _chromosomes;
     public int ChromCount => _chromosomes.Count;
-    public float Fitness;
+    public float Fitness { get; private set; }
     
     public Karyotype(bool isFemale)
     {
@@ -81,8 +81,7 @@ public class Karyotype
     private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
         => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
 
-    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet, SimParams simParams, 
-    Dictionary<ChromNum, List<Gene>> essentialGenes, Dictionary<ChromNum, List<Gene>> tsgOgGenes)
+    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
         string region = "";
         var chr = RandomChr(rnd);
@@ -161,12 +160,10 @@ public class Karyotype
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
-        //TODO: Calculate fitness based on event
-        CalcFitness(essentialGenes, tsgOgGenes, simParams);
         return region;
     }
 
-    public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
+    private List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
         foreach (var chr in _chromosomes)
@@ -179,9 +176,8 @@ public class Karyotype
         }
         return presentGenes;
     }
-
-    private void CalcFitness(Dictionary<ChromNum, List<Gene>> essentialGenes, Dictionary<ChromNum, List<Gene>> tsgOgGenes, 
-    SimParams simParams)
+    
+    public float UpdateFitness(Dictionary<ChromNum, List<Gene>> essentialGenes, Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
     {
         float stress = CalcStress(simParams.StressFraction, ChromCount);
         var essentialFound = GetPresentGenes(essentialGenes);
@@ -192,13 +188,14 @@ public class Karyotype
         float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
         // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
         // n - 2 for each overrepresented gene (ploidy 2+)
-        float tsgOgFitness = 2*tsgOgMissing.Sum(g => g.DeltaFitness) 
+        float tsgOgFitness = 2 * tsgOgMissing.Sum(g => g.DeltaFitness) 
                              -tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
         // parametrized linear combination of factors
-        Fitness =  stress + simParams.TsgOgFraction * tsgOgFitness + simParams.EssentialFraction * essentialityFitness;
+        Fitness = stress + simParams.TsgOgFraction * tsgOgFitness + simParams.EssentialFraction * essentialityFitness;
+        return Fitness;
     }
 
-        private static List<Gene> FindMissingGenes(List<Gene> presentGenes, Dictionary<ChromNum, List<Gene>> geneList)
+    private static List<Gene> FindMissingGenes(List<Gene> presentGenes, Dictionary<ChromNum, List<Gene>> geneList)
     {
         var missingGenes = new List<Gene>();
         foreach (var (_, allGenes) in geneList)
@@ -210,6 +207,6 @@ public class Karyotype
 
     // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
     // TODO: This needs to be validated
-     private static float CalcStress(float stressFactor, int chromCount)
+    private static float CalcStress(float stressFactor, int chromCount)
         => stressFactor * (float)Math.Pow(Math.Max(0, chromCount - 46), 2);
 }

@@ -14,7 +14,7 @@ public class Clone
         ChildrenIDs = new List<int>();
         TotalMutations = totalMutations;
     }
-
+    
     public int CloneId { get; }
     public int ParentId { get; }
     public int DistToParent { get; }
