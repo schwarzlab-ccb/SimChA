@@ -53,7 +53,7 @@ public class Simulator
                 string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
                 float newFitness = child.Karyotype.UpdateFitness(_essentialGenes, _tsgOgGenes, _simParams);
                 int mutationCount = parentMutations + 1 + i;
-                var abberation = new Abberation(child.Name, aberration.ToString(), mutationCount,
+                var abberation = new Abberation(child.Name, aberration, mutationCount,
                     eventString, newFitness - oldFitness, newFitness);
                 abberationList.Add(abberation);
                 oldFitness = newFitness;

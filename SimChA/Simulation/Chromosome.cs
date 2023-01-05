@@ -2,13 +2,13 @@
 
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
 public class Chromosome
 {
-    // TODO: PRIVATE!! :(
-    public List<Region> _regions;
+    private List<Region> _regions;
 
     public Chromosome(Region initialRegion) 
         => _regions = new List<Region> { initialRegion };
@@ -30,9 +30,14 @@ public class Chromosome
     public override string ToString()
         => ToString(_regions);
 
-    // TODO: SHould not exist
+    // TODO: Should not exist
     public List<Region> GetAllRegions()
         => _regions.ToList();
+
+    public void Clear()
+    {
+        _regions.Clear();
+    }
 
     public List<Region> GetRegions(ChromID chromID)
         => _regions.Where(r => r.ChromId.Equals(chromID)).ToList();

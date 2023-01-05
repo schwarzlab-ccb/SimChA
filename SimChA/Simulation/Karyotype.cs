@@ -3,6 +3,7 @@
 using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
 using SimChA.IO;
+using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
@@ -31,12 +32,6 @@ public class Karyotype
         _chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
         return regions;
     }
-
-    private Chromosome RandomChr(Random rnd)
-        => _chromosomes.Shuffle(rnd).First();
-
-    private List<Chromosome> RandomChrs(Random rnd, int count)
-        => _chromosomes.Shuffle(rnd).Take(count).ToList();
 
     // Segment is at most 2 bases shorter than chr
     private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
@@ -83,64 +78,66 @@ public class Karyotype
 
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
-        string region = "";
-        var chr = RandomChr(rnd);
+        string descriptor = "";
+        int chrID = _chromosomes.GetRandIndex(rnd);
+        var chr = _chromosomes[chrID];
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
-                int numberNucleotides = chr._regions[0].End;
                 (int delSplit, bool delFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.Split(delSplit, !delFromStart);
-                region = $"chromosome:{chr._regions[0].ChromId};nucleotides_deleted:" + 
-                    $"{(numberNucleotides - delSplit)}{(delFromStart ? " from start":"")}";
+                var removed = chr.Split(delSplit, !delFromStart);
+                descriptor = $"chr:{chrID};lost:{removed.Length()}";
                 break;
 
             case AberrationEnum.ChromDeletion:
-                region = $"chromosome:{chr._regions[0].ChromId}";
-                _chromosomes.Remove(chr);
+                descriptor = $"chr:{chrID}";
+                chr.Clear();
                 break;
 
             case AberrationEnum.InternalDuplication:
                 (int dupStart, int dupEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.DuplicateRange(dupStart, dupEnd);
-                region = $"chromosome:{chr._regions[0].ChromId};start:{dupStart};end:{dupEnd}";
+                descriptor = $"chr:{chrID};start:{dupStart};end:{dupEnd}";
                 break;
 
             case AberrationEnum.InternalDeletion:
                 (int delStart, int delEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.DeleteRange(delStart, delEnd);                
-                region = $"chromosome:{chr._regions[0].ChromId};start:{delStart};end:{delEnd}";
+                descriptor = $"chr:{chrID};start:{delStart};end:{delEnd}";
                 break;
 
             case AberrationEnum.Translocation:
                 // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
-                var chrPair = RandomChrs(rnd, 2);
-                var splits = chrPair.Select(c => c.Split(GetUniformPos(rnd, c), true)).ToList();
-                chrPair[0].Join(splits[1]);
-                chrPair[1].Join(splits[0]);
-                region = $"chromosome_1:{chrPair[0]._regions[0].ChromId};added_1:{splits[1]._regions[0].ChromId};start_1:{splits[1]._regions[0].Start};end_1:{splits[1]._regions[0].End}" +
-                $"chromosome_2:{chrPair[1]._regions[0].ChromId};added_2:{splits[0]._regions[0].ChromId};start_2:{splits[0]._regions[0].Start};end_2:{splits[0]._regions[0].End}";
+                var chrIDs = _chromosomes.GetRandIndices( 2, rnd).ToList();
+                var chrA = _chromosomes[chrIDs[0]];
+                var chrB = _chromosomes[chrIDs[1]];
+                var splitA = chrA.Split(GetUniformPos(rnd, chrA), true);
+                var splitB = chrB.Split(GetUniformPos(rnd, chrB), true);
+                descriptor = $"chr_A:{chrIDs[0]};gave:{splitA.Length()};chr_B:{chrIDs[0]};gave:{splitB.Length()};";
+                chrA.Join(splitB);
+                chrB.Join(splitA);
                 break;
 
             case AberrationEnum.InternalInversion:
                 (int invStart, int invEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.InvertRange(invStart, invEnd);
-                region = $"chromosome:{chr._regions[0].ChromId};start:{invStart};end{invEnd}";
+                descriptor = $"chr:{chrID};start:{invStart};end{invEnd}";
                 break;
 
             case AberrationEnum.ChromDuplication:
                 _chromosomes.Add(new Chromosome(chr));
-                region = "chromosome:" + chr._regions[0].ChromId;
+                descriptor = "chr:" + chrID;
                 break;
 
             case AberrationEnum.BreakageFusionBridge:
                 (int bfbPos, bool bfbFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
                 chr.Bridge(bfbPos, bfbFromStart);
-                region = $"chromosome:{chr._regions[0].ChromId};position:{bfbPos}{(bfbFromStart ? " from start":"")}";
+                descriptor = $"chr:{chrID};position:{bfbPos}{(bfbFromStart ? " from start":"")}";
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:
                 _chromosomes.AddRange(_chromosomes.Select(ch => new Chromosome(ch)).ToList());
+                descriptor = "WGD";
                 break;
 
             case AberrationEnum.Chromothripsis:
@@ -148,19 +145,16 @@ public class Karyotype
                 var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(rnd, chr)).Distinct().ToList();
                 stops.Sort();
                 int count = rnd.Next(1, stops.Count);
+                int baseCount = chr.Length();
                 chr.ScatterAndGather(stops, count, rnd);
-                region = $"chromosome:{chr._regions[0].ChromId}";
-                foreach (var keptRegion in chr._regions)
-                {
-                    region += $";start:{keptRegion.Start};end:{keptRegion.End}";
-                }
+                descriptor =$"chr:{chrID};fragments:{stops.Count+1};lost:{baseCount - chr.Length()}";
                 break;
 
             case AberrationEnum.Chromoplexy:
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
-        return region;
+        return descriptor;
     }
 
     private List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)

@@ -222,7 +222,7 @@ public class FileIO
         abberationString.Append("Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
         foreach(var abberation in abberationList){
             abberationString.Append($"{abberation.CloneName}\t" + 
-                                    $"{abberation.AbberationEnum}\t" +
+                                    $"{abberation.AberrationType}\t" +
                                     $"{abberation.Region}\t" +
                                     $"{Math.Round((decimal)abberation.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
                                     $"{Math.Round((decimal)abberation.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +

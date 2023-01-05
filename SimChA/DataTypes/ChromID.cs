@@ -2,19 +2,8 @@
 
 namespace SimChA.DataTypes;
 
-public struct ChromID
+public record ChromID(ChromNum ChromNum, bool Parent)
 {
-    public ChromNum ChromNum;
-    public bool Parent;
-
-    public ChromID(ChromNum num, bool parent)
-    {
-        ChromNum = num;
-        Parent = parent;
-    }
-
-    public bool Equals(ChromID other) => ChromNum == other.ChromNum && Parent == other.Parent;
-
     public override string ToString()
     {
         string parentIdentifier = Parent ? "H1" : "H2";

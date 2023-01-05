@@ -11,7 +11,7 @@ public static class CopyNumbers
         var reference = ReferenceGenome.GetChromosomes(isFemale);
         var copyNumbers = CalcSegmentation(allRegions, reference);
         return copyNumbers;
-        // TODO: Merge neighboring segments that have the same copy numbers
+        // TODO: Optimization: Merge neighboring segments that have the same copy numbers
     }
 
     // Minimum consistent segmentation
