@@ -108,4 +108,14 @@ public class Chromosome
         var keptRegions = newRegions.Shuffle(rnd).Take(count);
         _regions = RegionOps.ConcatRegions(keptRegions);
     }
+    public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
+    {
+        var presentGenes = new List<Gene>();
+        foreach (var region in _regions)
+        {
+            var chromNum = region.ChromId.ChromNum;
+            presentGenes.AddRange(geneLists[chromNum].FindAll(g => g.Region.IsInside(region)));
+        }
+        return presentGenes;
+    }
 }

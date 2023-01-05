@@ -1,6 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using Extreme.Statistics.Distributions;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Misc;
@@ -12,7 +13,7 @@ public class Karyotype
 {
     private readonly List<Chromosome> _chromosomes;
     public int ChromCount => _chromosomes.Count(c => c.Any());
-    public float Fitness { get; private set; }
+    public float FitnessVal { get; private set; }
 
     public Karyotype(bool isFemale)
     {
@@ -163,51 +164,9 @@ public class Karyotype
     private static (int start, int end) GetIndices(Chromosome chr, int position, bool fromStart)
         => fromStart ? (0, position) : (position, chr.Length());
 
-    private List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
-    {
-        List<Gene> presentGenes = new();
-        foreach (var chr in _chromosomes)
-        {
-            foreach (var region in chr.GetAllRegions())
-            {
-                var chromNum = region.ChromId.ChromNum;
-                presentGenes.AddRange(geneLists[chromNum].FindAll(g => g.Region.IsInside(region)));
-            }
-        }
-        return presentGenes;
-    }
-
-    public float UpdateFitness(Dictionary<ChromNum, List<Gene>> essentialGenes,
-        Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
-    {
-        float stress = CalcStress(simParams.StressFraction, ChromCount);
-        var essentialFound = GetPresentGenes(essentialGenes);
-        var tsgOgFound = GetPresentGenes(tsgOgGenes);
-        var essentialsMissing = FindMissingGenes(essentialFound, essentialGenes);
-        var tsgOgMissing = FindMissingGenes(tsgOgFound, tsgOgGenes);
-        var tsgOgCounts = tsgOgFound.GroupBy(x => x).ToList();
-        float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
-        // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
-        // n - 2 for each overrepresented gene (ploidy 2+)
-        float tsgOgFitness = 2 * tsgOgMissing.Sum(g => g.DeltaFitness) -
-                             tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
-        // parametrized linear combination of factors
-        Fitness = stress + simParams.TsgOgFraction * tsgOgFitness + simParams.EssentialFraction * essentialityFitness;
-        return Fitness;
-    }
-
-    private static List<Gene> FindMissingGenes(List<Gene> presentGenes, Dictionary<ChromNum, List<Gene>> geneList)
-    {
-        var missingGenes = new List<Gene>();
-        foreach (var (_, allGenes) in geneList)
-        {
-            missingGenes.AddRange(allGenes.Except(presentGenes));
-        }
-        return missingGenes;
-    }
-
-    // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
-    // TODO: This needs to be validated
-    private static float CalcStress(float stressFactor, int chromCount)
-        => stressFactor * (float)Math.Pow(Math.Max(0, chromCount - 46), 2);
+    public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
+        => _chromosomes.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+    
+    public float UpdateFitness(Dictionary<ChromNum, List<Gene>> essentialGenes, Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
+        => FitnessVal = Fitness.Calculate(this, essentialGenes, tsgOgGenes, simParams);
 }

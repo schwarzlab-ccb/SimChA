@@ -44,7 +44,7 @@ public class Simulator
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
-            float oldFitness = node.Karyotype.Fitness;
+            float oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
@@ -61,7 +61,7 @@ public class Simulator
             AssignMutationsRecursive(child, clones, abberationList, ref cloneNo, numNodes);
         }
     }
-
+    
     private static int GetMutations(Clone clone, List<Clone> clones)
     {
         int mutCount = clone.ParentId != -1 ? GetMutations(clones[clone.ParentId], clones) : 0;
