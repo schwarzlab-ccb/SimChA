@@ -37,7 +37,6 @@ public static class Fitness
         return missingGenes;
     }
 
-
     // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
     // TODO: This needs to be validated
     private static float CalcStress(float stressFactor, int chromCount)

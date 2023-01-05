@@ -33,16 +33,14 @@ public class Chromosome
         => ToString(_regions);
 
     // TODO: Should not exist
-    public List<Region> GetAllRegions()
-        => _regions.ToList();
+
+    public IEnumerable<Region> FindRegionsOfChr(ChromNum chrNum)
+        => _regions.Where(r => r.ChromId.ChromNum == chrNum);
 
     public void Clear()
     {
         _regions.Clear();
     }
-
-    public List<Region> GetRegions(ChromID chromID)
-        => _regions.Where(r => r.ChromId.Equals(chromID)).ToList();
 
     public void DeleteRange(int start, int end)
     {

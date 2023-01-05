@@ -27,16 +27,12 @@ public class Karyotype
 
     public override string ToString()
         => ChromCount > 0 ? "[\n\t" + string.Join(",\n\t", _chromosomes.Where(c => c.Any())) + "\n]\n" : "[]";
-
-    public List<Region> GetAllRegions()
-    {
-        var regions = new List<Region>();
-        _chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
-        return regions;
-    }
+    
+    public IEnumerable<Region> FindRegionsOfChrom(ChromNum chromNum) 
+        => _chromosomes.SelectMany(c => c.FindRegionsOfChr(chromNum));
 
     // Segment is at most 2 bases shorter than chr
-    private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
+    private static int GetSegLength(Random rnd, Chromosome chr, double meanLen)
     {
         double fraction = Math.Clamp(ExponentialDistribution.Sample(rnd, meanLen), 0, 1);
         return Math.Min((int)Math.Round(fraction * chr.Length()), chr.Length() - 2);
@@ -45,7 +41,7 @@ public class Karyotype
     // Get two positions within the chromosome (boundaries are excluded)
     private static (int start, int end) GetInternalRange(Random rnd, Chromosome chr, double meanLen)
     {
-        int segLength = GetSegLen(rnd, chr, meanLen);
+        int segLength = GetSegLength(rnd, chr, meanLen);
         int start = DiscreteUniformDistribution.Sample(rnd, 1, chr.Length() - segLength);
         int end = Math.Min(start + segLength + 1, chr.Length() - 1);
         return (start, end);
@@ -57,7 +53,7 @@ public class Karyotype
 
     private static (int, bool) GetTail(Random rnd, Chromosome chr, double meanLen)
     {
-        int segLength = GetSegLen(rnd, chr, meanLen);
+        int segLength = GetSegLength(rnd, chr, meanLen);
         bool fromStart = rnd.CoinFlip();
         int pos = fromStart ? segLength - 1 : chr.Length() - segLength - 1;
         return (pos, fromStart);

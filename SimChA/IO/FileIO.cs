@@ -140,7 +140,7 @@ public class FileIO
         foreach (var subClone in subClones)
         {
             var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
-            var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers, snps, isFemale);
+            var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers.ToList(), snps, isFemale);
             outputbaf[0] += $"\t{subClone.CloneId}";
             outputlogr[0] += $"\t{subClone.CloneId}";
             for (int i = 0; i < rawdata.Count; i++)
