@@ -23,21 +23,21 @@ public class TestKaryotype
     public void TestDeletion()
     {
         _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
-        Assert.AreEqual(45, _kar.ChromCount);
+        Assert.AreEqual(45, _kar.ChrCount);
     }
     
     [Test]
     public void TestDuplication()
     {
         _kar.ApplyAberration(_rnd, AberrationEnum.ChromDuplication, new BaseAbbP(1f));
-        Assert.AreEqual(47, _kar.ChromCount);
+        Assert.AreEqual(47, _kar.ChrCount);
     }
     
     [Test]
     public void TestBFB()
     {
         _kar.ApplyAberration(_rnd, AberrationEnum.BreakageFusionBridge, new FractionAbbP(1f, .1f));
-        Assert.AreEqual(46, _kar.ChromCount);
+        Assert.AreEqual(46, _kar.ChrCount);
     }
     
     [Test]

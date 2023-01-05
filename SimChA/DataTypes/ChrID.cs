@@ -4,9 +4,9 @@ namespace SimChA.DataTypes;
 
 public record ChrID(ChrNo ChrNo, bool Parent)
 {
+    private string ParentID() 
+        => Parent ?"H1" : "H2";
+    
     public override string ToString()
-    {
-        string parentIdentifier = Parent ? "H1" : "H2";
-        return $"({ChrNo.ToString()},{parentIdentifier})";
-    }
+        => $"({ChrNo.ToString()},{ParentID()})";
 }

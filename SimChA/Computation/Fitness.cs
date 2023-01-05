@@ -11,7 +11,7 @@ public static class Fitness
     public static float Calculate(Karyotype karyotype, Dictionary<ChrNo, List<Gene>> essentialGenes,
         Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
     {
-        float stress = CalcStress(simParams.StressFraction, karyotype.ChromCount);
+        float stress = CalcStress(simParams.StressFraction, karyotype.ChrCount);
         var essentialFound = karyotype.GetPresentGenes(essentialGenes);
         var tsgOgFound = karyotype.GetPresentGenes(tsgOgGenes);
         var essentialsMissing = FindMissingGenes(essentialFound, essentialGenes);
@@ -39,6 +39,6 @@ public static class Fitness
 
     // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
     // TODO: This needs to be validated
-    private static float CalcStress(float stressFactor, int chromCount)
-        => stressFactor * (float)Math.Pow(Math.Max(0, chromCount - 46), 2);
+    private static float CalcStress(float stressFactor, int chrCount)
+        => stressFactor * (float)Math.Pow(Math.Max(0, chrCount - 46), 2);
 }

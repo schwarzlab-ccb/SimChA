@@ -135,7 +135,7 @@ public static class ReferenceGenome
         => isFemale ? GenotypeF : GenotypeM;
 
     public static long TotalLength(bool isFemale)
-        => GetChromosomes(isFemale).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
+        => GetChromosomes(isFemale).Select(c => (long)ChromosomeLengthMap[c]).Sum();
 
     // TODO: Is this what we want? - it only produces a haploid!
     public static IEnumerable<ChrNo> GetChromosomes(bool isFemale)

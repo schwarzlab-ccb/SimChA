@@ -1,11 +1,7 @@
 ﻿namespace SimChA.DataTypes;
 
-public struct CopyNumber
+public record CopyNumber(Region Segment, int CNH1, int CNH2)
 {
-    public Region Segment;
-    public int CNH1;
-    public int CNH2;
-
-    public string ToTSV()
-        => string.Join('\t', Segment.ChrID.ChrNo, Segment.Start, Segment.End, CNH1, CNH2);
+        public string ToTSV() 
+                => string.Join('\t', Segment.ChrID.ChrNo, Segment.Start, Segment.End, CNH1, CNH2);
 }

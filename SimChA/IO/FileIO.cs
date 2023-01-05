@@ -119,7 +119,7 @@ public class FileIO
         using var outputFile = new StreamWriter(outPath);
 
         StringBuilder copyNumbersString = new StringBuilder();
-        copyNumbersString.Append("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n");
+        copyNumbersString.Append("sample_id\tchr\tstart\tend\tcn_a\tcn_b\n");
 
         foreach (var subClone in subClones)
         {
@@ -132,9 +132,9 @@ public class FileIO
     public void WriteRawData(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
     {
         var outputbaf = new List<string>();
-        outputbaf.Add("\tchrom\tpos");
+        outputbaf.Add("\tchr\tpos");
 
-        outputbaf.AddRange(snps.Select(snp => $"{snp.Id}\t{snp.Chrom}\t{snp.Pos}"));
+        outputbaf.AddRange(snps.Select(snp => $"{snp.Id}\t{snp.ChrNo}\t{snp.Pos}"));
 
         var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
         foreach (var subClone in subClones)
@@ -264,18 +264,18 @@ public class FileIO
                 }
                 string name = genString[0];
                 float fitness = float.Parse(genString[1]);
-                var chromNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[2]);
-                var chromID = new ChrID(chromNum, false);
+                var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[2]);
+                var chrID = new ChrID(chrNum, false);
                 // Convert to zero-based [start, end) index 
-                var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chromID);
+                var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chrID);
                 var gene = new Gene(name, region, negFit ? -fitness : fitness);
-                if(genes.ContainsKey(chromNum))
+                if(genes.ContainsKey(chrNum))
                 {
-                    genes[chromNum].Add(gene);
+                    genes[chrNum].Add(gene);
                 }
                 else
                 {
-                    genes.Add(chromNum, new List<Gene> {gene});
+                    genes.Add(chrNum, new List<Gene> {gene});
                 }
             }
 

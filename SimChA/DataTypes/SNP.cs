@@ -1,37 +1,26 @@
 ﻿namespace SimChA.DataTypes;
 
-public struct SNP
+public record SNP
 {
-    public ChrNo Chrom;
-    public int Pos;
-    public long AbsPos;
-    public Nucleotides Ref;
-    public Nucleotides Alt;
-    public bool Heterozygous;
-    public int Id;
+    private readonly Nucleotides _ref;
+    private readonly Nucleotides _alt;
+    public readonly ChrNo ChrNo;
+    public readonly int Pos;
+    public readonly long AbsPos;
+    public readonly bool Heterozygous;
+    public readonly int Id;
 
-    public SNP(ChrNo chrom, int pos, bool heterozygous, int id, Nucleotides re, Nucleotides alt)
+    public SNP(ChrNo chrNo, int pos, bool heterozygous, int id)
     {
-        Chrom = chrom;
+        ChrNo = chrNo;
         Pos = pos;
-        AbsPos = ReferenceGenome.ChromosomeStartMap[chrom] + pos;
-        Ref = re;
-        Alt = alt;
-        Heterozygous = heterozygous;
-        Id = id;
-    }
-
-    public SNP(ChrNo chrom, int pos, bool heterozygous, int id)
-    {
-        Chrom = chrom;
-        Pos = pos;
-        AbsPos = ReferenceGenome.ChromosomeStartMap[chrom] + pos;
-        Ref = Nucleotides.A;
-        Alt = Nucleotides.G;
+        AbsPos = ReferenceGenome.ChromosomeStartMap[chrNo] + pos;
+        _ref = Nucleotides.A;
+        _alt = Nucleotides.G;
         Heterozygous = heterozygous;
         Id = id;
     }
 
     public override string ToString()
-        => $"{Chrom} {Pos}: {Ref} / {Alt} ({(Heterozygous ? "het" : "hom")})";
+        => $"{ChrNo} {Pos}: {_ref} / {_alt} ({(Heterozygous ? "het" : "hom")})";
 }

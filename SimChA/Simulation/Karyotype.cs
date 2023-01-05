@@ -11,25 +11,25 @@ namespace SimChA.Simulation;
 // Note: Empty chromosomes are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
-    private readonly List<Chromosome> _chromosomes;
-    public int ChromCount => _chromosomes.Count(c => c.Any());
+    private readonly List<Chromosome> _chrs;
+    public int ChrCount => _chrs.Count(c => c.Any());
     public float FitnessVal { get; private set; }
 
     public Karyotype(bool isFemale)
     {
-        _chromosomes = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region)).ToList();
+        _chrs = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region)).ToList();
     }
 
     public Karyotype(Karyotype other)
     {
-        _chromosomes = other._chromosomes.Select(ch => new Chromosome(ch)).ToList();
+        _chrs = other._chrs.Select(ch => new Chromosome(ch)).ToList();
     }
 
     public override string ToString()
-        => ChromCount > 0 ? "[\n\t" + string.Join(",\n\t", _chromosomes.Where(c => c.Any())) + "\n]\n" : "[]";
+        => ChrCount > 0 ? "[\n\t" + string.Join(",\n\t", _chrs.Where(c => c.Any())) + "\n]\n" : "[]";
     
-    public IEnumerable<Region> FindRegionsOfChrom(ChrNo chrNo) 
-        => _chromosomes.SelectMany(c => c.FindRegionsOfChr(chrNo));
+    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
+        => _chrs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
     // Segment is at most 2 bases shorter than chr
     private static int GetSegLength(Random rnd, Chromosome chr, double meanLen)
@@ -77,9 +77,9 @@ public class Karyotype
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
         string descriptor;
-        var chrIDs = Enumerable.Range(0, _chromosomes.Count).Where(i => _chromosomes[i].Any()).Shuffle(rnd).ToList();
+        var chrIDs = Enumerable.Range(0, _chrs.Count).Where(i => _chrs[i].Any()).Shuffle(rnd).ToList();
         int chrID = chrIDs[0];
-        var chr = _chromosomes[chrID];
+        var chr = _chrs[chrID];
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
@@ -109,7 +109,7 @@ public class Karyotype
             case AberrationEnum.Translocation:
                 // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
                 int altID = chrIDs[1];
-                var alt = _chromosomes[altID];
+                var alt = _chrs[altID];
                 var splitChr = chr.Split(GetUniformPos(rnd, chr), true);
                 var splitAlt = alt.Split(GetUniformPos(rnd, alt), true);
                 descriptor = $"chr_A:{chrID};gave:{splitChr.Length()};chr_B:{altID};gave:{splitAlt.Length()};";
@@ -124,7 +124,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.ChromDuplication:
-                _chromosomes.Add(new Chromosome(chr));
+                _chrs.Add(new Chromosome(chr));
                 descriptor = $"chr:{chrID}";
                 break;
 
@@ -136,7 +136,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:
-                _chromosomes.AddRange(_chromosomes.Select(ch => new Chromosome(ch)).ToList());
+                _chrs.AddRange(_chrs.Select(ch => new Chromosome(ch)).ToList());
                 descriptor = "WGD";
                 break;
 
@@ -161,7 +161,7 @@ public class Karyotype
         => fromStart ? (0, position) : (position, chr.Length());
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _chromosomes.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+        => _chrs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
     
     public float UpdateFitness(Dictionary<ChrNo, List<Gene>> essentialGenes, Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
         => FitnessVal = Fitness.Calculate(this, essentialGenes, tsgOgGenes, simParams);

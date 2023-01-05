@@ -8,33 +8,30 @@ public static class CopyNumbers
     public static IEnumerable<CopyNumber> CalcCopyNumbers(Karyotype karyotype, bool isFemale)
     {
         var reference = ReferenceGenome.GetChromosomes(isFemale);
-        var copyNumbers = reference.SelectMany(chr => CalcSegmentation(karyotype.FindRegionsOfChrom(chr), chr));
+        var copyNumbers = reference.SelectMany(chr => CalcSegmentation(karyotype.FindRegionsOfChr(chr), chr));
         return copyNumbers.ToList();
         // TODO: Optimization: Merge neighboring segments that have the same copy numbers
     }
 
     // Minimum consistent segmentation
-    private static IEnumerable<CopyNumber> CalcSegmentation(IEnumerable<Region> curRegions, ChrNo refChrom)
+    private static IEnumerable<CopyNumber> CalcSegmentation(IEnumerable<Region> curRegs, ChrNo refChrom)
     {
         var result = new List<CopyNumber>();
 
-        var curRegionsWithReference = curRegions.Append(ReferenceGenome.GetRegion(refChrom)).ToList();
+        var curRegionsWithReference = curRegs.Append(ReferenceGenome.GetRegion(refChrom)).ToList();
 
         var starts = curRegionsWithReference.Select(r => r.Start);
         var ends = curRegionsWithReference.Select(r => r.End);
         var segmentBoundaries = starts.Concat(ends).Distinct().ToList();
         segmentBoundaries.Sort();
 
-        var chromId = new ChrID(refChrom, true);
+        var chrID = new ChrID(refChrom, true);
         for (int i = 0; i < segmentBoundaries.Count - 1; i++)
         {
-            var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], chromId);
-            var cn = new CopyNumber
-            {
-                Segment = seg,
-                CNH1 = curRegions.Count(r => r.ChrID.Parent && seg.IsInside(r)),
-                CNH2 = curRegions.Count(r => !r.ChrID.Parent && seg.IsInside(r))
-            };
+            var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], chrID);
+            int cnh1 = curRegs.Count(r => r.ChrID.Parent && seg.IsInside(r));
+            int cnh2 = curRegs.Count(r => !r.ChrID.Parent && seg.IsInside(r));
+            var cn = new CopyNumber(seg, cnh1, cnh2);
             result.Add(cn);
         }
 
@@ -52,12 +49,12 @@ public static class CopyNumbers
         return ploidy;
     }
 
-    private static string FirstLine(bool withSample, bool isFirst)
-        => isFirst ? (withSample ? "sample_name\t" : "") + "chrom\tstart\tend\tcn_a\tcn_b\n" : "";
+    private static string Header(bool withSample, bool isFirst)
+        => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\n" : "";
 
     public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, bool isFirst)
-        => FirstLine(false, isFirst) + string.Join("\n", copyNumbers.Select(cn => cn.ToTSV()));
+        => Header(false, isFirst) + string.Join("\n", copyNumbers.Select(cn => cn.ToTSV()));
 
     public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId, bool isFirst)
-        => FirstLine(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
+        => Header(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 }
