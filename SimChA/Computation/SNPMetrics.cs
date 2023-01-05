@@ -22,7 +22,7 @@ public static class SNPMetrics
         foreach (var snp in snps)
         {
             curSegmentId = copyNumbers.FindIndex(curSegmentId, cn =>
-                ReferenceGenome.ChromosomeStartMap[cn.Segment.ChromId.ChromNum] + cn.Segment.End > snp.AbsPos);
+                ReferenceGenome.ChromosomeStartMap[cn.Segment.ChrID.ChrNo] + cn.Segment.End > snp.AbsPos);
 
             if (copyNumbers[curSegmentId].CNH1 + copyNumbers[curSegmentId].CNH2 <= 0)
             {

@@ -2,7 +2,7 @@
 
 public struct SNP
 {
-    public ChromNum Chrom;
+    public ChrNo Chrom;
     public int Pos;
     public long AbsPos;
     public Nucleotides Ref;
@@ -10,7 +10,7 @@ public struct SNP
     public bool Heterozygous;
     public int Id;
 
-    public SNP(ChromNum chrom, int pos, bool heterozygous, int id, Nucleotides re, Nucleotides alt)
+    public SNP(ChrNo chrom, int pos, bool heterozygous, int id, Nucleotides re, Nucleotides alt)
     {
         Chrom = chrom;
         Pos = pos;
@@ -21,7 +21,7 @@ public struct SNP
         Id = id;
     }
 
-    public SNP(ChromNum chrom, int pos, bool heterozygous, int id)
+    public SNP(ChrNo chrom, int pos, bool heterozygous, int id)
     {
         Chrom = chrom;
         Pos = pos;

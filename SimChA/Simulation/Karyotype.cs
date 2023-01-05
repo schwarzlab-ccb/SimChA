@@ -28,8 +28,8 @@ public class Karyotype
     public override string ToString()
         => ChromCount > 0 ? "[\n\t" + string.Join(",\n\t", _chromosomes.Where(c => c.Any())) + "\n]\n" : "[]";
     
-    public IEnumerable<Region> FindRegionsOfChrom(ChromNum chromNum) 
-        => _chromosomes.SelectMany(c => c.FindRegionsOfChr(chromNum));
+    public IEnumerable<Region> FindRegionsOfChrom(ChrNo chrNo) 
+        => _chromosomes.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
     // Segment is at most 2 bases shorter than chr
     private static int GetSegLength(Random rnd, Chromosome chr, double meanLen)
@@ -160,9 +160,9 @@ public class Karyotype
     private static (int start, int end) GetIndices(Chromosome chr, int position, bool fromStart)
         => fromStart ? (0, position) : (position, chr.Length());
 
-    public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
+    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _chromosomes.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
     
-    public float UpdateFitness(Dictionary<ChromNum, List<Gene>> essentialGenes, Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
+    public float UpdateFitness(Dictionary<ChrNo, List<Gene>> essentialGenes, Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
         => FitnessVal = Fitness.Calculate(this, essentialGenes, tsgOgGenes, simParams);
 }

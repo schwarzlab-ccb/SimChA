@@ -14,7 +14,7 @@ public static class CopyNumbers
     }
 
     // Minimum consistent segmentation
-    private static IEnumerable<CopyNumber> CalcSegmentation(IEnumerable<Region> curRegions, ChromNum refChrom)
+    private static IEnumerable<CopyNumber> CalcSegmentation(IEnumerable<Region> curRegions, ChrNo refChrom)
     {
         var result = new List<CopyNumber>();
 
@@ -25,15 +25,15 @@ public static class CopyNumbers
         var segmentBoundaries = starts.Concat(ends).Distinct().ToList();
         segmentBoundaries.Sort();
 
-        var chromId = new ChromID(refChrom, true);
+        var chromId = new ChrID(refChrom, true);
         for (int i = 0; i < segmentBoundaries.Count - 1; i++)
         {
             var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], chromId);
             var cn = new CopyNumber
             {
                 Segment = seg,
-                CNH1 = curRegions.Count(r => r.ChromId.Parent && seg.IsInside(r)),
-                CNH2 = curRegions.Count(r => !r.ChromId.Parent && seg.IsInside(r))
+                CNH1 = curRegions.Count(r => r.ChrID.Parent && seg.IsInside(r)),
+                CNH2 = curRegions.Count(r => !r.ChrID.Parent && seg.IsInside(r))
             };
             result.Add(cn);
         }

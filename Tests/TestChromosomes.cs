@@ -17,8 +17,8 @@ public class TestChromosomes
     [SetUp]
     public void Setup()
     {
-        _chr1 = new Chromosome(ReferenceGenome.GetRegion(ChromNum.chr1));
-        _chrX = new Chromosome(ReferenceGenome.GetRegion(ChromNum.chrX, false));
+        _chr1 = new Chromosome(ReferenceGenome.GetRegion(ChrNo.chr1));
+        _chrX = new Chromosome(ReferenceGenome.GetRegion(ChrNo.chrX, false));
     }
 
     [Test]

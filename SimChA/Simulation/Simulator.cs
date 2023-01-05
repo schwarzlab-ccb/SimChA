@@ -9,15 +9,15 @@ public class Simulator
     private readonly AberrationsInfo _aberrationsInfo;
     private readonly Random _rnd;
     private readonly SimParams _simParams;
-    private readonly Dictionary<ChromNum, List<Gene>> _tsgOgGenes;
-    private readonly Dictionary<ChromNum, List<Gene>> _essentialGenes;
+    private readonly Dictionary<ChrNo, List<Gene>> _tsgOgGenes;
+    private readonly Dictionary<ChrNo, List<Gene>> _essentialGenes;
     
     public Simulator(
         AberrationsInfo aberrationsInfo, 
         Random rnd, 
         SimParams simParams, 
-        Dictionary<ChromNum, List<Gene>> tsgOgGenes, 
-        Dictionary<ChromNum, List<Gene>> essentialGenes)
+        Dictionary<ChrNo, List<Gene>> tsgOgGenes, 
+        Dictionary<ChrNo, List<Gene>> essentialGenes)
     {
         _aberrationsInfo = aberrationsInfo;
         _rnd = rnd;

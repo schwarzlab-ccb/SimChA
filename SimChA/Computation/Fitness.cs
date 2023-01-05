@@ -8,8 +8,8 @@ namespace SimChA.Computation;
 
 public static class Fitness
 {
-    public static float Calculate(Karyotype karyotype, Dictionary<ChromNum, List<Gene>> essentialGenes,
-        Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
+    public static float Calculate(Karyotype karyotype, Dictionary<ChrNo, List<Gene>> essentialGenes,
+        Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
     {
         float stress = CalcStress(simParams.StressFraction, karyotype.ChromCount);
         var essentialFound = karyotype.GetPresentGenes(essentialGenes);
@@ -27,7 +27,7 @@ public static class Fitness
     }
 
     private static IEnumerable<Gene> FindMissingGenes(IReadOnlyCollection<Gene> presentGenes,
-        Dictionary<ChromNum, List<Gene>> geneList)
+        Dictionary<ChrNo, List<Gene>> geneList)
     {
         var missingGenes = new List<Gene>();
         foreach (var (_, allGenes) in geneList)

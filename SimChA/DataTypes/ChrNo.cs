@@ -2,7 +2,7 @@
 
 namespace SimChA.DataTypes;
 
-public enum ChromNum
+public enum ChrNo
 {
     chr1,
     chr2,

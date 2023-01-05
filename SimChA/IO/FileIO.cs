@@ -231,10 +231,10 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
 
-    public static (Dictionary<ChromNum, List<Gene>>, Dictionary<ChromNum, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
+    public static (Dictionary<ChrNo, List<Gene>>, Dictionary<ChrNo, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
     {
-        Dictionary<ChromNum, List<Gene>> tsgOgList = new();
-        Dictionary<ChromNum, List<Gene>> essentialList = new();
+        Dictionary<ChrNo, List<Gene>> tsgOgList = new();
+        Dictionary<ChrNo, List<Gene>> essentialList = new();
         
         if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
            || !File.Exists(Path.Combine(folder, OGS_TSV)) 
@@ -248,7 +248,7 @@ public class FileIO
         return (tsgOgList, essentialList);
     }
 
-    private static void ReadGenesFromFile(string file, bool negFit, Dictionary<ChromNum, List<Gene>> genes, bool isFemale)
+    private static void ReadGenesFromFile(string file, bool negFit, Dictionary<ChrNo, List<Gene>> genes, bool isFemale)
     {
         string fileContent = File.ReadAllText(Path.GetFullPath(file));
         string[] genesFromFile = fileContent.Split('\n');
@@ -258,14 +258,14 @@ public class FileIO
             {
                 string[] genString = geneFromFile.Split('\t');
                 //Don't include Y chromosome in genes list if clone is female
-                if(isFemale && (ChromNum)Enum.Parse(typeof(ChromNum), genString[2]) == ChromNum.chrY)
+                if(isFemale && (ChrNo)Enum.Parse(typeof(ChrNo), genString[2]) == ChrNo.chrY)
                 {
                     continue;
                 }
                 string name = genString[0];
                 float fitness = float.Parse(genString[1]);
-                var chromNum = (ChromNum) Enum.Parse(typeof(ChromNum), genString[2]);
-                var chromID = new ChromID(chromNum, false);
+                var chromNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[2]);
+                var chromID = new ChrID(chromNum, false);
                 // Convert to zero-based [start, end) index 
                 var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chromID);
                 var gene = new Gene(name, region, negFit ? -fitness : fitness);

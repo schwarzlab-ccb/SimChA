@@ -19,34 +19,30 @@ public class Chromosome
     public Chromosome(Chromosome other) 
         => _regions = new List<Region>(other._regions);
 
-    public int Length() => Length(_regions);
+    public int Length() 
+        => Length(_regions);
 
-    public bool Any() => Length() > 0;
+    public bool Any() 
+        => Length() > 0;
 
-    public static int Length(List<Region> regions)
+    public static int Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
 
-    public static string ToString(List<Region> regions)
+    public static string ToString(IEnumerable<Region> regions)
         => "[" + string.Join(",", regions.Select(r => r.ToString())) + "]";
 
     public override string ToString()
         => ToString(_regions);
-
-    // TODO: Should not exist
-
-    public IEnumerable<Region> FindRegionsOfChr(ChromNum chrNum)
-        => _regions.Where(r => r.ChromId.ChromNum == chrNum);
+    
+    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo)
+        => _regions.Where(r => r.ChrID.ChrNo == chrNo);
 
     public void Clear()
-    {
-        _regions.Clear();
-    }
+        => _regions.Clear();
 
     public void DeleteRange(int start, int end)
-    {
-        _regions = RegionOps.DeleteRange(_regions, start, end);
-    }
-    
+        => _regions = RegionOps.DeleteRange(_regions, start, end);
+
     public Chromosome Split(int pos, bool keepFirst)
     {
         var (first, second) = RegionOps.SplitRegions(_regions, pos);
@@ -55,9 +51,7 @@ public class Chromosome
     }
 
     public void Join(Chromosome other)
-    {
-        _regions = RegionOps.ConcatRegions(_regions, other._regions);
-    }
+        => _regions = RegionOps.ConcatRegions(_regions, other._regions);
 
     public void InvertRange(int invStart, int invEnd)
     {
@@ -106,14 +100,7 @@ public class Chromosome
         var keptRegions = newRegions.Shuffle(rnd).Take(count);
         _regions = RegionOps.ConcatRegions(keptRegions);
     }
-    public List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
-    {
-        var presentGenes = new List<Gene>();
-        foreach (var region in _regions)
-        {
-            var chromNum = region.ChromId.ChromNum;
-            presentGenes.AddRange(geneLists[chromNum].FindAll(g => g.Region.IsInside(region)));
-        }
-        return presentGenes;
-    }
+    
+    public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
+        => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => g.Region.IsInside(r)));
 }

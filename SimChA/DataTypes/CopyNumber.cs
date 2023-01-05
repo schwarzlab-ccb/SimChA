@@ -7,5 +7,5 @@ public struct CopyNumber
     public int CNH2;
 
     public string ToTSV()
-        => string.Join('\t', Segment.ChromId.ChromNum, Segment.Start, Segment.End, CNH1, CNH2);
+        => string.Join('\t', Segment.ChrID.ChrNo, Segment.Start, Segment.End, CNH1, CNH2);
 }

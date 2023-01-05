@@ -2,11 +2,11 @@
 
 namespace SimChA.DataTypes;
 
-public record ChromID(ChromNum ChromNum, bool Parent)
+public record ChrID(ChrNo ChrNo, bool Parent)
 {
     public override string ToString()
     {
         string parentIdentifier = Parent ? "H1" : "H2";
-        return $"({ChromNum.ToString()},{parentIdentifier})";
+        return $"({ChrNo.ToString()},{parentIdentifier})";
     }
 }
