@@ -7,12 +7,13 @@ using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
+// Note: Empty chromosomes are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
     private readonly List<Chromosome> _chromosomes;
-    public int ChromCount => _chromosomes.Count;
+    public int ChromCount => _chromosomes.Count(c => c.Any());
     public float Fitness { get; private set; }
-    
+
     public Karyotype(bool isFemale)
     {
         _chromosomes = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region)).ToList();
@@ -24,7 +25,7 @@ public class Karyotype
     }
 
     public override string ToString()
-        => _chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", _chromosomes) + "\n]\n" : "[]";
+        => ChromCount > 0 ? "[\n\t" + string.Join(",\n\t", _chromosomes.Where(c => c.Any())) + "\n]\n" : "[]";
 
     public List<Region> GetAllRegions()
     {
@@ -37,7 +38,7 @@ public class Karyotype
     private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
     {
         double fraction = Math.Clamp(ExponentialDistribution.Sample(rnd, meanLen), 0, 1);
-        return Math.Min((int) Math.Round(fraction * chr.Length()), chr.Length() - 2);
+        return Math.Min((int)Math.Round(fraction * chr.Length()), chr.Length() - 2);
     }
 
     // Get two positions within the chromosome (boundaries are excluded)
@@ -74,19 +75,21 @@ public class Karyotype
 
     // Needs better estimation
     private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
-        => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
+        => rnd.Next(1, (int)Math.Pow(chr.Length(), 1 / 3f));
 
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
-        string descriptor = "";
-        int chrID = _chromosomes.GetRandIndex(rnd);
+        string descriptor;
+        var chrIDs = Enumerable.Range(0, _chromosomes.Count).Where(i => _chromosomes[i].Any()).Shuffle(rnd).ToList();
+        int chrID = chrIDs[0];
         var chr = _chromosomes[chrID];
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
-                (int delSplit, bool delFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                var removed = chr.Split(delSplit, !delFromStart);
-                descriptor = $"chr:{chrID};lost:{removed.Length()}";
+                (int tailSplit, bool tailFromStart) = GetTail(rnd, chr, ((FractionAbbP)paramsSet).MeanLength);
+                (int tailStart, int tailEnd) = GetIndices(chr, tailSplit, tailFromStart);
+                var removed = chr.Split(tailSplit, !tailFromStart);
+                descriptor = $"chr:{chrID};start:{tailStart};end{tailEnd}";
                 break;
 
             case AberrationEnum.ChromDeletion:
@@ -95,44 +98,44 @@ public class Karyotype
                 break;
 
             case AberrationEnum.InternalDuplication:
-                (int dupStart, int dupEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
+                (int dupStart, int dupEnd) = GetInternalRange(rnd, chr, ((FractionAbbP)paramsSet).MeanLength);
                 chr.DuplicateRange(dupStart, dupEnd);
                 descriptor = $"chr:{chrID};start:{dupStart};end:{dupEnd}";
                 break;
 
             case AberrationEnum.InternalDeletion:
-                (int delStart, int delEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.DeleteRange(delStart, delEnd);                
+                (int delStart, int delEnd) = GetInternalRange(rnd, chr, ((FractionAbbP)paramsSet).MeanLength);
+                chr.DeleteRange(delStart, delEnd);
                 descriptor = $"chr:{chrID};start:{delStart};end:{delEnd}";
                 break;
 
             case AberrationEnum.Translocation:
                 // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
-                var chrIDs = _chromosomes.GetRandIndices( 2, rnd).ToList();
-                var chrA = _chromosomes[chrIDs[0]];
-                var chrB = _chromosomes[chrIDs[1]];
-                var splitA = chrA.Split(GetUniformPos(rnd, chrA), true);
-                var splitB = chrB.Split(GetUniformPos(rnd, chrB), true);
-                descriptor = $"chr_A:{chrIDs[0]};gave:{splitA.Length()};chr_B:{chrIDs[0]};gave:{splitB.Length()};";
-                chrA.Join(splitB);
-                chrB.Join(splitA);
+                int altID = chrIDs[1];
+                var alt = _chromosomes[altID];
+                var splitChr = chr.Split(GetUniformPos(rnd, chr), true);
+                var splitAlt = alt.Split(GetUniformPos(rnd, alt), true);
+                descriptor = $"chr_A:{chrID};gave:{splitChr.Length()};chr_B:{altID};gave:{splitAlt.Length()};";
+                chr.Join(splitAlt);
+                alt.Join(splitChr);
                 break;
 
             case AberrationEnum.InternalInversion:
-                (int invStart, int invEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
+                (int invStart, int invEnd) = GetInternalRange(rnd, chr, ((FractionAbbP)paramsSet).MeanLength);
                 chr.InvertRange(invStart, invEnd);
                 descriptor = $"chr:{chrID};start:{invStart};end{invEnd}";
                 break;
 
             case AberrationEnum.ChromDuplication:
                 _chromosomes.Add(new Chromosome(chr));
-                descriptor = "chr:" + chrID;
+                descriptor = $"chr:{chrID}";
                 break;
 
             case AberrationEnum.BreakageFusionBridge:
-                (int bfbPos, bool bfbFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
+                (int bfbPos, bool bfbFromStart) = GetTail(rnd, chr, ((FractionAbbP)paramsSet).MeanLength);
+                (int bfbStart, int bfbEnd) = GetIndices(chr, bfbPos, bfbFromStart);
+                descriptor = $"chr:{chrID};start:{bfbStart};end{bfbEnd}";
                 chr.Bridge(bfbPos, bfbFromStart);
-                descriptor = $"chr:{chrID};position:{bfbPos}{(bfbFromStart ? " from start":"")}";
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:
@@ -147,7 +150,7 @@ public class Karyotype
                 int count = rnd.Next(1, stops.Count);
                 int baseCount = chr.Length();
                 chr.ScatterAndGather(stops, count, rnd);
-                descriptor =$"chr:{chrID};fragments:{stops.Count+1};lost:{baseCount - chr.Length()}";
+                descriptor = $"chr:{chrID};fragments:{stops.Count + 1};lost:{baseCount - chr.Length()}";
                 break;
 
             case AberrationEnum.Chromoplexy:
@@ -157,6 +160,9 @@ public class Karyotype
         return descriptor;
     }
 
+    private static (int start, int end) GetIndices(Chromosome chr, int position, bool fromStart)
+        => fromStart ? (0, position) : (position, chr.Length());
+
     private List<Gene> GetPresentGenes(Dictionary<ChromNum, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
@@ -165,13 +171,14 @@ public class Karyotype
             foreach (var region in chr.GetAllRegions())
             {
                 var chromNum = region.ChromId.ChromNum;
-                presentGenes.AddRange(geneLists[chromNum].FindAll(g =>  g.Region.IsInside(region)));
+                presentGenes.AddRange(geneLists[chromNum].FindAll(g => g.Region.IsInside(region)));
             }
         }
         return presentGenes;
     }
-    
-    public float UpdateFitness(Dictionary<ChromNum, List<Gene>> essentialGenes, Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
+
+    public float UpdateFitness(Dictionary<ChromNum, List<Gene>> essentialGenes,
+        Dictionary<ChromNum, List<Gene>> tsgOgGenes, SimParams simParams)
     {
         float stress = CalcStress(simParams.StressFraction, ChromCount);
         var essentialFound = GetPresentGenes(essentialGenes);
@@ -182,8 +189,8 @@ public class Karyotype
         float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
         // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
         // n - 2 for each overrepresented gene (ploidy 2+)
-        float tsgOgFitness = 2 * tsgOgMissing.Sum(g => g.DeltaFitness) 
-                             -tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
+        float tsgOgFitness = 2 * tsgOgMissing.Sum(g => g.DeltaFitness) -
+                             tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
         // parametrized linear combination of factors
         Fitness = stress + simParams.TsgOgFraction * tsgOgFitness + simParams.EssentialFraction * essentialityFitness;
         return Fitness;

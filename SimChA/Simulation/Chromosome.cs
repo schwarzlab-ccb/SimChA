@@ -21,6 +21,8 @@ public class Chromosome
 
     public int Length() => Length(_regions);
 
+    public bool Any() => Length() > 0;
+
     public static int Length(List<Region> regions)
         => regions.Sum(r => r.Length);
 
