@@ -85,7 +85,6 @@ public class Karyotype
             case AberrationEnum.TailDeletion:
                 (int tailSplit, bool tailFromStart) = GetTail(rnd, chr, ((FractionAbbP)paramsSet).MeanLength);
                 (int tailStart, int tailEnd) = GetIndices(chr, tailSplit, tailFromStart);
-                var removed = chr.Split(tailSplit, !tailFromStart);
                 descriptor = $"chr:{chrID};start:{tailStart};end{tailEnd}";
                 break;
 
