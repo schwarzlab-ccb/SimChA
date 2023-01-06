@@ -11,7 +11,7 @@ public static class Fitness
     public static float Calculate(Karyotype karyotype, Dictionary<ChrNo, List<Gene>> essentialGenes,
         Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
     {
-        float stress = CalcStress(simParams.StressFraction, karyotype.ChrCount);
+        float stress = CalcStress(karyotype.ChrCount);
         var essentialFound = karyotype.GetPresentGenes(essentialGenes);
         var tsgOgFound = karyotype.GetPresentGenes(tsgOgGenes);
         var essentialsMissing = FindMissingGenes(essentialFound, essentialGenes);
@@ -23,7 +23,9 @@ public static class Fitness
         float tsgOgFitness = 2 * tsgOgMissing.Sum(g => g.DeltaFitness) -
                              tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
         // parametrized linear combination of factors
-        return stress + simParams.TsgOgFraction * tsgOgFitness + simParams.EssentialFraction * essentialityFitness;
+        return simParams.StressFraction * stress 
+               + simParams.TsgOgFraction * tsgOgFitness 
+               + simParams.EssentialFraction * essentialityFitness;
     }
 
     private static IEnumerable<Gene> FindMissingGenes(IReadOnlyCollection<Gene> presentGenes,
@@ -39,6 +41,6 @@ public static class Fitness
 
     // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
     // TODO: This needs to be validated
-    private static float CalcStress(float stressFactor, int chrCount)
-        => stressFactor * (float)Math.Pow(Math.Max(0, chrCount - 46), 2);
+    private static float CalcStress(int chrCount)
+        => (float)Math.Pow(Math.Max(0, chrCount - 46), 2);
 }
