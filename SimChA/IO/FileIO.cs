@@ -263,7 +263,7 @@ public class FileIO
                     continue;
                 }
                 string name = genString[0];
-                float fitness = float.Parse(genString[1]);
+                float fitness = float.Parse(genString[1], CultureInfo.InvariantCulture.NumberFormat);
                 var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[2]);
                 var chrID = new ChrID(chrNum, false);
                 // Convert to zero-based [start, end) index 

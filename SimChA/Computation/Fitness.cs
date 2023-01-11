@@ -12,31 +12,37 @@ public static class Fitness
         Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
     {
         float stress = CalcStress(karyotype.ChrCount);
-        var essentialFound = karyotype.GetPresentGenes(essentialGenes);
-        var tsgOgFound = karyotype.GetPresentGenes(tsgOgGenes);
-        var essentialsMissing = FindMissingGenes(essentialFound, essentialGenes);
-        var tsgOgMissing = FindMissingGenes(tsgOgFound, tsgOgGenes);
-        var tsgOgCounts = tsgOgFound.GroupBy(x => x).ToList();
-        float essentialityFitness = essentialsMissing.Sum(g => g.DeltaFitness);
-        // Twice the value for missing genes (ploidy 0), -1 multiplicative factor for each missing gene (ploidy 1),
-        // n - 2 for each overrepresented gene (ploidy 2+)
-        float tsgOgFitness = 2 * tsgOgMissing.Sum(g => g.DeltaFitness) -
-                             tsgOgCounts.Sum(g => g.Key.DeltaFitness * (g.Count() - 2));
-        // parametrized linear combination of factors
-        return simParams.StressFraction * stress 
-               + simParams.TsgOgFraction * tsgOgFitness 
-               + simParams.EssentialFraction * essentialityFitness;
+        Dictionary<Gene, int> tsgOgOccurences = FindeGeneMultiplications(tsgOgGenes, 
+            karyotype.GetPresentGenes(tsgOgGenes));
+        Dictionary<Gene, int> essentialOccurences = FindeGeneMultiplications(essentialGenes, 
+            karyotype.GetPresentGenes(essentialGenes));
+        float tsgOgFitness = 0;
+        float essentialityFitness = 0;
+        foreach(var tsgOgGenePresent in tsgOgOccurences)
+        {
+            tsgOgFitness += tsgOgGenePresent.Key.DeltaFitness * (tsgOgGenePresent.Value-2);
+        }
+        foreach(var essentialGene in essentialOccurences)
+        {
+            essentialityFitness = Math.Max(1 - essentialGene.Value, 0) * essentialGene.Key.DeltaFitness;
+        }
+        return 1 - simParams.StressFraction * stress
+            + simParams.TsgOgFraction * tsgOgFitness
+            - simParams.EssentialFraction * essentialityFitness;
     }
 
-    private static IEnumerable<Gene> FindMissingGenes(IReadOnlyCollection<Gene> presentGenes,
-        Dictionary<ChrNo, List<Gene>> geneList)
+    private static Dictionary<Gene, int> FindeGeneMultiplications(Dictionary<ChrNo, List<Gene>> geneLists, 
+    List<Gene> presentGenes)
     {
-        var missingGenes = new List<Gene>();
-        foreach (var (_, allGenes) in geneList)
+        Dictionary<Gene, int> geneListMultiplication = new Dictionary<Gene, int>();
+        foreach(var geneList in geneLists)
         {
-            missingGenes.AddRange(allGenes.Except(presentGenes));
+            foreach(var gene in geneList.Value)
+            {
+                geneListMultiplication.Add(gene, presentGenes.Where(x => x == gene).Count());
+            }
         }
-        return missingGenes;
+        return geneListMultiplication;
     }
 
     // Represents the limitation of space in the nucleus - more chromosomes ==> more stress
