@@ -244,7 +244,7 @@ public class FileIO
         }
         ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, tsgOgList, isFemale);
         ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, tsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), true, essentialList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), false, essentialList, isFemale);
         return (tsgOgList, essentialList);
     }
 

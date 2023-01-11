@@ -6,17 +6,17 @@ using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
-public class Chromosome
+public class Contig
 {
     private List<Region> _regions;
 
-    public Chromosome(Region initialRegion) 
+    public Contig(Region initialRegion) 
         => _regions = new List<Region> { initialRegion };
 
-    private Chromosome(IEnumerable<Region> regions)
+    private Contig(IEnumerable<Region> regions)
         => _regions = regions.Where(r => r.Length > 0).ToList();
 
-    public Chromosome(Chromosome other) 
+    public Contig(Contig other) 
         => _regions = new List<Region>(other._regions);
 
     public int Length() 
@@ -43,14 +43,14 @@ public class Chromosome
     public void DeleteRange(int start, int end)
         => _regions = RegionOps.DeleteRange(_regions, start, end);
 
-    public Chromosome Split(int pos, bool keepFirst)
+    public Contig Split(int pos, bool keepFirst)
     {
         var (first, second) = RegionOps.SplitRegions(_regions, pos);
         _regions = keepFirst ? first : second;
-        return new Chromosome(keepFirst ? second : first);
+        return new Contig(keepFirst ? second : first);
     }
 
-    public void Join(Chromosome other)
+    public void Join(Contig other)
         => _regions = RegionOps.ConcatRegions(_regions, other._regions);
 
     public void InvertRange(int invStart, int invEnd)
