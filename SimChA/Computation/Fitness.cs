@@ -20,7 +20,7 @@ public static class Fitness
         float essentialityFitness = 0;
         foreach(var tsgOgGenePresent in tsgOgOccurences)
         {
-            tsgOgFitness += tsgOgGenePresent.Key.DeltaFitness * (tsgOgGenePresent.Value-2);
+            tsgOgFitness -= (tsgOgGenePresent.Key.DeltaFitness * (tsgOgGenePresent.Value-2));
         }
         foreach(var essentialGene in essentialOccurences)
         {
