@@ -12,29 +12,38 @@ public static class Fitness
         Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
     {
         float stress = CalcStress(karyotype.ContigCount);
-        Dictionary<Gene, int> tsgOgOccurences = FindeGeneMultiplications(tsgOgGenes, 
-            karyotype.GetPresentGenes(tsgOgGenes));
-        Dictionary<Gene, int> essentialOccurences = FindeGeneMultiplications(essentialGenes, 
-            karyotype.GetPresentGenes(essentialGenes));
-        float tsgOgFitness = 0;
-        float essentialityFitness = 0;
-
-
-        //TODO -> individual functions
-        foreach(var tsgOgGenePresent in tsgOgOccurences)
-        {
-            tsgOgFitness -= (tsgOgGenePresent.Key.DeltaFitness * (tsgOgGenePresent.Value-2));
-        }
-        foreach(var essentialGene in essentialOccurences)
-        {
-            essentialityFitness -= Math.Max(1 - essentialGene.Value, 0) * essentialGene.Key.DeltaFitness;
-        }
+        float tsgOgFitness = CalcTsgOgFitness(karyotype, tsgOgGenes);
+        float essentialityFitness = CalcEssentialityFitness(karyotype, essentialGenes);
         return 1 - simParams.StressFraction * stress
             + simParams.TsgOgFraction * tsgOgFitness
             - simParams.EssentialFraction * essentialityFitness;
     }
 
-    private static Dictionary<Gene, int> FindeGeneMultiplications(Dictionary<ChrNo, List<Gene>> geneLists, 
+    private static float CalcEssentialityFitness(Karyotype karyotype, Dictionary<ChrNo, List<Gene>> essentialGenes)
+    {
+        float essentialityFitness = 0;
+        Dictionary<Gene, int> essentialOccurences =FindGeneMultiplications(essentialGenes, 
+            karyotype.GetPresentGenes(essentialGenes));
+        foreach(var essentialGene in essentialOccurences)
+        {
+            essentialityFitness += Math.Max(1 - essentialGene.Value, 0) * essentialGene.Key.DeltaFitness;
+        }
+        return essentialityFitness;   
+    }
+
+    private static float CalcTsgOgFitness(Karyotype karyotype, Dictionary<ChrNo, List<Gene>> tsgOgGenes)
+    {
+        float tsgOgFitness = 0;
+        Dictionary<Gene, int> tsgOgOccurences = FindGeneMultiplications(tsgOgGenes, 
+            karyotype.GetPresentGenes(tsgOgGenes));
+        foreach(var tsgOgGenePresent in tsgOgOccurences)
+        {
+            tsgOgFitness += tsgOgGenePresent.Key.DeltaFitness * (tsgOgGenePresent.Value-2);
+        }
+        return tsgOgFitness;
+    }
+
+    private static Dictionary<Gene, int> FindGeneMultiplications(Dictionary<ChrNo, List<Gene>> geneLists, 
     List<Gene> presentGenes)
     {
         Dictionary<Gene, int> geneListMultiplication = new Dictionary<Gene, int>();
