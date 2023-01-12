@@ -236,9 +236,12 @@ public class FileIO
         Dictionary<ChrNo, List<Gene>>, 
         Dictionary<ChrNo, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
     {
-        Dictionary<ChrNo, List<Gene>> tsgList = new();
-        Dictionary<ChrNo, List<Gene>> ogList = new();
-        Dictionary<ChrNo, List<Gene>> essentialList = new();
+        Dictionary<ChrNo, List<Gene>> tsgList = Enum.GetValues(typeof(ChrNo))
+            .Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        Dictionary<ChrNo, List<Gene>> ogList = Enum.GetValues(typeof(ChrNo))
+            .Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        Dictionary<ChrNo, List<Gene>> essentialList = Enum.GetValues(typeof(ChrNo))
+            .Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
         
         if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
            || !File.Exists(Path.Combine(folder, OGS_TSV)) 
@@ -273,14 +276,7 @@ public class FileIO
                 // Convert to zero-based [start, end) index 
                 var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chrID);
                 var gene = new Gene(name, region, negFit ? -fitness : fitness);
-                if(genes.ContainsKey(chrNum))
-                {
-                    genes[chrNum].Add(gene);
-                }
-                else
-                {
-                    genes.Add(chrNum, new List<Gene> {gene});
-                }
+                genes[chrNum].Add(gene);
             }
         }
     }
