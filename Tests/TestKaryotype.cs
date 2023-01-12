@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using SimChA.DataTypes;
 using SimChA.IO;
@@ -51,19 +52,18 @@ public class TestKaryotype
         Assert.AreEqual("[]", _kar.ToString());
     }
 
+    private Gene MakeGene(ChrNo chrNo) 
+        => new("G" + chrNo, new Region(0, 50, new ChrID(chrNo, false)), _rnd.NextDouble());
+
     [Test]
     public void TestGetPresentGenes()
     {
-        _kar = new Karyotype(false);
-        var tsgOgLists = new Dictionary<ChrNo, List<Gene>>();
-        foreach(var chrNo in (ChrNo[]) Enum.GetValues(typeof(ChrNo)))
-        {
-            tsgOgLists.Add(chrNo, new List<Gene>{new Gene("T" + chrNo.ToString(), 
-                new Region(0, 50, new ChrID(chrNo, false)), (float) _rnd.NextDouble())});
-        }
+        var chrNums = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>();
+        var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> {MakeGene(c)});
         var tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.ContigCount, tsgOgsPresent.Count);
-        _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+        
+        // Removes a gene and a contig at the same time
         _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.ContigCount, tsgOgsPresent.Count);

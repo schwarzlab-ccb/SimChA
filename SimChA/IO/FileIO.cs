@@ -278,7 +278,6 @@ public class FileIO
                     genes.Add(chrNum, new List<Gene> {gene});
                 }
             }
-
         }
     }
 }

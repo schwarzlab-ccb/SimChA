@@ -9,7 +9,7 @@ using SimChA.Simulation;
 namespace Tests;
 
 [TestFixture]
-public class TestChromosomes
+public class TestContig
 {
     private Contig _contig1;
     private Contig _contigX;

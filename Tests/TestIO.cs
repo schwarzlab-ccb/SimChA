@@ -1,6 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using NUnit.Framework;
 using SimChA.IO;
@@ -26,7 +27,14 @@ public class TestIO
     }
 
     [Test]
-    public void TestNewickParser(){
+    public void TestTsgOgReading()
+    {
+        // TODO: @Felix
+    }
+
+    [Test]
+    public void TestNewickParser()
+    {
         string[] newickTestStrings= {
             "",
             "(,,(,));",
@@ -66,7 +74,7 @@ public class TestIO
             9,
             174
         };
-        
+
         for(int i = 0; i < newickTestStrings.Length; i++)
         {
             var clones = Newick.ParseNewick(newickTestStrings[i], true);

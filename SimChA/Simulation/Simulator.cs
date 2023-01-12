@@ -51,7 +51,7 @@ public class Simulator
                 Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
                 var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
-                double newFitness = child.Karyotype.UpdateFitness(_essentialGenes, _tsgOgGenes, _simParams);
+                double newFitness = child.Karyotype.UpdateFitness(_tsgOgGenes, _essentialGenes, _simParams);
                 int mutationCount = parentMutations + 1 + i;
                 var abberation = new Abberation(child.Name, aberration, mutationCount,
                     eventString, newFitness - oldFitness, newFitness);

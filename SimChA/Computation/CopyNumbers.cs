@@ -8,7 +8,7 @@ public static class CopyNumbers
     public static IEnumerable<CopyNumber> CalcCopyNumbers(Karyotype karyotype, bool isFemale)
     {
         var reference = ReferenceGenome.GetChromosomes(isFemale);
-        var copyNumbers = reference.SelectMany(chr => CalcSegmentation(karyotype.FindRegionsOfChr(chr), chr));
+        var copyNumbers = reference.SelectMany(c => CalcSegmentation(karyotype.FindRegionsOfChr(c), c));
         return copyNumbers.ToList();
         // TODO: Optimization: Merge neighboring segments that have the same copy numbers
     }
