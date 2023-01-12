@@ -13,7 +13,7 @@ public class Karyotype
 {
     private readonly List<Contig> _contigs;
     public int ContigCount => _contigs.Count(c => c.Any());
-    public float FitnessVal { get; private set; }
+    public double FitnessVal { get; private set; }
 
     public Karyotype(bool isFemale)
     {
@@ -162,6 +162,6 @@ public class Karyotype
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
     
-    public float UpdateFitness(Dictionary<ChrNo, List<Gene>> essentialGenes, Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
+    public double UpdateFitness(Dictionary<ChrNo, List<Gene>> essentialGenes, Dictionary<ChrNo, List<Gene>> tsgOgGenes, SimParams simParams)
         => FitnessVal = Fitness.Calculate(this, essentialGenes, tsgOgGenes, simParams);
 }

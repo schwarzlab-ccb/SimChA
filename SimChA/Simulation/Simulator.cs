@@ -44,14 +44,14 @@ public class Simulator
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
-            float oldFitness = node.Karyotype.FitnessVal;
+            double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
                 Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
                 var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
-                float newFitness = child.Karyotype.UpdateFitness(_essentialGenes, _tsgOgGenes, _simParams);
+                double newFitness = child.Karyotype.UpdateFitness(_essentialGenes, _tsgOgGenes, _simParams);
                 int mutationCount = parentMutations + 1 + i;
                 var abberation = new Abberation(child.Name, aberration, mutationCount,
                     eventString, newFitness - oldFitness, newFitness);

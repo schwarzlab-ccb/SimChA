@@ -9,5 +9,5 @@ public record Abberation(
     AberrationEnum AberrationType, 
     int NrOfMutation,
     string Region = "",
-    float DeltaFitness = 0, 
-    float TotalFitness = 0);
+    double DeltaFitness = 0, 
+    double TotalFitness = 0);
