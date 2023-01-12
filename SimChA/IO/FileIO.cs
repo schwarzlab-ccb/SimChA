@@ -231,9 +231,13 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
 
-    public static (Dictionary<ChrNo, List<Gene>>, Dictionary<ChrNo, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
+    public static (
+        Dictionary<ChrNo, List<Gene>>, 
+        Dictionary<ChrNo, List<Gene>>, 
+        Dictionary<ChrNo, List<Gene>>) ReadGeneLists(string folder, bool isFemale)
     {
-        Dictionary<ChrNo, List<Gene>> tsgOgList = new();
+        Dictionary<ChrNo, List<Gene>> tsgList = new();
+        Dictionary<ChrNo, List<Gene>> ogList = new();
         Dictionary<ChrNo, List<Gene>> essentialList = new();
         
         if(!File.Exists(Path.Combine(folder, TSGS_TSV)) 
@@ -242,10 +246,10 @@ public class FileIO
         {
             throw new Exception($"Required files not found in {folder} directory.");
         }
-        ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, tsgOgList, isFemale);
-        ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, tsgOgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), true, tsgList, isFemale);
+        ReadGenesFromFile(Path.Combine(folder, OGS_TSV), false, ogList, isFemale);
         ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), false, essentialList, isFemale);
-        return (tsgOgList, essentialList);
+        return (tsgList, ogList, essentialList);
     }
 
     private static void ReadGenesFromFile(string file, bool negFit, Dictionary<ChrNo, List<Gene>> genes, bool isFemale)

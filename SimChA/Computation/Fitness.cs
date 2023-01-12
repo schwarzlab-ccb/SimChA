@@ -10,15 +10,18 @@ public static class Fitness
 {
     public static double Calculate(
         Karyotype karyotype,
-        Dictionary<ChrNo, List<Gene>> tsgOgGenes,
+        Dictionary<ChrNo, List<Gene>> tsgGenes,
+        Dictionary<ChrNo, List<Gene>> ogGenes, 
         Dictionary<ChrNo, List<Gene>> essentialGenes,
         SimParams simParams)
     {
-        var tsgOgCNs = CalcCNs(tsgOgGenes, karyotype);
+        var tsgCNs = CalcCNs(tsgGenes, karyotype);
+        var ogCNs = CalcCNs(ogGenes, karyotype);
         var essCNs = CalcCNs(essentialGenes, karyotype);
         return 1 
                - simParams.StressFraction * StressTerm(karyotype.ContigCount) 
-               + simParams.TsgOgFraction * TsgOgTerm(tsgOgCNs) 
+               + simParams.TsgOgFraction * TsgOgTerm(tsgCNs)
+               + simParams.TsgOgFraction * TsgOgTerm(ogCNs) 
                - simParams.EssentialFraction * EssTerm(essCNs);
     }
 
@@ -27,8 +30,8 @@ public static class Fitness
     public static double StressTerm(int contigCount)
         => Math.Pow(Math.Max(0, contigCount - 46), 2);
 
-    public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> tsgOgCNs)
-        => tsgOgCNs.Sum(g => (g.CN - 2) * g.gene.DeltaFitness);
+    public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs)
+        => geneCNs.Sum(g => (g.CN - 2) * g.gene.DeltaFitness);
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Max(1 - g.CN, 0) * g.gene.DeltaFitness);
