@@ -69,11 +69,10 @@ public class TestFitness
     public void TestCNCalulation()
     {
         // Seed 14 to get chr1 delete
-        Random rnd = new Random(14);
-        Dictionary<ChrNo, List<Gene>> dict = Enum.GetValues(typeof(ChrNo))
-            .Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        var rnd = new Random(14);
+        var karyotype = new Karyotype(true);
+        var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
         dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
-        Karyotype karyotype = new Karyotype(true);
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 2));
         karyotype.ApplyAberration(rnd, AberrationEnum.ChromDeletion, new SimChA.IO.BaseAbbP(1));
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));

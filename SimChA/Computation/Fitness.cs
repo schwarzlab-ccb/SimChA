@@ -20,8 +20,7 @@ public static class Fitness
         var essCNs = CalcCNs(essentialGenes, karyotype);
         return 1 
                - simParams.StressFraction * StressTerm(karyotype.ContigCount) 
-               + simParams.TsgOgFraction * TsgOgTerm(tsgCNs)
-               + simParams.TsgOgFraction * TsgOgTerm(ogCNs) 
+               + simParams.TsgOgFraction * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
                - simParams.EssentialFraction * EssTerm(essCNs);
     }
 
