@@ -8,7 +8,7 @@ public static class SNPBuilder
     {
         List<SNP> snps = new();
         var referenceChromosomes = ReferenceGenome.GetChromosomes(isFemale);
-        long totGenomeLength = ReferenceGenome.TotalLength(isFemale);
+        long totGenomeLength = ReferenceGenome.TotalLength(isFemale) / 2;
 
         int snpId = 0;
         foreach (var chrom in referenceChromosomes)

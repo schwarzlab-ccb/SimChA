@@ -135,10 +135,21 @@ public static class ReferenceGenome
         => isFemale ? GenotypeF : GenotypeM;
 
     public static long TotalLength(bool isFemale)
-        => GetChromosomes(isFemale).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
+    {
+        long length = 2 * Enum.GetValues<ChromNum>().Take(22).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
+        if (isFemale)
+        {
+            length += 2 * ChromosomeLengthMap[ChromNum.chrX];
+        }
+        else
+        {
+            length += ChromosomeLengthMap[ChromNum.chrX] + ChromosomeLengthMap[ChromNum.chrY];
+        }
+        return length;
+    }
 
     public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
-        => Enum.GetValues<ChromNum>().Take(22).Append(isFemale ? ChromNum.chrX : ChromNum.chrY);
+        => Enum.GetValues<ChromNum>().Take(isFemale ? 23 : 24);
 
     public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true) =>
         new(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));

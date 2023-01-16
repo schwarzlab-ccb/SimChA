@@ -47,7 +47,7 @@ public static class CopyNumbers
 
     public static float CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
     {
-        long totalLength = ReferenceGenome.TotalLength(isFemale);
+        long totalLength = ReferenceGenome.TotalLength(isFemale) / 2;
         float ploidy = copyNumbers
             .Select(c => (float)(c.Segment.End - c.Segment.Start) * (c.CNH1 + c.CNH2) / totalLength)
             .Sum();
