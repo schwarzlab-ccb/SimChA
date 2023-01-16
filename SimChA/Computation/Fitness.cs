@@ -10,14 +10,12 @@ public static class Fitness
 {
     public static double Calculate(
         Karyotype karyotype,
-        Dictionary<ChrNo, List<Gene>> tsgGenes,
-        Dictionary<ChrNo, List<Gene>> ogGenes, 
-        Dictionary<ChrNo, List<Gene>> essentialGenes,
+        List<Dictionary<ChrNo, List<Gene>>> geneLists,
         SimParams simParams)
     {
-        var tsgCNs = CalcCNs(tsgGenes, karyotype);
-        var ogCNs = CalcCNs(ogGenes, karyotype);
-        var essCNs = CalcCNs(essentialGenes, karyotype);
+        var tsgCNs = CalcCNs(geneLists[0], karyotype);
+        var ogCNs = CalcCNs(geneLists[1], karyotype);
+        var essCNs = CalcCNs(geneLists[2], karyotype);
         return 1 
                - simParams.StressFraction * StressTerm(karyotype.ContigCount) 
                + simParams.TsgOgFraction * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 

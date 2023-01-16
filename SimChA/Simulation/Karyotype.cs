@@ -163,9 +163,7 @@ public class Karyotype
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
     
     public double UpdateFitness(
-        Dictionary<ChrNo, List<Gene>> tsgGenes, 
-        Dictionary<ChrNo, List<Gene>> ogGenes, 
-        Dictionary<ChrNo, List<Gene>> essentialGenes,  
+        List<Dictionary<ChrNo, List<Gene>>> geneLists, 
         SimParams simParams)
-        => FitnessVal = Fitness.Calculate(this, tsgGenes, ogGenes, essentialGenes, simParams);
+        => FitnessVal = Fitness.Calculate(this, geneLists, simParams);
 }

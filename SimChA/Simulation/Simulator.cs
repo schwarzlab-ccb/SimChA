@@ -9,24 +9,18 @@ public class Simulator
     private readonly AberrationsInfo _aberrationsInfo;
     private readonly Random _rnd;
     private readonly SimParams _simParams;
-    private readonly Dictionary<ChrNo, List<Gene>> _tsgGenes;
-    private readonly Dictionary<ChrNo, List<Gene>> _ogGenes;
-    private readonly Dictionary<ChrNo, List<Gene>> _essentialGenes;
+    private readonly List<Dictionary<ChrNo, List<Gene>>> _geneLists;
     
     public Simulator(
         AberrationsInfo aberrationsInfo, 
         Random rnd, 
         SimParams simParams, 
-        Dictionary<ChrNo, List<Gene>> tsgGenes, 
-        Dictionary<ChrNo, List<Gene>> ogGenes, 
-        Dictionary<ChrNo, List<Gene>> essentialGenes)
+        List<Dictionary<ChrNo, List<Gene>>> geneLists)
     {
         _aberrationsInfo = aberrationsInfo;
         _rnd = rnd;
         _simParams = simParams;
-        _tsgGenes = tsgGenes;
-        _ogGenes = ogGenes;
-        _essentialGenes = essentialGenes;
+        _geneLists = geneLists;
     }
     
     // calculate the number of nodes in the tree given by clones from the rootClone
@@ -54,7 +48,7 @@ public class Simulator
                 Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
                 var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
-                double newFitness = child.Karyotype.UpdateFitness(_tsgGenes, _ogGenes, _essentialGenes, _simParams);
+                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams);
                 int mutationCount = parentMutations + 1 + i;
                 var abberation = new Abberation(child.Name, aberration, mutationCount,
                     eventString, newFitness - oldFitness, newFitness);

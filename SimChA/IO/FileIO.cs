@@ -235,8 +235,7 @@ public class FileIO
     }
 
     // TODO make the return triple into a dictionary
-    public static (Dictionary<ChrNo, List<Gene>>, Dictionary<ChrNo, List<Gene>>, Dictionary<ChrNo, List<Gene>>) 
-        ReadGeneLists(string folder, bool isFemale)
+    public static List<Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale)
     {
         foreach (string filename in new[] { TSGS_TSV, OGS_TSV, ESSENTIALS_TSV })
         {
@@ -245,10 +244,11 @@ public class FileIO
                 throw new Exception($"Required file {filename} not found in {folder} directory.");
             }
         }
-        var tsgList = ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), isFemale);
-        var ogList = ReadGenesFromFile(Path.Combine(folder, OGS_TSV), isFemale);
-        var essentialList = ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), isFemale);
-        return (tsgList, ogList, essentialList);
+        var geneLists = new List<Dictionary<ChrNo, List<Gene>>>();
+        geneLists.Add(ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), isFemale));
+        geneLists.Add(ReadGenesFromFile(Path.Combine(folder, OGS_TSV), isFemale));
+        geneLists.Add(ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), isFemale));
+        return geneLists;
     }
 
     private static Dictionary<ChrNo, List<Gene>> ReadGenesFromFile(string file, bool isFemale)
@@ -267,12 +267,12 @@ public class FileIO
             {
                 continue;
             }
-            string name = genString[0];
-            float fitness = float.Parse(genString[1], CultureInfo.InvariantCulture.NumberFormat);
-            var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[2]);
+            string name = genString[3];
+            float fitness = float.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
+            var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[0]);
             var chrID = new ChrID(chrNum, isFemale);
             // Convert to zero-based [start, end) index 
-            var region = new Region(int.Parse(genString[3]) - 1, int.Parse(genString[4]), chrID);
+            var region = new Region(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrID);
             var gene = new Gene(name, region, fitness);
             geneList[chrNum].Add(gene);
         }

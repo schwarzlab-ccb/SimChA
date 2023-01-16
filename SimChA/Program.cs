@@ -28,7 +28,7 @@ if (options.Value.NewickFile != "")
 {
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
-var (tsgList, ogList, essentialsList) = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
 
 Console.WriteLine("Computing mutations.");
 var watch = new Stopwatch();
@@ -41,7 +41,7 @@ var clones = options.Value.NewickFile != ""
     ? Newick.ParseNewick(newickString, simParams.IsFemale)
     : Simulator.MakeClonePair(options.Value.Distance , true);
 var aberrationsInfo = new AberrationsInfo(simParams);
-var simulator = new Simulator(aberrationsInfo, rnd, simParams, tsgList, ogList, essentialsList);
+var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
 var aberrations = simulator.AssignMutations(clones[0], clones);
 var lcaTree = LCATreeBuilder.BuildTree(clones);
     
