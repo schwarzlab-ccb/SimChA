@@ -1,6 +1,8 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -66,6 +68,16 @@ public class TestFitness
     [Test]
     public void TestCNCalulation()
     {
-        // TODO: @Felix
+        // Seed 14 to get chr1 delete
+        Random rnd = new Random(14);
+        Dictionary<ChrNo, List<Gene>> dict = Enum.GetValues(typeof(ChrNo))
+            .Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
+        Karyotype karyotype = new Karyotype(true);
+        Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 2));
+        karyotype.ApplyAberration(rnd, AberrationEnum.ChromDeletion, new SimChA.IO.BaseAbbP(1));
+        Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
+        karyotype.ApplyAberration(rnd, AberrationEnum.ChromDeletion, new SimChA.IO.BaseAbbP(1));
+        Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
     }
 }
