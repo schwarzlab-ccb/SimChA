@@ -1,77 +1,61 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using Extreme.Statistics.Distributions;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
+using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
+// Note: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
+    private readonly List<Contig> _contigs;
+    public int ContigCount => _contigs.Count(c => c.Any());
+    public double FitnessVal { get; private set; }
+
     public Karyotype(bool isFemale)
     {
-        var reference = ReferenceGenome.GetGenotype(isFemale).Select(region => new Chromosome(region));
-        Chromosomes = new List<Chromosome>(reference);
-        IsFemale = isFemale;
+        _contigs = ReferenceGenome.GetGenotype(isFemale).Select(region => new Contig(region)).ToList();
     }
 
     public Karyotype(Karyotype other)
     {
-        Chromosomes = other.Chromosomes.Select(ch => new Chromosome(ch)).ToList();
-        IsFemale = other.IsFemale;
-    }
-
-    public Karyotype(List<Chromosome> chromosomes, bool isFemale)
-    {
-        Chromosomes = chromosomes;
-        IsFemale = isFemale;
+        _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
     }
 
     public override string ToString()
-        => Chromosomes.Any() ? "[\n\t" + string.Join(",\n\t", Chromosomes) + "\n]\n" : "[]";
+        => ContigCount > 0 ? "[\n\t" + string.Join(",\n\t", _contigs.Where(c => c.Any())) + "\n]\n" : "[]";
+    
+    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
+        => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
-    public List<Chromosome> Chromosomes { get; }
-    public bool IsFemale { get; }
-    public int ChromCount => Chromosomes.Count;
-
-    public List<Region> GetAllRegions()
-    {
-        var regions = new List<Region>();
-        Chromosomes.ForEach(ch => regions.AddRange(ch.GetAllRegions()));
-        return regions;
-    }
-
-    private Chromosome RandomChr(Random rnd)
-        => Chromosomes.Shuffle(rnd).First();
-
-    private List<Chromosome> RandomChrs(Random rnd, int count)
-        => Chromosomes.Shuffle(rnd).Take(count).ToList();
-
-    // Segment is at most 2 bases shorter than chr
-    private static int GetSegLen(Random rnd, Chromosome chr, double meanLen)
+    // Segment is at most 2 bases shorter than contig
+    private static int GetSegLength(Random rnd, Contig contig, double meanLen)
     {
         double fraction = Math.Clamp(ExponentialDistribution.Sample(rnd, meanLen), 0, 1);
-        return Math.Min((int) Math.Round(fraction * chr.Length()), chr.Length() - 2);
+        return Math.Min((int)Math.Round(fraction * contig.Length()), contig.Length() - 2);
     }
 
-    // Get two positions within the chromosome (boundaries are excluded)
-    private static (int start, int end) GetInternalRange(Random rnd, Chromosome chr, double meanLen)
+    // Get two positions within the contig (boundaries are excluded)
+    private static (int start, int end) GetInternalRange(Random rnd, Contig contig, double meanLen)
     {
-        int segLength = GetSegLen(rnd, chr, meanLen);
-        int start = DiscreteUniformDistribution.Sample(rnd, 1, chr.Length() - segLength);
-        int end = Math.Min(start + segLength + 1, chr.Length() - 1);
+        int segLength = GetSegLength(rnd, contig, meanLen);
+        int start = DiscreteUniformDistribution.Sample(rnd, 1, contig.Length() - segLength);
+        int end = Math.Min(start + segLength + 1, contig.Length() - 1);
         return (start, end);
     }
 
-    // Get two positions within the chromosome (boundaries are excluded)
-    private static int GetUniformPos(Random rnd, Chromosome chr)
-        => rnd.Next(1, chr.Length() - 1);
+    // Get two positions within the contig (boundaries are excluded)
+    private static int GetUniformPos(Random rnd, Contig contig)
+        => rnd.Next(1, contig.Length() - 1);
 
-    private static (int, bool) GetTail(Random rnd, Chromosome chr, double meanLen)
+    private static (int, bool) GetTail(Random rnd, Contig contig, double meanLen)
     {
-        int segLength = GetSegLen(rnd, chr, meanLen);
+        int segLength = GetSegLength(rnd, contig, meanLen);
         bool fromStart = rnd.CoinFlip();
-        int pos = fromStart ? segLength - 1 : chr.Length() - segLength - 1;
+        int pos = fromStart ? segLength - 1 : contig.Length() - segLength - 1;
         return (pos, fromStart);
     }
 
@@ -87,88 +71,99 @@ public class Karyotype
         };
 
     // Needs better estimation
-    private static int GetChromothripsisSiteCount(Random rnd, Chromosome chr)
-        => rnd.Next(1, (int) Math.Pow(chr.Length(), 1 / 3f));
+    private static int GetChromothripsisSiteCount(Random rnd, Contig contig)
+        => rnd.Next(1, (int)Math.Pow(contig.Length(), 1 / 3f));
 
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
-        string region = "";
-        var chr = RandomChr(rnd);
+        string descriptor;
+        var contigIDs = Enumerable.Range(0, _contigs.Count).Where(i => _contigs[i].Any()).Shuffle(rnd).ToList();
+        int contigID = contigIDs[0];
+        var contig = _contigs[contigID];
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
-                int numberNucleotides = chr._regions[0].End;
-                (int delSplit, bool delFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.Split(delSplit, !delFromStart);
-                region = $"chromosome:{chr._regions[0].ChromId};nucleotides_deleted:" + 
-                    $"{(numberNucleotides - delSplit)}{(delFromStart ? " from start":"")}";
-                
+                (int tailSplit, bool tailFromStart) = GetTail(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
+                (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, tailFromStart);
+                descriptor = $"contig:{contigID};start:{tailStart};end{tailEnd}";
                 break;
 
             case AberrationEnum.ChromDeletion:
-                region = $"chromosome:{chr._regions[0].ChromId}";
-                Chromosomes.Remove(chr);
+                descriptor = $"contig:{contigID}";
+                contig.Clear();
                 break;
 
             case AberrationEnum.InternalDuplication:
-                (int dupStart, int dupEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.DuplicateRange(dupStart, dupEnd);
-                region = $"chromosome:{chr._regions[0].ChromId};start:{dupStart};end:{dupEnd}";
+                (int dupStart, int dupEnd) = GetInternalRange(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
+                contig.DuplicateRange(dupStart, dupEnd);
+                descriptor = $"contig:{contigID};start:{dupStart};end:{dupEnd}";
                 break;
 
             case AberrationEnum.InternalDeletion:
-                (int delStart, int delEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.DeleteRange(delStart, delEnd);                
-                region = $"chromosome:{chr._regions[0].ChromId};start:{delStart};end:{delEnd}";
+                (int delStart, int delEnd) = GetInternalRange(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
+                contig.DeleteRange(delStart, delEnd);
+                descriptor = $"contig:{contigID};start:{delStart};end:{delEnd}";
                 break;
 
             case AberrationEnum.Translocation:
                 // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
-                var chrPair = RandomChrs(rnd, 2);
-                var splits = chrPair.Select(c => c.Split(GetUniformPos(rnd, c), true)).ToList();
-                chrPair[0].Join(splits[1]);
-                chrPair[1].Join(splits[0]);
-                region = $"chromosome_1:{chrPair[0]._regions[0].ChromId};added_1:{splits[1]._regions[0].ChromId};start_1:{splits[1]._regions[0].Start};end_1:{splits[1]._regions[0].End}" +
-                $"chromosome_2:{chrPair[1]._regions[0].ChromId};added_2:{splits[0]._regions[0].ChromId};start_2:{splits[0]._regions[0].Start};end_2:{splits[0]._regions[0].End}";
+                int altID = contigIDs[1];
+                var alt = _contigs[altID];
+                var splitContig = contig.Split(GetUniformPos(rnd, contig), true);
+                var splitAlt = alt.Split(GetUniformPos(rnd, alt), true);
+                descriptor = $"contig_A:{contigID};gave:{splitContig.Length()};contig_B:{altID};gave:{splitAlt.Length()};";
+                contig.Join(splitAlt);
+                alt.Join(splitContig);
                 break;
 
             case AberrationEnum.InternalInversion:
-                (int invStart, int invEnd) = GetInternalRange(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.InvertRange(invStart, invEnd);
-                region = $"chromosome:{chr._regions[0].ChromId};start:{invStart};end{invEnd}";
+                (int invStart, int invEnd) = GetInternalRange(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
+                contig.InvertRange(invStart, invEnd);
+                descriptor = $"contig:{contigID};start:{invStart};end{invEnd}";
                 break;
 
             case AberrationEnum.ChromDuplication:
-                Chromosomes.Add(new Chromosome(chr));
-                region = "chromosome:" + chr._regions[0].ChromId;
+                _contigs.Add(new Contig(contig));
+                descriptor = $"contig:{contigID}";
                 break;
 
             case AberrationEnum.BreakageFusionBridge:
-                (int bfbPos, bool bfbFromStart) = GetTail(rnd, chr, ((FractionAbbP) paramsSet).MeanLength);
-                chr.Bridge(bfbPos, bfbFromStart);
-                region = $"chromosome:{chr._regions[0].ChromId};position:{bfbPos}{(bfbFromStart ? " from start":"")}";
+                (int bfbPos, bool bfbFromStart) = GetTail(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
+                (int bfbStart, int bfbEnd) = GetIndices(contig, bfbPos, bfbFromStart);
+                descriptor = $"contig:{contigID};start:{bfbStart};end{bfbEnd}";
+                contig.Bridge(bfbPos, bfbFromStart);
                 break;
 
             case AberrationEnum.WholeGenomeDoubling:
-                Chromosomes.AddRange(Chromosomes.Select(ch => new Chromosome(ch)).ToList());
+                _contigs.AddRange(_contigs.Select(ch => new Contig(ch)).ToList());
+                descriptor = "WGD";
                 break;
 
             case AberrationEnum.Chromothripsis:
-                int shardCount = GetChromothripsisSiteCount(rnd, chr);
-                var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(rnd, chr)).Distinct().ToList();
+                int shardCount = GetChromothripsisSiteCount(rnd, contig);
+                var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(rnd, contig)).Distinct().ToList();
                 stops.Sort();
                 int count = rnd.Next(1, stops.Count);
-                chr.ScatterAndGather(stops, count, rnd);
-                region = $"chromosome:{chr._regions[0].ChromId}";
-                foreach (var keptRegion in chr._regions)
-                {
-                    region += $";start:{keptRegion.Start};end:{keptRegion.End}";
-                }
+                int baseCount = contig.Length();
+                contig.ScatterAndGather(stops, count, rnd);
+                descriptor = $"contig:{contigID};fragments:{stops.Count + 1};lost:{baseCount - contig.Length()}";
                 break;
 
+            case AberrationEnum.Chromoplexy:
             default:
                 throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
         }
-        return region.ToString();
+        return descriptor;
     }
+
+    private static (int start, int end) GetIndices(Contig contig, int position, bool fromStart)
+        => fromStart ? (0, position) : (position, contig.Length());
+
+    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
+        => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+    
+    public double UpdateFitness(
+        List<Dictionary<ChrNo, List<Gene>>> geneLists, 
+        SimParams simParams)
+        => FitnessVal = Fitness.Calculate(this, geneLists, simParams);
 }

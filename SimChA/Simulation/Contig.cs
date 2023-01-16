@@ -1,55 +1,57 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
-public class Chromosome
+public class Contig
 {
-    public List<Region> _regions;
+    private List<Region> _regions;
 
-    public Chromosome(Region initialRegion) 
+    public Contig(Region initialRegion) 
         => _regions = new List<Region> { initialRegion };
 
-    private Chromosome(IEnumerable<Region> regions)
+    private Contig(IEnumerable<Region> regions)
         => _regions = regions.Where(r => r.Length > 0).ToList();
 
-    public Chromosome(Chromosome other) 
+    public Contig(Contig other) 
         => _regions = new List<Region>(other._regions);
 
-    public int Length() => Length(_regions);
+    public int Length() 
+        => Length(_regions);
 
-    public static int Length(List<Region> regions)
+    public bool Any() 
+        => Length() > 0;
+
+    public static int Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
 
-    public static string ToString(List<Region> regions)
+    public static string ToString(IEnumerable<Region> regions)
         => "[" + string.Join(",", regions.Select(r => r.ToString())) + "]";
 
     public override string ToString()
         => ToString(_regions);
+    
+    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo)
+        => _regions.Where(r => r.ChrID.ChrNo == chrNo);
 
-    public List<Region> GetAllRegions()
-        => _regions.ToList();
-
-    public List<Region> GetRegions(ChromID chromID)
-        => _regions.Where(r => r.ChromId.Equals(chromID)).ToList();
+    public void Clear()
+        => _regions.Clear();
 
     public void DeleteRange(int start, int end)
-    {
-        _regions = RegionOps.DeleteRange(_regions, start, end);
-    }
-    
-    public Chromosome Split(int pos, bool keepFirst)
+        => _regions = RegionOps.DeleteRange(_regions, start, end);
+
+    public Contig Split(int pos, bool keepFirst)
     {
         var (first, second) = RegionOps.SplitRegions(_regions, pos);
         _regions = keepFirst ? first : second;
-        return new Chromosome(keepFirst ? second : first);
+        return new Contig(keepFirst ? second : first);
     }
 
-    public void Join(Chromosome other)
-    {
-        _regions = RegionOps.ConcatRegions(_regions, other._regions);
-    }
+    public void Join(Contig other)
+        => _regions = RegionOps.ConcatRegions(_regions, other._regions);
 
     public void InvertRange(int invStart, int invEnd)
     {
@@ -98,4 +100,7 @@ public class Chromosome
         var keptRegions = newRegions.Shuffle(rnd).Take(count);
         _regions = RegionOps.ConcatRegions(keptRegions);
     }
+    
+    public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
+        => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => g.Region.IsInside(r)));
 }

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.Computation;
+using SimChA.IO;
 
 namespace Tests;
 
@@ -33,11 +34,11 @@ public class TestCopyNumbers
     [Test]
     public void TestCalcPloidyReference()
     {
-        var copyNumbersReferenceFemale = CopyNumbers.CalcCopyNumbers(referenceFemale);
+        var copyNumbersReferenceFemale = CopyNumbers.CalcCopyNumbers(referenceFemale, true).ToList();
         float ploidyReferenceFemale = CopyNumbers.CalcPloidy(copyNumbersReferenceFemale, true);
         Assert.AreEqual(2, ploidyReferenceFemale);
 
-        var copyNumbersReferenceMale = CopyNumbers.CalcCopyNumbers(referenceMale);
+        var copyNumbersReferenceMale = CopyNumbers.CalcCopyNumbers(referenceMale, false).ToList();
         float ploidyReferenceMale = CopyNumbers.CalcPloidy(copyNumbersReferenceMale, false);
         Assert.AreEqual(2, ploidyReferenceMale);
     }
@@ -47,8 +48,10 @@ public class TestCopyNumbers
     {
         // gain every single chromosome
         karyotype = new Karyotype(referenceFemale);
-        karyotype.Chromosomes.AddRange(karyotype.Chromosomes.ToList().Select(ch => new Chromosome(ch)));
-        var copyNumbers = CopyNumbers.CalcCopyNumbers(karyotype);
+
+        string eventString = karyotype.ApplyAberration(_rnd, AberrationEnum.WholeGenomeDoubling, new BaseAbbP(1));
+        // karyotype._contigs.AddRange(karyotype._contigs.Select(ch => new Contig(ch)).ToList());
+        var copyNumbers = CopyNumbers.CalcCopyNumbers(karyotype, true).ToList();
         float ploidy = CopyNumbers.CalcPloidy(copyNumbers, true);
         Assert.AreEqual(4, ploidy);
     }

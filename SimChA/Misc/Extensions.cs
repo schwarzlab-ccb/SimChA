@@ -1,4 +1,4 @@
-﻿namespace SimChA;
+﻿namespace SimChA.Misc;
 
 public static class Extensions
 {
@@ -7,4 +7,10 @@ public static class Extensions
 
     public static bool CoinFlip(this Random rnd)
         => rnd.Next(0, 2) == 0;
+    
+    public static int GetRandIndex<T>(this IEnumerable<T> source, Random rnd)
+        => rnd.Next(source.Count());
+
+    public static IEnumerable<int> GetRandIndices<T>(this IEnumerable<T> source, int count, Random rnd)
+        => Enumerable.Range(0, source.Count()).Shuffle(rnd).Take(count);
 }

@@ -6,14 +6,6 @@ namespace SimChA.IO;
 
 public static class Newick
 {
-    private static Clone CreateNodes(string newickNode, int parentId, bool isFemale)
-    {
-        string[] cloneString = newickNode.Split(':');
-        var clone = new Clone(int.Parse(cloneString[0].Split('-')[0]), parentId, "1", int.Parse(cloneString[1]), new Karyotype(isFemale));
-        return clone;
-    }
-
-
     public static List<Clone> ParseNewick(string newickString, bool isFemale)
     {
         List<Clone> clones = new();
@@ -24,7 +16,7 @@ public static class Newick
                               @"(?<nextNode>[,])|" +
                               @"(?<root>[;])";
         //Reverse order of newick file to start with root
-        RegexOptions regexOptions = RegexOptions.RightToLeft | RegexOptions.IgnorePatternWhitespace;
+        var regexOptions = RegexOptions.RightToLeft | RegexOptions.IgnorePatternWhitespace;
         if(newickString == "")
         {
             return clones;
@@ -34,7 +26,7 @@ public static class Newick
         {
             throw new Exception("Newick file is not in the right format");
         }
-        var branchLength = checkBranchLength(matches);
+        var branchLength = CheckBranchLength(matches);
         //Iterate throu Regex-Matches
         var parentIds = new List<int> {-1};
         foreach(Match match in matches)
@@ -44,15 +36,15 @@ public static class Newick
             {
                 case ";":
                     //create root node
-                    clones.Add(createClone(clones.Count(), parentIds.Last(), match.NextMatch(), 
-                        match.NextMatch().NextMatch(), isFemale, branchLength));
+                    clones.Add(CreateClone(clones.Count(), parentIds.Last(), match.NextMatch(), 
+                        match.NextMatch().NextMatch(), isFemale, branchLength, 0));
                     parentIds.Add(clones[clones.Count()-1].CloneId);
                     break;
                 case ")":
                     //create new children
                     parentIds.Add(clones[clones.Count()-1].CloneId);
-                    clones.Add(createClone(clones.Count(), parentIds.Last(), match.NextMatch(), 
-                        match.NextMatch().NextMatch(), isFemale, branchLength));
+                    clones.Add(CreateClone(clones.Count(), parentIds.Last(), match.NextMatch(), 
+                        match.NextMatch().NextMatch(), isFemale, branchLength, clones[parentIds.Last()].TotalMutations));
                     clones[parentIds.Last()].ChildrenIDs.Add(clones.Count()-1);
                     break;
                 case "(":
@@ -61,8 +53,8 @@ public static class Newick
                     break;
                 case ",":
                     //create new child
-                    clones.Add(createClone(clones.Count(), parentIds.Last(), match.NextMatch(), 
-                        match.NextMatch().NextMatch(), isFemale, branchLength));
+                    clones.Add(CreateClone(clones.Count(), parentIds.Last(), match.NextMatch(), 
+                        match.NextMatch().NextMatch(), isFemale, branchLength, clones[parentIds.Last()].TotalMutations));
                     clones[parentIds.Last()].ChildrenIDs.Add(clones.Count()-1);
                     break;
             }
@@ -73,18 +65,21 @@ public static class Newick
         }
         return clones;
     }
+    
     //create clone from newick Match
-    private static Clone createClone(int id, int parentId, Match branchLengthMatch, Match nameMatch, bool isFemale, bool branchLength)
+    private static Clone CreateClone(int id, int parentId, Match branchLengthMatch, Match nameMatch, bool isFemale, bool branchLength,
+    int parentMutations)
     {
         string nameClone = nameMatch.Groups["nodeName"].Value != "" ? nameMatch.Value : 
             branchLengthMatch.Groups["nodeName"].Value != "" ? branchLengthMatch.Value : "C" + id.ToString();
         int mutCount = branchLengthMatch.Groups["branchLength"].Value != "" ? 
             (int)Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0,1))) : branchLength ? 0 : 1;
-        var clone = new Clone(id, parentId, nameClone, mutCount, new Karyotype(isFemale));
+        var clone = new Clone(id, parentId, nameClone, mutCount, new Karyotype(isFemale), parentMutations + mutCount);
         return clone;
     }
+    
     //check for branch-length in newick file
-    private static bool checkBranchLength(MatchCollection matches)
+    private static bool CheckBranchLength(MatchCollection matches)
     {
         bool branchLength = false;
         foreach (Match match in matches)

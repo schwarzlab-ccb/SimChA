@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 
@@ -23,28 +24,28 @@ public class TestRegions
         var regions = new List<Region> { _cRegion };
         // Start and end within a region
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 1000, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
         // Start and end within a region (out of two)
         regions = RegionOps.DeleteRange(regions, 2000, 4000);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 3000, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length - 3000, Contig.Length(regions));
         // Two neighbouring regions
         regions = RegionOps.DeleteRange(regions, 1500, 2500);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 4000, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length - 4000, Contig.Length(regions));
         // Cut region out
         regions = RegionOps.DeleteRange(regions, 500, 2500);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 6000, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length - 6000, Contig.Length(regions));
         // Remove region from front
         regions = RegionOps.DeleteRange(regions, 0, 500);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 6500, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length - 6500, Contig.Length(regions));
         // oversized range selection
         regions = RegionOps.DeleteRange(regions, -1000, _cRegion.Length);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(0, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(0, Contig.Length(regions));
     }
 
     [Test]
@@ -71,14 +72,14 @@ public class TestRegions
         var regions = new List<Region> { _cRegion };
         // Start and end within a region
         var regCopy = RegionOps.CopyRange(regions, 500, 3500);
-        Console.WriteLine(Chromosome.ToString(regCopy));
-        Assert.AreEqual(3000, Chromosome.Length(regCopy));
+        Console.WriteLine(Contig.ToString(regCopy));
+        Assert.AreEqual(3000, Contig.Length(regCopy));
         // Copy across regions
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         regions = RegionOps.DeleteRange(regions, 4000, 5000);
         regCopy = RegionOps.CopyRange(regions, 500, 3500);
-        Console.WriteLine(Chromosome.ToString(regCopy));
-        Assert.AreEqual(3000, Chromosome.Length(regCopy));
+        Console.WriteLine(Contig.ToString(regCopy));
+        Assert.AreEqual(3000, Contig.Length(regCopy));
     }
 
     [Test]
@@ -104,10 +105,10 @@ public class TestRegions
     {
         var regions = new List<Region> { _cRegion };
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
-        Console.WriteLine(Chromosome.ToString(before));
-        Assert.AreEqual(2000, Chromosome.Length(before));
-        Console.WriteLine(Chromosome.ToString(after));
-        Assert.AreEqual(_cRegion.Length - 2000, Chromosome.Length(after));
+        Console.WriteLine(Contig.ToString(before));
+        Assert.AreEqual(2000, Contig.Length(before));
+        Console.WriteLine(Contig.ToString(after));
+        Assert.AreEqual(_cRegion.Length - 2000, Contig.Length(after));
     }
     
     [Test]
@@ -118,7 +119,7 @@ public class TestRegions
             _cRegion with { Start = 0, End = 2 },
         };
         var (before, after) = RegionOps.SplitRegions(regions, 1);
-        Assert.AreEqual(1, Chromosome.Length(after));
+        Assert.AreEqual(1, Contig.Length(after));
     }
     
     [Test]
@@ -127,8 +128,8 @@ public class TestRegions
         var regions = new List<Region> { _cRegion };
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         regions = RegionOps.InvertRegions(regions);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 1000, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
     }
     
     [Test]
@@ -136,10 +137,10 @@ public class TestRegions
     {
         var regions = new List<Region> { _cRegion };
         regions = RegionOps.ConcatRegions(regions, regions);
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length * 2, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length * 2, Contig.Length(regions));
         regions = RegionOps.ConcatRegions(new[] {regions, regions });
-        Console.WriteLine(Chromosome.ToString(regions));
-        Assert.AreEqual(_cRegion.Length * 4, Chromosome.Length(regions));
+        Console.WriteLine(Contig.ToString(regions));
+        Assert.AreEqual(_cRegion.Length * 4, Contig.Length(regions));
     }
 }

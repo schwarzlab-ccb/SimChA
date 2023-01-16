@@ -2,9 +2,4 @@
 
 namespace SimChA.DataTypes;
 
-public class TreeEdge
-{
-    public int Distance;
-    public String SourceId;
-    public String TargetId;
-}
+public record TreeEdge(int Distance, string SourceId, string TargetId);

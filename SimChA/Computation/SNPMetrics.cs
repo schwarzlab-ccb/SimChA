@@ -22,7 +22,7 @@ public static class SNPMetrics
         foreach (var snp in snps)
         {
             curSegmentId = copyNumbers.FindIndex(curSegmentId, cn =>
-                ReferenceGenome.ChromosomeStartMap[cn.Segment.ChromId.ChromNum] + cn.Segment.End > snp.AbsPos);
+                ReferenceGenome.ChromosomeStartMap[cn.Segment.ChrID.ChrNo] + cn.Segment.End > snp.AbsPos);
 
             if (copyNumbers[curSegmentId].CNH1 + copyNumbers[curSegmentId].CNH2 <= 0)
             {
@@ -59,12 +59,12 @@ public static class SNPMetrics
         throw new NotImplementedException();
     }
 
-    private static string FirstLine(bool isFirst, string type)
-        => isFirst ? $"\tchrom\tpos\t{type}\n" : "";
+    private static string Header(string type)
+        => $"\tchr\tpos\t{type}\n";
 
     public static string PrintBAF(List<SNPData> rawData)
-        => FirstLine(true, "BAF") + string.Join("\n", rawData.Select(r => r.PrintBAF()));
+        => Header("BAF") + string.Join("\n", rawData.Select(r => r.PrintBAF()));
 
     public static string PrintLogR(List<SNPData> rawData)
-        => FirstLine(true, "logR") + string.Join("\n", rawData.Select(r => r.PrintLogR()));
+        => Header("logR") + string.Join("\n", rawData.Select(r => r.PrintLogR()));
 }

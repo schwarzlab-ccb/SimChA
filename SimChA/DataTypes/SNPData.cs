@@ -14,8 +14,8 @@ public struct SNPData
     }
 
     public string PrintBAF()
-        => $"{Snp.Id}\t{Snp.Chrom}\t{Snp.Pos}\t{Baf}";
+        => $"{Snp.Id}\t{Snp.ChrNo}\t{Snp.Pos}\t{Baf}";
 
     public string PrintLogR()
-        => $"{Snp.Id}\t{Snp.Chrom}\t{Snp.Pos}\t{LogR}";
+        => $"{Snp.Id}\t{Snp.ChrNo}\t{Snp.Pos}\t{LogR}";
 }

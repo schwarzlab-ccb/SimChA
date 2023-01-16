@@ -1,6 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using NUnit.Framework;
 using SimChA.IO;
@@ -26,7 +27,14 @@ public class TestIO
     }
 
     [Test]
-    public void TestNewickParser(){
+    public void TestTsgOgReading()
+    {
+        // TODO: @Felix
+    }
+
+    [Test]
+    public void TestNewickParser()
+    {
         string[] newickTestStrings= {
             "",
             "(,,(,));",
@@ -66,19 +74,26 @@ public class TestIO
             9,
             174
         };
-        
+
         for(int i = 0; i < newickTestStrings.Length; i++)
         {
             var clones = Newick.ParseNewick(newickTestStrings[i], true);
-            foreach(var clone in clones){
-                Console.WriteLine("String {0}: ID={1}, Name={2}, ParentID={3}, Mutations={4}, Childrencount={5}", 
-                    i, clone.CloneId, clone.Name, clone.ParentId, clone.DistToParent, clone.ChildrenIDs.Count);
-                foreach(int childrenID in clone.ChildrenIDs){
-                    Console.WriteLine("   ChildrenID:{0}", childrenID);
+            foreach(var clone in clones)
+            {
+                Console.WriteLine($"String {i}: " +
+                                  $"ID={clone.CloneId}, " +
+                                  $"Name={clone.Name}, " +
+                                  $"ParentID={clone.ParentId}, " +
+                                  $"Mutations={clone.DistToParent}, " +
+                                  $"ChildrenCount={clone.ChildrenIDs.Count}");
+                foreach(int childrenID in clone.ChildrenIDs)
+                {
+                    Console.WriteLine($"\tChildID:{childrenID}");
                 }
+                Console.WriteLine();
             }
             Assert.AreEqual(clones.Count, cloneCounts[i]);
-            Console.WriteLine("\n");
+            Console.WriteLine();
         }
     }
 }

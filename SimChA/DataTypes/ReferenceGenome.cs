@@ -5,107 +5,107 @@ namespace SimChA.DataTypes;
 
 public static class ReferenceGenome
 {
-    public static readonly Dictionary<ChromNum, int> ChromosomeLengthMap = new()
+    public static readonly Dictionary<ChrNo, int> ChromosomeLengthMap = new()
     {
         {
-            ChromNum.chr1,
+            ChrNo.chr1,
             249_956_942
         },
         {
-            ChromNum.chr2,
+            ChrNo.chr2,
             242_508_799
         },
         {
-            ChromNum.chr3,
+            ChrNo.chr3,
             198_450_956
         },
         {
-            ChromNum.chr4,
+            ChrNo.chr4,
             190_424_264
         },
         {
-            ChromNum.chr5,
+            ChrNo.chr5,
             181_630_948
         },
         {
-            ChromNum.chr6,
+            ChrNo.chr6,
             170_805_979
         },
         {
-            ChromNum.chr7,
+            ChrNo.chr7,
             159_345_973
         },
         {
-            ChromNum.chr8,
+            ChrNo.chr8,
             145_138_636
         },
         {
-            ChromNum.chr9,
+            ChrNo.chr9,
             138_688_728
         },
         {
-            ChromNum.chr10,
+            ChrNo.chr10,
             133_797_422
         },
         {
-            ChromNum.chr11,
+            ChrNo.chr11,
             135_186_938
         },
         {
-            ChromNum.chr12,
+            ChrNo.chr12,
             133_275_309
         },
         {
-            ChromNum.chr13,
+            ChrNo.chr13,
             114_364_328
         },
         {
-            ChromNum.chr14,
+            ChrNo.chr14,
             108_136_338
         },
         {
-            ChromNum.chr15,
+            ChrNo.chr15,
             102_439_437
         },
         {
-            ChromNum.chr16,
+            ChrNo.chr16,
             92_211_104
         },
         {
-            ChromNum.chr17,
+            ChrNo.chr17,
             83_836_422
         },
         {
-            ChromNum.chr18,
+            ChrNo.chr18,
             80_373_285
         },
         {
-            ChromNum.chr19,
+            ChrNo.chr19,
             58_617_616
         },
         {
-            ChromNum.chr20,
+            ChrNo.chr20,
             64_444_167
         },
         {
-            ChromNum.chr21,
+            ChrNo.chr21,
             46_709_983
         },
         {
-            ChromNum.chr22,
+            ChrNo.chr22,
             51_857_516
         },
         {
-            ChromNum.chrX,
+            ChrNo.chrX,
             156_040_895
         },
         {
-            ChromNum.chrY,
+            ChrNo.chrY,
             57_264_655
         }
     };
 
-    public static readonly Dictionary<ChromNum, long> ChromosomeStartMap;
+    public static readonly Dictionary<ChrNo, long> ChromosomeStartMap;
 
     static ReferenceGenome()
     {
@@ -125,8 +125,8 @@ public static class ReferenceGenome
 
     private static IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
     {
-        var nonGender = Enum.GetValues<ChromNum>().Take(22);
-        var sexChr = isFirstHaplotype | isFemale ? ChromNum.chrX : ChromNum.chrY;
+        var nonGender = Enum.GetValues<ChrNo>().Take(22);
+        var sexChr = isFirstHaplotype | isFemale ? ChrNo.chrX : ChrNo.chrY;
         var all = nonGender.Concat(new[] { sexChr });
         return all.Select(num => GetRegion(num, isFirstHaplotype));
     }
@@ -136,21 +136,21 @@ public static class ReferenceGenome
 
     public static long TotalLength(bool isFemale)
     {
-        long length = 2 * Enum.GetValues<ChromNum>().Take(22).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
+        long length = 2 * Enum.GetValues<ChrNo>().Take(22).Select(chrom => (long)ChromosomeLengthMap[chrom]).Sum();
         if (isFemale)
         {
-            length += 2 * ChromosomeLengthMap[ChromNum.chrX];
+            length += 2 * ChromosomeLengthMap[ChrNo.chrX];
         }
         else
         {
-            length += ChromosomeLengthMap[ChromNum.chrX] + ChromosomeLengthMap[ChromNum.chrY];
+            length += ChromosomeLengthMap[ChrNo.chrX] + ChromosomeLengthMap[ChrNo.chrY];
         }
         return length;
     }
 
-    public static IEnumerable<ChromNum> GetChromosomes(bool isFemale)
-        => Enum.GetValues<ChromNum>().Take(isFemale ? 23 : 24);
+    public static IEnumerable<ChrNo> GetChromosomes(bool isFemale)
+        => Enum.GetValues<ChrNo>().Take(isFemale ? 23 : 24);
 
-    public static Region GetRegion(ChromNum chromNum, bool isFirstHaplotype = true) =>
-        new(0, ChromosomeLengthMap[chromNum] + 1, new ChromID(chromNum, isFirstHaplotype));
+    public static Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) =>
+        new(0, ChromosomeLengthMap[chrNo] + 1, new ChrID(chrNo, isFirstHaplotype));
 }
