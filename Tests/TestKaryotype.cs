@@ -47,7 +47,7 @@ public class TestKaryotype
     {
         for (int i = 0; i < 46; i++)
         {
-            _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+            _kar.ApplyChromDeletion(i);
         }
         Assert.AreEqual("[]", _kar.ToString());
     }
