@@ -70,10 +70,7 @@ public class Karyotype
             _ => 2
         };
 
-    // Needs better estimation
-    private static int GetChromothripsisSiteCount(Random rnd, Contig contig)
-        => rnd.Next(1, (int)Math.Pow(contig.Length(), 1 / 3f));
-
+    
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
         string descriptor;
@@ -83,8 +80,8 @@ public class Karyotype
         switch (aberration)
         {
             case AberrationEnum.TailDeletion:
-                (int tailSplit, bool tailFromStart) = GetTail(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
-                (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, tailFromStart);
+                (int tailSplit, bool fiveToThree) = GetTail(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
+                (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
                 descriptor = $"contig:{contigID};start:{tailStart};end{tailEnd}";
                 break;
 
@@ -140,7 +137,7 @@ public class Karyotype
                 break;
 
             case AberrationEnum.Chromothripsis:
-                int shardCount = GetChromothripsisSiteCount(rnd, contig);
+                int shardCount = Sampling.GetChromothripsisSiteCount(rnd, contig);
                 var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(rnd, contig)).Distinct().ToList();
                 stops.Sort();
                 int count = rnd.Next(1, stops.Count);
@@ -156,8 +153,8 @@ public class Karyotype
         return descriptor;
     }
 
-    private static (int start, int end) GetIndices(Contig contig, int position, bool fromStart)
-        => fromStart ? (0, position) : (position, contig.Length());
+    private static (int start, int end) GetIndices(Contig contig, int position, bool fiveToThree)
+        => fiveToThree ? (0, position) : (position, contig.Length());
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
