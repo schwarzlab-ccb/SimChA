@@ -116,19 +116,12 @@ public class Karyotype
         return "";
     }
 
-    public string ApplyChromothripsis(Random rnd, int contigID)
+    public string ApplyChromothripsis(int contigID, List<int> stops, IEnumerable<int> selection)
     {            
         var contig = _contigs[contigID];
-        int shardCount = Sampling.GetChromothripsisSiteCount(rnd, contig.Length());
-        var stops = Enumerable.Range(0, shardCount)
-            .Select(_ => Sampling.GetInternalPos(rnd, contig.Length()))
-            .Distinct()
-            .ToList();
-        stops.Sort();
-        int count = rnd.Next(1, stops.Count);
-        int baseCount = contig.Length();
-        contig.ScatterAndGather(stops, count, rnd);
-        return $"contig:{contigID};fragments:{stops.Count + 1};lost:{baseCount - contig.Length()}";
+        int contigLen = contig.Length();
+        contig.ScatterAndGather(stops, selection);
+        return $"contig:{contigID};fragments:{stops.Count + 1};lost:{contigLen - contig.Length()}B";
     }
     
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
@@ -186,7 +179,11 @@ public class Karyotype
                 return ApplyTranslocation(contigA, contigB, posA, posB);
             
             case AberrationEnum.Chromothripsis:
-                return ApplyChromothripsis(rnd, contigA);
+                int shardCount = Sampling.GetChromothripsisSiteCount(rnd, lenA);
+                var stops = Sampling.GetStopsForShards(rnd, lenA, shardCount);
+                int shardsKept = rnd.Next(1, stops.Count);
+                var order = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept);
+                return ApplyChromothripsis(contigA, stops, order);
    
             case AberrationEnum.Chromoplexy:
             default:

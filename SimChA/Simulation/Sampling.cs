@@ -29,4 +29,11 @@ public static class Sampling
             var n when n < .79 => 6,
             _ => 2
         };
+
+    public static List<int> GetStopsForShards(Random rnd, int contigLen, int shardCount) 
+        => Enumerable.Range(0, shardCount)
+            .Select(_ => Sampling.GetInternalPos(rnd, contigLen))
+            .Distinct()
+            .OrderBy(i => i)
+            .ToList();
 }
