@@ -1,6 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using SimChA.DataTypes;
@@ -66,7 +65,7 @@ public class TestContig
     public void TestScatterAndGather()
     {
         int length = _contig1.Length();
-        _contig1.ScatterAndGather(new List<int>{1000, 2000, 3000}, 4, new Random(0));
+        _contig1.ScatterAndGather(new List<int>{1000, 2000, 3000}, new List<int>{3, 1, 2, 0});
         Assert.AreEqual(length, _contig1.Length());
     }
 }

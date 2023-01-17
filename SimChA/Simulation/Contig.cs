@@ -84,9 +84,11 @@ public class Contig
         }
     }
 
-    public void ScatterAndGather(List<int> locs, int count, Random rnd)
+    public void ScatterAndGather(List<int> locs, IEnumerable<int> indices)
     {
+        // First region
         var newRegions = new List<List<Region>> { RegionOps.CopyRange(_regions, 0, locs[0]) };
+        // Internal regions
         for (int i = 0; i < locs.Count - 1; i++)
         {
             int start = locs[i];
@@ -94,11 +96,11 @@ public class Contig
             var copy = RegionOps.CopyRange(_regions, start, end);
             newRegions.Add(copy);
         }
-
+        // Last region
         newRegions.Add(RegionOps.CopyRange(_regions, locs.Last(), Length(_regions)));
-
-        var keptRegions = newRegions.Shuffle(rnd).Take(count);
-        _regions = RegionOps.ConcatRegions(keptRegions);
+        
+        var selectedRegions = indices.Select(i => newRegions[i]);
+        _regions = RegionOps.ConcatRegions(selectedRegions);
     }
     
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
