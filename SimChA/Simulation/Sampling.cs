@@ -8,28 +8,25 @@ public static class Sampling
         => Math.Clamp(ExponentialDistribution.Sample(rnd, mean), 0, 1);
     
     // Segment is at most 2 bases shorter than contig
-    public static int GetSegLength(double fraction, Contig contig) 
-        => Math.Min((int)Math.Round(fraction * contig.Length()), contig.Length() - 2);
-    
-    // Get two positions within the contig (boundaries are excluded)
-    public static (int start, int end) GetInternalRange(Random rnd, Contig contig, int segLength)
-    {
-        int start = rnd.Next(contig.Length() - segLength + 1);
-        int end = Math.Min(start + segLength + 1, contig.Length() - 1);
-        return (start, end);
-    }
-    
-    // Get two positions within the contig (boundaries are excluded)
-    public static int GetUniformPos(Random rnd, Contig contig)
-        => rnd.Next(1, contig.Length() - 1);
+    public static int GetSegLength(Random rnd, int contigLen, double mean) 
+        => Math.Min((int)Math.Round(GetFraction(rnd, mean) * contigLen), contigLen - 2);
 
-    private static (int, bool) GetTail(Random rnd, int segLength, Contig contig, bool fiveToThree)
-    {
-        int pos = fiveToThree ? segLength - 1 : contig.Length() - segLength - 1;
-        return (pos, fiveToThree);
-    }
+    // Get two positions within the contig (boundaries are excluded)
+    public static int GetInternalPos(Random rnd, int contigLen)
+        => rnd.Next(1, contigLen - 1);
     
     // Needs better estimation
-    public static int GetChromothripsisSiteCount(Random rnd, Contig contig)
-        => rnd.Next(1, (int)Math.Pow(contig.Length(), 1 / 3f));
+    public static int GetChromothripsisSiteCount(Random rnd, int contigLen)
+        => rnd.Next(1, (int)Math.Pow(contigLen, 1 / 3f));
+    
+    // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
+    private static int GetChromoplexySiteCount(Random rnd)
+        => rnd.NextSingle() switch
+        {
+            var n when n < .46 => 3,
+            var n when n < .64 => 4,
+            var n when n < .74 => 5,
+            var n when n < .79 => 6,
+            _ => 2
+        };
 }

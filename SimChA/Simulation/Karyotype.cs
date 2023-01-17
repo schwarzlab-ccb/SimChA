@@ -31,136 +31,165 @@ public class Karyotype
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
-    // Segment is at most 2 bases shorter than contig
-    private static int GetSegLength(Random rnd, Contig contig, double meanLen)
-    {
-        double fraction = Math.Clamp(ExponentialDistribution.Sample(rnd, meanLen), 0, 1);
-        return Math.Min((int)Math.Round(fraction * contig.Length()), contig.Length() - 2);
-    }
-
-    // Get two positions within the contig (boundaries are excluded)
-    private static (int start, int end) GetInternalRange(Random rnd, Contig contig, double meanLen)
-    {
-        int segLength = GetSegLength(rnd, contig, meanLen);
-        int start = DiscreteUniformDistribution.Sample(rnd, 1, contig.Length() - segLength);
-        int end = Math.Min(start + segLength + 1, contig.Length() - 1);
-        return (start, end);
-    }
-
-    // Get two positions within the contig (boundaries are excluded)
-    private static int GetUniformPos(Random rnd, Contig contig)
-        => rnd.Next(1, contig.Length() - 1);
-
-    private static (int, bool) GetTail(Random rnd, Contig contig, double meanLen)
-    {
-        int segLength = GetSegLength(rnd, contig, meanLen);
-        bool fromStart = rnd.CoinFlip();
-        int pos = fromStart ? segLength - 1 : contig.Length() - segLength - 1;
-        return (pos, fromStart);
-    }
-
-    // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
-    private static int GetChromoplexySiteCount(Random rnd)
-        => rnd.NextSingle() switch
-        {
-            var n when n < .46 => 3,
-            var n when n < .64 => 4,
-            var n when n < .74 => 5,
-            var n when n < .79 => 6,
-            _ => 2
-        };
-
+    public static int GetTail(int segLength, Contig contig, bool fiveToThree) 
+        => fiveToThree ? segLength - 1 : contig.Length() - segLength - 1;
     
-    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
-    {
-        string descriptor;
-        var contigIDs = Enumerable.Range(0, _contigs.Count).Where(i => _contigs[i].Any()).Shuffle(rnd).ToList();
-        int contigID = contigIDs[0];
-        var contig = _contigs[contigID];
-        switch (aberration)
-        {
-            case AberrationEnum.TailDeletion:
-                (int tailSplit, bool fiveToThree) = GetTail(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
-                (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
-                descriptor = $"contig:{contigID};start:{tailStart};end{tailEnd}";
-                break;
-
-            case AberrationEnum.ChromDeletion:
-                descriptor = $"contig:{contigID}";
-                contig.Clear();
-                break;
-
-            case AberrationEnum.InternalDuplication:
-                (int dupStart, int dupEnd) = GetInternalRange(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
-                contig.DuplicateRange(dupStart, dupEnd);
-                descriptor = $"contig:{contigID};start:{dupStart};end:{dupEnd}";
-                break;
-
-            case AberrationEnum.InternalDeletion:
-                (int delStart, int delEnd) = GetInternalRange(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
-                contig.DeleteRange(delStart, delEnd);
-                descriptor = $"contig:{contigID};start:{delStart};end:{delEnd}";
-                break;
-
-            case AberrationEnum.Translocation:
-                // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
-                int altID = contigIDs[1];
-                var alt = _contigs[altID];
-                var splitContig = contig.Split(GetUniformPos(rnd, contig), true);
-                var splitAlt = alt.Split(GetUniformPos(rnd, alt), true);
-                descriptor = $"contig_A:{contigID};gave:{splitContig.Length()};contig_B:{altID};gave:{splitAlt.Length()};";
-                contig.Join(splitAlt);
-                alt.Join(splitContig);
-                break;
-
-            case AberrationEnum.InternalInversion:
-                (int invStart, int invEnd) = GetInternalRange(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
-                contig.InvertRange(invStart, invEnd);
-                descriptor = $"contig:{contigID};start:{invStart};end{invEnd}";
-                break;
-
-            case AberrationEnum.ChromDuplication:
-                _contigs.Add(new Contig(contig));
-                descriptor = $"contig:{contigID}";
-                break;
-
-            case AberrationEnum.BreakageFusionBridge:
-                (int bfbPos, bool bfbFromStart) = GetTail(rnd, contig, ((FractionAbbP)paramsSet).MeanLength);
-                (int bfbStart, int bfbEnd) = GetIndices(contig, bfbPos, bfbFromStart);
-                descriptor = $"contig:{contigID};start:{bfbStart};end{bfbEnd}";
-                contig.Bridge(bfbPos, bfbFromStart);
-                break;
-
-            case AberrationEnum.WholeGenomeDoubling:
-                _contigs.AddRange(_contigs.Select(ch => new Contig(ch)).ToList());
-                descriptor = "WGD";
-                break;
-
-            case AberrationEnum.Chromothripsis:
-                int shardCount = Sampling.GetChromothripsisSiteCount(rnd, contig);
-                var stops = Enumerable.Range(0, shardCount).Select(_ => GetUniformPos(rnd, contig)).Distinct().ToList();
-                stops.Sort();
-                int count = rnd.Next(1, stops.Count);
-                int baseCount = contig.Length();
-                contig.ScatterAndGather(stops, count, rnd);
-                descriptor = $"contig:{contigID};fragments:{stops.Count + 1};lost:{baseCount - contig.Length()}";
-                break;
-
-            case AberrationEnum.Chromoplexy:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
-        }
-        return descriptor;
-    }
-
+    
     private static (int start, int end) GetIndices(Contig contig, int position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
     
-    public double UpdateFitness(
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, 
-        SimParams simParams)
+    public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, SimParams simParams)
         => FitnessVal = Fitness.Calculate(this, geneLists, simParams);
+
+    public string ApplyTailDeletion(int contigID, int tailLen, bool fiveToThree)
+    {
+        var contig = _contigs[contigID];
+        int tailSplit = GetTail(tailLen, contig, fiveToThree);
+        (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        contig.DeleteRange(tailStart, tailEnd);
+        return $"contig:{contigID};start:{tailStart};end{tailEnd}";
+    }
+
+    public string ApplyBFB(int contigID, int tailLen, bool fiveToThree)
+    {
+        var contig = _contigs[contigID];
+        int tailSplit = GetTail(tailLen, contig, fiveToThree);
+        (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        contig.Bridge(tailSplit, fiveToThree);
+        return $"contig:{contigID};start:{tailStart};end{tailEnd}";
+    }
+    
+    public string ApplyChromDeletion(int contigID)
+    {
+        var contig = _contigs[contigID];
+        contig.Clear();
+        return $"contig:{contigID}";
+    }
+    
+    public string ApplyChromDuplication(int contigID)
+    {
+        var contig = _contigs[contigID];
+        _contigs.Add(new Contig(contig));
+        return $"contig:{contigID}";
+    }
+
+    public string ApplyInternalDuplication(int contigID, int startPos, int endPos)
+    {
+        var contig = _contigs[contigID];
+        contig.DuplicateRange(startPos, startPos + endPos);
+        return  $"contig:{contigID};start:{startPos};end:{endPos}";
+    }
+    
+    public string ApplyInternalInversion(int contigID, int startPos, int endPos)
+    {
+        var contig = _contigs[contigID];
+        contig.InvertRange(startPos, startPos + endPos);
+        return  $"contig:{contigID};start:{startPos};end:{endPos}";
+    }
+
+    public string ApplyInternalDeletion(int contigID, int startPos, int endPos)
+    {
+        var contig = _contigs[contigID];
+        contig.DeleteRange(startPos, startPos + endPos);
+        return  $"contig:{contigID};start:{startPos};end:{endPos}";
+    }
+
+    // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
+    public string ApplyTranslocation(int contigA, int contigB, int posA, int posB)
+    {
+        var refContig = _contigs[contigA];
+        var altContig = _contigs[contigB];
+        var splitRef = refContig.Split(posA, true);
+        var splitAlt = altContig.Split(posB, true);
+        string descriptor = $"contig_A:{contigA};gave:{splitRef.Length()};contig_B:{contigB};gave:{splitAlt.Length()};";
+        refContig.Join(splitAlt);
+        altContig.Join(splitRef);
+        return descriptor;
+    }
+
+    public string ApplyWGD()
+    {
+        _contigs.AddRange(_contigs.Select(ch => new Contig(ch)).ToList());
+        return "";
+    }
+
+    public string ApplyChromothripsis(Random rnd, int contigID)
+    {            
+        var contig = _contigs[contigID];
+        int shardCount = Sampling.GetChromothripsisSiteCount(rnd, contig.Length());
+        var stops = Enumerable.Range(0, shardCount)
+            .Select(_ => Sampling.GetInternalPos(rnd, contig.Length()))
+            .Distinct()
+            .ToList();
+        stops.Sort();
+        int count = rnd.Next(1, stops.Count);
+        int baseCount = contig.Length();
+        contig.ScatterAndGather(stops, count, rnd);
+        return $"contig:{contigID};fragments:{stops.Count + 1};lost:{baseCount - contig.Length()}";
+    }
+    
+    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
+    {
+        using var contigIDs = Enumerable
+            .Range(0, _contigs.Count)
+            .Where(i => _contigs[i].Any())
+            .Shuffle(rnd)
+            .GetEnumerator();
+        int contigA = contigIDs.Current;
+        int lenA = _contigs[contigA].Length();
+        
+        switch (aberration)
+        {
+            // Whole chromosome events
+            case AberrationEnum.ChromDeletion:
+                return ApplyChromDeletion(contigA);
+
+            case AberrationEnum.ChromDuplication:
+                return ApplyChromDuplication(contigA);
+            
+            case AberrationEnum.WholeGenomeDoubling:
+                return ApplyWGD();
+            
+            // Tail events
+            case AberrationEnum.TailDeletion:
+            case AberrationEnum.BreakageFusionBridge:
+                int delFraction = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
+                bool delDirection = rnd.CoinFlip();
+                return aberration == AberrationEnum.TailDeletion 
+                    ? ApplyTailDeletion(contigA, delFraction, delDirection) 
+                    : ApplyBFB(contigA, delFraction, delDirection);
+
+            // Internal events
+            case AberrationEnum.InternalDuplication:
+            case AberrationEnum.InternalDeletion:
+            case AberrationEnum.InternalInversion:
+                int segLen = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
+                int start = Sampling.GetInternalPos(rnd, lenA- segLen);
+                int end = start + segLen;
+                return aberration switch
+                {
+                    AberrationEnum.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
+                    AberrationEnum.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
+                    _ => ApplyInternalInversion(contigA, start, end)
+                };
+
+            case AberrationEnum.Translocation:
+                contigIDs.MoveNext();
+                int contigB = contigIDs.Current;
+                int lenB = _contigs[contigB].Length();
+                int posA = Sampling.GetInternalPos(rnd, lenA);
+                int posB = Sampling.GetInternalPos(rnd, lenB);
+                return ApplyTranslocation(contigA, contigB, posA, posB);
+            
+            case AberrationEnum.Chromothripsis:
+                return ApplyChromothripsis(rnd, contigA);
+   
+            case AberrationEnum.Chromoplexy:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
+        }
+    }
 }
