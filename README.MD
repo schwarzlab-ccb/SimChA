@@ -91,14 +91,16 @@ The following general parameters are set in the config file.
 ## Fitness calculation
 
 ### TSG/OG/Eseentiality Score
-We use three data files, providing the TSG/OG/Essentiality score. Each file is a TSV with the following columns:
+We use three data files, providing the TSG/OG/Essentiality score. Each file is a tab-separated file with the following columns:
 
-| Gene | Score | Chromosome | Start Position | End Position |
-|------|-------|------------|----------------|--------------|
+| Chromosome | Start Position | End Position | Gene | Score |
+|------------|----------------|--------------|------|-------|
+| chr1       | 1000           | 2000         | gene | 0.5   |
 
 For each gene, the:
-* TSG score is the probability that the gene is a Tumor Suppresor Gene (TSG)
-* OG score is the probability that the gene is an Oncogene (OG)
+
+* TSG score is the probability that the gene is a Tumor Suppresor Gene (TSG) 
+* OG score is the probability that the gene is an Oncogene (OG) 
 * Essentiality score is the log2 fold change in the reproducibility of a cell after a knock-out of the gene (both alleles).
 
 ## Aberrations
