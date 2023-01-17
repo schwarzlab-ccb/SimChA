@@ -13,4 +13,7 @@ public static class Extensions
 
     public static IEnumerable<int> GetRandIndices<T>(this IEnumerable<T> source, int count, Random rnd)
         => Enumerable.Range(0, source.Count()).Shuffle(rnd).Take(count);
+
+    public static IEnumerable<T> GetValues<T>() where T : Enum 
+        => Enum.GetValues(typeof(T)).Cast<T>();
 }

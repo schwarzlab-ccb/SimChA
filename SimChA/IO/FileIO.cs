@@ -235,19 +235,24 @@ public class FileIO
     }
 
     // TODO make the return triple into a dictionary
-    public static List<Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale)
+    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale)
     {
-        foreach (string filename in new[] { TSGS_TSV, OGS_TSV, ESSENTIALS_TSV })
+        var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
+        var fileMap = new Dictionary<GeneListType, string>
         {
-            if (!File.Exists(Path.Combine(folder, filename)))
+            {GeneListType.TumorSuppressor, TSGS_TSV},
+            {GeneListType.Oncogene, OGS_TSV},
+            {GeneListType.Essentiality, ESSENTIALS_TSV}
+        };
+        foreach ((var key, string filename) in fileMap)
+        {
+            string filePath = Path.Combine(folder, filename);
+            if (!File.Exists(filePath))
             {
                 throw new Exception($"Required file {filename} not found in {folder} directory.");
             }
+            geneLists[key] = ReadGenesFromFile(filePath, isFemale);
         }
-        var geneLists = new List<Dictionary<ChrNo, List<Gene>>>();
-        geneLists.Add(ReadGenesFromFile(Path.Combine(folder, TSGS_TSV), isFemale));
-        geneLists.Add(ReadGenesFromFile(Path.Combine(folder, OGS_TSV), isFemale));
-        geneLists.Add(ReadGenesFromFile(Path.Combine(folder, ESSENTIALS_TSV), isFemale));
         return geneLists;
     }
 
