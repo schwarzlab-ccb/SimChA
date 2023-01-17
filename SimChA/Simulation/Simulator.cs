@@ -9,13 +9,13 @@ public class Simulator
     private readonly AberrationsInfo _aberrationsInfo;
     private readonly Random _rnd;
     private readonly SimParams _simParams;
-    private readonly List<Dictionary<ChrNo, List<Gene>>> _geneLists;
+    private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
     
     public Simulator(
         AberrationsInfo aberrationsInfo, 
         Random rnd, 
         SimParams simParams, 
-        List<Dictionary<ChrNo, List<Gene>>> geneLists)
+        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
     {
         _aberrationsInfo = aberrationsInfo;
         _rnd = rnd;
