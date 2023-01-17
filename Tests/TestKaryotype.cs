@@ -22,17 +22,38 @@ public class TestKaryotype
     }
 
     [Test]
-    public void TestDeletion()
+    public void TestChromDeletion()
     {
         _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
         Assert.AreEqual(45, _kar.ContigCount);
     }
     
     [Test]
-    public void TestDuplication()
+    public void TestChromDuplication()
     {
         _kar.ApplyAberration(_rnd, AberrationEnum.ChromDuplication, new BaseAbbP(1f));
         Assert.AreEqual(47, _kar.ContigCount);
+    }
+
+    [Test]
+    public void TestInternalDeletion()
+    {
+        _kar.ApplyAberration(_rnd, AberrationEnum.InternalDeletion, new FractionAbbP(1, 0.1));
+        Assert.AreEqual(46, _kar.ContigCount);
+    }
+    
+    [Test]
+    public void TestInternalDuplication()
+    {
+        _kar.ApplyAberration(_rnd, AberrationEnum.InternalDuplication, new FractionAbbP(1, 0.1));
+        Assert.AreEqual(46, _kar.ContigCount);
+    }
+
+    [Test]
+    public void TestTailDeletion()
+    {
+        _kar.ApplyAberration(_rnd, AberrationEnum.TailDeletion, new FractionAbbP(1, 0.1));
+        Assert.AreEqual(46, _kar.ContigCount);
     }
     
     [Test]
