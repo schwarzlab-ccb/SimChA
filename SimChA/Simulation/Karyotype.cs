@@ -133,12 +133,13 @@ public class Karyotype
     
     public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
     {
-        var contigIDs = Enumerable
+        using var IDsEnumerator = Enumerable
             .Range(0, _contigs.Count)
             .Where(i => _contigs[i].Any())
             .Shuffle(rnd)
-            .ToList();
-        int contigA = contigIDs[0];
+            .GetEnumerator();
+        IDsEnumerator.MoveNext();
+        int contigA = IDsEnumerator.Current;
         int lenA = _contigs[contigA].Length();
         
         switch (aberration)
@@ -177,7 +178,8 @@ public class Karyotype
                 };
 
             case AberrationEnum.Translocation:
-                int contigB = contigIDs[1];
+                IDsEnumerator.MoveNext();
+                int contigB = IDsEnumerator.Current;
                 int lenB = _contigs[contigB].Length();
                 int posA = Sampling.GetInternalPos(rnd, lenA);
                 int posB = Sampling.GetInternalPos(rnd, lenB);
