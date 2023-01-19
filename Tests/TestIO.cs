@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Linq;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.Simulation;
@@ -95,5 +96,35 @@ public class TestIO
             Assert.AreEqual(clones.Count, cloneCounts[i]);
             Console.WriteLine();
         }
+    }
+
+    [Test]
+    public void TestReadGeneLists()
+    {
+        string tempTSG = System.IO.Path.GetTempPath() + "tsgs.tsv";
+        string tempOG = System.IO.Path.GetTempPath() + "ogs.tsv";
+        string tempEssential = System.IO.Path.GetTempPath() + "essentials.tsv";
+        string[] genesTSG = {"chr1\t0\t50\tTSG1\t0.001"};
+        string[] genesOG = {"chr1\t0\t50\tOG01\t0.001"};
+        string[] genesESS = {"chr1\t0\t50\tESS1\t0.001"};
+        System.IO.File.WriteAllLines(tempTSG, genesTSG);
+        System.IO.File.WriteAllLines(tempOG, genesOG);
+        System.IO.File.WriteAllLines(tempEssential, genesESS);
+        var geneList = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
+            t => t, 
+            t => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>()));
+        geneList[GeneListType.Essentiality][ChrNo.chr1].Add(new Gene(
+            "ESS1", 
+            new Region(-1, 50, new ChrID(ChrNo.chr1, true)), 
+            0.001d));
+        geneList[GeneListType.TumorSuppressor][ChrNo.chr1].Add(new Gene(
+            "TSG1", 
+            new Region(-1, 50, new ChrID(ChrNo.chr1, true)), 
+            0.001));
+        geneList[GeneListType.Oncogene][ChrNo.chr1].Add(new Gene(
+            "OG01", 
+            new Region(-1, 50, new ChrID(ChrNo.chr1, true)), 
+            0.001d));
+        Assert.AreEqual(geneList, FileIO.ReadGeneLists(System.IO.Path.GetTempPath(), true));
     }
 }
