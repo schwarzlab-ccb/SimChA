@@ -89,14 +89,13 @@ public class TestFitness
         //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
         var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t, 
-            t => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>()));
-        
+            _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
         
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
         Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
 
         //For OGs with one chromosome lost
-        karyotype.ApplyAberration(new Random(14), AberrationEnum.ChromDeletion, new BaseAbbP(1));
+        karyotype.ApplyChromDeletion(0);
         Assert.AreEqual(1+(1-2)*(simParams.TsgOgFraction*0.001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
         
         //For TSGs with one chromosome lost
@@ -110,7 +109,7 @@ public class TestFitness
         Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
         
         //Seed to lose second chromosome 1
-        karyotype.ApplyAberration(new Random(77), AberrationEnum.ChromDeletion, new BaseAbbP(1));
+        karyotype.ApplyChromDeletion(23);
         
         //For OGs with chromosome 1 lost twice
         listGenes[GeneListType.Essentiality][ChrNo.chr1].Clear();
