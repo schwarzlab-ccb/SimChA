@@ -6,6 +6,7 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -78,5 +79,52 @@ public class TestFitness
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
         karyotype.ApplyAberration(rnd, AberrationEnum.ChromDeletion, new SimChA.IO.BaseAbbP(1));
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
+    }
+
+    [Test]
+    public void TestCalculate()
+    {
+        var karyotype = new Karyotype(true);
+        var simParams = SimParams.CreateSimParams(14, true, 0.001f, 0.01f, 0.000_1f, AberrationsInfo.DefaultAberrations());
+        //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
+        var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
+            t => t, 
+            t => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>()));
+        
+        
+        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
+
+        //For OGs with one chromosome lost
+        karyotype.ApplyAberration(new Random(14), AberrationEnum.ChromDeletion, new BaseAbbP(1));
+        Assert.AreEqual(1+(1-2)*(simParams.TsgOgFraction*0.001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
+        
+        //For TSGs with one chromosome lost
+        listGenes[GeneListType.Oncogene][ChrNo.chr1].Clear();
+        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.0001));
+        Assert.AreEqual(1+(1-2)*(-simParams.TsgOgFraction*0.0001), Fitness.Calculate(karyotype, listGenes, simParams),  0.0000000001);
+        
+        // For essential genes with one chromosome lost
+        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Clear();
+        listGenes[GeneListType.Essentiality][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
+        
+        //Seed to lose second chromosome 1
+        karyotype.ApplyAberration(new Random(77), AberrationEnum.ChromDeletion, new BaseAbbP(1));
+        
+        //For OGs with chromosome 1 lost twice
+        listGenes[GeneListType.Essentiality][ChrNo.chr1].Clear();
+        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
+        Assert.AreEqual(1+(0-2)*(simParams.TsgOgFraction*0.001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
+        
+        //For TSGs with chromosome 1 lost twice
+        listGenes[GeneListType.Oncogene][ChrNo.chr1].Clear();
+        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.0001));
+        Assert.AreEqual(1+(0-2)*(-simParams.TsgOgFraction*0.0001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
+        
+        //For essential genes with chromosome 1 lost twice
+        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Clear();
+        listGenes[GeneListType.Essentiality][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
+        Assert.AreEqual(1+(-1)*(simParams.EssentialFraction*0.01), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
     }
 }
