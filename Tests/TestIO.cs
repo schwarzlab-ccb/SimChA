@@ -101,30 +101,19 @@ public class TestIO
     [Test]
     public void TestReadGeneLists()
     {
-        string tempTSG = System.IO.Path.GetTempPath() + "tsgs.tsv";
-        string tempOG = System.IO.Path.GetTempPath() + "ogs.tsv";
-        string tempEssential = System.IO.Path.GetTempPath() + "essentials.tsv";
-        string[] genesTSG = {"chr1\t0\t50\tTSG1\t0.001"};
-        string[] genesOG = {"chr1\t0\t50\tOG01\t0.001"};
-        string[] genesESS = {"chr1\t0\t50\tESS1\t0.001"};
-        System.IO.File.WriteAllLines(tempTSG, genesTSG);
-        System.IO.File.WriteAllLines(tempOG, genesOG);
-        System.IO.File.WriteAllLines(tempEssential, genesESS);
-        var geneList = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
-            t => t, 
-            t => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>()));
-        geneList[GeneListType.Essentiality][ChrNo.chr1].Add(new Gene(
-            "ESS1", 
-            new Region(-1, 50, new ChrID(ChrNo.chr1, true)), 
-            0.001d));
-        geneList[GeneListType.TumorSuppressor][ChrNo.chr1].Add(new Gene(
-            "TSG1", 
-            new Region(-1, 50, new ChrID(ChrNo.chr1, true)), 
-            0.001));
-        geneList[GeneListType.Oncogene][ChrNo.chr1].Add(new Gene(
-            "OG01", 
-            new Region(-1, 50, new ChrID(ChrNo.chr1, true)), 
-            0.001d));
-        Assert.AreEqual(geneList, FileIO.ReadGeneLists(System.IO.Path.GetTempPath(), true));
+        var tsgList = Enum.GetValues<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        
+        var genesTSG = "chr1\t1\t50\tTSG1\t0.001";
+        
+        var gene1 = new Gene("TSG1", new Region(0, 50, new ChrID(ChrNo.chr1, true)), 0.001);
+        tsgList[ChrNo.chr1].Add(gene1);
+        var listFromString = FileIO.ReadGenesFromFile(genesTSG, true);
+        Assert.AreEqual(tsgList, listFromString);
+        
+        genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
+        var gene2 = new Gene("TSG2", new Region(99, 5000, new ChrID(ChrNo.chr2, true)), 0.01);
+        tsgList[ChrNo.chr2].Add(gene2);
+        listFromString = FileIO.ReadGenesFromFile(genesTSG, true);
+        Assert.AreEqual(tsgList, listFromString);
     }
 }

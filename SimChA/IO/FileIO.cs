@@ -246,33 +246,32 @@ public class FileIO
         };
         foreach ((var key, string filename) in fileMap)
         {
-            var filePath = Path.Combine(folder, filename);
+            string filePath = Path.Combine(folder, filename);
             if (!File.Exists(filePath))
             {
                 throw new Exception($"Required file {filename} not found in {folder} directory.");
             }
-            geneLists[key] = ReadGenesFromFile(filePath, isFemale);
+            string fileContent = File.ReadAllText(Path.GetFullPath(filePath));
+            geneLists[key] = ReadGenesFromFile(fileContent, isFemale);
         }
         return geneLists;
     }
 
-    private static Dictionary<ChrNo, List<Gene>> ReadGenesFromFile(string file, bool isFemale)
+    public static Dictionary<ChrNo, List<Gene>> ReadGenesFromFile(string fileContent, bool isFemale)
     {
         // Pre-initialization
         var noEnum = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToList();
         var geneList = noEnum.ToDictionary(c => c, c => new List<Gene>());
-        var fileContent = File.ReadAllText(Path.GetFullPath(file));
-        var genesFromFile = fileContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
+        string[] genesFromFile = fileContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         foreach (string geneFromFile in genesFromFile)
         {
-            var genString = geneFromFile.Split('\t');
+            string[] genString = geneFromFile.Split('\t');
             //Don't include Y chromosome in genes list if clone is female
             if (isFemale && (ChrNo)Enum.Parse(typeof(ChrNo), genString[2]) == ChrNo.chrY)
             {
                 continue;
             }
-            var name = genString[3];
+            string name = genString[3];
             var fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
             var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[0]);
             var chrID = new ChrID(chrNum, isFemale);
