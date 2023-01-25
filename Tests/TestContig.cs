@@ -19,7 +19,7 @@ public class TestContig
         _contig1 = new Contig(ReferenceGenome.GetRegion(ChrNo.chr1));
         _contigX = new Contig(ReferenceGenome.GetRegion(ChrNo.chrX, false));
     }
-
+    
     [Test]
     public void TestSplit()
     {
