@@ -130,4 +130,7 @@ public static class RegionOps
 
     public static List<Region> ConcatRegions(IEnumerable<Region> first, IEnumerable<Region> second)
         => first.Concat(second).ToList();
+    
+    public static long GetLength(IEnumerable<Region> regions)
+        => regions.Sum(r => r.Length);
 }

@@ -95,7 +95,7 @@ public class TestFitness
         Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
 
         //For OGs with one chromosome lost
-        karyotype.ApplyChromDeletion(0);
+        karyotype.ApplyContigDeletion(0);
         Assert.AreEqual(1+(1-2)*(simParams.TsgOgFraction*0.001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
         
         //For TSGs with one chromosome lost
@@ -109,7 +109,7 @@ public class TestFitness
         Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
         
         //Seed to lose second chromosome 1
-        karyotype.ApplyChromDeletion(23);
+        karyotype.ApplyContigDeletion(23);
         
         //For OGs with chromosome 1 lost twice
         listGenes[GeneListType.Essentiality][ChrNo.chr1].Clear();

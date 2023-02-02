@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using CommandLine;
-using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
 
@@ -43,7 +42,6 @@ var clones = options.Value.NewickFile != ""
 var aberrationsInfo = new AberrationsInfo(simParams);
 var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
 var aberrations = simulator.AssignMutations(clones[0], clones);
-var lcaTree = LCATreeBuilder.BuildTree(clones);
     
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
@@ -53,9 +51,7 @@ try
 {
     files.WriteClones(clones);
     files.WriteCopyNumbers(clones, simParams.IsFemale);
-    files.WriteParentTree(lcaTree);
     files.WriteSimParams(simParams);
-    files.WriteNewickFile(clones);
     files.WriteTSV(aberrations);
 }
 catch (Exception e)

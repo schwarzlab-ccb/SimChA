@@ -103,7 +103,7 @@ public class TestIO
     {
         var tsgList = Enum.GetValues<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
         
-        var genesTSG = "chr1\t1\t50\tTSG1\t0.001";
+        string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
         
         var gene1 = new Gene("TSG1", new Region(0, 50, new ChrID(ChrNo.chr1, true)), 0.001);
         tsgList[ChrNo.chr1].Add(gene1);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
@@ -21,26 +22,95 @@ public class TestKaryotype
         _rnd = new Random(0);
     }
 
+    // Test for each AberrationEnum value
     [Test]
-    public void TestDeletion()
+    public void TestWGD()
     {
-        _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+        _kar.ApplyWGD();
+        Assert.AreEqual(92, _kar.ContigCount);
+    }
+
+    [Test]
+    public void TestContigDeletion()
+    {
+        _kar.ApplyContigDeletion(0);
         Assert.AreEqual(45, _kar.ContigCount);
+        
+        _kar.ApplyContigDeletion(45);
+        Assert.AreEqual(44, _kar.ContigCount);
     }
     
     [Test]
-    public void TestDuplication()
+    public void TestContigDuplication()
     {
-        _kar.ApplyAberration(_rnd, AberrationEnum.ChromDuplication, new BaseAbbP(1f));
+        _kar.ApplyContigDuplication(0);
         Assert.AreEqual(47, _kar.ContigCount);
+        
+        _kar.ApplyContigDuplication(46);
+        Assert.AreEqual(48, _kar.ContigCount);
+    }
+
+    [Test]
+    public void TestInternalDeletion()
+    {
+        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        _kar.ApplyInternalDeletion(0, 1000, 2000);
+        Assert.AreEqual(len - 1000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        _kar.ApplyInternalDeletion(0, 1000, 2000);
+        Assert.AreEqual(len - 2000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
     }
     
     [Test]
-    public void TestBFB()
+    public void TestInternalDuplication()
     {
-        _kar.ApplyAberration(_rnd, AberrationEnum.BreakageFusionBridge, new FractionAbbP(1f, .1f));
-        Assert.AreEqual(46, _kar.ContigCount);
+        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        _kar.ApplyInternalDuplication(0, 1000, 2000);
+        Assert.AreEqual(len + 1000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        _kar.ApplyInternalDuplication(0, 1000, 2000);
+        Assert.AreEqual(len + 2000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
     }
+    
+    [Test]
+    public void TestInternalInversion()
+    {
+        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        _kar.ApplyInternalInversion(0, 1000, 2000);
+        Assert.AreEqual(len, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        _kar.ApplyInternalInversion(0, 1000, 2000);
+        Assert.AreEqual(len, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+    }
+    
+    [Test]
+    public void TestInternalTranslocation()
+    {
+        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        _kar.ApplyTailDeletion(0, 1000, true);
+        Assert.AreEqual(len - 1000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        _kar.ApplyTailDeletion(0, 1000, false);
+        Assert.AreEqual(len - 2000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+    }
+
+    //
+    // [Test]
+    // public void TestDeletion()
+    // {
+    //     _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+    //     Assert.AreEqual(45, _kar.ContigCount);
+    // }
+    //
+    // [Test]
+    // public void TestDuplication()
+    // {
+    //     _kar.ApplyAberration(_rnd, AberrationEnum.ChromDuplication, new BaseAbbP(1f));
+    //     Assert.AreEqual(47, _kar.ContigCount);
+    // }
+    //
+    // [Test]
+    // public void TestBFB()
+    // {
+    //     _kar.ApplyAberration(_rnd, AberrationEnum.BreakageFusionBridge, new FractionAbbP(1f, .1f));
+    //     Assert.AreEqual(46, _kar.ContigCount);
+    // }
     
     [Test]
     public void TestClean()

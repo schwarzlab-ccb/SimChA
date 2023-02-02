@@ -59,7 +59,7 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
         using var outputFile = new StreamWriter(outPath);
 
-        StringBuilder clonesString = new StringBuilder();
+        var clonesString = new StringBuilder();
         foreach (var subClone in subClones)
         {
             clonesString.AppendLine(subClone.ToString());
@@ -67,52 +67,7 @@ public class FileIO
 
         outputFile.Write(clonesString.ToString());
     }
-
-    public void WriteParentTree(ParentTree tree)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), DOT_FILENAME);
-        using var outputFile = new StreamWriter(outPath);
-
-        StringBuilder parentTreeString = new StringBuilder();
-        parentTreeString.AppendLine("Digraph SimChA {");
-        foreach (var node in tree.Nodes)
-        {
-            double size = Math.Round(.25 * (1 + Math.Log(1 + 0)), 2);
-            parentTreeString.AppendLine($"\t{node.Id} [label=\"{node.Name}\", width={size}, height={size * .6}];");
-        }
-
-        foreach (var edge in tree.Edges)
-        {
-            parentTreeString.AppendLine($"\t{edge.SourceId} -> {edge.TargetId} [label=\"{edge.Distance}\"];");
-        }
-
-        parentTreeString.AppendLine("}");
-        outputFile.Write(parentTreeString.ToString());
-    }
-
-    public void WriteNewickFile(List<Clone> clones)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), NEWICK_FILENAME);
-        using var outputFile = new StreamWriter(outPath);
-        StringBuilder newickString = new StringBuilder(";");
-        newickString.Insert(0, IterateClones(clones[0], clones));
-        outputFile.WriteLine(newickString);
-    }
-
-    private static string IterateClones(Clone clone, List<Clone> clones)
-    {
-        var newickString = new StringBuilder(":" + clone.DistToParent);
-        newickString.Insert(0, clone.Name);
-        newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? ")" : "");
-        foreach (int cloneId in clone.ChildrenIDs)
-        {
-            newickString.Insert(0, IterateClones(clones[cloneId], clones));
-            newickString.Insert(0, cloneId != clone.ChildrenIDs.Last() ? "," : "");
-        }
-        newickString.Insert(0, clone.ChildrenIDs.Count > 0 ? "(" : "");
-        return newickString.ToString();
-    }
-
+    
     public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
@@ -128,39 +83,6 @@ public class FileIO
             copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, subClone.Name, false) + "\n");
         }
         outputFile.Write(copyNumbersString.ToString());
-    }
-
-    public void WriteBAFAndLogR(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
-    {
-        var baf = new List<string>
-        {
-            "\tchr\tpos"
-        };
-        baf.AddRange(snps.Select(snp => $"{snp.Id}\t{snp.ChrNo}\t{snp.Pos}"));
-
-        var logr = baf.Select(x => x.Clone()).ToList();
-        foreach (var subClone in subClones)
-        {
-            var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
-            var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers.ToList(), snps, isFemale);
-            baf[0] += $"\t{subClone.CloneId}";
-            logr[0] += $"\t{subClone.CloneId}";
-            for (int i = 0; i < rawdata.Count; i++)
-            {
-                baf[i + 1] += $"\t{rawdata[i].Baf}";
-                logr[i + 1] += $"\t{rawdata[i].LogR}";
-            }
-        }
-
-        string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
-        Console.WriteLine($"Writing BAF to file {outPathBAF}");
-        using var outFileBAF = new StreamWriter(outPathBAF);
-        outFileBAF.Write(string.Join("\n", baf) + "\n");
-
-        string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
-        Console.WriteLine($"Writing LogR to file {outPathLogR}");
-        using var outputFileLogR = new StreamWriter(outPathLogR);
-        outputFileLogR.Write(string.Join("\n", logr) + "\n");
     }
 
     public void WriteSimParams(SimParams simParams)

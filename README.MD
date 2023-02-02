@@ -234,8 +234,6 @@ The start position is inclusive, the end exclusive.
 #### `copy_numbers.png` 
 The copy number tracks
 
-![ParentGraph](./doc/img/copy_numbers.png)
-
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, adam.streck@mdc-berlin.de.
 

@@ -62,14 +62,14 @@ public class Karyotype
         return $"contig:{contigID};start:{tailStart};end{tailEnd}";
     }
     
-    public string ApplyChromDeletion(int contigID)
+    public string ApplyContigDeletion(int contigID)
     {
         var contig = _contigs[contigID];
         contig.Clear();
         return $"contig:{contigID}";
     }
     
-    public string ApplyChromDuplication(int contigID)
+    public string ApplyContigDuplication(int contigID)
     {
         var contig = _contigs[contigID];
         _contigs.Add(new Contig(contig));
@@ -79,21 +79,21 @@ public class Karyotype
     public string ApplyInternalDuplication(int contigID, int startPos, int endPos)
     {
         var contig = _contigs[contigID];
-        contig.DuplicateRange(startPos, startPos + endPos);
+        contig.DuplicateRange(startPos, endPos);
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
     
     public string ApplyInternalInversion(int contigID, int startPos, int endPos)
     {
         var contig = _contigs[contigID];
-        contig.InvertRange(startPos, startPos + endPos);
+        contig.InvertRange(startPos, endPos);
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
 
     public string ApplyInternalDeletion(int contigID, int startPos, int endPos)
     {
         var contig = _contigs[contigID];
-        contig.DeleteRange(startPos, startPos + endPos);
+        contig.DeleteRange(startPos, endPos);
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
 
@@ -139,10 +139,10 @@ public class Karyotype
         {
             // Whole chromosome events
             case AberrationEnum.ChromDeletion:
-                return ApplyChromDeletion(contigA);
+                return ApplyContigDeletion(contigA);
 
             case AberrationEnum.ChromDuplication:
-                return ApplyChromDuplication(contigA);
+                return ApplyContigDuplication(contigA);
             
             case AberrationEnum.WholeGenomeDoubling:
                 return ApplyWGD();
