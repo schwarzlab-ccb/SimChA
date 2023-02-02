@@ -9,7 +9,7 @@ public static class SNPMetrics
         Random rnd,
         List<CopyNumber> copyNumbers,
         List<SNP> snps,
-        bool isfemale,
+        bool isFemale,
         float purity = 1f,
         float baferror = 0.1f,
         float readstd = 2f,
@@ -18,7 +18,7 @@ public static class SNPMetrics
     {
         var result = new List<SNPData>();
         int curSegmentId = 0;
-        float tumorPloidy = CopyNumbers.CalcPloidy(copyNumbers, isfemale);
+        float tumorPloidy = CopyNumbers.CalcPloidy(copyNumbers, isFemale);
         foreach (var snp in snps)
         {
             curSegmentId = copyNumbers.FindIndex(curSegmentId, cn =>

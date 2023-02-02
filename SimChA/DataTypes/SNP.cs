@@ -1,26 +1,13 @@
 ﻿namespace SimChA.DataTypes;
 
-public record SNP
+public record SNP(ChrNo ChrNo, int Pos, bool Heterozygous, int Id)
 {
-    private readonly Nucleotides _ref;
-    private readonly Nucleotides _alt;
-    public readonly ChrNo ChrNo;
-    public readonly int Pos;
-    public readonly long AbsPos;
-    public readonly bool Heterozygous;
-    public readonly int Id;
-
-    public SNP(ChrNo chrNo, int pos, bool heterozygous, int id)
-    {
-        ChrNo = chrNo;
-        Pos = pos;
-        AbsPos = ReferenceGenome.ChromosomeStartMap[chrNo] + pos;
-        _ref = Nucleotides.A;
-        _alt = Nucleotides.G;
-        Heterozygous = heterozygous;
-        Id = id;
-    }
+    public readonly ChrNo ChrNo = ChrNo;
+    public readonly int Pos = Pos;
+    public long AbsPos => ReferenceGenome.ChromosomeStartMap[ChrNo] + Pos;
+    public readonly bool Heterozygous = Heterozygous;
+    public readonly int Id = Id; // Id is the index in the list of SNPs
 
     public override string ToString()
-        => $"{ChrNo} {Pos}: {_ref} / {_alt} ({(Heterozygous ? "het" : "hom")})";
+        => $"{ChrNo} {Pos}: ({(Heterozygous ? "het" : "hom")})";
 }

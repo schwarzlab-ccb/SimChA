@@ -119,47 +119,48 @@ public class FileIO
         Console.WriteLine($"Writing CopyNumbers to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
-        StringBuilder copyNumbersString = new StringBuilder();
+        var copyNumbersString = new StringBuilder();
         copyNumbersString.Append("sample_id\tchr\tstart\tend\tcn_a\tcn_b\n");
 
         foreach (var subClone in subClones)
         {
             var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
-            copyNumbersString.Append((CopyNumbers.ToTSV(copynumbers, subClone.Name, false) + "\n"));
+            copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, subClone.Name, false) + "\n");
         }
         outputFile.Write(copyNumbersString.ToString());
     }
 
-    public void WriteRawData(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
+    public void WriteBAFAndLogR(Random rnd, IEnumerable<Clone> subClones, List<SNP> snps, bool isFemale)
     {
-        var outputbaf = new List<string>();
-        outputbaf.Add("\tchr\tpos");
+        var baf = new List<string>
+        {
+            "\tchr\tpos"
+        };
+        baf.AddRange(snps.Select(snp => $"{snp.Id}\t{snp.ChrNo}\t{snp.Pos}"));
 
-        outputbaf.AddRange(snps.Select(snp => $"{snp.Id}\t{snp.ChrNo}\t{snp.Pos}"));
-
-        var outputlogr = outputbaf.Select(x => x.Clone()).ToList();
+        var logr = baf.Select(x => x.Clone()).ToList();
         foreach (var subClone in subClones)
         {
             var copyNumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
             var rawdata = SNPMetrics.CalcSingleSubClone(rnd, copyNumbers.ToList(), snps, isFemale);
-            outputbaf[0] += $"\t{subClone.CloneId}";
-            outputlogr[0] += $"\t{subClone.CloneId}";
+            baf[0] += $"\t{subClone.CloneId}";
+            logr[0] += $"\t{subClone.CloneId}";
             for (int i = 0; i < rawdata.Count; i++)
             {
-                outputbaf[i + 1] += $"\t{rawdata[i].Baf}";
-                outputlogr[i + 1] += $"\t{rawdata[i].LogR}";
+                baf[i + 1] += $"\t{rawdata[i].Baf}";
+                logr[i + 1] += $"\t{rawdata[i].LogR}";
             }
         }
 
         string outPathBAF = Path.Combine(Path.GetFullPath(RootFolder), BAF_FILENAME);
         Console.WriteLine($"Writing BAF to file {outPathBAF}");
         using var outFileBAF = new StreamWriter(outPathBAF);
-        outFileBAF.Write(string.Join("\n", outputbaf) + "\n");
+        outFileBAF.Write(string.Join("\n", baf) + "\n");
 
         string outPathLogR = Path.Combine(Path.GetFullPath(RootFolder), LOGR_FILENAME);
         Console.WriteLine($"Writing LogR to file {outPathLogR}");
         using var outputFileLogR = new StreamWriter(outPathLogR);
-        outputFileLogR.Write(string.Join("\n", outputlogr) + "\n");
+        outputFileLogR.Write(string.Join("\n", logr) + "\n");
     }
 
     public void WriteSimParams(SimParams simParams)

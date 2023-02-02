@@ -7,34 +7,33 @@ public static class CopyNumbers
 {
     public static IEnumerable<CopyNumber> CalcCopyNumbers(Karyotype karyotype, bool isFemale)
     {
-        var reference = ReferenceGenome.GetChromosomes(isFemale);
-        var copyNumbers = reference.SelectMany(c => CalcSegmentation(karyotype.FindRegionsOfChr(c), c));
-        return copyNumbers.ToList();
+        var reference = ReferenceGenome.ChrIDsForSex(isFemale);
+        var copyNumbers = reference.Select(c => 
+            CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), new ChrID(c, isFemale)));
+        return copyNumbers.SelectMany(x => x).ToList();
         // TODO: Optimization: Merge neighboring segments that have the same copy numbers
     }
 
-    // Minimum consistent segmentation
-    private static IEnumerable<CopyNumber> CalcSegmentation(IEnumerable<Region> curRegs, ChrNo refChrom)
+    // Calculate the segmentation of a chromosome based on the regions of the karyotype mapping to that chromosome
+    private static IEnumerable<CopyNumber> CalcChrCopyNumbers(List<Region> curRegs, ChrID id)
     {
         var result = new List<CopyNumber>();
 
-        var curRegionsWithReference = curRegs.Append(ReferenceGenome.GetRegion(refChrom)).ToList();
+        var curRegionsWithReference = curRegs.Append(ReferenceGenome.GetRegion(id.ChrNo)).ToList();
 
         var starts = curRegionsWithReference.Select(r => r.Start);
         var ends = curRegionsWithReference.Select(r => r.End);
         var segmentBoundaries = starts.Concat(ends).Distinct().ToList();
         segmentBoundaries.Sort();
-
-        var chrID = new ChrID(refChrom, true);
+        
         for (int i = 0; i < segmentBoundaries.Count - 1; i++)
         {
-            var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], chrID);
+            var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], id);
             int cnh1 = curRegs.Count(r => r.ChrID.Parent && seg.IsInside(r));
             int cnh2 = curRegs.Count(r => !r.ChrID.Parent && seg.IsInside(r));
             var cn = new CopyNumber(seg, cnh1, cnh2);
             result.Add(cn);
         }
-
 
         return result;
     }

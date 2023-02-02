@@ -1,13 +1,14 @@
 ﻿using SimChA.DataTypes;
 
-namespace SimChA.Computation;
+namespace SimChA.Simulation;
 
 public static class SNPBuilder
 {
+    // Creates a list of SNPs with a given number of SNPs per genome
     public static List<SNP> CreateSNPs(Random random, bool isFemale, int nrsnps, float hetrate = 1f)
     {
         List<SNP> snps = new();
-        var referenceChrs = ReferenceGenome.GetChromosomes(isFemale);
+        var referenceChrs = ReferenceGenome.ChrIDsForSex(isFemale);
         long totGenomeLength = ReferenceGenome.TotalLength(isFemale) / 2;
 
         int snpId = 0;
