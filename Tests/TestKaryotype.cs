@@ -71,7 +71,7 @@ public class TestKaryotype
         _kar.ApplyInternalDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + 2 * TEST_FRAC, _kar.ContigLen(0));
     }
-    
+
     [Test]
     public void TestInternalInversion()
     {
