@@ -54,11 +54,13 @@ public class TestContig
     }
     
     [Test]
-    public void TestBridge()
+    public void TestBridgeFront()
     {
         int length = (_contig1.Length() - 1000) * 2;
         _contig1.Bridge(1000, true);
         Assert.AreEqual(length, _contig1.Length());
+        _contig1.Bridge(1000, false);
+        Assert.AreEqual(1000*2, _contig1.Length());
     }
 
     [Test]
