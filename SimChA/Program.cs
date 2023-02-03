@@ -42,15 +42,18 @@ var clones = options.Value.NewickFile != ""
 var aberrationsInfo = new AberrationsInfo(simParams);
 var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
 var aberrations = simulator.AssignMutations(clones[0], clones);
-    
+
+// TODO: do not remove the diploid clone if a newick file is provided
+var selectClones = clones.Where(c => c.CloneId != 0).ToList();
+
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
 
 Console.WriteLine("Writing to disk.");
 try
 {
-    files.WriteClones(clones);
-    files.WriteCopyNumbers(clones, simParams.IsFemale);
+    files.WriteClones(selectClones);
+    files.WriteCopyNumbers(selectClones, simParams.IsFemale);
     files.WriteSimParams(simParams);
     files.WriteTSV(aberrations);
 }
