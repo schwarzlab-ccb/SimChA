@@ -2,8 +2,8 @@
 Plotting functions largely taken from MEDICC2 (see https://bitbucket.org/schwarzlab/medicc2)
 """
 
-
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -21,6 +21,9 @@ TREE_MARKER_SIZE = 40
 XLABEL_TICK_SIZE = 8
 SMALL_SEGMENTS_LIMIT = 1e7
 XLABEL_FONT_SIZE = 10
+TREE_WIDTH_SCALE = 1
+TRACK_WIDTH_SCALE = 1
+HEIGHT_SCALE = 1
 
 CHROM_SIZE = {
     "chr1": 247249719,
@@ -53,8 +56,22 @@ CHROM_ABS_START = {list(CHROM_SIZE.keys())[i]: (sum := sum+([0]+list(CHROM_SIZE.
                    for i in range(len(CHROM_SIZE))}
 
 
+def load_data(filename):
+    '''Load the data from a file'''
+    data = pd.read_csv(filename, sep='\t')
+    assert np.all(data.columns == ['sample_id', 'chr', 'start', 'end',
+                  'cn_a', 'cn_b']), 'Data columns are not correct'
+    data = data.set_index(['sample_id', 'chr', 'start', 'end'])
+    data = data.sort_index()
+
+    assert data.index.is_unique, 'Index is not unique'
+    assert len(data.columns) == 2, 'Data has more than two columns'
+
+    return data
+
+
 def calc_total_pos(data, col='pos'):
-    return data[col] + data['chrom'].apply(lambda x: CHROM_ABS_START[x])
+    return data[col] + data['chr'].apply(lambda x: CHROM_ABS_START[x])
 
 
 def plot_chrom_boundaries(ax, print_chrom=False, outside=False):
@@ -101,11 +118,11 @@ def plot_single_logr(data, ax=None, print_chrom=False):
 def plot_single_copynumber(data, ax=None, print_chrom=False, ymax=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 5))
-
+    data = data.copy()
     data['total_start'] = calc_total_pos(data, col='start')
     data['total_end'] = calc_total_pos(data, col='end')
     segment_lengths = data['end'] - data['start']
-    data['small_segment'] = (segment_lengths) < SMALL_SEGMENTS_LIMIT
+    data['small_segment'] = segment_lengths < SMALL_SEGMENTS_LIMIT
 
     lines_a = []
     lines_b = []
@@ -298,13 +315,13 @@ def plot_tree(input_tree,
     else:
         clade_colors = {}
         for sample in [x.name for x in list(input_tree.find_clades('')) if x.name is not None]:
-            ## determine if sample is terminal
+            # determine if sample is terminal
             is_terminal = True
             matches = list(input_tree.find_clades(sample))
             if len(matches) > 0:
                 clade = matches[0]
                 is_terminal = clade.is_terminal()
-            ## determine if sample is normal
+            # determine if sample is normal
             clade_colors[sample] = COL_MARKER_TERMINAL
             if not is_terminal:
                 clade_colors[sample] = COL_MARKER_INTERNAL
@@ -511,3 +528,167 @@ def plot_tree(input_tree,
         plt.savefig(output_name + ".png")
 
     return plt.gcf()
+
+
+def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, tree_width_ratio=1):
+
+    copynumbers = copynumbers.copy().reset_index().set_index('sample_id')
+    # Display the population size as fractions
+    if fraction:
+        total_pop = 0
+        for clade in tree.find_clades():
+            if clade.name is not None:
+                total_pop += int(clade.name.split('-')[1])
+        for clade in tree.find_clades():
+            if clade.name is not None:
+                clade.name = clade.name.split('-')[0] + '-' + \
+                    str(np.round(float(clade.name.split('-')[1])/total_pop, 3))
+
+    samples = list(copynumbers.index.unique())
+
+    # Figure dimensions
+    nsegs = len(copynumbers.loc[samples[0]])
+    track_width = nsegs * 0.2 * TRACK_WIDTH_SCALE
+    tree_width = 0 if tree is None else 2.5 * TREE_WIDTH_SCALE  # in figsize
+    nrows = len(samples)
+    plotheight = 4 * 0.2 * nrows * HEIGHT_SCALE
+    plotwidth = tree_width + track_width
+    tree_width_ratio = tree_width / plotwidth
+    fig = plt.figure(figsize=(plotwidth, plotheight), constrained_layout=True)
+
+    if tree is None:
+        gs = fig.add_gridspec(nrows, 1)
+        cn_axes = [fig.add_subplot(gs[i]) for i in range(0, nrows)]
+        y_posns = {sample: i for i, sample in enumerate(samples)}  # as they appear
+    else:
+        normal_sample = tree.root.name
+        gs = fig.add_gridspec(nrows, 2, width_ratios=[tree_width_ratio, 1-tree_width_ratio])
+        tree_ax = fig.add_subplot(gs[0:len(samples), 0])
+        cn_axes = [fig.add_subplot(gs[i]) for i in range(1, (2*(nrows))+1, 2)]
+        y_posns = _get_y_positions(tree, normal_sample, adjust=True)
+        y_posns = {clade.name: y_pos for clade, y_pos in y_posns.items()
+                   if clade.name is not None and clade.name != 'root'}
+        plot_tree(tree,
+                  ax=tree_ax,
+                  normal_name=normal_sample)
+
+    for sample in samples:
+        cur_data = copynumbers.loc[sample]
+        index_to_plot = y_posns[sample] - 1
+        plot_single_copynumber(cur_data,
+                               ax=cn_axes[index_to_plot],
+                               ymax=cmax)
+        cn_axes[index_to_plot].set_ylabel('')
+    for ax in cn_axes[:-1]:
+        ax.set_xticks([])
+
+    return fig
+
+
+def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_numbers=False,
+                    alleles=['cn_a', 'cn_b'], tree_width_ratio=1, cbar_width_ratio=0.05, figsize=(20, 10),
+                    tree_line_width=0.5, tree_marker_size=0, show_internal_nodes=False, title='',
+                    tree_label_colors=None, tree_label_func=None, cmap='coolwarm', normal_name='diploid',
+                    ignore_segment_lengths=False):
+
+    copynumbers = copynumbers[alleles].copy()
+
+    if not isinstance(alleles, list) and not isinstance(alleles, tuple):
+        alleles = [alleles]
+    nr_alleles = len(alleles)
+
+    cmax = min(cmax, np.max(copynumbers[alleles].values.astype(int)))
+
+    if tree is None:
+        fig, axs = plt.subplots(figsize=figsize, ncols=1+nr_alleles, sharey=False,
+                                gridspec_kw={'width_ratios': nr_alleles*[1] + [cbar_width_ratio]})
+
+        cur_sample_labels = (copynumbers.index.get_level_values('sample_id').unique())
+        if y_posns is None:
+            y_posns = {s: i for i, s in enumerate(cur_sample_labels)}
+
+        cn_axes = axs[:-1]
+    else:
+        fig, axs = plt.subplots(figsize=figsize, ncols=2+nr_alleles, sharey=False,
+                                gridspec_kw={'width_ratios': [tree_width_ratio] + nr_alleles*[1] + [cbar_width_ratio]})
+        tree_ax = axs[0]
+        cn_axes = axs[1:-1]
+
+        if show_internal_nodes:
+            cur_sample_labels = np.array([x.name for x in list(
+                tree.find_clades()) if x.name is not None])
+        else:
+            cur_sample_labels = np.array([x.name for x in tree.get_terminals()])
+
+        y_posns = {k.name: v for k, v in _get_y_positions(
+            tree, adjust=show_internal_nodes, normal_name=normal_name).items()}
+
+        _ = plot_tree(tree, ax=tree_ax, normal_name=normal_name,
+                      label_func=tree_label_func if tree_label_func is not None else lambda x: '',
+                      hide_internal_nodes=(not show_internal_nodes), show_branch_lengths=False, show_events=False,
+                      line_width=tree_line_width, marker_size=tree_marker_size,
+                      title=title, label_colors=tree_label_colors)
+        tree_ax.set_axis_off()
+        tree_ax.set_axis_off()
+        fig.set_constrained_layout_pads(w_pad=0, h_pad=0, hspace=0.0, wspace=100)
+
+    cax = axs[-1]
+
+    ind = [y_posns.get(x, -1) for x in cur_sample_labels]
+    cur_sample_labels = cur_sample_labels[np.argsort(ind)]
+    if cmax == (2 if total_copy_numbers else 1):
+        cmax += 1
+    color_norm = mcolors.TwoSlopeNorm(vmin=0, vcenter=(2 if total_copy_numbers else 1), vmax=cmax)
+
+    chr_ends = copynumbers.loc[cur_sample_labels[0]].copy()
+    chr_ends['end_pos'] = np.cumsum([1]*len(chr_ends))
+    chr_ends = chr_ends.reset_index().groupby('chr').max()['end_pos']
+    chr_ends = chr_ends.dropna()
+    chr_ends = chr_ends.astype(int)
+
+    if ignore_segment_lengths:
+        x_pos = np.arange(
+            len(copynumbers.loc[cur_sample_labels].astype(int).unstack('sample_id'))+1)
+    else:
+        x_pos = np.append([0], np.cumsum(copynumbers.loc[cur_sample_labels].astype(int).unstack(
+            'sample_id').loc[:, (alleles[0])].loc[:, cur_sample_labels].eval('end-start').values))
+    y_pos = np.arange(len(cur_sample_labels)+1)+0.5
+
+    for ax, allele in zip(cn_axes, alleles):
+        im = ax.pcolormesh(x_pos, y_pos,
+                           copynumbers.loc[cur_sample_labels].astype(int).unstack(
+                               'sample_id').loc[:, (allele)].loc[:, cur_sample_labels].values.T,
+                           cmap=cmap,
+                           norm=color_norm)
+
+        for _, line in chr_ends.iteritems():
+            ax.axvline(x_pos[line], color='black', linewidth=0.75)
+
+        xtick_pos = np.append([0], x_pos[chr_ends.values][:-1])
+        xtick_pos = (xtick_pos + np.roll(xtick_pos, -1))/2
+        xtick_pos[-1] += x_pos[-1]/2
+        ax.set_xticks(xtick_pos)
+        ax.set_xticklabels([x[3:] for x in chr_ends.index], ha='center', rotation=90, va='bottom')
+        ax.tick_params(width=0)
+        ax.xaxis.set_tick_params(labelbottom=False, labeltop=True, bottom=False)
+        ax.set_yticks([])
+
+    cax.pcolormesh([0, 1],
+                   np.arange(0, cmax+2),
+                   np.arange(0, cmax+1)[:, np.newaxis],
+                   cmap=cmap,
+                   norm=color_norm)
+
+    cax.set_xticks([])
+    cax.set_yticks(np.arange(0, cmax+1)+0.5)
+    if np.max(copynumbers.values.astype(int)) > cmax:
+        cax.set_yticklabels([str(x) + '+' if x == cmax else str(x)
+                             for x in np.arange(0, cmax+1)], ha='left')
+    else:
+        cax.set_yticklabels(np.arange(0, cmax+1), ha='left')
+    cax.yaxis.set_tick_params(left=False, labelleft=False, labelright=True)
+
+    for ax in axs[:-1]:
+        ax.set_ylim(len(cur_sample_labels)+0.5, 0.5)
+
+    return fig
