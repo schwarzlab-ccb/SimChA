@@ -15,6 +15,8 @@ public class TestKaryotype
     private Karyotype _kar;
     private Random _rnd;
     
+    private int TEST_FRAC = 1000;
+    
     [SetUp]
     public void Setup()
     {
@@ -53,64 +55,61 @@ public class TestKaryotype
     [Test]
     public void TestInternalDeletion()
     {
-        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        _kar.ApplyInternalDeletion(0, 1000, 2000);
-        Assert.AreEqual(len - 1000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
-        _kar.ApplyInternalDeletion(0, 1000, 2000);
-        Assert.AreEqual(len - 2000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        long len = _kar.ContigLen(0);
+        _kar.ApplyInternalDeletion(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len - TEST_FRAC, _kar.ContigLen(0));
+        _kar.ApplyInternalDeletion(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len - 2 * TEST_FRAC, _kar.ContigLen(0));
     }
     
     [Test]
     public void TestInternalDuplication()
     {
-        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        _kar.ApplyInternalDuplication(0, 1000, 2000);
-        Assert.AreEqual(len + 1000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
-        _kar.ApplyInternalDuplication(0, 1000, 2000);
-        Assert.AreEqual(len + 2000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        long len = _kar.ContigLen(0);
+        _kar.ApplyInternalDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
+        _kar.ApplyInternalDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len + 2 * TEST_FRAC, _kar.ContigLen(0));
     }
     
     [Test]
     public void TestInternalInversion()
     {
-        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        _kar.ApplyInternalInversion(0, 1000, 2000);
-        Assert.AreEqual(len, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
-        _kar.ApplyInternalInversion(0, 1000, 2000);
-        Assert.AreEqual(len, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        long len = _kar.ContigLen(0);
+        _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len, _kar.ContigLen(0));
+        _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len, _kar.ContigLen(0));
     }
     
     [Test]
-    public void TestInternalTranslocation()
+    public void TestTailDeletion()
     {
-        long len = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        _kar.ApplyTailDeletion(0, 1000, true);
-        Assert.AreEqual(len - 1000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
-        _kar.ApplyTailDeletion(0, 1000, false);
-        Assert.AreEqual(len - 2000, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        long len = _kar.ContigLen(0);
+        _kar.ApplyTailDeletion(0, TEST_FRAC, true);
+        Assert.AreEqual(len - TEST_FRAC, _kar.ContigLen(0));
+        _kar.ApplyTailDeletion(0, TEST_FRAC, false);
+        Assert.AreEqual(len - 2 * TEST_FRAC, _kar.ContigLen(0));
     }
 
-    //
-    // [Test]
-    // public void TestDeletion()
-    // {
-    //     _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
-    //     Assert.AreEqual(45, _kar.ContigCount);
-    // }
-    //
-    // [Test]
-    // public void TestDuplication()
-    // {
-    //     _kar.ApplyAberration(_rnd, AberrationEnum.ChromDuplication, new BaseAbbP(1f));
-    //     Assert.AreEqual(47, _kar.ContigCount);
-    // }
-    //
-    // [Test]
-    // public void TestBFB()
-    // {
-    //     _kar.ApplyAberration(_rnd, AberrationEnum.BreakageFusionBridge, new FractionAbbP(1f, .1f));
-    //     Assert.AreEqual(46, _kar.ContigCount);
-    // }
+    [Test]
+    public void TestBFB()
+    {
+        long len = _kar.ContigLen(0);
+        _kar.ApplyBFB(0, TEST_FRAC, true);
+        long newLen = _kar.ContigLen(0);
+        Assert.AreEqual((len - TEST_FRAC) * 2, newLen);
+    }
+    
+    [Test]
+    public void TestTranslocation()
+    {
+        long contigLen = _kar.ContigLen(0);
+        long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC);
+        Assert.AreEqual(contigLen, _kar.ContigLen(1));
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+    }
     
     [Test]
     public void TestClean()

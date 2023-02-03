@@ -32,8 +32,10 @@ public class Karyotype
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
     public static int GetTail(int segLength, Contig contig, bool fiveToThree) 
-        => fiveToThree ? segLength - 1 : contig.Length() - segLength - 1;
+        => fiveToThree ? segLength : contig.Length() - segLength;
     
+    public int ContigLen(int contigId)
+        => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
     
     private static (int start, int end) GetIndices(Contig contig, int position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
