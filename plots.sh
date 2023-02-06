@@ -6,8 +6,11 @@ python3 scripts/consistent_segmentation.py -i $out/copynumbers.out -o $out/copyn
 
 echo "Plotting CN Tracks"
 # check if tree file exists
-if [ -f $out/parent_graph.dot ]; then
-    echo "Found tree, plotting it"
+if [ -f $out/parent_graph.new ]; then
+    echo "Found .new tree, plotting it"
+    python3 scripts/plot_copynumbers.py --input $out/copynumbers_consistent.out --tree $out/parent_graph.new --output-folder $out --type heatmap
+elif  [ -f $out/parent_graph.dot ]; then
+    echo "Found .dot tree, plotting it"
     python3 scripts/plot_copynumbers.py --input $out/copynumbers_consistent.out --tree $out/parent_graph.dot --output-folder $out --type heatmap
 else
     echo "No tree found"
