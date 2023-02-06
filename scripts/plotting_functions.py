@@ -19,11 +19,13 @@ COL_MARKER_NORMAL = 'green'
 LINEWIDTH_COPY_NUMBERS = 2
 TREE_MARKER_SIZE = 40
 XLABEL_TICK_SIZE = 8
-SMALL_SEGMENTS_LIMIT = 1e7
 XLABEL_FONT_SIZE = 10
+YLABEL_FONT_SIZE = 12
+SMALL_SEGMENTS_LIMIT = 1e7
 TREE_WIDTH_SCALE = 1
 TRACK_WIDTH_SCALE = 1
 HEIGHT_SCALE = 1
+
 
 CHROM_SIZE = {
     "chr1": 247249719,
@@ -177,7 +179,6 @@ def plot_single_copynumber(data, ax=None, print_chrom=False, ymax=None):
         ymax = data[['cn_a', 'cn_b']].max().max()
     ax.set_ylim(-0.1, ymax + 0.1)
     plot_chrom_boundaries(ax, print_chrom=print_chrom)
-    ax.set_ylabel('copynumber')
     ax.set_yticks(range(ymax+1))
 
     seg_bound_first = data['total_start'].values[0]
@@ -568,6 +569,7 @@ def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, t
                    if clade.name is not None and clade.name != 'root'}
         plot_tree(tree,
                   ax=tree_ax,
+                  label_func=lambda x: '',
                   normal_name=normal_sample)
 
     for sample in samples:
@@ -576,7 +578,8 @@ def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, t
         plot_single_copynumber(cur_data,
                                ax=cn_axes[index_to_plot],
                                ymax=cmax)
-        cn_axes[index_to_plot].set_ylabel('')
+        cn_axes[index_to_plot].set_ylabel(
+            sample, fontsize=YLABEL_FONT_SIZE, rotation=0, va='center', ha='right')
     for ax in cn_axes[:-1]:
         ax.set_xticks([])
 
@@ -622,7 +625,7 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
             tree, adjust=show_internal_nodes, normal_name=normal_name).items()}
 
         _ = plot_tree(tree, ax=tree_ax, normal_name=normal_name,
-                      label_func=tree_label_func if tree_label_func is not None else lambda x: '',
+                      label_func=lambda x: '',
                       show_branch_lengths=False, line_width=tree_line_width, marker_size=tree_marker_size,
                       title=title, label_colors=tree_label_colors)
         tree_ax.set_axis_off()
@@ -670,6 +673,12 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
         ax.xaxis.set_tick_params(labelbottom=False, labeltop=True, bottom=False)
         ax.set_yticks([])
 
+    # add sample names
+    cn_axes[0].set_yticks(np.arange(len(cur_sample_labels)) + 1)
+    cn_axes[0].set_yticklabels(cur_sample_labels, ha='right',
+                               va='center', fontsize=YLABEL_FONT_SIZE)
+
+    # add colorbar
     cax.pcolormesh([0, 1],
                    np.arange(0, cmax+2),
                    np.arange(0, cmax+1)[:, np.newaxis],
