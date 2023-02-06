@@ -239,10 +239,8 @@ def plot_tree(input_tree,
               title='',
               ax=None,
               output_name=None,
-              normal_name='diploid',
+              normal_name=0,
               show_branch_lengths=True,
-              show_branch_support=False,
-              show_events=False,
               branch_labels=None,
               label_colors=None,
               marker_size=None,
@@ -587,8 +585,8 @@ def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, t
 
 def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_numbers=False,
                     alleles=['cn_a', 'cn_b'], tree_width_ratio=1, cbar_width_ratio=0.05, figsize=(20, 10),
-                    tree_line_width=0.5, tree_marker_size=0, show_internal_nodes=False, title='',
-                    tree_label_colors=None, tree_label_func=None, cmap='coolwarm', normal_name='diploid',
+                    tree_line_width=0.5, tree_marker_size=1, show_internal_nodes=False, title='',
+                    tree_label_colors=None, tree_label_func=None, cmap='coolwarm', normal_name=0,
                     ignore_segment_lengths=False):
 
     copynumbers = copynumbers[alleles].copy()
@@ -625,8 +623,7 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
 
         _ = plot_tree(tree, ax=tree_ax, normal_name=normal_name,
                       label_func=tree_label_func if tree_label_func is not None else lambda x: '',
-                      hide_internal_nodes=(not show_internal_nodes), show_branch_lengths=False, show_events=False,
-                      line_width=tree_line_width, marker_size=tree_marker_size,
+                      show_branch_lengths=False, line_width=tree_line_width, marker_size=tree_marker_size,
                       title=title, label_colors=tree_label_colors)
         tree_ax.set_axis_off()
         tree_ax.set_axis_off()

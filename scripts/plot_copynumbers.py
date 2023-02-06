@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
     parser.add_argument('-t', '--tree', type=str, default=None, required=False)
-    parser.add_argument("-o", "--output_folder", type=str, default=None, required=False)
+    parser.add_argument("-o", "--output-folder", dest='output_folder', type=str, default=None, required=False)
     parser.add_argument("--fraction", action="store_true", dest="fraction")
 
     parser.add_argument('--type', type=str, default='heatmap', required=False,
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         elif not args.tree.endswith('.new'):
             raise BaseException("Tree must be either .dot or .new format.")
 
-        tree = Phylo.read(args.tree, 'newick')
+        tree = Phylo.read(args.tree.replace('dot', 'new'), 'newick')
         tree.ladderize()  # Flip branches so deeper clades are displayed at top
 
     if args.type == 'both':
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     if 'heatmap' in plot_type:
         fig = plot_cn_heatmap(copynumbers=copynumbers,
-                              tree=None, figsize=(20, 15),
+                              tree=tree, figsize=(20, 15),
                               cmax=cmax,
                               show_internal_nodes=False,
                               ignore_segment_lengths=False
