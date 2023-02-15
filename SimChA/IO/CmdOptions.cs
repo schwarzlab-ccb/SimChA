@@ -16,6 +16,6 @@ public class CmdOptions
     [Option('D', "distance", Required = false, Default = 1, HelpText = "Number of mutations to generate.")]
     public int Distance { get; set; }
 
-    [Option('G', "genes", Required = false, Default = "", HelpText = "Folder with three files for OGs, TSGs and essential genes in the format of essentials.tsv, ogs.tsv and tsgs.tsv")]
+    [Option('d', "data", Required = false, Default = "../data", HelpText = "Folder with three files for OGs, TSGs and essential genes in the format of essentials.tsv, ogs.tsv and tsgs.tsv")]
     public string GenesFolder { get; set;}
 }
