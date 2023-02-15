@@ -24,6 +24,11 @@ public class Karyotype
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
     }
+    
+    public Karyotype(List<Contig> contigs)
+    {
+        _contigs = contigs;
+    }
 
     public override string ToString()
         => ContigCount > 0 ? "[\n\t" + string.Join(",\n\t", _contigs.Where(c => c.Any())) + "\n]\n" : "[]";
@@ -31,13 +36,13 @@ public class Karyotype
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
-    public static int GetTail(int segLength, Contig contig, bool fiveToThree) 
+    public static long GetTail(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;
     
-    public int ContigLen(int contigId)
+    public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
     
-    private static (int start, int end) GetIndices(Contig contig, int position, bool fiveToThree)
+    private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
@@ -46,20 +51,20 @@ public class Karyotype
     public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, SimParams simParams)
         => FitnessVal = Fitness.Calculate(this, geneLists, simParams);
 
-    public string ApplyTailDeletion(int contigID, int tailLen, bool fiveToThree)
+    public string ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
-        int tailSplit = GetTail(tailLen, contig, fiveToThree);
-        (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        long tailSplit = GetTail(tailLen, contig, fiveToThree);
+        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.DeleteRange(tailStart, tailEnd);
         return $"contig:{contigID};start:{tailStart};end{tailEnd}";
     }
 
-    public string ApplyBFB(int contigID, int tailLen, bool fiveToThree)
+    public string ApplyBFB(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
-        int tailSplit = GetTail(tailLen, contig, fiveToThree);
-        (int tailStart, int tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        long tailSplit = GetTail(tailLen, contig, fiveToThree);
+        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.Bridge(tailSplit, fiveToThree);
         return $"contig:{contigID};start:{tailStart};end{tailEnd}";
     }
@@ -78,21 +83,21 @@ public class Karyotype
         return $"contig:{contigID}";
     }
 
-    public string ApplyInternalDuplication(int contigID, int startPos, int endPos)
+    public string ApplyInternalDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.DuplicateRange(startPos, endPos);
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
     
-    public string ApplyInternalInversion(int contigID, int startPos, int endPos)
+    public string ApplyInternalInversion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.InvertRange(startPos, endPos);
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
 
-    public string ApplyInternalDeletion(int contigID, int startPos, int endPos)
+    public string ApplyInternalDeletion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.DeleteRange(startPos, endPos);
@@ -100,7 +105,7 @@ public class Karyotype
     }
 
     // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
-    public string ApplyTranslocation(int contigA, int contigB, int posA, int posB)
+    public string ApplyTranslocation(int contigA, int contigB, long posA, long posB)
     {
         var refContig = _contigs[contigA];
         var altContig = _contigs[contigB];
@@ -118,10 +123,10 @@ public class Karyotype
         return "";
     }
 
-    public string ApplyChromothripsis(int contigID, List<int> stops, IEnumerable<int> selection)
+    public string ApplyChromothripsis(int contigID, List<long> stops, IEnumerable<int> selection)
     {            
         var contig = _contigs[contigID];
-        int contigLen = contig.Length();
+        long contigLen = contig.Length();
         contig.ScatterAndGather(stops, selection);
         return $"contig:{contigID};fragments:{stops.Count + 1};lost:{contigLen - contig.Length()}B";
     }
@@ -135,7 +140,7 @@ public class Karyotype
             .GetEnumerator();
         IDsEnumerator.MoveNext();
         int contigA = IDsEnumerator.Current;
-        int lenA = _contigs[contigA].Length();
+        long lenA = _contigs[contigA].Length();
         
         switch (aberration)
         {
@@ -152,7 +157,7 @@ public class Karyotype
             // Tail events
             case AberrationEnum.TailDeletion:
             case AberrationEnum.BreakageFusionBridge:
-                int delFraction = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
+                long delFraction = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
                 bool delDirection = rnd.CoinFlip();
                 return aberration == AberrationEnum.TailDeletion 
                     ? ApplyTailDeletion(contigA, delFraction, delDirection) 
@@ -162,9 +167,9 @@ public class Karyotype
             case AberrationEnum.InternalDuplication:
             case AberrationEnum.InternalDeletion:
             case AberrationEnum.InternalInversion:
-                int segLen = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
-                int start = Sampling.GetInternalPos(rnd, lenA- segLen);
-                int end = start + segLen;
+                long segLen = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
+                long start = Sampling.GetInternalPos(rnd, lenA- segLen);
+                long end = start + segLen;
                 return aberration switch
                 {
                     AberrationEnum.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
@@ -175,9 +180,9 @@ public class Karyotype
             case AberrationEnum.Translocation:
                 IDsEnumerator.MoveNext();
                 int contigB = IDsEnumerator.Current;
-                int lenB = _contigs[contigB].Length();
-                int posA = Sampling.GetInternalPos(rnd, lenA);
-                int posB = Sampling.GetInternalPos(rnd, lenB);
+                long lenB = _contigs[contigB].Length();
+                long posA = Sampling.GetInternalPos(rnd, lenA);
+                long posB = Sampling.GetInternalPos(rnd, lenB);
                 return ApplyTranslocation(contigA, contigB, posA, posB);
             
             case AberrationEnum.Chromothripsis:

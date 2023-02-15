@@ -13,19 +13,19 @@ public class Contig
     public Contig(Region initialRegion) 
         => _regions = new List<Region> { initialRegion };
 
-    private Contig(IEnumerable<Region> regions)
+    public Contig(IEnumerable<Region> regions)
         => _regions = regions.Where(r => r.Length > 0).ToList();
 
     public Contig(Contig other) 
         => _regions = new List<Region>(other._regions);
 
-    public int Length() 
+    public long Length() 
         => Length(_regions);
 
     public bool Any() 
         => Length() > 0;
 
-    public static int Length(IEnumerable<Region> regions)
+    public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
 
     public static string ToString(IEnumerable<Region> regions)
@@ -40,10 +40,10 @@ public class Contig
     public void Clear()
         => _regions.Clear();
 
-    public void DeleteRange(int start, int end)
+    public void DeleteRange(long start, long end)
         => _regions = RegionOps.DeleteRange(_regions, start, end);
 
-    public Contig Split(int pos, bool keepFirst)
+    public Contig Split(long pos, bool keepFirst)
     {
         var (first, second) = RegionOps.SplitRegions(_regions, pos);
         _regions = keepFirst ? first : second;
@@ -53,7 +53,7 @@ public class Contig
     public void Join(Contig other)
         => _regions = RegionOps.ConcatRegions(_regions, other._regions);
 
-    public void InvertRange(int invStart, int invEnd)
+    public void InvertRange(long invStart, long invEnd)
     {
         var copy = RegionOps.CopyRange(_regions, invStart, invEnd);
         var inverse = RegionOps.InvertRegions(copy);
@@ -62,14 +62,14 @@ public class Contig
         _regions = RegionOps.ConcatRegions(new[] { first, inverse, second });
     }
 
-    public void DuplicateRange(int start, int end)
+    public void DuplicateRange(long start, long end)
     {
         var copy = RegionOps.CopyRange(_regions, start, end);
         var (first, second) = RegionOps.SplitRegions(_regions, start);
         _regions = RegionOps.ConcatRegions(new[] { first, copy, second });
     }
 
-    public void Bridge(int pos, bool cutFront)
+    public void Bridge(long pos, bool cutFront)
     {
         var (first, second) = RegionOps.SplitRegions(_regions, pos);
         if (cutFront)
@@ -84,15 +84,15 @@ public class Contig
         }
     }
 
-    public void ScatterAndGather(List<int> locs, IEnumerable<int> indices)
+    public void ScatterAndGather(List<long> locs, IEnumerable<int> indices)
     {
         // First region
         var newRegions = new List<List<Region>> { RegionOps.CopyRange(_regions, 0, locs[0]) };
         // Internal regions
         for (int i = 0; i < locs.Count - 1; i++)
         {
-            int start = locs[i];
-            int end = locs[i + 1];
+            long start = locs[i];
+            long end = locs[i + 1];
             var copy = RegionOps.CopyRange(_regions, start, end);
             newRegions.Add(copy);
         }

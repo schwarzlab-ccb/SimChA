@@ -115,7 +115,7 @@ public class TestKaryotype
     public void TestChromothripsis()
     {
         long contigLen = _kar.ContigLen(0);
-        var stops = new List<int> { TEST_FRAC, TEST_FRAC * 2, TEST_FRAC * 3 };
+        var stops = new List<long> { TEST_FRAC, TEST_FRAC * 2, TEST_FRAC * 3 };
         var selection = new List<int> { 3, 1}; // Keep only a TEST_FRAC chunk and the tail
         _kar.ApplyChromothripsis(0, stops, selection);
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));

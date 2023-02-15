@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.IO;
 
@@ -19,6 +20,7 @@ public class FileIO
     private const string ESSENTIALS_TSV = "essentials.tsv";
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
+    private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
 
     public FileIO(string rootFolder)
     {
@@ -157,7 +159,6 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
 
-    // TODO make the return triple into a dictionary
     public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
@@ -195,7 +196,7 @@ public class FileIO
                 continue;
             }
             string name = genString[3];
-            var fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
+            double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
             var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[0]);
             var chrID = new ChrID(chrNum, isFemale);
             // Convert to zero-based [start, end) index 
@@ -204,5 +205,68 @@ public class FileIO
             geneList[chrNum].Add(gene);
         }
         return geneList;
+    }
+
+    public void WriteSampleFitness(Dictionary<string, double> fitness)
+    {
+        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
+        using var file = new StreamWriter(filePath);
+        file.WriteLine("Sample\tFitness");
+        foreach (var (sample, fit) in fitness)
+        {
+            file.WriteLine($"{sample}\t{fit}");
+        }
+    }
+
+    public static Dictionary<string, Karyotype> ReadCopyNumbers(string cnaProfile)
+    {
+        string fileFullPath = Path.GetFullPath(cnaProfile);
+        Dictionary<string, Karyotype> result = new();
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"CNA profile file {fileFullPath} does not exist");
+        }
+        try
+        {
+            var cnaFile = new StreamReader(fileFullPath);
+            string lastSample = "";
+            var regionsA = new List<Region>();
+            var regionsB = new List<Region>();
+            cnaFile.ReadLine(); // Skip header
+            while (cnaFile.ReadLine() is { } line)
+            {
+                string[] lineSplit = line.Split('\t');
+                string sample = lineSplit[0];
+                if (sample != lastSample)
+                {
+                    if (regionsA.Any() || regionsB.Any())
+                    {
+                        var haplotypes = new List<Contig> {new(regionsA), new(regionsB)};
+                        result[sample] = new Karyotype(haplotypes);
+                        regionsA.Clear();
+                        regionsB.Clear();
+                    }
+                    lastSample = sample;
+                }
+                var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), lineSplit[1]);
+                int start = int.Parse(lineSplit[2]) - 1;
+                int end = int.Parse(lineSplit[3]);
+                int cnA = int.Parse(lineSplit[4]);
+                int cnB = int.Parse(lineSplit[5]);
+                for (int i = 0; i < cnA; i++)
+                {
+                    regionsA.Add(new Region(start, end, new ChrID(chrNum, true)));
+                }
+                for (int i = 0; i < cnB; i++)
+                {
+                    regionsB.Add(new Region(start, end, new ChrID(chrNum, false)));
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to read newick file from the file {fileFullPath}. Error {e.Message}");
+        }
+        return result;
     }
 }

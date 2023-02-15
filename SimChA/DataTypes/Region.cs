@@ -4,9 +4,9 @@ namespace SimChA.DataTypes;
 
 // A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
 // TODO: The direction should not be part of the region, should be part of the chromosome
-public record Region(int Start, int End, ChrID ChrID, bool Forward = true)
+public record Region(long Start, long End, ChrID ChrID, bool Forward = true)
 {
-    public int Length => End - Start;
+    public long Length => End - Start;
 
     public bool IsInside(Region other) => Start >= other.Start && End <= other.End;
 

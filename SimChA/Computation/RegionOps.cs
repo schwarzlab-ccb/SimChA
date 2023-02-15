@@ -12,10 +12,10 @@ public static class RegionOps
         }
     }
 
-    public static List<Region> DeleteRange(List<Region> regions, int start, int end)
+    public static List<Region> DeleteRange(List<Region> regions, long start, long end)
     {
         var newRegions = new List<Region>();
-        int seekPos = 0;
+        long seekPos = 0;
         foreach (var region in regions)
         {
             if (start >= seekPos + region.Length) // region before start
@@ -54,10 +54,10 @@ public static class RegionOps
         return newRegions;
     }
 
-    public static List<Region> CopyRange(List<Region> regions, int start, int end)
+    public static List<Region> CopyRange(List<Region> regions, long start, long end)
     {
         var newRegions = new List<Region>();
-        int seekPos = 0;
+        long seekPos = 0;
         foreach (var region in regions)
         {
             if (start >= seekPos + region.Length) // region before start
@@ -93,9 +93,9 @@ public static class RegionOps
         return newRegions;
     }
 
-    public static (List<Region>, List<Region>) SplitRegions(List<Region> regions, int pos)
+    public static (List<Region>, List<Region>) SplitRegions(List<Region> regions, long pos)
     {
-        int seekPos = 0;
+        long seekPos = 0;
         var beforeRegions = new List<Region>();
         var afterRegions = new List<Region>();
         foreach (var region in regions)

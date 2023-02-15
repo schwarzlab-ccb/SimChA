@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CommandLine;
+using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
 
@@ -22,45 +23,70 @@ else
     simParams = SimParams.CreateSimParams(new Random().Next(), true, 0.000_01f, 0.000_1f, 0.000_01f, defaultAberrations);
 }
 
+var files = new FileIO(options.Value.OutputPath);
+var rnd = new Random(simParams.Seed);
+
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
+
 string newickString = "";
 if (options.Value.NewickFile != "")
 {
     newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
 }
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
 
-Console.WriteLine("Computing mutations.");
+var cnas = new Dictionary<string, Karyotype>();
+if (options.Value.CNProfiles != "")
+{
+    cnas = FileIO.ReadCopyNumbers(options.Value.CNProfiles);
+}
+
 var watch = new Stopwatch();
 watch.Start();
 
-var rnd = new Random(simParams.Seed);
-var files = new FileIO(options.Value.OutputPath);
+if (options.Value.CNProfiles != "")
+{
+    Console.WriteLine("Computing fitness.");
+    var result = new Dictionary<string, double>();
+    int counter = 0;
+    foreach ((string sample, var kar) in cnas)
+    {
+        Console.Write("\r" + counter++ + " / " + cnas.Count + " samples processed.");
+        double fitness = Fitness.Calculate(kar, geneLists, simParams);
+        result.Add(sample, fitness);
+    }
+    Console.WriteLine("Writing to disk.");
+    files.WriteSampleFitness(result);
+}
+else
+{
+    Console.WriteLine("Computing mutations.");
 
-var clones = options.Value.NewickFile != ""
-    ? Newick.ParseNewick(newickString, simParams.IsFemale)
-    : Simulator.MakeClonePair(options.Value.Distance , true);
-var aberrationsInfo = new AberrationsInfo(simParams);
-var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
-var aberrations = simulator.AssignMutations(clones[0], clones);
+    var clones = options.Value.NewickFile != ""
+        ? Newick.ParseNewick(newickString, simParams.IsFemale)
+        : Simulator.MakeClonePair(options.Value.Distance, true);
+    var aberrationsInfo = new AberrationsInfo(simParams);
+    var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
+    var aberrations = simulator.AssignMutations(clones[0], clones);
 
 // TODO: do not remove the diploid clone if a newick file is provided
-var selectClones = clones.Where(c => c.CloneId != 0).ToList();
+    var selectClones = clones.Where(c => c.CloneId != 0).ToList();
 
+
+    Console.WriteLine("Writing to disk.");
+    try
+    {
+        files.WriteClones(selectClones);
+        files.WriteCopyNumbers(selectClones, simParams.IsFemale);
+        files.WriteSimParams(simParams);
+        files.WriteTSV(aberrations);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
+        return e.HResult;
+    }
+}
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-
-Console.WriteLine("Writing to disk.");
-try
-{
-    files.WriteClones(selectClones);
-    files.WriteCopyNumbers(selectClones, simParams.IsFemale);
-    files.WriteSimParams(simParams);
-    files.WriteTSV(aberrations);
-}
-catch (Exception e)
-{
-    Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
-    return e.HResult;
-}
 
 return 0;
