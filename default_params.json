@@ -3,41 +3,5 @@
   "IsFemale": true,
   "StressFraction": -0.0001,
   "TsgOgFraction": 0.01,
-  "EssentialFraction": 0.001,
-  "p_ChromDeletion": {
-    "Likelihood": 1
-  },
-  "p_ChromDuplication": {
-    "Likelihood": 1
-  },
-  "p_TailDeletion": {
-    "MeanLength": 0.1,
-    "Likelihood": 1
-  },
-  "p_InternalDeletion": {
-    "MeanLength": 0.01,
-    "Likelihood": 1
-  },
-  "p_InternalDuplication": {
-    "MeanLength": 0.01,
-    "Likelihood": 1
-  },
-  "p_InternalInversion": {
-    "MeanLength": 0.01,
-    "Likelihood": 1
-  },
-  "p_Translocation": {
-    "MeanLength": 0.1,
-    "Likelihood": 1
-  },
-  "p_BreakageFusionBridge": {
-    "MeanLength": 0.1,
-    "Likelihood": 1
-  },
-  "p_WholeGenomeDoubling": {
-    "Likelihood": 1
-  },
-  "p_Chromothripsis": {
-    "Likelihood": 0
-  }
+  "EssentialFraction": 0.001
 }

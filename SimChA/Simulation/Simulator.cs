@@ -1,23 +1,19 @@
 ﻿using SimChA.DataTypes;
 using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
-using SimChA.IO;
 
 namespace SimChA.Simulation;
 
 public class Simulator
 {
-    private readonly AberrationsInfo _aberrationsInfo;
     private readonly Random _rnd;
     private readonly SimParams _simParams;
     private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
     
     public Simulator(
-        AberrationsInfo aberrationsInfo, 
         Random rnd, 
         SimParams simParams, 
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
     {
-        _aberrationsInfo = aberrationsInfo;
         _rnd = rnd;
         _simParams = simParams;
         _geneLists = geneLists;
@@ -27,16 +23,15 @@ public class Simulator
     private static int GetTreeNodeCount(Clone root, List<Clone> clones)
         => 1 + root.ChildrenIDs.Select(id => GetTreeNodeCount(clones[id], clones)).Sum();
 
-    public List<Abberation> AssignMutations(Clone rootClone, List<Clone> clones)
+    public List<CNEvent> ApplyEvents(Clone rootClone, List<Clone> clones)
     {
-        List<Abberation> abberationList = new();
-        int numNodes = GetTreeNodeCount(rootClone, clones) - 1;
-        int nodeNo = 1;
-        AssignMutationsRecursive(rootClone, clones, abberationList, ref nodeNo, numNodes);
-        return abberationList;
+        List<CNEvent> events = new();
+        var progress = (1, GetTreeNodeCount(rootClone, clones) - 1);
+        AssignMutationsRecursive(rootClone, clones, events, progress);
+        return events;
     }
     
-    private void AssignMutationsRecursive(Clone node, List<Clone> clones, List<Abberation> abberationList, ref int cloneNo, int numNodes)
+    private void AssignMutationsRecursive(Clone node, List<Clone> clones, List<CNEvent> events, (int, int) progress)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
@@ -45,17 +40,18 @@ public class Simulator
             int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
-                Console.Write($"Clone {cloneNo}/{numNodes}, Mut {i+1}/{child.DistToParent}.\r");
-                var aberration = _aberrationsInfo.PickRandomMutation(_rnd);
-                string eventString = child.Karyotype.ApplyAberration(_rnd, aberration, _aberrationsInfo.Map[aberration]);
+                Console.Write($"Clone {progress.Item1++}/{progress.Item2}, Mut {i+1}/{child.DistToParent}.\r");
+                var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
+                var eventP = SignatureHelper.PickRandomEventP(_rnd, sig.Events);
+                string eventString = child.Karyotype.ApplyAberration(_rnd, eventP);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams);
                 int mutationCount = parentMutations + 1 + i;
-                var abberation = new Abberation(child.Name, aberration, mutationCount,
+                var abberation = new CNEvent(child.Name, eventP.Type, mutationCount,
                     eventString, newFitness - oldFitness, newFitness);
-                abberationList.Add(abberation);
+                events.Add(abberation);
                 oldFitness = newFitness;
             }
-            AssignMutationsRecursive(child, clones, abberationList, ref cloneNo, numNodes);
+            AssignMutationsRecursive(child, clones, events, progress);
         }
     }
     

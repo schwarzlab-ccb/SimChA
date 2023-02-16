@@ -1,8 +1,11 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System.Text.Json.Serialization;
+
 namespace SimChA.DataTypes;
 
-public enum AberrationEnum
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum CNEventType
 {
     ChromDeletion,
     ChromDuplication,

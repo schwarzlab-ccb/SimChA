@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CommandLine;
 using SimChA.Computation;
+using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
 
@@ -23,8 +24,7 @@ else
     const float pStress = 000_01f;
     const float pTsgOg = 000_1f;
     const float pEssential = 000_01f;
-    var pAberrs = AberrationsInfo.DefaultAberrations();
-    simParams = SimParams.CreateSimParams(new Random().Next(), isFemale, pStress, pTsgOg, pEssential, pAberrs);
+    simParams = new SimParams(new Random().Next(), isFemale, pStress, pTsgOg, pEssential);
 }
 
 var files = new FileIO(options.Value.OutputPath);
@@ -32,7 +32,7 @@ var rnd = new Random(simParams.Seed);
 
 var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
 
-string newickString = "";
+var newickString = "";
 if (options.Value.NewickFile != "")
 {
     newickString = FileIO.ReadNewick(options.Value.NewickFile);
@@ -63,14 +63,14 @@ if (options.Value.CNProfiles != "")
 }
 else
 {
+    Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
 
     var clones = options.Value.NewickFile != ""
         ? Parsers.ParseNewick(newickString, simParams.IsFemale)
         : Simulator.MakeClonePair(options.Value.Distance, true);
-    var aberrationsInfo = new AberrationsInfo(simParams);
-    var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
-    var aberrations = simulator.AssignMutations(clones[0], clones);
+    var simulator = new Simulator(rnd, simParams, geneLists);
+    var aberrations = simulator.ApplyEvents(clones[0], clones);
 
     // TODO: do not remove the diploid clone if a newick file is provided
     var selectClones = clones.Where(c => c.CloneId != 0).ToList();

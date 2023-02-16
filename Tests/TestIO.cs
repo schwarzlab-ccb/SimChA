@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Linq;
 using NUnit.Framework;
 using SimChA.IO;
-using SimChA.Simulation;
 using SimChA.DataTypes;
 
 namespace Tests;
@@ -18,8 +17,7 @@ public class TestIO
     [Test]
     public void TestConfigSerialization()
     {
-        var defaultAberrations = AberrationsInfo.DefaultAberrations();
-        var simParams = SimParams.CreateSimParams(0, true, 0.00001f, 0.0001f, 0.00001f, defaultAberrations);
+        var simParams = new SimParams(0, true, 0.00001f, 0.0001f, 0.00001f);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);
@@ -28,10 +26,18 @@ public class TestIO
         Assert.AreEqual(simParams, deserialized);
     }
 
+    // TODO: Extend this test to cover all the possible configurations
     [Test]
-    public void TestTsgOgReading()
+    public void TestConfigRead()
     {
-        // TODO: @Felix
+        var res = Parsers.ParseSimParams("{}");
+        Assert.AreEqual(0, res.Seed);
+        res = Parsers.ParseSimParams("{\"Signatures\": [{\"Name\": \"test\", \"Prob\": 1}]}");
+        Assert.AreEqual(1, res.Signatures!.First().Prob, 0.000001);
+        res = Parsers.ParseSimParams("{\"Signatures\": [{\"Name\": \"test\", \"Prob\": 1, \"Events\": [{\"Type\": \"WholeGenomeDoubling\", \"Prob\": 0.1}]}]}");;
+        Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events!.First().Type);
+        res = Parsers.ParseSimParams("{\"Signatures\": [{\"Name\": \"test\", \"Prob\": 1, \"Events\": [{\"Type\": \"InternalInversion\", \"Prob\": 0.1, \"Params\": {\"Mean\": 0.1}}]}]}");
+        Assert.AreEqual(0.1, res.Signatures!.First().Events!.First().Params!["Mean"], 0.000001);
     }
 
     [Test]

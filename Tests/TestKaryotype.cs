@@ -14,6 +14,8 @@ public class TestKaryotype
 {
     private Karyotype _kar;
     private Random _rnd;
+    private CNEventP _del;
+    private CNEventP _dup;
     
     private int TEST_FRAC = 1000;
     
@@ -22,6 +24,8 @@ public class TestKaryotype
     {
         _kar = new Karyotype(false);
         _rnd = new Random(0);
+        _del = new CNEventP(CNEventType.ChromDeletion, 1f);
+        _dup = new CNEventP(CNEventType.ChromDuplication, 1f);
     }
 
     // Test for each AberrationEnum value
@@ -126,7 +130,7 @@ public class TestKaryotype
     {
         for (int i = 0; i < 46; i++)
         {
-            _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+            _kar.ApplyAberration(_rnd, _del);
         }
         Assert.AreEqual("[]", _kar.ToString());
     }
@@ -143,7 +147,7 @@ public class TestKaryotype
         Assert.AreEqual(_kar.ContigCount, tsgOgsPresent.Count);
         
         // Removes a gene and a contig at the same time
-        _kar.ApplyAberration(_rnd, AberrationEnum.ChromDeletion, new BaseAbbP(1f));
+        _kar.ApplyAberration(_rnd, _del);
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.ContigCount, tsgOgsPresent.Count);
     }

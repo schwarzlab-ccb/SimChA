@@ -15,7 +15,7 @@ namespace Tests;
 public class TestFitness
 {
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
-        => new("G" + chrNo, new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
+        => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
 
     [Test]
     public void TestEssTerm()
@@ -72,12 +72,13 @@ public class TestFitness
         // Seed 14 to get chr1 delete
         var rnd = new Random(14);
         var karyotype = new Karyotype(true);
-        var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        var deletion = new CNEventP(CNEventType.ChromDeletion, 1);
+        var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, _ => new List<Gene>());
         dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 2));
-        karyotype.ApplyAberration(rnd, AberrationEnum.ChromDeletion, new SimChA.IO.BaseAbbP(1));
+        karyotype.ApplyAberration(rnd, deletion);
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
-        karyotype.ApplyAberration(rnd, AberrationEnum.ChromDeletion, new SimChA.IO.BaseAbbP(1));
+        karyotype.ApplyAberration(rnd, deletion);
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
     }
 
@@ -85,7 +86,7 @@ public class TestFitness
     public void TestCalculate()
     {
         var karyotype = new Karyotype(true);
-        var simParams = SimParams.CreateSimParams(14, true, 0.001f, 0.01f, 0.000_1f, AberrationsInfo.DefaultAberrations());
+        var simParams = new SimParams(14, true, 0.001f, 0.01f, 0.000_1f, null);
         //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
         var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t, 

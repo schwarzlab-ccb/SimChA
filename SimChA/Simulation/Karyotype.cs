@@ -131,7 +131,7 @@ public class Karyotype
         return $"contig:{contigID};fragments:{stops.Count + 1};lost:{contigLen - contig.Length()}B";
     }
     
-    public string ApplyAberration(Random rnd, AberrationEnum aberration, BaseAbbP paramsSet)
+    public string ApplyAberration(Random rnd, CNEventP cnEventP)
     {
         using var IDsEnumerator = Enumerable
             .Range(0, _contigs.Count)
@@ -142,42 +142,42 @@ public class Karyotype
         int contigA = IDsEnumerator.Current;
         long lenA = _contigs[contigA].Length();
         
-        switch (aberration)
+        switch (cnEventP.Type)
         {
             // Whole chromosome events
-            case AberrationEnum.ChromDeletion:
+            case CNEventType.ChromDeletion:
                 return ApplyContigDeletion(contigA);
 
-            case AberrationEnum.ChromDuplication:
+            case CNEventType.ChromDuplication:
                 return ApplyContigDuplication(contigA);
             
-            case AberrationEnum.WholeGenomeDoubling:
+            case CNEventType.WholeGenomeDoubling:
                 return ApplyWGD();
             
             // Tail events
-            case AberrationEnum.TailDeletion:
-            case AberrationEnum.BreakageFusionBridge:
-                long delFraction = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
+            case CNEventType.TailDeletion:
+            case CNEventType.BreakageFusionBridge:
+                long delFraction = Sampling.GetSegLength(rnd, lenA, cnEventP.Params["Mean"]);
                 bool delDirection = rnd.CoinFlip();
-                return aberration == AberrationEnum.TailDeletion 
+                return cnEventP.Type == CNEventType.TailDeletion 
                     ? ApplyTailDeletion(contigA, delFraction, delDirection) 
                     : ApplyBFB(contigA, delFraction, delDirection);
 
             // Internal events
-            case AberrationEnum.InternalDuplication:
-            case AberrationEnum.InternalDeletion:
-            case AberrationEnum.InternalInversion:
-                long segLen = Sampling.GetSegLength(rnd, lenA, ((FractionAbbP) paramsSet).MeanLength);
+            case CNEventType.InternalDuplication:
+            case CNEventType.InternalDeletion:
+            case CNEventType.InternalInversion:
+                long segLen = Sampling.GetSegLength(rnd, lenA, cnEventP.Params["Mean"]);
                 long start = Sampling.GetInternalPos(rnd, lenA- segLen);
                 long end = start + segLen;
-                return aberration switch
+                return cnEventP.Type switch
                 {
-                    AberrationEnum.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
-                    AberrationEnum.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
+                    CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
+                    CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
                     _ => ApplyInternalInversion(contigA, start, end)
                 };
 
-            case AberrationEnum.Translocation:
+            case CNEventType.Translocation:
                 IDsEnumerator.MoveNext();
                 int contigB = IDsEnumerator.Current;
                 long lenB = _contigs[contigB].Length();
@@ -185,16 +185,16 @@ public class Karyotype
                 long posB = Sampling.GetInternalPos(rnd, lenB);
                 return ApplyTranslocation(contigA, contigB, posA, posB);
             
-            case AberrationEnum.Chromothripsis:
+            case CNEventType.Chromothripsis:
                 int shardCount = Sampling.GetChromothripsisSiteCount(rnd, lenA);
                 var stops = Sampling.GetStopsForShards(rnd, lenA, shardCount);
                 int shardsKept = rnd.Next(1, stops.Count);
                 var order = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept);
                 return ApplyChromothripsis(contigA, stops, order);
    
-            case AberrationEnum.Chromoplexy:
+            case CNEventType.Chromoplexy:
             default:
-                throw new ArgumentOutOfRangeException(nameof(aberration), aberration, null);
+                throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
     }
 }

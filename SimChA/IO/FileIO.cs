@@ -22,6 +22,11 @@ public class FileIO
     private const string TSGS_TSV = "tsgs.tsv";
     private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
 
+    private string Timestamp { get; }
+    private string RootFolder { get; }
+    private string ExperimentFolder { get; }
+    private bool IsRepeated { get; }
+
     public FileIO(string rootFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
@@ -50,11 +55,6 @@ public class FileIO
             ExperimentFolder = RootFolder;
         }
     }
-
-    private string Timestamp { get; }
-    private string RootFolder { get; }
-    private string ExperimentFolder { get; }
-    private bool IsRepeated { get; }
 
     public void WriteClones(IEnumerable<Clone> subClones)
     {
@@ -96,7 +96,7 @@ public class FileIO
         file.WriteLine(jsonString);
     }
     
-    public void WriteTSV(List<Abberation> abberationList)
+    public void WriteTSV(List<CNEvent> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
         string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
@@ -132,22 +132,16 @@ public class FileIO
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
         {
-            throw new Exception($"Configuration file {fileFullPath} does not exist");
+            throw new Exception($"File {fileFullPath} does not exist");
         }
         try
         {
             string serializedJSON = File.ReadAllText(fileFullPath);
-            var options = new JsonSerializerOptions { IncludeFields = true };
-            var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
-            if (simParams.Seed < 0)
-            {
-                return simParams with { Seed = new Random().Next() };
-            }
-            return simParams;
+            return Parsers.ParseSimParams(serializedJSON);
         }
         catch (Exception e)
         {
-            throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
 
@@ -156,7 +150,7 @@ public class FileIO
         string fileFullPath = Path.GetFullPath(newickFile);
         if (!File.Exists(fileFullPath))
         {
-            throw new Exception($"Newick file {fileFullPath} does not exist");
+            throw new Exception($"File {fileFullPath} does not exist");
         }
         try
         {
@@ -184,7 +178,7 @@ public class FileIO
             string fileFullPath = Path.GetFullPath(filePath);
             if (!File.Exists(fileFullPath))
             {
-                throw new Exception($"Required file {filePath} not found in {folder} directory.");
+                throw new Exception($"File {fileFullPath} does not exist");
             }
             try
             {
@@ -204,7 +198,7 @@ public class FileIO
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
         {
-            throw new Exception($"CNA profile file {fileFullPath} does not exist");
+            throw new Exception($"File {fileFullPath} does not exist");
         }
         try
         {

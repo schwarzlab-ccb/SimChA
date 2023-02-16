@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using SimChA.DataTypes;
 using SimChA.Simulation;
@@ -7,6 +8,71 @@ namespace SimChA.IO;
 
 public static class Parsers
 {
+    public static SimParams ParseSimParams(string serializedJSON)
+    {
+        SimParams? res;
+        var options = new JsonSerializerOptions { IncludeFields = true };
+        try
+        {
+            res = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
+            if (res is null)
+            {
+                throw new Exception($"Could not parse the simulation parameters:\n{serializedJSON}");
+            }
+        }
+        catch (JsonException)
+        {
+            throw new Exception($"Could not parse the simulation parameters:\n{serializedJSON}");
+        }
+        if (res.Seed < 0)
+        {
+            return res with { Seed = new Random().Next() };
+        }
+        return res;
+    }
+
+    public static void ValidateSignatures(List<Signature>? signatures)
+    {
+        if (signatures is null || signatures.Count == 0)
+        {
+            throw new Exception("No signatures were provided.");
+        }
+        foreach (var sig in signatures)
+        {
+            if (sig.Events is null || sig.Events.Count == 0)
+            {
+                throw new Exception($"Signature {sig.Id} does not have any events.");
+            }
+            foreach(var ev in sig.Events)
+            {
+                switch (ev.Type)
+                {
+                    case CNEventType.Translocation:
+                    case CNEventType.ChromDeletion:
+                    case CNEventType.ChromDuplication:
+                    case CNEventType.BreakageFusionBridge:
+                    case CNEventType.WholeGenomeDoubling:
+                        break;
+                    case CNEventType.TailDeletion:
+                    case CNEventType.InternalDeletion:
+                    case CNEventType.InternalDuplication:
+                    case CNEventType.InternalInversion:
+                        if (ev.Params == null || !ev.Params.ContainsKey("Mean"))
+                        {
+                            throw new Exception($"The mean of {ev.Type} in signature {sig.Id} not specified.");
+                        }
+                        break;
+                    case CNEventType.Chromothripsis:
+                        break;
+                    case CNEventType.Chromoplexy:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+    }
+    
     public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
