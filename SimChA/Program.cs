@@ -15,7 +15,7 @@ options.WithNotParsed(o =>
 SimParams simParams;
 if (options.Value.ConfigFile != "")
 {
-    simParams = FileIO.SimParamsFromFile(options.Value.ConfigFile);
+    simParams = FileIO.ReadSimParams(options.Value.ConfigFile);
 }
 else
 {
@@ -35,7 +35,7 @@ var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFema
 string newickString = "";
 if (options.Value.NewickFile != "")
 {
-    newickString = FileIO.GetStringFromNewick(options.Value.NewickFile);
+    newickString = FileIO.ReadNewick(options.Value.NewickFile);
 }
 
 var cnas = new Dictionary<string, Karyotype>();
@@ -66,7 +66,7 @@ else
     Console.WriteLine("Computing mutations.");
 
     var clones = options.Value.NewickFile != ""
-        ? Newick.ParseNewick(newickString, simParams.IsFemale)
+        ? Parsers.ParseNewick(newickString, simParams.IsFemale)
         : Simulator.MakeClonePair(options.Value.Distance, true);
     var aberrationsInfo = new AberrationsInfo(simParams);
     var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);

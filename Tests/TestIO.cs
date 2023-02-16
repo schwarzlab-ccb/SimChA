@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using System.Linq;
 using NUnit.Framework;
@@ -78,7 +79,7 @@ public class TestIO
 
         for(int i = 0; i < newickTestStrings.Length; i++)
         {
-            var clones = Newick.ParseNewick(newickTestStrings[i], true);
+            var clones = Parsers.ParseNewick(newickTestStrings[i], true);
             foreach(var clone in clones)
             {
                 Console.WriteLine($"String {i}: " +
@@ -107,13 +108,13 @@ public class TestIO
         
         var gene1 = new Gene("TSG1", new Region(0, 50, new ChrID(ChrNo.chr1, true)), 0.001);
         tsgList[ChrNo.chr1].Add(gene1);
-        var listFromString = FileIO.ReadGenesFromFile(genesTSG, true);
+        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), true);
         Assert.AreEqual(tsgList, listFromString);
         
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
         var gene2 = new Gene("TSG2", new Region(99, 5000, new ChrID(ChrNo.chr2, true)), 0.01);
         tsgList[ChrNo.chr2].Add(gene2);
-        listFromString = FileIO.ReadGenesFromFile(genesTSG, true);
+        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), true);
         Assert.AreEqual(tsgList, listFromString);
     }
 }

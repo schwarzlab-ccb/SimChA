@@ -1,0 +1,176 @@
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
+using SimChA.DataTypes;
+using SimChA.Simulation;
+
+namespace SimChA.IO;
+
+public static class Parsers
+{
+    public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
+    {
+        Dictionary<string, Karyotype> result = new();
+        var lastSample = "";
+        var regionsA = new List<Region>();
+        var regionsB = new List<Region>();
+        cnaFile.ReadLine(); // Skip header
+        while (cnaFile.ReadLine() is { } line)
+        {
+            string[] lineSplit = line.Split('\t');
+            string sample = lineSplit[0];
+            if (sample != lastSample)
+            {
+                if (regionsA.Any() || regionsB.Any())
+                {
+                    var haplotypes = new List<Contig> {new(regionsA), new(regionsB)};
+                    result[sample] = new Karyotype(haplotypes);
+                    regionsA.Clear();
+                    regionsB.Clear();
+                }
+
+                lastSample = sample;
+            }
+
+            var num = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
+            int start = int.Parse(lineSplit[2]) - 1;
+            int end = int.Parse(lineSplit[3]);
+            int cnA = int.Parse(lineSplit[4]);
+            int cnB = int.Parse(lineSplit[5]);
+            for (int i = 0; i < cnA; i++)
+            {
+                regionsA.Add(new Region(start, end, new ChrID(num, true)));
+            }
+            for (int i = 0; i < cnB; i++)
+            {
+                regionsB.Add(new Region(start, end, new ChrID(num, false)));
+            }
+        }
+
+        return result;
+    }
+
+    public static Dictionary<ChrNo, List<Gene>> ParseGeneList(TextReader geneFile, bool isFemale)
+    {
+        // Pre-initialization
+        var noEnum = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToList();
+        var geneList = noEnum.ToDictionary(c => c, c => new List<Gene>());
+        while (geneFile.ReadLine() is { } line)
+        {
+            if (line == "") continue;
+            string[] genString = line.Split('\t');
+            //Don't include Y chromosome in genes list if clone is female
+            if (isFemale && (ChrNo) Enum.Parse(typeof(ChrNo), genString[2]) == ChrNo.chrY) continue;
+            string name = genString[3];
+            double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
+            var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[0]);
+            var chrID = new ChrID(chrNum, isFemale);
+            // Convert to zero-based [start, end) index 
+            var region = new Region(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrID);
+            var gene = new Gene(name, region, fitness);
+            geneList[chrNum].Add(gene);
+        }
+
+        return geneList;
+    }
+
+    public static List<Clone> ParseNewick(string newickString, bool isFemale)
+    {
+        List<Clone> clones = new();
+        if (newickString == "")
+        {
+            return clones;
+        }
+        
+        const string regexPattern = @"(?<closeChildren>[(])|" +
+                                    @"(?<openChildren>[)])|" +
+                                    @"(?<branchLength>:+[0-9a-zA-Z-_.]+)|" +
+                                    @"(?<nodeName>[0-9a-zA-Z-_.]+)|" +
+                                    @"(?<nextNode>[,])|" +
+                                    @"(?<root>[;])";
+        //Reverse order of newick file to start with root
+        const RegexOptions regexOptions = RegexOptions.RightToLeft | RegexOptions.IgnorePatternWhitespace;
+
+        var matches = Regex.Matches(newickString, regexPattern, regexOptions);
+        if (!matches.Any() || matches[0].Value != ";")
+        {
+            throw new Exception("Newick file is not in the right format");
+        }
+
+        bool branchLength = CheckBranchLength(matches);
+        //Iterate through Regex-Matches
+        var parentIds = new List<int> {-1};
+        foreach (Match match in matches)
+        {
+            switch (match.Value)
+            {
+                case ";":
+                    //create root node
+                    var root = CreateClone(clones.Count,  parentIds.Last(), match.NextMatch(),
+                        match.NextMatch().NextMatch(), isFemale, branchLength, 0);
+                    clones.Add(root);
+                    parentIds.Add(clones[^1].CloneId);
+                    break;
+                case "(":
+                    //remove parent from parentList and add childrenID to parent
+                    parentIds.RemoveAt(parentIds.Count - 1);
+                    break;
+                case ")":
+                    // Add parent to parentIds and then create a child
+                    parentIds.Add(clones[^1].CloneId);
+                    goto case ",";
+                case ",":
+                    //create new child
+                    int parentId = parentIds.Last();
+                    var child = CreateClone(clones.Count, parentId, match.NextMatch(),
+                        match.NextMatch().NextMatch(), isFemale, branchLength, clones[parentId].TotalMutations);
+                    clones.Add(child);
+                    clones[parentId].ChildrenIDs.Add(clones.Count - 1);
+                    break;
+            }
+        }
+        if (!clones.Any())
+        {
+            throw new Exception("No clones found in newick file. Might not be the right format.");
+        }
+
+        return clones;
+    }
+
+    //create clone from newick Match
+    private static Clone CreateClone(int id, int parentId, Match branchLengthMatch, Match nameMatch, bool isFemale,
+        bool branchLength,
+        int parentMutations)
+    {
+        string nameClone = nameMatch.Groups["nodeName"].Value != ""
+            ? nameMatch.Value
+            : branchLengthMatch.Groups["nodeName"].Value != ""
+                ? branchLengthMatch.Value
+                : "C" + id;
+        int mutCount = branchLengthMatch.Groups["branchLength"].Value != ""
+            ?
+            (int) Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0, 1)))
+            : branchLength
+                ? 0
+                : 1;
+        int totalMut = parentMutations + mutCount;
+        var clone = new Clone(id, parentId, nameClone, mutCount, new Karyotype(isFemale), totalMut);
+        return clone;
+    }
+
+    //check for branch-length in newick file
+    private static bool CheckBranchLength(MatchCollection matches)
+    {
+        var branchLength = false;
+        foreach (Match match in matches)
+        {
+            if (match.Groups["branchLength"].Value != "")
+            {
+                branchLength = true;
+                break;
+            }
+        }
+
+        Console.Write(branchLength ? "" : "No branch-lengths were found, using 1 as branch-length.");
+        return branchLength;
+    }
+}

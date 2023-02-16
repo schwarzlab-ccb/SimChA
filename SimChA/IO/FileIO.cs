@@ -95,50 +95,7 @@ public class FileIO
         string jsonString = JsonSerializer.Serialize(simParams, options);
         file.WriteLine(jsonString);
     }
-
-    public static SimParams SimParamsFromFile(string filePath)
-    {
-        string fileFullPath = Path.GetFullPath(filePath);
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"Configuration file {fileFullPath} does not exist");
-        }
-
-        try
-        {
-            string serializedJSON = File.ReadAllText(fileFullPath);
-            var options = new JsonSerializerOptions { IncludeFields = true };
-            var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
-            if (simParams.Seed < 0)
-            {
-                return simParams with { Seed = new Random().Next() };
-            }
-            return simParams;
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
-    public static string GetStringFromNewick(string newickFile)
-    {
-        string fileFullPath = Path.GetFullPath(newickFile);
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"Newick file {fileFullPath} does not exist");
-        }
-        try
-        {
-            var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
-            return newickBuild.ToString();
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to read newick file from the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
+    
     public void WriteTSV(List<Abberation> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
@@ -158,7 +115,60 @@ public class FileIO
         }
         outputFile.Write(abberationString.ToString());
     }
+    
+    public void WriteSampleFitness(Dictionary<string, double> fitness)
+    {
+        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
+        using var file = new StreamWriter(filePath);
+        file.WriteLine("Sample\tFitness");
+        foreach ((string sample, double fit) in fitness)
+        {
+            file.WriteLine($"{sample}\t{fit}");
+        }
+    }
+    
+    public static SimParams ReadSimParams(string filePath)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"Configuration file {fileFullPath} does not exist");
+        }
+        try
+        {
+            string serializedJSON = File.ReadAllText(fileFullPath);
+            var options = new JsonSerializerOptions { IncludeFields = true };
+            var simParams = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
+            if (simParams.Seed < 0)
+            {
+                return simParams with { Seed = new Random().Next() };
+            }
+            return simParams;
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to read simulation params from the file {fileFullPath}. Error {e.Message}");
+        }
+    }
 
+    public static string ReadNewick(string newickFile)
+    {
+        string fileFullPath = Path.GetFullPath(newickFile);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"Newick file {fileFullPath} does not exist");
+        }
+        try
+        {
+            var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
+            return newickBuild.ToString();
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+    
     public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
@@ -171,57 +181,27 @@ public class FileIO
         foreach ((var key, string filename) in fileMap)
         {
             string filePath = Path.Combine(folder, filename);
-            if (!File.Exists(filePath))
+            string fileFullPath = Path.GetFullPath(filePath);
+            if (!File.Exists(fileFullPath))
             {
-                throw new Exception($"Required file {filename} not found in {folder} directory.");
+                throw new Exception($"Required file {filePath} not found in {folder} directory.");
             }
-            string fileContent = File.ReadAllText(Path.GetFullPath(filePath));
-            geneLists[key] = ReadGenesFromFile(fileContent, isFemale);
+            try
+            {
+                var geneFile = new StreamReader(fileFullPath);
+                geneLists[key] = Parsers.ParseGeneList(geneFile, isFemale);
+            }        
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+            }
         }
         return geneLists;
     }
-
-    public static Dictionary<ChrNo, List<Gene>> ReadGenesFromFile(string fileContent, bool isFemale)
-    {
-        // Pre-initialization
-        var noEnum = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToList();
-        var geneList = noEnum.ToDictionary(c => c, c => new List<Gene>());
-        string[] genesFromFile = fileContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        foreach (string geneFromFile in genesFromFile)
-        {
-            string[] genString = geneFromFile.Split('\t');
-            //Don't include Y chromosome in genes list if clone is female
-            if (isFemale && (ChrNo)Enum.Parse(typeof(ChrNo), genString[2]) == ChrNo.chrY)
-            {
-                continue;
-            }
-            string name = genString[3];
-            double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
-            var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[0]);
-            var chrID = new ChrID(chrNum, isFemale);
-            // Convert to zero-based [start, end) index 
-            var region = new Region(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrID);
-            var gene = new Gene(name, region, fitness);
-            geneList[chrNum].Add(gene);
-        }
-        return geneList;
-    }
-
-    public void WriteSampleFitness(Dictionary<string, double> fitness)
-    {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
-        using var file = new StreamWriter(filePath);
-        file.WriteLine("Sample\tFitness");
-        foreach (var (sample, fit) in fitness)
-        {
-            file.WriteLine($"{sample}\t{fit}");
-        }
-    }
-
+    
     public static Dictionary<string, Karyotype> ReadCopyNumbers(string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
-        Dictionary<string, Karyotype> result = new();
         if (!File.Exists(fileFullPath))
         {
             throw new Exception($"CNA profile file {fileFullPath} does not exist");
@@ -229,44 +209,13 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            string lastSample = "";
-            var regionsA = new List<Region>();
-            var regionsB = new List<Region>();
-            cnaFile.ReadLine(); // Skip header
-            while (cnaFile.ReadLine() is { } line)
-            {
-                string[] lineSplit = line.Split('\t');
-                string sample = lineSplit[0];
-                if (sample != lastSample)
-                {
-                    if (regionsA.Any() || regionsB.Any())
-                    {
-                        var haplotypes = new List<Contig> {new(regionsA), new(regionsB)};
-                        result[sample] = new Karyotype(haplotypes);
-                        regionsA.Clear();
-                        regionsB.Clear();
-                    }
-                    lastSample = sample;
-                }
-                var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), lineSplit[1]);
-                int start = int.Parse(lineSplit[2]) - 1;
-                int end = int.Parse(lineSplit[3]);
-                int cnA = int.Parse(lineSplit[4]);
-                int cnB = int.Parse(lineSplit[5]);
-                for (int i = 0; i < cnA; i++)
-                {
-                    regionsA.Add(new Region(start, end, new ChrID(chrNum, true)));
-                }
-                for (int i = 0; i < cnB; i++)
-                {
-                    regionsB.Add(new Region(start, end, new ChrID(chrNum, false)));
-                }
-            }
+            var result = Parsers.ParseCNAProfile(cnaFile);
+            return result;
+
         }
         catch (Exception e)
         {
-            throw new Exception($"Failed to read newick file from the file {fileFullPath}. Error {e.Message}");
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
-        return result;
     }
 }
