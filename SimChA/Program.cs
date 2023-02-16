@@ -19,8 +19,12 @@ if (options.Value.ConfigFile != "")
 }
 else
 {
-    var defaultAberrations = AberrationsInfo.DefaultAberrations();
-    simParams = SimParams.CreateSimParams(new Random().Next(), true, 0.000_01f, 0.000_1f, 0.000_01f, defaultAberrations);
+    const bool isFemale = true;
+    const float pStress = 000_01f;
+    const float pTsgOg = 000_1f;
+    const float pEssential = 000_01f;
+    var pAberrs = AberrationsInfo.DefaultAberrations();
+    simParams = SimParams.CreateSimParams(new Random().Next(), isFemale, pStress, pTsgOg, pEssential, pAberrs);
 }
 
 var files = new FileIO(options.Value.OutputPath);
@@ -68,9 +72,8 @@ else
     var simulator = new Simulator(aberrationsInfo, rnd, simParams, geneLists);
     var aberrations = simulator.AssignMutations(clones[0], clones);
 
-// TODO: do not remove the diploid clone if a newick file is provided
+    // TODO: do not remove the diploid clone if a newick file is provided
     var selectClones = clones.Where(c => c.CloneId != 0).ToList();
-
 
     Console.WriteLine("Writing to disk.");
     try
