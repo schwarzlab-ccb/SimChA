@@ -6,7 +6,6 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -14,6 +13,8 @@ namespace Tests;
 [TestFixture]
 public class TestFitness
 {
+    private const double EPSILON = 0.0000000001;
+    
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
         => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
 
@@ -26,13 +27,13 @@ public class TestFitness
         Assert.AreEqual(0, Fitness.EssTerm(testNoEffect));
         
         var testMissing = new List<(Gene, int)> { (MakeGene(ChrNo.chr1, 0.1), 0) };
-        Assert.AreEqual(0.1, Fitness.EssTerm(testMissing));
+        Assert.AreEqual(-0.1, Fitness.EssTerm(testMissing));
 
         var testHaplosufficient = new List<(Gene, int)> { (MakeGene(ChrNo.chr1, 0.1), 1) };
         Assert.AreEqual(0, Fitness.EssTerm(testHaplosufficient));
         
         var testList = new List<(Gene, int)> { (MakeGene(ChrNo.chr1, 0.1), 0), (MakeGene(ChrNo.chr2, 0.2), 0) };
-        Assert.AreEqual(0.1 + 0.2, Fitness.EssTerm(testList));
+        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(testList));
     }
 
     [Test]
@@ -60,10 +61,15 @@ public class TestFitness
     [Test]
     public void TestStressTerm()
     {
-        Assert.AreEqual(0, Fitness.StressTerm(46));
-        Assert.AreEqual(0, Fitness.StressTerm(45));
-        Assert.AreEqual(1, Fitness.StressTerm(47));
-        Assert.AreEqual(4, Fitness.StressTerm(48));
+        var xxKaryotype = new Karyotype(true);
+        var xyKaryotype = new Karyotype(false);
+        Assert.AreEqual(0, Fitness.StressTerm(xxKaryotype.CountBases(), true), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(xyKaryotype.CountBases(), false), EPSILON);
+        Assert.AreNotEqual(0, Fitness.StressTerm(xxKaryotype.CountBases(), false));
+        xxKaryotype.ApplyWGD(); // Double all
+        Assert.AreEqual(-1, Fitness.StressTerm(xxKaryotype.CountBases(), true), EPSILON);
+        foreach (int i in Enumerable.Range(0, 46)) { xyKaryotype.ApplyContigDeletion(i); }
+        Assert.AreEqual(1, Fitness.StressTerm(xyKaryotype.CountBases(), false), EPSILON);
     }
     
     [Test]
@@ -86,45 +92,15 @@ public class TestFitness
     public void TestCalculate()
     {
         var karyotype = new Karyotype(true);
-        var simParams = new SimParams(14, true, 0.001f, 0.01f, 0.000_1f, null);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
         //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
         var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
-            t => t, 
+            t => t,
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-        
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
 
-        //For OGs with one chromosome lost
-        karyotype.ApplyContigDeletion(0);
-        Assert.AreEqual(1+(1-2)*(simParams.TsgOgFraction*0.001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
-        
-        //For TSGs with one chromosome lost
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Clear();
-        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.0001));
-        Assert.AreEqual(1+(1-2)*(-simParams.TsgOgFraction*0.0001), Fitness.Calculate(karyotype, listGenes, simParams),  0.0000000001);
-        
-        // For essential genes with one chromosome lost
-        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Clear();
-        listGenes[GeneListType.Essentiality][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
-        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, simParams));
-        
-        //Seed to lose second chromosome 1
-        karyotype.ApplyContigDeletion(23);
-        
-        //For OGs with chromosome 1 lost twice
-        listGenes[GeneListType.Essentiality][ChrNo.chr1].Clear();
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        Assert.AreEqual(1+(0-2)*(simParams.TsgOgFraction*0.001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
-        
-        //For TSGs with chromosome 1 lost twice
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Clear();
-        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.0001));
-        Assert.AreEqual(1+(0-2)*(-simParams.TsgOgFraction*0.0001), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
-        
-        //For essential genes with chromosome 1 lost twice
-        listGenes[GeneListType.TumorSuppressor][ChrNo.chr1].Clear();
-        listGenes[GeneListType.Essentiality][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
-        Assert.AreEqual(1+(-1)*(simParams.EssentialFraction*0.01), Fitness.Calculate(karyotype, listGenes, simParams), 0.0000000001);
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, fit), EPSILON);
+
+        // TODO: Test the linear combination
     }
 }

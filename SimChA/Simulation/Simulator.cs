@@ -44,7 +44,7 @@ public class Simulator
                 var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
                 var eventP = SignatureHelper.PickRandomEventP(_rnd, sig.Events);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, eventP);
-                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams);
+                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + i;
                 var abberation = new CNEvent(child.Name, eventP.Type, mutationCount,
                     eventString, newFitness - oldFitness, newFitness);

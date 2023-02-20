@@ -33,27 +33,27 @@ public class TestKaryotype
     public void TestWGD()
     {
         _kar.ApplyWGD();
-        Assert.AreEqual(92, _kar.ContigCount);
+        Assert.AreEqual(92, _kar.CountContigs());
     }
 
     [Test]
     public void TestContigDeletion()
     {
         _kar.ApplyContigDeletion(0);
-        Assert.AreEqual(45, _kar.ContigCount);
+        Assert.AreEqual(45, _kar.CountContigs());
         
         _kar.ApplyContigDeletion(45);
-        Assert.AreEqual(44, _kar.ContigCount);
+        Assert.AreEqual(44, _kar.CountContigs());
     }
     
     [Test]
     public void TestContigDuplication()
     {
         _kar.ApplyContigDuplication(0);
-        Assert.AreEqual(47, _kar.ContigCount);
+        Assert.AreEqual(47, _kar.CountContigs());
         
         _kar.ApplyContigDuplication(46);
-        Assert.AreEqual(48, _kar.ContigCount);
+        Assert.AreEqual(48, _kar.CountContigs());
     }
 
     [Test]
@@ -144,11 +144,11 @@ public class TestKaryotype
         var chrNums = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>();
         var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> {MakeGene(c)});
         var tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.ContigCount, tsgOgsPresent.Count);
+        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
         
         // Removes a gene and a contig at the same time
         _kar.ApplyAberration(_rnd, _del);
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.ContigCount, tsgOgsPresent.Count);
+        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
     }
 }

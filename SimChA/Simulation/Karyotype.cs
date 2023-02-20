@@ -1,9 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.IO;
 using SimChA.Misc;
 
 namespace SimChA.Simulation;
@@ -11,27 +9,38 @@ namespace SimChA.Simulation;
 // Note: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
-    private readonly List<Contig> _contigs;
-    public int ContigCount => _contigs.Count(c => c.Any());
     public double FitnessVal { get; private set; }
-
-    public Karyotype(bool isFemale)
+    
+    public bool SexXX { get;  }
+    
+    public int CountContigs() 
+        => _contigs.Count(c => c.Any());
+    
+    public long CountBases() 
+        => _contigs.Sum(c => c.Length());
+    
+    private readonly List<Contig> _contigs;
+    
+    public Karyotype(bool sexXX)
     {
-        _contigs = ReferenceGenome.GetGenotype(isFemale).Select(region => new Contig(region)).ToList();
+        _contigs = ReferenceGenome.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        SexXX = sexXX;
     }
 
     public Karyotype(Karyotype other)
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
+        SexXX = other.SexXX;
     }
     
-    public Karyotype(List<Contig> contigs)
+    public Karyotype(List<Contig> contigs, bool sexXX)
     {
         _contigs = contigs;
+        SexXX = sexXX;
     }
 
     public override string ToString()
-        => ContigCount > 0 ? "[\n\t" + string.Join(",\n\t", _contigs.Where(c => c.Any())) + "\n]\n" : "[]";
+        => CountContigs() > 0 ? "[\n\t" + string.Join(",\n\t", _contigs.Where(c => c.Any())) + "\n]\n" : "[]";
     
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
@@ -48,8 +57,8 @@ public class Karyotype
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
     
-    public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, SimParams simParams)
-        => FitnessVal = Fitness.Calculate(this, geneLists, simParams);
+    public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
+        => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
 
     public string ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {

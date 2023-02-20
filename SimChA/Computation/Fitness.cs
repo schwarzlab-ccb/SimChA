@@ -1,7 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
 using SimChA.DataTypes;
-using SimChA.IO;
 using SimChA.Simulation;
 
 namespace SimChA.Computation;
@@ -11,27 +10,27 @@ public static class Fitness
     public static double Calculate(
         Karyotype karyotype,
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
-        SimParams simParams)
+        FitnessParams fParams)
     {
         var tsgCNs = CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
         var ogCNs = CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
         return 1 
-               - simParams.StressFraction * StressTerm(karyotype.ContigCount) 
-               + simParams.TsgOgFraction * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
-               - simParams.EssentialFraction * EssTerm(essCNs);
+               + fParams.Stress * StressTerm(karyotype.CountBases(), karyotype.SexXX) 
+               + fParams.TsgOg * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
+               + fParams.Essentiality * EssTerm(essCNs);
     }
 
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
-    public static double StressTerm(int contigCount)
-        => Math.Pow(Math.Max(0, contigCount - 46), 2);
+    public static double StressTerm(long baseCount, bool isFemale)
+        => 1 - baseCount / (double) ReferenceGenome.GetGenomeSize(isFemale);
 
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs)
         => geneCNs.Sum(g => (g.CN - 2) * g.gene.DeltaFitness);
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
-        => essCNs.Sum(g => Math.Max(1 - g.CN, 0) * g.gene.DeltaFitness);
+        => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
 
     public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<ChrNo, List<Gene>> searched, Karyotype karyotype)
     {

@@ -104,9 +104,9 @@ public static class ReferenceGenome
             57_264_655
         }
     };
-
-    // The start of each chromosome w.r.t. the length of the whole genome
-    public static readonly Dictionary<ChrNo, long> ChromosomeStartMap; 
+    
+    private static long maleGenomeLen;
+    private static long femaleGenomeLen;
 
     static ReferenceGenome()
     {
@@ -117,14 +117,8 @@ public static class ReferenceGenome
         var haplotypeTwoM = CreateHaplotype(false, false);
         GenotypeM = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
 
-        long start = 0;
-        
-        ChromosomeStartMap = ChromosomeLengthMap.ToDictionary(pair => pair.Key, pair =>
-        {
-            long oldStart = start;
-            start += pair.Value;
-            return oldStart;
-        });
+        femaleGenomeLen = TotalLength(true);
+        maleGenomeLen = TotalLength(false);
     }
 
     private static Region[] GenotypeM { get; }
@@ -159,5 +153,8 @@ public static class ReferenceGenome
         => Enum.GetValues<ChrNo>().Take(isFemale ? 23 : 24);
 
     public static Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) =>
-        new(0, ChromosomeLengthMap[chrNo] + 1, new ChrID(chrNo, isFirstHaplotype));
+        new(0, ChromosomeLengthMap[chrNo], new ChrID(chrNo, isFirstHaplotype));
+    
+    public static long GetGenomeSize(bool isFemale)
+        => isFemale ? femaleGenomeLen : maleGenomeLen;
 }

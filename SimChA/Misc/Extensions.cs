@@ -16,4 +16,12 @@ public static class Extensions
 
     public static IEnumerable<T> GetValues<T>() where T : Enum 
         => Enum.GetValues(typeof(T)).Cast<T>();
+    
+    public static void ForEach<T>(this IEnumerable<T> sequence, Action<T> action)
+    {
+        foreach (var item in sequence)
+        {
+            action(item);
+        }
+    }
 }

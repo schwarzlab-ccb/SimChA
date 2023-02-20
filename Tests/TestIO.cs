@@ -17,7 +17,8 @@ public class TestIO
     [Test]
     public void TestConfigSerialization()
     {
-        var simParams = new SimParams(0, true, 0.00001f, 0.0001f, 0.00001f);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
+        var simParams = new SimParams(14, true, fit, null);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);

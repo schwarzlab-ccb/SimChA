@@ -79,6 +79,7 @@ public static class Parsers
         var lastSample = "";
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
+        bool isFemale = true;
         cnaFile.ReadLine(); // Skip header
         while (cnaFile.ReadLine() is { } line)
         {
@@ -89,15 +90,20 @@ public static class Parsers
                 if (regionsA.Any() || regionsB.Any())
                 {
                     var haplotypes = new List<Contig> {new(regionsA), new(regionsB)};
-                    result[sample] = new Karyotype(haplotypes);
+                    result[sample] = new Karyotype(haplotypes, isFemale);
                     regionsA.Clear();
                     regionsB.Clear();
+                    isFemale = true;
                 }
 
                 lastSample = sample;
             }
 
             var num = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
+            if (num == ChrNo.chrY)
+            {
+                isFemale = false;
+            }
             int start = int.Parse(lineSplit[2]) - 1;
             int end = int.Parse(lineSplit[3]);
             int cnA = int.Parse(lineSplit[4]);

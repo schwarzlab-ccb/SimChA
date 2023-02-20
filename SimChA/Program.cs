@@ -20,17 +20,16 @@ if (options.Value.ConfigFile != "")
 }
 else
 {
-    const bool isFemale = true;
-    const float pStress = 000_01f;
-    const float pTsgOg = 000_1f;
-    const float pEssential = 000_01f;
-    simParams = new SimParams(new Random().Next(), isFemale, pStress, pTsgOg, pEssential);
+    int seed = new Random().Next();
+    bool sexXX = true;
+    var fitness = new FitnessParams(1, 1, 1);
+    simParams = new SimParams(seed, sexXX, fitness, null);
 }
 
 var files = new FileIO(options.Value.OutputPath);
 var rnd = new Random(simParams.Seed);
 
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.IsFemale);
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
 
 var newickString = "";
 if (options.Value.NewickFile != "")
@@ -55,7 +54,7 @@ if (options.Value.CNProfiles != "")
     foreach ((string sample, var kar) in cnas)
     {
         Console.Write("\r" + counter++ + " / " + cnas.Count + " samples processed.");
-        double fitness = Fitness.Calculate(kar, geneLists, simParams);
+        double fitness = Fitness.Calculate(kar, geneLists, simParams.Fitness);
         result.Add(sample, fitness);
     }
     Console.WriteLine("Writing to disk.");
@@ -67,8 +66,8 @@ else
     Console.WriteLine("Computing mutations.");
 
     var clones = options.Value.NewickFile != ""
-        ? Parsers.ParseNewick(newickString, simParams.IsFemale)
-        : Simulator.MakeClonePair(options.Value.Distance, true);
+        ? Parsers.ParseNewick(newickString, simParams.SexXX)
+        : Simulator.MakeClonePair(options.Value.Distance, simParams.SexXX);
     var simulator = new Simulator(rnd, simParams, geneLists);
     var aberrations = simulator.ApplyEvents(clones[0], clones);
 
@@ -79,7 +78,7 @@ else
     try
     {
         files.WriteClones(selectClones);
-        files.WriteCopyNumbers(selectClones, simParams.IsFemale);
+        files.WriteCopyNumbers(selectClones, simParams.SexXX);
         files.WriteSimParams(simParams);
         files.WriteTSV(aberrations);
     }
