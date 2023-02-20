@@ -49,16 +49,26 @@ watch.Start();
 if (options.Value.CNProfiles != "")
 {
     Console.WriteLine("Computing fitness.");
-    var result = new Dictionary<string, double>();
+    var results = new List<SampleStats>();
     int counter = 0;
     foreach ((string sample, var kar) in cnas)
     {
-        Console.Write("\r" + counter++ + " / " + cnas.Count + " samples processed.");
+        Console.Write($"\r{counter++}/{cnas.Count} samples processed.");
+        
+        var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], kar);
+        var ogCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], kar);
+        var essCNs = Fitness.CalcCNs(geneLists[GeneListType.Essentiality], kar);
+        
         double fitness = Fitness.Calculate(kar, geneLists, simParams.Fitness);
-        result.Add(sample, fitness);
+        double stress = Fitness.StressTerm(kar.CountBases(), kar.SexXX);
+        double tsg = -Fitness.TsgOgTerm(tsgCNs);
+        double og = Fitness.TsgOgTerm(ogCNs);
+        double ess = Fitness.EssTerm(essCNs);
+        var stats = new SampleStats(sample, kar.Sex, fitness, stress, tsg, og, ess);
+        results.Add(stats);
     }
     Console.WriteLine("Writing to disk.");
-    files.WriteSampleFitness(result);
+    files.WriteSampleFitness(results);
 }
 else
 {
@@ -80,7 +90,7 @@ else
         files.WriteClones(selectClones);
         files.WriteCopyNumbers(selectClones, simParams.SexXX);
         files.WriteSimParams(simParams);
-        files.WriteTSV(aberrations);
+        files.WriteEvents(aberrations);
     }
     catch (Exception e)
     {

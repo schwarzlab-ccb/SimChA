@@ -68,7 +68,7 @@ public class TestFitness
         Assert.AreNotEqual(0, Fitness.StressTerm(xxKaryotype.CountBases(), false));
         xxKaryotype.ApplyWGD(); // Double all
         Assert.AreEqual(-1, Fitness.StressTerm(xxKaryotype.CountBases(), true), EPSILON);
-        foreach (int i in Enumerable.Range(0, 46)) { xyKaryotype.ApplyContigDeletion(i); }
+        foreach (int i in Enumerable.Range(0, HGRef.CHR_COUNT)) { xyKaryotype.ApplyContigDeletion(i); }
         Assert.AreEqual(1, Fitness.StressTerm(xyKaryotype.CountBases(), false), EPSILON);
     }
     

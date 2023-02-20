@@ -128,7 +128,7 @@ public class TestKaryotype
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < 46; i++)
+        for (int i = 0; i < HGRef.CHR_COUNT; i++)
         {
             _kar.ApplyAberration(_rnd, _del);
         }

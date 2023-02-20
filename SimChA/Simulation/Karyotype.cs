@@ -12,6 +12,8 @@ public class Karyotype
     public double FitnessVal { get; private set; }
     
     public bool SexXX { get;  }
+
+    public string Sex => SexXX ? "XX" : "XY";
     
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
@@ -23,7 +25,7 @@ public class Karyotype
     
     public Karyotype(bool sexXX)
     {
-        _contigs = ReferenceGenome.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
         SexXX = sexXX;
     }
 

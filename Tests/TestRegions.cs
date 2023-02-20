@@ -15,7 +15,7 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
-        _cRegion = ReferenceGenome.GetGenotype(true)[0];
+        _cRegion = HGRef.GetGenotype(true)[0];
     }
 
     [Test]

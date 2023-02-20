@@ -7,7 +7,7 @@ public static class CopyNumbers
 {
     public static IEnumerable<CopyNumber> CalcCopyNumbers(Karyotype karyotype, bool isFemale)
     {
-        var reference = ReferenceGenome.ChrIDsForSex(isFemale);
+        var reference = HGRef.ChrIDsForSex(isFemale);
         var copyNumbers = reference.Select(c => 
             CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), new ChrID(c, isFemale)));
         return copyNumbers.SelectMany(x => x).ToList();
@@ -19,7 +19,7 @@ public static class CopyNumbers
     {
         var result = new List<CopyNumber>();
 
-        var curRegionsWithReference = curRegs.Append(ReferenceGenome.GetRegion(id.ChrNo)).ToList();
+        var curRegionsWithReference = curRegs.Append(HGRef.GetRegion(id.ChrNo)).ToList();
 
         var starts = curRegionsWithReference.Select(r => r.Start);
         var ends = curRegionsWithReference.Select(r => r.End);
@@ -40,7 +40,7 @@ public static class CopyNumbers
 
     public static float CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
     {
-        long totalLength = ReferenceGenome.TotalLength(isFemale) / 2;
+        long totalLength = HGRef.TotalLength(isFemale) / 2;
         float ploidy = copyNumbers
             .Select(c => (float)c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength)
             .Sum();

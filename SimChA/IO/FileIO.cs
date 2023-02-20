@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
@@ -16,7 +17,7 @@ public class FileIO
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
-    private const string TSV_FILENAME = "abberations.tsv";
+    private const string CN_EVENTS_FILENAME = "abberations.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
@@ -96,10 +97,10 @@ public class FileIO
         file.WriteLine(jsonString);
     }
     
-    public void WriteTSV(List<CNEvent> abberationList)
+    public void WriteEvents(List<CNEvent> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
-        string filePath = Path.Combine(Path.GetFullPath(RootFolder), TSV_FILENAME);
+        string filePath = Path.Combine(Path.GetFullPath(RootFolder), CN_EVENTS_FILENAME);
         using var outputFile = new StreamWriter(filePath);
         StringBuilder abberationString = new();
         abberationString.Append(
@@ -116,14 +117,20 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
     
-    public void WriteSampleFitness(Dictionary<string, double> fitness)
+    public void WriteSampleFitness(List<SampleStats> samples)
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
         using var file = new StreamWriter(filePath);
-        file.WriteLine("Sample\tFitness");
-        foreach ((string sample, double fit) in fitness)
+        var myT = typeof(SampleStats);
+        Console.WriteLine(myT);
+        var fileds = myT.GetProperties();
+        var fieldNames = fileds.Select(f => f.Name).ToList();
+        file.WriteLine(string.Join("\t", fieldNames));
+        foreach (var sample in samples)
         {
-            file.WriteLine($"{sample}\t{fit}");
+            // Get all the field values of the record sample
+            var values = fileds.Select(f => f.GetValue(sample)).Select(v => $"{v:F4}").ToList();
+            file.WriteLine(string.Join("\t", values));
         }
     }
     

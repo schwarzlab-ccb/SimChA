@@ -16,8 +16,8 @@ public class TestContig
     [SetUp]
     public void Setup()
     {
-        _contig1 = new Contig(ReferenceGenome.GetRegion(ChrNo.chr1));
-        _contigX = new Contig(ReferenceGenome.GetRegion(ChrNo.chrX, false));
+        _contig1 = new Contig(HGRef.GetRegion(ChrNo.chr1));
+        _contigX = new Contig(HGRef.GetRegion(ChrNo.chrX, false));
     }
     
     [Test]

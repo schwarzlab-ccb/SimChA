@@ -3,9 +3,12 @@
 
 namespace SimChA.DataTypes;
 
-public static class ReferenceGenome
+public static class HGRef
 {
-    public static readonly Dictionary<ChrNo, int> ChromosomeLengthMap = new()
+    public const int CHR_COUNT = 46;
+    public const int AUTOSOME_COUNT = 22;
+
+    private static readonly Dictionary<ChrNo, int> ChromosomeLengthMap = new()
     {
         {
             ChrNo.chr1,
@@ -108,7 +111,7 @@ public static class ReferenceGenome
     private static long maleGenomeLen;
     private static long femaleGenomeLen;
 
-    static ReferenceGenome()
+    static HGRef()
     {
         var haplotypeOneF = CreateHaplotype(true, true);
         var haplotypeTwoF = CreateHaplotype(false, true);
@@ -150,7 +153,7 @@ public static class ReferenceGenome
     }
 
     public static IEnumerable<ChrNo> ChrIDsForSex(bool isFemale)
-        => Enum.GetValues<ChrNo>().Take(isFemale ? 23 : 24);
+        => Enum.GetValues<ChrNo>().Take(isFemale ? AUTOSOME_COUNT + 1: AUTOSOME_COUNT + 2);
 
     public static Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) =>
         new(0, ChromosomeLengthMap[chrNo], new ChrID(chrNo, isFirstHaplotype));
