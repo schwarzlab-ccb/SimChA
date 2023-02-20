@@ -117,11 +117,11 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
     
-    public void WriteSampleFitness(List<SampleStats> samples)
+    public void WriteSampleFitness(List<ProfileStats> samples)
     {
         string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
         using var file = new StreamWriter(filePath);
-        var myT = typeof(SampleStats);
+        var myT = typeof(ProfileStats);
         Console.WriteLine(myT);
         var fileds = myT.GetProperties();
         var fieldNames = fileds.Select(f => f.Name).ToList();

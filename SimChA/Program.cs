@@ -21,9 +21,8 @@ if (options.Value.ConfigFile != "")
 else
 {
     int seed = new Random().Next();
-    bool sexXX = true;
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, sexXX, fitness, null);
+    simParams = new SimParams(seed, true, fitness, null);
 }
 
 var files = new FileIO(options.Value.OutputPath);
@@ -49,23 +48,13 @@ watch.Start();
 if (options.Value.CNProfiles != "")
 {
     Console.WriteLine("Computing fitness.");
-    var results = new List<SampleStats>();
+    var results = new List<ProfileStats>();
     int counter = 0;
     foreach ((string sample, var kar) in cnas)
     {
         Console.Write($"\r{counter++}/{cnas.Count} samples processed.");
-        
-        var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], kar);
-        var ogCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], kar);
-        var essCNs = Fitness.CalcCNs(geneLists[GeneListType.Essentiality], kar);
-        
-        double fitness = Fitness.Calculate(kar, geneLists, simParams.Fitness);
-        double stress = Fitness.StressTerm(kar.CountBases(), kar.SexXX);
-        double tsg = -Fitness.TsgOgTerm(tsgCNs);
-        double og = Fitness.TsgOgTerm(ogCNs);
-        double ess = Fitness.EssTerm(essCNs);
-        var stats = new SampleStats(sample, kar.Sex, fitness, stress, tsg, og, ess);
-        results.Add(stats);
+        var profileStats = CNProfile.GetProfileStats(sample, kar, geneLists, simParams.Fitness);
+        results.Add(profileStats);
     }
     Console.WriteLine("Writing to disk.");
     files.WriteSampleFitness(results);
