@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from utils import format_chromosomes
+
 COL_ALLELE_A = mpl.colors.to_rgba('orange')
 COL_ALLELE_B = mpl.colors.to_rgba('teal')
 LINEWIDTH_COPY_NUMBERS = 4
@@ -26,36 +28,14 @@ TREE_WIDTH_SCALE = 1
 TRACK_WIDTH_SCALE = 1
 HEIGHT_SCALE = 1
 
+CHROM_SIZES = [247249719, 242951149, 199501827, 191273063, 180857866, 170899992,
+    158821424, 146274826, 140273252, 135374737, 134452384, 132349534,
+    114142980, 106368585, 100338915, 88827254, 78774742, 76117153,
+    63811651, 62435964, 46944323, 49691432, 154913754]
 
-CHROM_SIZE = {
-    "chr1": 247249719,
-    "chr2": 242951149,
-    "chr3": 199501827,
-    "chr4": 191273063,
-    "chr5": 180857866,
-    "chr6": 170899992,
-    "chr7": 158821424,
-    "chr8": 146274826,
-    "chr9": 140273252,
-    "chr10": 135374737,
-    "chr11": 134452384,
-    "chr12": 132349534,
-    "chr13": 114142980,
-    "chr14": 106368585,
-    "chr15": 100338915,
-    "chr16": 88827254,
-    "chr17": 78774742,
-    "chr18": 76117153,
-    "chr19": 63811651,
-    "chr20": 62435964,
-    "chr21": 46944323,
-    "chr22": 49691432,
-    "chrX": 154913754
-}
-
-sum = 0
-CHROM_ABS_START = {list(CHROM_SIZE.keys())[i]: (sum := sum+([0]+list(CHROM_SIZE.values()))[i])
-                   for i in range(len(CHROM_SIZE))}
+# sum = 0
+# CHROM_ABS_START = {list(CHROM_SIZE.keys())[i]: (sum := sum+([0]+list(CHROM_SIZE.values()))[i])
+#                    for i in range(len(CHROM_SIZE))}
 
 
 def load_data(filename):
@@ -63,6 +43,7 @@ def load_data(filename):
     data = pd.read_csv(filename, sep='\t')
     assert np.all(data.columns == ['sample_id', 'chr', 'start', 'end',
                   'cn_a', 'cn_b']), 'Data columns are not correct'
+    data['chr'] = format_chromosomes(data['chr'])
     data = data.set_index(['sample_id', 'chr', 'start', 'end'])
     data = data.sort_index()
 
@@ -71,23 +52,39 @@ def load_data(filename):
 
     return data
 
+def add_chrom_offset(data):
+    chrom_offset = pd.DataFrame([(f'chr{str(i+1).replace("23", "X")}', l)
+                                    for i, l in enumerate(CHROM_SIZES)], columns=['chr', 'chrom_offset'])
+    chrom_offset['chrom_offset'] = np.append(0, np.cumsum(chrom_offset['chrom_offset'])[:-1])
+    chrom_offset['chr'] = format_chromosomes(chrom_offset['chr'])
+    chrom_offset = chrom_offset.set_index('chr')[['chrom_offset']]
+    data = data.join(chrom_offset, on='chr').copy()
+
+    return data
+
 
 def calc_total_pos(data, col='pos'):
-    return data[col] + data['chr'].apply(lambda x: CHROM_ABS_START[x])
+    if 'chrom_offset' not in data.columns:
+        data = add_chrom_offset(data)
+    return data[col] + data['chrom_offset']
 
 
 def plot_chrom_boundaries(ax, print_chrom=False, outside=False):
-    for chrom, boundary in CHROM_ABS_START.items():
-        ax.axvline(boundary, color='grey')
+    chrom_offset = pd.DataFrame([(f'chr{str(i+1).replace("23", "X")}', l)
+                                for i, l in enumerate(CHROM_SIZES)], columns=['chr', 'chrom_offset'])
+    chrom_offset['chrom_offset'] = np.append(0, np.cumsum(chrom_offset['chrom_offset'])[:-1])
+    chrom_offset = chrom_offset.set_index('chr')['chrom_offset']
+    for chrom, chrom_offset in chrom_offset.items():
+        ax.axvline(chrom_offset, color='grey')
         if print_chrom:
             if outside:
-                ax.text(boundary + 1e7, ax.get_ylim()[1],
+                ax.text(chrom_offset + 1e7, ax.get_ylim()[1],
                         chrom.replace('chr', ''), fontsize=8, ha='left', va='bottom')
             else:
-                ax.text(boundary + 1e7, ax.get_ylim()[0] + (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.9,
+                ax.text(chrom_offset + 1e7, ax.get_ylim()[0] + (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.9,
                         chrom.replace('chr', ''), fontsize=8, ha='left')
 
-    ax.set_xlim(0, CHROM_ABS_START['chrX'] + CHROM_SIZE['chrX'])
+    ax.set_xlim(0, np.sum(CHROM_SIZES))
 
 
 def plot_single_baf(data, ax=None, print_chrom=False):
