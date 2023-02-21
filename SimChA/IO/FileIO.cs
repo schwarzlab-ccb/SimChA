@@ -60,6 +60,7 @@ public class FileIO
     public void WriteClones(IEnumerable<Clone> subClones)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
         var clonesString = new StringBuilder();
@@ -74,7 +75,7 @@ public class FileIO
     public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
     {
         string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
-        Console.WriteLine($"Writing CopyNumbers to file {outPath}");
+        Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
         var copyNumbersString = new StringBuilder();
@@ -100,8 +101,9 @@ public class FileIO
     public void WriteEvents(List<CNEvent> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
-        string filePath = Path.Combine(Path.GetFullPath(RootFolder), CN_EVENTS_FILENAME);
-        using var outputFile = new StreamWriter(filePath);
+        string outPath = Path.Combine(Path.GetFullPath(RootFolder), CN_EVENTS_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
         abberationString.Append(
             "Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
@@ -119,10 +121,10 @@ public class FileIO
     
     public void WriteSampleFitness(List<ProfileStats> samples)
     {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
-        using var file = new StreamWriter(filePath);
+        string outPath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var file = new StreamWriter(outPath);
         var myT = typeof(ProfileStats);
-        Console.WriteLine(myT);
         var fileds = myT.GetProperties();
         var fieldNames = fileds.Select(f => f.Name).ToList();
         file.WriteLine(string.Join("\t", fieldNames));

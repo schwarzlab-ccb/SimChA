@@ -26,12 +26,13 @@ public class Simulator
     public List<CNEvent> ApplyEvents(Clone rootClone, List<Clone> clones)
     {
         List<CNEvent> events = new();
-        var progress = (1, GetTreeNodeCount(rootClone, clones) - 1);
-        AssignMutationsRecursive(rootClone, clones, events, progress);
+        int counter = 1;
+        ApplyCNEventsRec(rootClone, clones, events, ref counter);
+        Console.WriteLine();
         return events;
     }
     
-    private void AssignMutationsRecursive(Clone node, List<Clone> clones, List<CNEvent> events, (int, int) progress)
+    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
@@ -40,18 +41,19 @@ public class Simulator
             int parentMutations = GetMutations(node, clones);
             for (int i = 0; i < child.DistToParent; i++)
             {
-                Console.Write($"Clone {progress.Item1++}/{progress.Item2}, Mut {i+1}/{child.DistToParent}.\r");
+                Console.Write($"\rClone {counter}/{clones.Count-1}, Mut {i+1}/{child.DistToParent}.");
                 var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
                 var eventP = SignatureHelper.PickRandomEventP(_rnd, sig.Events);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, eventP);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + i;
-                var abberation = new CNEvent(child.Name, eventP.Type, mutationCount,
-                    eventString, newFitness - oldFitness, newFitness);
+                double dFit = newFitness - oldFitness;
+                var abberation = new CNEvent(child.Name, eventP.Type, mutationCount, eventString, dFit, newFitness);
                 events.Add(abberation);
                 oldFitness = newFitness;
             }
-            AssignMutationsRecursive(child, clones, events, progress);
+            counter++;
+            ApplyCNEventsRec(child, clones, events, ref counter);
         }
     }
     
@@ -64,16 +66,16 @@ public class Simulator
 
     public static List<Clone> MakeClonePair(int distance, bool isFemale)
     {
-        var parent = new Clone(0, -1, "1", 0, new Karyotype(isFemale), 0);
-        var child = new Clone(1, 0, "2", distance, new Karyotype(isFemale), distance);
+        var parent = new Clone(0, -1, "0-0", 0, new Karyotype(isFemale), 0);
+        var child = new Clone(1, 0, $"1-{distance.ToString()}", distance, new Karyotype(isFemale), distance);
         parent.ChildrenIDs.Add(child.CloneId);
         return new List<Clone> { parent, child };
     }
 
     public static List<Clone> ClonesFromProfiles(Dictionary<string, Karyotype> profiles)
     {
-        var i = 0;
-        var res = profiles.Select(pair => new Clone(i++, -1, pair.Key, 1, pair.Value, 1));
+        var i = 1;
+        var res = profiles.Select(pair => new Clone(i++, 0, pair.Key, 1, pair.Value, 1));
         return res.ToList();
     }
 }

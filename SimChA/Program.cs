@@ -60,16 +60,13 @@ else
         ? Parsers.ParseNewick(newickString, simParams.SexXX)
         : Simulator.MakeClonePair(options.Value.Distance, simParams.SexXX);
     var simulator = new Simulator(rnd, simParams, geneLists);
-    var aberrations = simulator.ApplyEvents(clones[0], clones);
-    // TODO: do not remove the diploid clone if a newick file is provided
-    var selectClones = clones.Where(c => c.CloneId != 0).ToList();
-
-    Console.WriteLine("Writing to disk.".PadRight(80));
+    var cnEvents = simulator.ApplyEvents(clones[0], clones);
+    
     try
     {
-        files.WriteClones(selectClones);
-        files.WriteCopyNumbers(selectClones, simParams.SexXX);
-        files.WriteEvents(aberrations);
+        files.WriteClones(clones);
+        files.WriteCopyNumbers(clones, simParams.SexXX);
+        files.WriteEvents(cnEvents);
     }
     catch (Exception e)
     {
@@ -88,7 +85,7 @@ foreach (var clone in clones)
     var profileStats = CNProfile.GetProfileStats(clone, geneLists, simParams.Fitness);
     results.Add(profileStats);
 }
-Console.WriteLine("Writing to disk.".PadRight(80));
+Console.WriteLine();
 files.WriteSampleFitness(results);
 
 watch.Stop();
