@@ -59,7 +59,7 @@ if __name__ == "__main__":
         fig = plot_cn_heatmap(copynumbers=copynumbers,
                               tree=tree, figsize=(20, 15),
                               cmax=cmax,
-                              show_internal_nodes=False,
+                              hide_internal_nodes=True,
                               ignore_segment_lengths=False
                               )
         fig.savefig(os.path.join(output_folder, 'copy_numbers_heatmap.png'))
