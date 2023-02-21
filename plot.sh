@@ -1,6 +1,5 @@
 out="./out"$1
-in="./out"$1
-
+in="./in"$1
 
 echo "Selected data folder $out"
 echo "Creating consistent segmentation"

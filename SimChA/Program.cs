@@ -61,6 +61,7 @@ else
         : Simulator.MakeClonePair(options.Value.Distance, simParams.SexXX);
     var simulator = new Simulator(rnd, simParams, geneLists);
     var cnEvents = simulator.ApplyEvents(clones[0], clones);
+    clones = clones.Where(c => c.CloneId != 0).ToList();
     
     try
     {
