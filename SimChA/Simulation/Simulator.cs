@@ -39,9 +39,11 @@ public class Simulator
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
-            for (int i = 0; i < child.DistToParent; i++)
+            int i = 0;
+            int j = 0;
+            while (i < child.DistToParent)
             {
-                Console.Write($"\rClone {counter}/{clones.Count-1}, Mut {i+1}/{child.DistToParent}.");
+                Console.Write($"\rClone {counter}/{clones.Count-1}. Event {i+1}/{child.DistToParent}. Attempt {++j}");
                 var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
                 var eventP = SignatureHelper.PickRandomEventP(_rnd, sig.Events);
                 string eventString = child.Karyotype.ApplyAberration(_rnd, eventP);
@@ -51,6 +53,8 @@ public class Simulator
                 var abberation = new CNEvent(child.Name, eventP.Type, mutationCount, eventString, dFit, newFitness);
                 events.Add(abberation);
                 oldFitness = newFitness;
+                i++;
+                j = 0;
             }
             counter++;
             ApplyCNEventsRec(child, clones, events, ref counter);
