@@ -200,7 +200,7 @@ public class FileIO
         return geneLists;
     }
     
-    public static Dictionary<string, Karyotype> ReadCopyNumbers(string cnaProfile)
+    public static Dictionary<string, Karyotype> ReadProfiles(string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -210,8 +210,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var result = Parsers.ParseCNAProfile(cnaFile);
-            return result;
+            return Parsers.ParseCNAProfile(cnaFile);
 
         }
         catch (Exception e)

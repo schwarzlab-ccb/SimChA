@@ -5,6 +5,9 @@ using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
 
+var watch = new Stopwatch();
+watch.Start();
+
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
@@ -37,40 +40,27 @@ if (options.Value.NewickFile != "")
     newickString = FileIO.ReadNewick(options.Value.NewickFile);
 }
 
-var cnas = new Dictionary<string, Karyotype>();
+Dictionary<string, Karyotype> profiles = new();
 if (options.Value.CNProfiles != "")
 {
-    cnas = FileIO.ReadCopyNumbers(options.Value.CNProfiles);
+    profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
 }
 
-var watch = new Stopwatch();
-watch.Start();
-
+List<Clone> clones;
 if (options.Value.CNProfiles != "")
 {
-    Console.WriteLine("Computing fitness.");
-    var results = new List<ProfileStats>();
-    int counter = 0;
-    foreach ((string sample, var kar) in cnas)
-    {
-        Console.Write($"\r{counter++}/{cnas.Count} samples processed.");
-        var profileStats = CNProfile.GetProfileStats(sample, kar, geneLists, simParams.Fitness);
-        results.Add(profileStats);
-    }
-    Console.WriteLine("Writing to disk.".PadRight(80));
-    files.WriteSampleFitness(results);
+    clones = Simulator.ClonesFromProfiles(profiles);
 }
 else
 {
     Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
-
-    var clones = options.Value.NewickFile != ""
+    
+    clones = options.Value.NewickFile != ""
         ? Parsers.ParseNewick(newickString, simParams.SexXX)
         : Simulator.MakeClonePair(options.Value.Distance, simParams.SexXX);
     var simulator = new Simulator(rnd, simParams, geneLists);
     var aberrations = simulator.ApplyEvents(clones[0], clones);
-
     // TODO: do not remove the diploid clone if a newick file is provided
     var selectClones = clones.Where(c => c.CloneId != 0).ToList();
 
@@ -87,6 +77,20 @@ else
         return e.HResult;
     }
 }
+
+// Fitness data
+Console.WriteLine("Computing fitness.");
+var results = new List<ProfileStats>();
+int counter = 0;
+foreach (var clone in clones)
+{
+    Console.Write($"\r{++counter}/{clones.Count} samples processed.");
+    var profileStats = CNProfile.GetProfileStats(clone, geneLists, simParams.Fitness);
+    results.Add(profileStats);
+}
+Console.WriteLine("Writing to disk.".PadRight(80));
+files.WriteSampleFitness(results);
+
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
 

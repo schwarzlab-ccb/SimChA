@@ -2,9 +2,9 @@
   "Seed": 42,
   "SexXX": true,
   "Fitness": {
-    "Stress": 1,
-    "TsgOg": 1,
-    "Essentiality": 1
+    "Stress": 0.1,
+    "TsgOg": 0.01,
+    "Essentiality": 0.01
   },
   "Signatures": [
     { 

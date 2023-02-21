@@ -69,4 +69,11 @@ public class Simulator
         parent.ChildrenIDs.Add(child.CloneId);
         return new List<Clone> { parent, child };
     }
+
+    public static List<Clone> ClonesFromProfiles(Dictionary<string, Karyotype> profiles)
+    {
+        var i = 0;
+        var res = profiles.Select(pair => new Clone(i++, -1, pair.Key, 1, pair.Value, 1));
+        return res.ToList();
+    }
 }
