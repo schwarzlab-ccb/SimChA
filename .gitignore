@@ -3,6 +3,7 @@ out*/
 
 # Input files
 sim_params.json
+in*/
 
 # Jupyter Notebooks
 .ipynb_checkpoints

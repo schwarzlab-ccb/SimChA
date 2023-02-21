@@ -25,8 +25,9 @@ else
     simParams = new SimParams(seed, true, fitness, null);
 }
 
-var files = new FileIO(options.Value.OutputPath);
 var rnd = new Random(simParams.Seed);
+var files = new FileIO(options.Value.OutputPath);
+files.WriteSimParams(simParams);
 
 var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
 
@@ -56,7 +57,7 @@ if (options.Value.CNProfiles != "")
         var profileStats = CNProfile.GetProfileStats(sample, kar, geneLists, simParams.Fitness);
         results.Add(profileStats);
     }
-    Console.WriteLine("Writing to disk.");
+    Console.WriteLine("Writing to disk.".PadRight(80));
     files.WriteSampleFitness(results);
 }
 else
@@ -73,12 +74,11 @@ else
     // TODO: do not remove the diploid clone if a newick file is provided
     var selectClones = clones.Where(c => c.CloneId != 0).ToList();
 
-    Console.WriteLine("Writing to disk.");
+    Console.WriteLine("Writing to disk.".PadRight(80));
     try
     {
         files.WriteClones(selectClones);
         files.WriteCopyNumbers(selectClones, simParams.SexXX);
-        files.WriteSimParams(simParams);
         files.WriteEvents(aberrations);
     }
     catch (Exception e)

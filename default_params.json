@@ -1,7 +1,27 @@
 {
-  "Seed": 1368013691,
-  "IsFemale": true,
-  "StressFraction": -0.0001,
-  "TsgOgFraction": 0.01,
-  "EssentialFraction": 0.001
+  "Seed": 42,
+  "SexXX": true,
+  "Fitness": {
+    "Stress": 1,
+    "TsgOg": 1,
+    "Essentiality": 1
+  },
+  "Signatures": [
+    { 
+      "Id": "sigA",
+      "Prob": 0.7,
+      "Events": [
+        { "Type" : "ChromDeletion", "Prob" : 0.2 }, 
+        { "Type" : "InternalDuplication", "Prob" : 0.8, "Params": { "Mean": 0.1 } }
+      ]
+    },
+    { 
+      "Id": "sigB",
+      "Prob": 0.3,
+      "Events": [
+        { "Type" : "ChromDuplication", "Prob" : 0.3 }, 
+        { "Type" : "InternalDeletion", "Prob" : 0.7, "Params": { "Mean": 0.2 } }
+      ]
+    }
+  ]
 }
