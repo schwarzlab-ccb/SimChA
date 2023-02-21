@@ -243,6 +243,7 @@ def plot_tree(input_tree,
               label_colors=None,
               marker_size=None,
               line_width=None,
+              hide_internal_nodes=False,
               **kwargs):
     """Plot the given tree using matplotlib (or pylab).
     The graphic is a rooted tree, drawn with roughly the same algorithm as
@@ -343,9 +344,7 @@ def plot_tree(input_tree,
     ax.set_title(title, x=0.01, y=1.0, ha='left', va='bottom',
                  fontweight='bold', fontsize=16, zorder=10)
     x_posns = _get_x_positions(input_tree)
-    y_posns = _get_y_positions(input_tree, normal_name=normal_name,
-                               adjust=True)
-
+    y_posns = _get_y_positions(input_tree, adjust=not hide_internal_nodes, normal_name=normal_name)
     # Arrays that store lines for the plot of clades
     horizontal_linecollections = []
     vertical_linecollections = []
@@ -433,7 +432,8 @@ def plot_tree(input_tree,
         # Add node marker
         if marker_func is not None:
             marker = marker_func(clade)
-            if marker is not None and clade is not None:
+            if marker is not None and clade is not None and \
+                    not(hide_internal_nodes and not clade.is_terminal()):
                 marker_size, marker_col = marker_func(clade)
                 ax.scatter(x_here, y_here, s=marker_size, c=marker_col, zorder=3)
 
@@ -441,7 +441,8 @@ def plot_tree(input_tree,
         label = label_func(str(clade))
         ax_scale = ax.get_xlim()[1] - ax.get_xlim()[0]
 
-        if label not in (None, clade.__class__.__name__):
+        if label not in (None, clade.__class__.__name__) and \
+                not (hide_internal_nodes and not clade.is_terminal()):
             ax.text(
                 x_here + min(0.5*ax_scale, 1),
                 y_here,
@@ -526,7 +527,8 @@ def plot_tree(input_tree,
     return plt.gcf()
 
 
-def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, tree_width_ratio=1):
+def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, tree_width_ratio=1,
+                 hide_internal_nodes=True):
 
     copynumbers = copynumbers.copy().reset_index().set_index('sample_id')
     # Display the population size as fractions
@@ -567,7 +569,8 @@ def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, t
         plot_tree(tree,
                   ax=tree_ax,
                   label_func=lambda x: '',
-                  normal_name=normal_sample)
+                  normal_name=normal_sample,
+                  hide_internal_nodes=hide_internal_nodes)
 
     for sample in samples:
         cur_data = copynumbers.loc[sample]
@@ -585,8 +588,8 @@ def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, t
 
 def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_numbers=False,
                     alleles=['cn_a', 'cn_b'], tree_width_ratio=1, cbar_width_ratio=0.05, figsize=(20, 10),
-                    tree_line_width=0.5, tree_marker_size=1, show_internal_nodes=False, title='',
-                    tree_label_colors=None, tree_label_func=None, cmap='coolwarm', normal_name=0,
+                    tree_line_width=0.5, tree_marker_size=1, hide_internal_nodes=True, title='',
+                    tree_label_colors=None, cmap='coolwarm', normal_name=0,
                     ignore_segment_lengths=False):
 
     copynumbers = copynumbers[alleles].copy()
@@ -612,22 +615,23 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
         tree_ax = axs[0]
         cn_axes = axs[1:-1]
 
-        if show_internal_nodes:
+        if not hide_internal_nodes:
             cur_sample_labels = np.array([x.name for x in list(
                 tree.find_clades()) if x.name is not None])
         else:
             cur_sample_labels = np.array([x.name for x in tree.get_terminals()])
 
         y_posns = {k.name: v for k, v in _get_y_positions(
-            tree, adjust=show_internal_nodes, normal_name=normal_name).items()}
+            tree, adjust=not hide_internal_nodes, normal_name=normal_name).items()}
 
         _ = plot_tree(tree, ax=tree_ax, normal_name=normal_name,
-                      label_func=lambda x: '',
+                      label_func=lambda x: '', hide_internal_nodes=hide_internal_nodes,
                       show_branch_lengths=False, line_width=tree_line_width, marker_size=tree_marker_size,
                       title=title, label_colors=tree_label_colors)
         tree_ax.set_axis_off()
         tree_ax.set_axis_off()
         fig.set_constrained_layout_pads(w_pad=0, h_pad=0, hspace=0.0, wspace=100)
+        tree_ax.set_ylim(len(cur_sample_labels)-0.5, -0.5)
 
     cax = axs[-1]
 
@@ -649,7 +653,7 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
     else:
         x_pos = np.append([0], np.cumsum(copynumbers.loc[cur_sample_labels].astype(int).unstack(
             'sample_id').loc[:, (alleles[0])].loc[:, cur_sample_labels].eval('end-start').values))
-    y_pos = np.arange(len(cur_sample_labels)+1)+0.5
+    y_pos = np.arange(len(cur_sample_labels)+1)
 
     for ax, allele in zip(cn_axes, alleles):
         im = ax.pcolormesh(x_pos, y_pos,
@@ -671,7 +675,7 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
         ax.set_yticks([])
 
     # add sample names
-    cn_axes[0].set_yticks(np.arange(len(cur_sample_labels)) + 1)
+    cn_axes[0].set_yticks(np.arange(len(cur_sample_labels)) + 0.5)
     cn_axes[0].set_yticklabels(cur_sample_labels, ha='right',
                                va='center', fontsize=YLABEL_FONT_SIZE)
 
@@ -691,7 +695,12 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
         cax.set_yticklabels(np.arange(0, cmax+1), ha='left')
     cax.yaxis.set_tick_params(left=False, labelleft=False, labelright=True)
 
-    for ax in axs[:-1]:
-        ax.set_ylim(len(cur_sample_labels)+0.5, 0.5)
+    # for ax in axs[:-1]:
+    #     for i in range(len(cur_sample_labels)+1):
+    #         ax.axhline(i, color='black', linewidth=0.5)
+    #         ax.axhline(i+0.5, ls='--', color='black', linewidth=0.5)
+    
+    for ax in cn_axes:
+        ax.set_ylim(len(cur_sample_labels), 0)
 
     return fig
