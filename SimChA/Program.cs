@@ -25,7 +25,7 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, fitness, null);
+    simParams = new SimParams(seed, true, GenomeAssembly.HG38, fitness, null);
 }
 
 var rnd = new Random(simParams.Seed);

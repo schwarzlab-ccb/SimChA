@@ -38,13 +38,12 @@ public static class CopyNumbers
         return result;
     }
 
-    public static float CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
+    public static double CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
     {
-        long totalLength = HGRef.TotalLength(isFemale) / 2;
-        float ploidy = copyNumbers
+        long totalLength = HGRef.GetGenomeLen(isFemale) / 2;
+        double ploidy = copyNumbers
             .Select(c => (float)c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength)
             .Sum();
-
         return ploidy;
     }
 

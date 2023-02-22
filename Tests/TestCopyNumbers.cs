@@ -19,7 +19,7 @@ public class TestCopyNumbers
     private Karyotype referenceFemale;
     private Random _rnd;
     private List<CopyNumber> copyNumbers;
-    private float ploidy;
+    private double ploidy;
 
 
     [SetUp]
@@ -37,11 +37,11 @@ public class TestCopyNumbers
     public void TestCalcPloidyReference()
     {
         var copyNumbersReferenceFemale = CopyNumbers.CalcCopyNumbers(referenceFemale, true).ToList();
-        float ploidyReferenceFemale = CopyNumbers.CalcPloidy(copyNumbersReferenceFemale, true);
+        double ploidyReferenceFemale = CopyNumbers.CalcPloidy(copyNumbersReferenceFemale, true);
         Assert.AreEqual(2, ploidyReferenceFemale);
 
         var copyNumbersReferenceMale = CopyNumbers.CalcCopyNumbers(referenceMale, false).ToList();
-        float ploidyReferenceMale = CopyNumbers.CalcPloidy(copyNumbersReferenceMale, false);
+        double ploidyReferenceMale = CopyNumbers.CalcPloidy(copyNumbersReferenceMale, false);
         Assert.AreEqual(2, ploidyReferenceMale);
     }
 
@@ -60,7 +60,7 @@ public class TestCopyNumbers
         for (int i = 0; i < 100; i++)
         {
             karyotype.ApplyAberration(_rnd, new CNEventP(CNEventType.Translocation, 1));
-            var invParams = new Dictionary<string, double>{{"Mean", 0.01}};
+            var invParams = new Dictionary<string, double> { {"Mean", 0.01} };
             karyotype.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalInversion, 1, invParams));
         }
         copyNumbers = CopyNumbers.CalcCopyNumbers(karyotype, true).ToList();
