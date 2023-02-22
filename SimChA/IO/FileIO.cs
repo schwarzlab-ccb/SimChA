@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
@@ -34,14 +33,7 @@ public class FileIO
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
         RootFolder = rootFolder;
-        if (Directory.Exists(RootFolder))
-        {
-            foreach (var file in new DirectoryInfo(RootFolder).GetFiles())
-            {
-                file.Delete();
-            }
-        }
-        else
+        if (!Directory.Exists(RootFolder))
         {
             Directory.CreateDirectory(RootFolder);
         }

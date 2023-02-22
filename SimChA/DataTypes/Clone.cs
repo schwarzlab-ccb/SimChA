@@ -24,7 +24,7 @@ public class Clone
     public int TotalMutations { get; }
 
     public override string ToString()
-        => $"ID:{CloneId}, Name:{Name} Parent:{ParentId},  Muts: {DistToParent}, Karyotype: {Karyotype}";
+        => $"ID:{CloneId}, Name:{Name}, Sex:{Karyotype.Sex}, Parent:{ParentId}, Events: {DistToParent}, Karyotype: {Karyotype}";
 
     public Karyotype CopyKaryotype() => new(Karyotype);
 }

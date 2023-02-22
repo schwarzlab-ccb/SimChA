@@ -1,8 +1,8 @@
 {
-  "Seed": 42,
+  "Seed": 0,
   "SexXX": true,
   "Fitness": {
-    "Stress": 0.1,
+    "Stress": 1,
     "TsgOg": 0.01,
     "Essentiality": 0.01
   },
@@ -22,6 +22,6 @@
         { "Type" : "ChromDuplication", "Prob" : 0.3 }, 
         { "Type" : "InternalDeletion", "Prob" : 0.7, "Params": { "Mean": 0.2 } }
       ]
-    }
+    }    
   ]
 }

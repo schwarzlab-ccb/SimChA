@@ -79,7 +79,7 @@ else
 // Fitness data
 Console.WriteLine("Computing fitness.");
 var results = new List<ProfileStats>();
-int counter = 0;
+var counter = 0;
 foreach (var clone in clones)
 {
     Console.Write($"\r{++counter}/{clones.Count} samples processed.");
