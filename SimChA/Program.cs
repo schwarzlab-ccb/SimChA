@@ -17,63 +17,51 @@ options.WithNotParsed(o =>
 });
 
 SimParams simParams;
-if (options.Value.ConfigFile != "")
+string configFile = options.Value.ConfigFile;
+if (configFile != "")
 {
-    simParams = FileIO.ReadSimParams(options.Value.ConfigFile);
+    simParams = FileIO.ReadSimParams(configFile);
 }
 else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, GenomeAssembly.HG38, fitness, null);
+    simParams = new SimParams(seed, true, GenomeAssembly.hg38, fitness, null);
 }
 
+HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
 files.WriteSimParams(simParams);
 
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
-
-var newickString = "";
-if (options.Value.NewickFile != "")
-{
-    newickString = FileIO.ReadNewick(options.Value.NewickFile);
-}
-
-Dictionary<string, Karyotype> profiles = new();
+// Obtain clones
+var newick = "";
+List<Clone> clones = new();
+List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
 {
-    profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
-}
-
-List<Clone> clones;
-if (options.Value.CNProfiles != "")
-{
+    var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
     clones = Simulator.ClonesFromProfiles(profiles);
 }
 else
 {
     Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
-    
-    clones = options.Value.NewickFile != ""
-        ? Parsers.ParseNewick(newickString, simParams.SexXX)
-        : Simulator.MakeClonePair(options.Value.Distance, simParams.SexXX);
     var simulator = new Simulator(rnd, simParams, geneLists);
-    var cnEvents = simulator.ApplyEvents(clones[0], clones);
-    clones = clones.Where(c => c.CloneId != 0).ToList();
+
+    if (options.Value.NewickFile != "")
+    {
+        newick = FileIO.ReadNewick(options.Value.NewickFile);
+        clones = Parsers.ParseNewick(newick, simParams.SexXX);
+    }
+    else
+    {
+        clones = Simulator.MakeClones(options.Value.Distance, options.Value.Repeats, simParams.SexXX);   
+    }
     
-    try
-    {
-        files.WriteClones(clones);
-        files.WriteCopyNumbers(clones, simParams.SexXX);
-        files.WriteEvents(cnEvents);
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
-        return e.HResult;
-    }
+    cnEvents = simulator.ApplyEvents(clones[0], clones);
+    clones = clones.Where(c => c.CloneId != 0).ToList();
 }
 
 // Fitness data
@@ -86,8 +74,27 @@ foreach (var clone in clones)
     var profileStats = CNProfile.GetProfileStats(clone, geneLists, simParams.Fitness);
     results.Add(profileStats);
 }
+
 Console.WriteLine();
-files.WriteSampleFitness(results);
+try
+{
+    files.WriteClones(clones);
+    files.WriteCopyNumbers(clones, simParams.SexXX);
+    files.WriteSampleFitness(results);
+    if (cnEvents.Any())
+    {
+        files.WriteEvents(cnEvents);
+    }
+    if (newick != "")
+    {
+        files.WriteNewick(newick);
+    }
+}
+catch (Exception e)
+{
+    Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
+    return e.HResult;
+}
 
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");

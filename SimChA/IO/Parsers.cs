@@ -80,17 +80,17 @@ public static class Parsers
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
         bool isFemale = true;
+        string sample = "";
         cnaFile.ReadLine(); // Skip header
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
-            string sample = lineSplit[0];
+            sample = lineSplit[0];
             if (sample != lastSample)
             {
                 if (regionsA.Any() || regionsB.Any())
                 {
-                    var haplotypes = new List<Contig> {new(regionsA), new(regionsB)};
-                    result[sample] = new Karyotype(haplotypes, isFemale);
+                    result[sample] = new Karyotype(new List<Contig> {new(regionsA), new(regionsB)}, isFemale);
                     regionsA.Clear();
                     regionsB.Clear();
                     isFemale = true;
@@ -117,7 +117,7 @@ public static class Parsers
                 regionsB.Add(new Region(start, end, new ChrID(num, false)));
             }
         }
-
+        result[sample] = new Karyotype(new List<Contig> {new(regionsA), new(regionsB)} , isFemale);
         return result;
     }
 

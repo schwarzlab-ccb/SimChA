@@ -1,7 +1,4 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-// Edited by Felix Schifferdecker to match the GRCh38.p13
-
-using System.Reflection;
 
 namespace SimChA.DataTypes;
 
@@ -69,7 +66,7 @@ public static class HGRef
     };
 
     private static Dictionary<ChrNo, int> GetChrs(GenomeAssembly assembly) 
-        => assembly == GenomeAssembly.HG19 ? HG19Chrs : HG38Chrs;
+        => assembly == GenomeAssembly.hg19 ? HG19Chrs : HG38Chrs;
     
     public static GenomeAssembly Assembly { get; set; }
 

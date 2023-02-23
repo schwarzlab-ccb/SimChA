@@ -1,7 +1,10 @@
-﻿namespace SimChA.DataTypes;
+﻿using System.Text.Json.Serialization;
 
+namespace SimChA.DataTypes;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum GenomeAssembly
 {
-    HG19,
-    HG38,
+    hg19,
+    hg38,
 }

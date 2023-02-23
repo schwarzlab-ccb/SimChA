@@ -68,12 +68,17 @@ public class Simulator
         return mutCount;
     }
 
-    public static List<Clone> MakeClonePair(int distance, bool isFemale)
+    public static List<Clone> MakeClones(int distance, int repeats, bool sexXX)
     {
-        var parent = new Clone(0, -1, "0-0", 0, new Karyotype(isFemale), 0);
-        var child = new Clone(1, 0, $"1-{distance.ToString()}", distance, new Karyotype(isFemale), distance);
-        parent.ChildrenIDs.Add(child.CloneId);
-        return new List<Clone> { parent, child };
+        var parent = new Clone(0, -1, "0-0", 0, new Karyotype(sexXX), 0);
+        var clones = new List<Clone> { parent };
+        for (var i = 1; i <= repeats; i++)
+        {
+            var child = new Clone(i, 0, $"{i}-{distance}", distance, new Karyotype(sexXX), distance);
+            parent.ChildrenIDs.Add(child.CloneId);
+            clones.Add(child);
+        }
+        return clones;
     }
 
     public static List<Clone> ClonesFromProfiles(Dictionary<string, Karyotype> profiles)

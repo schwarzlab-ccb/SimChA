@@ -23,35 +23,30 @@ public class FileIO
     private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
 
     private string Timestamp { get; }
-    private string RootFolder { get; }
-    private string ExperimentFolder { get; }
-    private bool IsRepeated { get; }
+    private string OutFolder { get; }
 
-    public FileIO(string rootFolder)
+    public FileIO(string outFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
-        RootFolder = rootFolder;
-        if (!Directory.Exists(RootFolder))
+        OutFolder = outFolder;
+        if (!Directory.Exists(OutFolder))
         {
-            Directory.CreateDirectory(RootFolder);
-        }
-
-        if (IsRepeated)
-        {
-            ExperimentFolder = Path.Join(RootFolder, Timestamp);
-            Directory.CreateDirectory(ExperimentFolder);
+            Directory.CreateDirectory(OutFolder);
         }
         else
         {
-            ExperimentFolder = RootFolder;
+            foreach (string file in Directory.EnumerateFiles(OutFolder))
+            {
+                File.Delete(file);
+            }
         }
     }
 
     public void WriteClones(IEnumerable<Clone> subClones)
     {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
@@ -66,7 +61,7 @@ public class FileIO
     
     public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
     {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
@@ -83,7 +78,7 @@ public class FileIO
 
     public void WriteSimParams(SimParams simParams)
     {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME);
+        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
         using var file = new StreamWriter(filePath);
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
         string jsonString = JsonSerializer.Serialize(simParams, options);
@@ -93,7 +88,7 @@ public class FileIO
     public void WriteEvents(List<CNEvent> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), CN_EVENTS_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
@@ -111,9 +106,17 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
     
+    public void WriteNewick(string newick)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), NEWICK_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var file = new StreamWriter(outPath);
+        file.Write(newick);
+    }
+    
     public void WriteSampleFitness(List<ProfileStats> samples)
     {
-        string outPath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLE_FITNESS_FILE);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
         var myT = typeof(ProfileStats);
@@ -123,7 +126,7 @@ public class FileIO
         foreach (var sample in samples)
         {
             // Get all the field values of the record sample
-            var values = fileds.Select(f => f.GetValue(sample)).Select(v => $"{v:F4}").ToList();
+            var values = fileds.Select(f => $"{f.GetValue(sample)}:F4");
             file.WriteLine(string.Join("\t", values));
         }
     }
