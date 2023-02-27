@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 
 
+def format_chromosomes_int(chroms):
+    return chroms.str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
+
 def format_chromosomes(ds):
     """ Expects pandas Series with chromosome names. 
     The goal is to take recognisalbe chromosome names, i.e. chr4 or chrom3 and turn them into chr3 format.

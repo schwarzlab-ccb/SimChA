@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from utils import format_chromosomes
+from utils import format_chromosomes, format_chromosomes_int
 
 COL_ALLELE_A = mpl.colors.to_rgba('orange')
 COL_ALLELE_B = mpl.colors.to_rgba('teal')
@@ -43,7 +43,7 @@ def load_data(filename):
     data = pd.read_csv(filename, sep='\t')
     assert np.all(data.columns == ['sample_id', 'chr', 'start', 'end',
                   'cn_a', 'cn_b']), 'Data columns are not correct'
-    data['chr'] = format_chromosomes(data['chr'])
+    data['chr'] = format_chromosomes_int(data['chr'])
     data = data.set_index(['sample_id', 'chr', 'start', 'end'])
     data = data.sort_index()
 
@@ -56,7 +56,7 @@ def add_chrom_offset(data):
     chrom_offset = pd.DataFrame([(f'chr{str(i+1).replace("23", "X")}', l)
                                     for i, l in enumerate(CHROM_SIZES)], columns=['chr', 'chrom_offset'])
     chrom_offset['chrom_offset'] = np.append(0, np.cumsum(chrom_offset['chrom_offset'])[:-1])
-    chrom_offset['chr'] = format_chromosomes(chrom_offset['chr'])
+    chrom_offset['chr'] = format_chromosomes_int(chrom_offset['chr'])
     chrom_offset = chrom_offset.set_index('chr')[['chrom_offset']]
     data = data.join(chrom_offset, on='chr').copy()
 
@@ -669,7 +669,7 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
         xtick_pos = (xtick_pos + np.roll(xtick_pos, -1))/2
         xtick_pos[-1] += x_pos[-1]/2
         ax.set_xticks(xtick_pos)
-        ax.set_xticklabels([x[3:] for x in chr_ends.index], ha='center', rotation=90, va='bottom')
+        ax.set_xticklabels([str(x).replace('chr', '').replace('23', 'X').replace('24', 'Y') for x in chr_ends.index], ha='center', rotation=90, va='bottom')
         ax.tick_params(width=0)
         ax.xaxis.set_tick_params(labelbottom=False, labeltop=True, bottom=False)
         ax.set_yticks([])
