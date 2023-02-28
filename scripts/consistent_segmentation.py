@@ -1,7 +1,8 @@
-import numpy as np
+import argparse
 
 import numpy as np
 import pandas as pd
+
 try:
     from tqdm import tqdm
 except ImportError:
@@ -69,3 +70,20 @@ def consistent_segmentation(raw_data, alleles=['cn_a', 'cn_b'], chrom_col='chr')
         assert raw_data.eval(f'(end - start) * {allele}').sum() == segmented_data.eval(f'(end - start) * {allele}').sum()
 
     return segmented_data
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Segment the data in a consistent way across all samples')
+    parser.add_argument('--i', '-input', dest='input', help='Input file')
+    parser.add_argument('--o', '-output', dest='output', help='Output file')
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_args()
+
+    raw_data = load_data(args.input).reset_index()
+    segmented_data = consistent_segmentation(raw_data)
+    segmented_data.to_csv(args.output, sep='\t')
+
