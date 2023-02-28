@@ -3,6 +3,7 @@ out*/
 
 # Compiled python
 *.so
+*.c
 
 # Input files
 sim_params.json
