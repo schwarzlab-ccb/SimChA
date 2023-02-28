@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def format_chromosomes_int(chroms):
-    return chroms.str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
+    return chroms.astype(str).str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
 
 def format_chromosomes(ds):
     """ Expects pandas Series with chromosome names. 
