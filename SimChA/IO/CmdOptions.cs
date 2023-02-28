@@ -16,6 +16,9 @@ public class CmdOptions
     [Option('D', "distance", Required = false, Default = 1, HelpText = "Number of mutations to generate.")]
     public int Distance { get; set; }
     
+    [Option('R', "repeats", Required = false, Default = 1, HelpText = "Number of repeats to generate if the distance parameter is used.")]
+    public int Repeats { get; set; }
+    
     [Option('P', "cnprofiles", Required = false, Default = "", HelpText = "File with CNAs, will cause the program to write a scoring file.")]
     public string CNProfiles { get; set; }
 

@@ -20,11 +20,20 @@ public static class Fitness
                + fParams.TsgOg * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
                + fParams.Essentiality * EssTerm(essCNs);
     }
+    
+    private static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
+    {
+        Console.WriteLine("CNs:");
+        foreach ((var gene, int cn) in geneCNs)
+        {
+            Console.WriteLine($"\tCN: {cn}; {gene}" );
+        }
+    }
 
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
     public static double StressTerm(long baseCount, bool isFemale)
-        => 1 - baseCount / (double) HGRef.GetGenomeSize(isFemale);
+        => 1 - baseCount / (double) HGRef.GetGenomeLen(isFemale);
 
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs)
         => geneCNs.Sum(g => (g.CN - 2) * g.gene.DeltaFitness);

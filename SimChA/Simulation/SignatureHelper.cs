@@ -8,7 +8,7 @@ namespace SimChA.Simulation;
 
 public static class SignatureHelper
 {
-    public static Signature PickRandomSignature(Random rnd, List<Signature>? sigs)
+    public static Signature PickRandomSignature(Random rnd, List<Signature> sigs)
     {
         double probSum = sigs.Sum(ev => ev.Prob);
         double sample = ContinuousUniformDistribution.Sample(rnd, 0, probSum);

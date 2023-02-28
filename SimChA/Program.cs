@@ -5,6 +5,9 @@ using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
 
+var watch = new Stopwatch();
+watch.Start();
+
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
@@ -14,79 +17,85 @@ options.WithNotParsed(o =>
 });
 
 SimParams simParams;
-if (options.Value.ConfigFile != "")
+string configFile = options.Value.ConfigFile;
+if (configFile != "")
 {
-    simParams = FileIO.ReadSimParams(options.Value.ConfigFile);
+    simParams = FileIO.ReadSimParams(configFile);
 }
 else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, fitness, null);
+    simParams = new SimParams(seed, true, GenomeAssembly.hg38, fitness, null);
 }
 
+HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
 files.WriteSimParams(simParams);
 
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
-
-var newickString = "";
-if (options.Value.NewickFile != "")
-{
-    newickString = FileIO.ReadNewick(options.Value.NewickFile);
-}
-
-var cnas = new Dictionary<string, Karyotype>();
+// Obtain clones
+var newick = "";
+List<Clone> clones = new();
+List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
 {
-    cnas = FileIO.ReadCopyNumbers(options.Value.CNProfiles);
-}
-
-var watch = new Stopwatch();
-watch.Start();
-
-if (options.Value.CNProfiles != "")
-{
-    Console.WriteLine("Computing fitness.");
-    var results = new List<ProfileStats>();
-    int counter = 0;
-    foreach ((string sample, var kar) in cnas)
-    {
-        Console.Write($"\r{counter++}/{cnas.Count} samples processed.");
-        var profileStats = CNProfile.GetProfileStats(sample, kar, geneLists, simParams.Fitness);
-        results.Add(profileStats);
-    }
-    Console.WriteLine("Writing to disk.".PadRight(80));
-    files.WriteSampleFitness(results);
+    var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
+    clones = Simulator.ClonesFromProfiles(profiles);
 }
 else
 {
     Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
-
-    var clones = options.Value.NewickFile != ""
-        ? Parsers.ParseNewick(newickString, simParams.SexXX)
-        : Simulator.MakeClonePair(options.Value.Distance, simParams.SexXX);
     var simulator = new Simulator(rnd, simParams, geneLists);
-    var aberrations = simulator.ApplyEvents(clones[0], clones);
 
-    // TODO: do not remove the diploid clone if a newick file is provided
-    var selectClones = clones.Where(c => c.CloneId != 0).ToList();
-
-    Console.WriteLine("Writing to disk.".PadRight(80));
-    try
+    if (options.Value.NewickFile != "")
     {
-        files.WriteClones(selectClones);
-        files.WriteCopyNumbers(selectClones, simParams.SexXX);
-        files.WriteEvents(aberrations);
+        newick = FileIO.ReadNewick(options.Value.NewickFile);
+        clones = Parsers.ParseNewick(newick, simParams.SexXX);
     }
-    catch (Exception e)
+    else
     {
-        Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
-        return e.HResult;
+        clones = Simulator.MakeClones(options.Value.Distance, options.Value.Repeats, simParams.SexXX);   
+    }
+    
+    cnEvents = simulator.ApplyEvents(clones[0], clones);
+    clones = clones.Where(c => c.CloneId != 0).ToList();
+}
+
+// Fitness data
+Console.WriteLine("Computing fitness.");
+var results = new List<ProfileStats>();
+var counter = 0;
+foreach (var clone in clones)
+{
+    Console.Write($"\r{++counter}/{clones.Count} samples processed.");
+    var profileStats = CNProfile.GetProfileStats(clone, geneLists, simParams.Fitness);
+    results.Add(profileStats);
+}
+
+Console.WriteLine();
+try
+{
+    files.WriteClones(clones);
+    files.WriteCopyNumbers(clones, simParams.SexXX);
+    files.WriteSampleFitness(results);
+    if (cnEvents.Any())
+    {
+        files.WriteEvents(cnEvents);
+    }
+    if (newick != "")
+    {
+        files.WriteNewick(newick);
     }
 }
+catch (Exception e)
+{
+    Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
+    return e.HResult;
+}
+
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
 

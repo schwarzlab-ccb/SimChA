@@ -2,4 +2,4 @@
 
 namespace SimChA.DataTypes;
 
-public record ProfileStats(string Id, string Sex, double Fitness, double Stress, double Tsg, double Og, double Essentiality);
+public record ProfileStats(string Id, double Fitness, double Stress, double Tsg, double Og, double Essentiality);

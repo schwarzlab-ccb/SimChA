@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
@@ -24,42 +23,31 @@ public class FileIO
     private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
 
     private string Timestamp { get; }
-    private string RootFolder { get; }
-    private string ExperimentFolder { get; }
-    private bool IsRepeated { get; }
+    private string OutFolder { get; }
 
-    public FileIO(string rootFolder)
+    public FileIO(string outFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
-        RootFolder = rootFolder;
-        if (Directory.Exists(RootFolder))
+        OutFolder = outFolder;
+        if (!Directory.Exists(OutFolder))
         {
-            foreach (var file in new DirectoryInfo(RootFolder).GetFiles())
+            Directory.CreateDirectory(OutFolder);
+        }
+        else
+        {
+            foreach (string file in Directory.EnumerateFiles(OutFolder))
             {
-                file.Delete();
+                File.Delete(file);
             }
-        }
-        else
-        {
-            Directory.CreateDirectory(RootFolder);
-        }
-
-        if (IsRepeated)
-        {
-            ExperimentFolder = Path.Join(RootFolder, Timestamp);
-            Directory.CreateDirectory(ExperimentFolder);
-        }
-        else
-        {
-            ExperimentFolder = RootFolder;
         }
     }
 
     public void WriteClones(IEnumerable<Clone> subClones)
     {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), SUBCLONES_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
         var clonesString = new StringBuilder();
@@ -73,8 +61,8 @@ public class FileIO
     
     public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
     {
-        string outPath = Path.Combine(Path.GetFullPath(RootFolder), COPYNUMBERS_FILENAME);
-        Console.WriteLine($"Writing CopyNumbers to file {outPath}");
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
         var copyNumbersString = new StringBuilder();
@@ -90,7 +78,7 @@ public class FileIO
 
     public void WriteSimParams(SimParams simParams)
     {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SIM_PARAMS_FILENAME);
+        string filePath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
         using var file = new StreamWriter(filePath);
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
         string jsonString = JsonSerializer.Serialize(simParams, options);
@@ -100,8 +88,9 @@ public class FileIO
     public void WriteEvents(List<CNEvent> abberationList)
     {
         //TODO: Format output, talk with Tom about readable ideas
-        string filePath = Path.Combine(Path.GetFullPath(RootFolder), CN_EVENTS_FILENAME);
-        using var outputFile = new StreamWriter(filePath);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
         abberationString.Append(
             "Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
@@ -117,19 +106,27 @@ public class FileIO
         outputFile.Write(abberationString.ToString());
     }
     
+    public void WriteNewick(string newick)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), NEWICK_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var file = new StreamWriter(outPath);
+        file.Write(newick);
+    }
+    
     public void WriteSampleFitness(List<ProfileStats> samples)
     {
-        string filePath = Path.Combine(Path.GetFullPath(ExperimentFolder), SAMPLE_FITNESS_FILE);
-        using var file = new StreamWriter(filePath);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLE_FITNESS_FILE);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var file = new StreamWriter(outPath);
         var myT = typeof(ProfileStats);
-        Console.WriteLine(myT);
         var fileds = myT.GetProperties();
         var fieldNames = fileds.Select(f => f.Name).ToList();
         file.WriteLine(string.Join("\t", fieldNames));
         foreach (var sample in samples)
         {
             // Get all the field values of the record sample
-            var values = fileds.Select(f => f.GetValue(sample)).Select(v => $"{v:F4}").ToList();
+            var values = fileds.Select(f => $"{f.GetValue(sample)}:F4");
             file.WriteLine(string.Join("\t", values));
         }
     }
@@ -200,7 +197,7 @@ public class FileIO
         return geneLists;
     }
     
-    public static Dictionary<string, Karyotype> ReadCopyNumbers(string cnaProfile)
+    public static Dictionary<string, Karyotype> ReadProfiles(string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -210,8 +207,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var result = Parsers.ParseCNAProfile(cnaFile);
-            return result;
+            return Parsers.ParseCNAProfile(cnaFile);
 
         }
         catch (Exception e)
