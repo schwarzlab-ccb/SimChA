@@ -1,6 +1,10 @@
 # Output files (anywhere)
 out*/
 
+# Compiled python
+*.pyx
+*.so
+
 # Input files
 sim_params.json
 in*/
