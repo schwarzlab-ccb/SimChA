@@ -231,6 +231,8 @@ The start position is inclusive, the end exclusive.
 
 ### Plots (created by `./plots.sh`)
 
+In order to run `./plots.sh` you first have to install the consistent segmentation routine with by running `python setup.py build_ext --inplace` in the `simcha/scripts/segmentation_cython` directory (with [Cython](https://anaconda.org/anaconda/cython) installed).
+
 #### `copy_numbers.png` 
 The copy number tracks
 

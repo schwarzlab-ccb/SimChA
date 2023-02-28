@@ -7,7 +7,14 @@ try:
 except ImportError:
     def tqdm(x): return x
 
-from segmentation_cython.consistent_segmentation_step import _consistent_segmentation_step_cython
+from plotting_functions import load_data
+try:
+    from segmentation_cython.consistent_segmentation_step import \
+        _consistent_segmentation_step_cython
+except ImportError:
+    raise ImportError('Please run `python setup.py build_ext --inplace` in the '
+                      'simcha/scripts/segmentation_cython directory with cython installed')
+
 
 def consistent_segmentation(raw_data, alleles=['cn_a', 'cn_b'], chrom_col='chr'):
     '''Segment the data in a consistent way across all samples'''
