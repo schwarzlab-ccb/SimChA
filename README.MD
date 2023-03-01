@@ -86,7 +86,8 @@ The lenght of the selected segment is always at most the length of the chromosom
 The following general parameters are set in the config file.
 
 * `Seed: int` The random seed for mutations generator.
-* `IsFemale: bool` The higher the confinement the stronger the competition between clones.
+* `IsFemale: bool` Wether the Genome should include two X chromosomes (true) or one X and one Y chromosome (false).
+* `Assembly: hg19 or hg38` Which assembly for gene locations the program should use.
 
 ## Fitness calculation
 

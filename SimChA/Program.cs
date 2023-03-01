@@ -32,7 +32,7 @@ else
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX);
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
 // Obtain clones

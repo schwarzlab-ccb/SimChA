@@ -167,7 +167,8 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale)
+    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale, 
+        GenomeAssembly assembly)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
@@ -178,7 +179,7 @@ public class FileIO
         };
         foreach ((var key, string filename) in fileMap)
         {
-            string filePath = Path.Combine(folder, filename);
+            string filePath = Path.Combine(folder, assembly.ToString(), filename);
             string fileFullPath = Path.GetFullPath(filePath);
             if (!File.Exists(fileFullPath))
             {

@@ -1,6 +1,7 @@
 {
   "Seed": 0,
   "SexXX": true,
+  "Assembly": "hg38",
   "Fitness": {
     "Stress": 1,
     "TsgOg": 0.01,
