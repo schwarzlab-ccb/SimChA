@@ -21,9 +21,10 @@ def consistent_segmentation(raw_data, alleles=['cn_a', 'cn_b'], chrom_col='chr')
     '''Segment the data in a consistent way across all samples'''
 
     assert len(np.setdiff1d(raw_data.columns, ['sample_id', 'chr', 'start', 'end'])) == len(alleles)
-
-    assert (raw_data.groupby(['sample_id', chrom_col], observed=True)['start'].min() == 0).all()
-    assert (raw_data.groupby(['sample_id', chrom_col], observed=True)['end'].max().groupby(chrom_col, observed=True).std() == 0).all()
+    assert (raw_data.groupby(['sample_id', chrom_col], observed=True)['start'].min() == 0).all(), \
+        "The start position of the first segment should be 0"
+    assert (raw_data.groupby(['sample_id', chrom_col], observed=True)['end'].max().groupby(chrom_col, observed=True).std(ddof=0) == 0).all(), \
+        "Chromosome lengths differ between patients"
 
     samples = raw_data['sample_id'].unique()
 
