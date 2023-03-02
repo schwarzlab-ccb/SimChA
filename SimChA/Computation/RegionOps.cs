@@ -122,24 +122,29 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
 
-    public static List<Region> GlueNeighbours(List<Region> regions)
+    public static List<T> GlueNeighbours<T>(List<T> regions) where T : GenRange
     {
-        var newRegions = new List<Region>();
-        for (int i = 0; i < regions.Count; i += 1)
+        var newRegions = new List<T>();
+        var merged = new bool[regions.Count];
+        for (int i = 0; i < regions.Count; i++)
         {
-            // Last is just added (can be skipped it if was glued to the penultimate)
-            if (i == regions.Count - 1)
+            if (merged[i])
             {
-                newRegions.Add(regions[i]);
+                continue;
             }
-            else if (regions[i].ChrID == regions[i + 1].ChrID && regions[i].End == regions[i].Start) {
-                newRegions.Add(regions[i] with {End = regions[i + 1].End});
-                i += 1;
-            }
-            else
+            var newRegion = regions[i];
+            for (int j = i + 1; j < regions.Count; j++)
             {
-                newRegions.Add(regions[i]);
+                if (merged[j] 
+                    || regions[j].ChrNo != newRegion.ChrNo 
+                    || regions[j].Start != newRegion.End)
+                {
+                    continue;
+                }
+                newRegion = newRegion with {End = regions[j].End};
+                merged[j] = true;
             }
+            newRegions.Add(newRegion);
         }
         return newRegions;
     }

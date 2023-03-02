@@ -15,14 +15,13 @@ public static class Fitness
         var tsgCNs = CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
         var ogCNs = CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
-        LogCNs(essCNs.Where(p => p.Item2 == 0));
         return 1 
                + fParams.Stress * StressTerm(karyotype.CountBases(), karyotype.SexXX) 
                + fParams.TsgOg * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
                + fParams.Essentiality * EssTerm(essCNs);
     }
-    
-    private static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
+
+    public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
     {
         Console.WriteLine("CNs:");
         foreach ((var gene, int cn) in geneCNs)

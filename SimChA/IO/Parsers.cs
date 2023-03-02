@@ -73,6 +73,15 @@ public static class Parsers
             }
         }
     }
+
+    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, bool sexXX)
+    {
+        var contigA = new Contig(RegionOps.GlueNeighbours(regionsA));
+        var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
+        regionsA.Clear();
+        regionsB.Clear();
+        return new Karyotype(new List<Contig> {contigA, contigB}, sexXX);
+    }
     
     public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
     {
@@ -80,30 +89,28 @@ public static class Parsers
         var lastSample = "";
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        bool isFemale = true;
+        bool sexXX = true;
         string sample = "";
         cnaFile.ReadLine(); // Skip header
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
             sample = lineSplit[0];
+
             if (sample != lastSample)
             {
                 if (regionsA.Any() || regionsB.Any())
                 {
-                    result[sample] = new Karyotype(new List<Contig> {new(regionsA), new(regionsB)}, isFemale);
-                    regionsA.Clear();
-                    regionsB.Clear();
-                    isFemale = true;
+                    result[lastSample] = MakeKaryotype(regionsA, regionsB, sexXX);
+                    sexXX = true;
                 }
-
                 lastSample = sample;
             }
 
             var num = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
             if (num == ChrNo.chrY)
             {
-                isFemale = false;
+                sexXX = false;
             }
             int start = int.Parse(lineSplit[2]) - 1;
             int end = int.Parse(lineSplit[3]);
@@ -118,9 +125,8 @@ public static class Parsers
                 regionsB.Add(new Region(start, end, new ChrID(num, false)));
             }
         }
-        var contigA = new Contig(RegionOps.GlueNeighbours(regionsA));
-        var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
-        result[sample] = new Karyotype(new List<Contig> {contigA, contigB} , isFemale);
+        // Add the last sample
+        result[lastSample] = MakeKaryotype(regionsA, regionsB, sexXX);
         return result;
     }
 
@@ -138,13 +144,15 @@ public static class Parsers
             string name = genString[3];
             double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
             var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[0]);
-            var chrID = new ChrID(chrNum, isFemale);
             // Convert to zero-based [start, end) index 
-            var region = new Region(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrID);
+            var region = new GenRange(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrNum);
             var gene = new Gene(name, region, fitness);
             geneList[chrNum].Add(gene);
         }
-
+        foreach (var pair in geneList)
+        {
+            pair.Value.Sort((g1, g2) => g1.Region.Start.CompareTo(g2.Region.Start));
+        }
         return geneList;
     }
 

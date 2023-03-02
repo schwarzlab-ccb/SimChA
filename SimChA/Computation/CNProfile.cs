@@ -18,7 +18,7 @@ public class CNProfile
         double tsg = -Fitness.TsgOgTerm(tsgCNs);
         double og = Fitness.TsgOgTerm(ogCNs);
         double ess = Fitness.EssTerm(essCNs);
-        
+
         return new ProfileStats(clone.Name, fitness, stress, tsg, og, ess);
     }
 }
