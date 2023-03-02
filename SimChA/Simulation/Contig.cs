@@ -66,7 +66,7 @@ public class Contig
     {
         var copy = RegionOps.CopyRange(_regions, start, end);
         var (first, second) = RegionOps.SplitRegions(_regions, start);
-        _regions = RegionOps.ConcatRegions(new[] { first, copy, second });
+        _regions = RegionOps.GlueNeighbours(RegionOps.ConcatRegions(new[] { first, copy, second }));
     }
 
     public void Bridge(long pos, bool cutFront)
@@ -100,7 +100,7 @@ public class Contig
         newRegions.Add(RegionOps.CopyRange(_regions, locs.Last(), Length(_regions)));
         
         var selectedRegions = indices.Select(i => newRegions[i]);
-        _regions = RegionOps.ConcatRegions(selectedRegions);
+        _regions = RegionOps.GlueNeighbours(RegionOps.ConcatRegions(selectedRegions));
     }
     
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
