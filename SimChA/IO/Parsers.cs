@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 
@@ -117,7 +118,9 @@ public static class Parsers
                 regionsB.Add(new Region(start, end, new ChrID(num, false)));
             }
         }
-        result[sample] = new Karyotype(new List<Contig> {new(regionsA), new(regionsB)} , isFemale);
+        var contigA = new Contig(RegionOps.GlueNeighbours(regionsA));
+        var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
+        result[sample] = new Karyotype(new List<Contig> {contigA, contigB} , isFemale);
         return result;
     }
 

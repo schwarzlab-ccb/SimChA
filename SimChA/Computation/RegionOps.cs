@@ -122,6 +122,28 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
 
+    public static List<Region> GlueNeighbours(List<Region> regions)
+    {
+        var newRegions = new List<Region>();
+        for (int i = 0; i < regions.Count; i += 1)
+        {
+            // Last is just added (can be skipped it if was glued to the penultimate)
+            if (i == regions.Count - 1)
+            {
+                newRegions.Add(regions[i]);
+            }
+            else if (regions[i].ChrID == regions[i + 1].ChrID && regions[i].End == regions[i].Start) {
+                newRegions.Add(regions[i] with {End = regions[i + 1].End});
+                i += 1;
+            }
+            else
+            {
+                newRegions.Add(regions[i]);
+            }
+        }
+        return newRegions;
+    }
+
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
         => regions.Select(r => r with { Forward = false }).Reverse().ToList();
 

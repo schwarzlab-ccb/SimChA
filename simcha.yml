@@ -12,3 +12,5 @@ dependencies:
   - graphviz
   - biopython
   - numba
+  - cython
+  - gcc

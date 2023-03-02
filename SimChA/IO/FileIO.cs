@@ -126,7 +126,7 @@ public class FileIO
         foreach (var sample in samples)
         {
             // Get all the field values of the record sample
-            var values = fileds.Select(f => $"{f.GetValue(sample)}:F4");
+            var values = fileds.Select(f => $"{f.GetValue(sample):f4}");
             file.WriteLine(string.Join("\t", values));
         }
     }
@@ -209,7 +209,6 @@ public class FileIO
         {
             var cnaFile = new StreamReader(fileFullPath);
             return Parsers.ParseCNAProfile(cnaFile);
-
         }
         catch (Exception e)
         {
