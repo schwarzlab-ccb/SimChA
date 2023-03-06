@@ -76,12 +76,19 @@ public static class Parsers
 
     private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
     {
-        var contigA = new Contig(RegionOps.GlueNeighbours(regionsA));
+        regionsA = RegionOps.GlueNeighbours(regionsA);
+        var contigA = new Contig(regionsA);
+        regionsB = RegionOps.GlueNeighbours(regionsB);
         var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
-        return new Karyotype(new List<Contig> {contigA, contigB}, new List<GenRange>(missingRanges), sexXX);
+        // Add full missing chromosomes
+        var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, c => false);
+        regionsA.ForEach(r => chrPresent[r.ChrNo] = true);
+        regionsB.ForEach(r => chrPresent[r.ChrNo] = true);
+        var missingChrs = chrPresent.Where(pair => !pair.Value).Select(pair => new GenRange(0, HGRef.GetChromLen(pair.Key), pair.Key));
+        var totalMissing = missingChrs.Concat(missingRanges).ToList();
+        return new Karyotype(new List<Contig> {contigA, contigB}, totalMissing, sexXX);
     }
     
-   
     public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
