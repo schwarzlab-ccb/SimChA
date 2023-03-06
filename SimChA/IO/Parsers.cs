@@ -78,7 +78,7 @@ public static class Parsers
     {
         var contigA = new Contig(RegionOps.GlueNeighbours(regionsA));
         var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
-        return new Karyotype(new List<Contig> {contigA, contigB}, missingRanges, sexXX);
+        return new Karyotype(new List<Contig> {contigA, contigB}, new List<GenRange>(missingRanges), sexXX);
     }
     
    

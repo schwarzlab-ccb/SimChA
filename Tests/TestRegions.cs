@@ -30,6 +30,10 @@ public class TestRegions
 
         Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, ChrNo.chr1)));
         Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, ChrNo.chr1)));
+
+        var gene = new Gene("OR4F5", new GenRange(69090, 70008, ChrNo.chr1), 0.142321064);
+        var range = new GenRange(0, 249250621, ChrNo.chr1);
+        Assert.IsTrue(range.Overlaps(gene.Range));
     }
 
     [Test]
