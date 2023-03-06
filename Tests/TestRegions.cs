@@ -19,6 +19,20 @@ public class TestRegions
     }
 
     [Test]
+    public void TestOverlap()
+    {
+        var testRange = new GenRange(1000, 2000, ChrNo.chr1);
+        Assert.IsTrue(testRange.Overlaps(new GenRange(500, 1500, ChrNo.chr1)));
+        Assert.IsFalse(testRange.Overlaps(new GenRange(500, 1500, ChrNo.chr2)));
+        
+        Assert.IsTrue(testRange.Overlaps(new GenRange(0, 1001, ChrNo.chr1)));
+        Assert.IsFalse(testRange.Overlaps(new GenRange(0, 1000, ChrNo.chr1)));
+
+        Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, ChrNo.chr1)));
+        Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, ChrNo.chr1)));
+    }
+
+    [Test]
     public void TestDeletion()
     {
         var regions = new List<Region> { _cRegion };

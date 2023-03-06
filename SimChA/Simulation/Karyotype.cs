@@ -22,22 +22,35 @@ public class Karyotype
         => _contigs.Sum(c => c.Length());
     
     private readonly List<Contig> _contigs;
+    private readonly List<GenRange> _missingRanges;
     
     public Karyotype(bool sexXX)
     {
         _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _missingRanges = new List<GenRange>();
         SexXX = sexXX;
     }
+    
+    public bool IsMissing(GenRange other)
+        => _missingRanges.Any(range => range.Overlaps(other));
 
+    public long MissingLen()
+        => _missingRanges.Sum(r => r.Length);
+    
+    public double CalcCoverage()
+        => (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
+    
     public Karyotype(Karyotype other)
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
+        _missingRanges = other._missingRanges;
         SexXX = other.SexXX;
     }
     
-    public Karyotype(List<Contig> contigs, bool sexXX)
+    public Karyotype(List<Contig> contigs, List<GenRange> missingRanges, bool sexXX)
     {
         _contigs = contigs;
+        _missingRanges = missingRanges;
         SexXX = sexXX;
     }
 
