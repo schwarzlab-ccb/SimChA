@@ -46,7 +46,7 @@ public class Karyotype
     }
 
     public override string ToString()
-        => CountContigs() > 0 ? "[\n\t" + string.Join(",\n\t", _contigs.Where(c => c.Any())) + "\n]\n" : "[]";
+        => CountContigs() > 0 ? "[" + string.Join(",", _contigs.Where(c => c.Any())) + "]" : "[]";
 
     public bool IsMissing(GenRange other)
         => _missingRanges.Any(range => range.Overlaps(other));
@@ -54,8 +54,11 @@ public class Karyotype
     public long MissingLen()
         => _missingRanges.Sum(r => r.Length);
     
-    public double CalcCoverage()
-        => (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
+    public double CalcPloidy()
+        => CountBases() / (double) HGRef.GetGenomeLen(SexXX);
+    
+    public double CalcMissing()
+        => 1 - (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
     
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));

@@ -22,9 +22,8 @@ public class Clone
     public string Name { get; }
     public Karyotype Karyotype { set; get; }
     public int TotalMutations { get; }
-
-    public override string ToString()
-        => $"ID: {CloneId}, Name: {Name}, Sex: {Karyotype.Sex}, Parent: {ParentId}, Events: {DistToParent}, Coverage: {Karyotype.CalcCoverage()}, Karyotype: {Karyotype}";
-
+    public static string Header() => "ID\tName\tSex\tParent\tEvents\tPloidy\tMissing\tKaryotype";
+    public override string ToString() 
+        => $"{CloneId}\t{Name}\t{Karyotype.Sex}\t{ParentId}\t{DistToParent}\t{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{Karyotype}";
     public Karyotype CopyKaryotype() => new(Karyotype);
 }

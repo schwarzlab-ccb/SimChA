@@ -2,7 +2,6 @@
 
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
