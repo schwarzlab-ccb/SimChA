@@ -55,7 +55,7 @@ public class Karyotype
         => _missingRanges.Sum(r => r.Length);
     
     public double CalcPloidy()
-        => CountBases() / (double) HGRef.GetGenomeLen(SexXX);
+        => 2.0 * CountBases() / HGRef.GetGenomeLen(SexXX);
     
     public double CalcMissing()
         => 1 - (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
