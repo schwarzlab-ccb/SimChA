@@ -117,6 +117,14 @@ public class Karyotype
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
     
+    public string ApplyInvertedDuplication(int contigID, long startPos, long endPos)
+    {
+        var contig = _contigs[contigID];
+        contig.DuplicateRange(startPos, endPos);
+        contig.InvertRange(endPos, endPos + (endPos - startPos));
+        return  $"contig:{contigID};start:{startPos};end:{endPos}";
+    }
+    
     public string ApplyInternalInversion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
@@ -194,6 +202,7 @@ public class Karyotype
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
                 long segLen = Sampling.GetSegLength(rnd, lenA, cnEventP.Params["Mean"]);
                 long start = Sampling.GetInternalPos(rnd, lenA- segLen);
                 long end = start + segLen;
@@ -201,7 +210,8 @@ public class Karyotype
                 {
                     CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
                     CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
-                    _ => ApplyInternalInversion(contigA, start, end)
+                    CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
+                    CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
                 };
 
             case CNEventType.Translocation:

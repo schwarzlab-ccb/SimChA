@@ -13,6 +13,7 @@ public enum CNEventType
     InternalDeletion,
     InternalDuplication,
     InternalInversion,
+    InvertedDuplication,
     Translocation,
     BreakageFusionBridge,
     WholeGenomeDoubling,
