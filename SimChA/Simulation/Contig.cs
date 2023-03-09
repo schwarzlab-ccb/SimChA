@@ -2,7 +2,6 @@
 
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
@@ -104,5 +103,5 @@ public class Contig
     }
     
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => g.Region.IsInside(r)));
+        => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
 }

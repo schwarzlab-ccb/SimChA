@@ -11,8 +11,8 @@ public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
     private const string NEWICK_FILENAME = "parent_graph.new";
-    private const string SUBCLONES_FILENAME = "subclones.out";
-    private const string COPYNUMBERS_FILENAME = "copynumbers.out";
+    private const string SUBCLONES_FILENAME = "clones.tsv";
+    private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
@@ -50,13 +50,11 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
-        var clonesString = new StringBuilder();
+        outputFile.WriteLine(Clone.Header());
         foreach (var subClone in subClones)
         {
-            clonesString.AppendLine(subClone.ToString());
+            outputFile.WriteLine(subClone.ToString());
         }
-
-        outputFile.Write(clonesString.ToString());
     }
     
     public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
@@ -92,8 +90,7 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
-        abberationString.Append(
-            "Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
+        abberationString.Append("Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
         foreach (var abberation in abberationList)
         {
             abberationString.Append($"{abberation.CloneName}\t" +

@@ -9,6 +9,9 @@ out*/
 sim_params.json
 in*/
 
+# Notebooks
+notebooks*
+
 # Jupyter Notebooks
 .ipynb_checkpoints
 */.ipynb_checkpoints/*

@@ -3,4 +3,4 @@
 namespace SimChA.DataTypes;
 
 [Serializable]
-public record CNEventP(CNEventType Type, double Prob, Dictionary<string, double>? Params = null);
+public record CNEventP(CNEventType Type, double Prob, Dictionary<string, double>? Params = null, Dictionary<ChrNo, double>? Targets = null);

@@ -22,27 +22,43 @@ public class Karyotype
         => _contigs.Sum(c => c.Length());
     
     private readonly List<Contig> _contigs;
+    private readonly List<GenRange> _missingRanges;
     
     public Karyotype(bool sexXX)
     {
         _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _missingRanges = new List<GenRange>();
         SexXX = sexXX;
     }
-
+    
     public Karyotype(Karyotype other)
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
+        _missingRanges = other._missingRanges;
         SexXX = other.SexXX;
     }
     
-    public Karyotype(List<Contig> contigs, bool sexXX)
+    public Karyotype(List<Contig> contigs, List<GenRange> missingRanges, bool sexXX)
     {
         _contigs = contigs;
+        _missingRanges = missingRanges;
         SexXX = sexXX;
     }
 
     public override string ToString()
-        => CountContigs() > 0 ? "[\n\t" + string.Join(",\n\t", _contigs.Where(c => c.Any())) + "\n]\n" : "[]";
+        => CountContigs() > 0 ? "[" + string.Join(",", _contigs.Where(c => c.Any())) + "]" : "[]";
+
+    public bool IsMissing(GenRange other)
+        => _missingRanges.Any(range => range.Overlaps(other));
+
+    public long MissingLen()
+        => _missingRanges.Sum(r => r.Length);
+    
+    public double CalcPloidy()
+        => 2.0 * CountBases() / HGRef.GetGenomeLen(SexXX);
+    
+    public double CalcMissing()
+        => 1 - (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
     
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
@@ -98,6 +114,14 @@ public class Karyotype
     {
         var contig = _contigs[contigID];
         contig.DuplicateRange(startPos, endPos);
+        return  $"contig:{contigID};start:{startPos};end:{endPos}";
+    }
+    
+    public string ApplyInvertedDuplication(int contigID, long startPos, long endPos)
+    {
+        var contig = _contigs[contigID];
+        contig.DuplicateRange(startPos, endPos);
+        contig.InvertRange(endPos, endPos + (endPos - startPos));
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
     
@@ -178,6 +202,7 @@ public class Karyotype
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
                 long segLen = Sampling.GetSegLength(rnd, lenA, cnEventP.Params["Mean"]);
                 long start = Sampling.GetInternalPos(rnd, lenA- segLen);
                 long end = start + segLen;
@@ -185,7 +210,8 @@ public class Karyotype
                 {
                     CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
                     CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
-                    _ => ApplyInternalInversion(contigA, start, end)
+                    CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
+                    CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
                 };
 
             case CNEventType.Translocation:

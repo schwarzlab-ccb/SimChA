@@ -72,14 +72,17 @@ public static class HGRef
 
     private static Dictionary<GenomeAssembly, GenomeReference> Refs { get; }
 
-    public static Region[] GetGenotype(bool isFemale)
-        => isFemale ? Refs[Assembly].XXGenome : Refs[Assembly].XYGenome;
+    public static Region[] GetGenotype(bool sexXX)
+        => sexXX ? Refs[Assembly].XXGenome : Refs[Assembly].XYGenome;
 
-    public static long GetGenomeLen(bool isFemale)
-        => isFemale ? Refs[Assembly].XXGenomeLen : Refs[Assembly].XYGenomeLen;
+    public static long GetGenomeLen(bool sexXX)
+        => sexXX ? Refs[Assembly].XXGenomeLen : Refs[Assembly].XYGenomeLen;
+
+    public static long GetChromLen(ChrNo chrNo)
+        => GetChrs(Assembly)[chrNo];
     
-    public static IEnumerable<ChrNo> ChrIDsForSex(bool isFemale)
-        => Enum.GetValues<ChrNo>().Take(isFemale ? AUTOSOME_COUNT + 1 : AUTOSOME_COUNT + 2);
+    public static IEnumerable<ChrNo> ChrIDsForSex(bool sexXX)
+        => Enum.GetValues<ChrNo>().Take(sexXX ? AUTOSOME_COUNT + 1 : AUTOSOME_COUNT + 2);
     
     public static Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) 
         => new(0, GetChrs(Assembly)[chrNo], new ChrID(chrNo, isFirstHaplotype));

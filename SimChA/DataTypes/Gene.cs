@@ -2,4 +2,4 @@
 
 namespace SimChA.DataTypes;
 
-public record Gene(string Name, GenRange Region, double DeltaFitness);
+public record Gene(string Name, GenRange Range, double DeltaFitness);

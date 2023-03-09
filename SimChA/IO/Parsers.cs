@@ -74,41 +74,58 @@ public static class Parsers
         }
     }
 
-    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, bool sexXX)
+    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
     {
-        var contigA = new Contig(RegionOps.GlueNeighbours(regionsA));
+        regionsA = RegionOps.GlueNeighbours(regionsA);
+        var contigA = new Contig(regionsA);
+        regionsB = RegionOps.GlueNeighbours(regionsB);
         var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
-        regionsA.Clear();
-        regionsB.Clear();
-        return new Karyotype(new List<Contig> {contigA, contigB}, sexXX);
+        // Add full missing chromosomes
+        var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, c => false);
+        regionsA.ForEach(r => chrPresent[r.ChrNo] = true);
+        regionsB.ForEach(r => chrPresent[r.ChrNo] = true);
+        var missingChrs = chrPresent.Where(pair => !pair.Value).Select(pair => new GenRange(0, HGRef.GetChromLen(pair.Key), pair.Key));
+        var totalMissing = missingChrs.Concat(missingRanges).ToList();
+        return new Karyotype(new List<Contig> {contigA, contigB}, totalMissing, sexXX);
     }
     
     public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
-        var lastSample = "";
+        var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
         bool sexXX = true;
+        var lastSample = "";
         string sample = "";
+        var lastChr = ChrNo.chr1;
+        var lastPos = 0L;
         cnaFile.ReadLine(); // Skip header
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
             sample = lineSplit[0];
 
+            // Set the new sample
             if (sample != lastSample)
             {
                 if (regionsA.Any() || regionsB.Any())
                 {
-                    result[lastSample] = MakeKaryotype(regionsA, regionsB, sexXX);
-                    sexXX = true;
+                    result[lastSample] = MakeKaryotype(regionsA, regionsB, missingRanges, sexXX);
                 }
+                // Reset
+                regionsA.Clear();
+                regionsB.Clear();
+                missingRanges.Clear();
                 lastSample = sample;
+                lastChr = ChrNo.chr1;
+                lastPos = 0L;
+                sexXX = true;
             }
 
-            var num = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
-            if (num == ChrNo.chrY)
+            // Parse the line
+            var chrNo = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
+            if (chrNo == ChrNo.chrY)
             {
                 sexXX = false;
             }
@@ -116,17 +133,45 @@ public static class Parsers
             int end = int.Parse(lineSplit[3]);
             int cnA = int.Parse(lineSplit[4]);
             int cnB = int.Parse(lineSplit[5]);
+            
+            // Check for missing ranges
+            if (chrNo == lastChr)
+            {
+                // Range skipped
+                if (lastPos != start)
+                {
+                    missingRanges.Add(new GenRange(lastPos, start, lastChr));
+                }
+            }
+            else
+            {
+                // Till the end of a chromosome
+                if (lastPos != HGRef.GetChromLen(lastChr))
+                {
+                    missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
+                }
+                // Start of a chromosome
+                if (start != 0)
+                {
+                    missingRanges.Add(new GenRange(0, start, chrNo));
+                }
+            }
+            lastChr = chrNo;
+            lastPos = end;
+            
+            // Add the new regions
             for (int i = 0; i < cnA; i++)
             {
-                regionsA.Add(new Region(start, end, new ChrID(num, true)));
+                regionsA.Add(new Region(start, end, new ChrID(chrNo, true)));
             }
             for (int i = 0; i < cnB; i++)
             {
-                regionsB.Add(new Region(start, end, new ChrID(num, false)));
+                regionsB.Add(new Region(start, end, new ChrID(chrNo, false)));
             }
         }
+        
         // Add the last sample
-        result[lastSample] = MakeKaryotype(regionsA, regionsB, sexXX);
+        result[lastSample] = MakeKaryotype(regionsA, regionsB, missingRanges, sexXX);
         return result;
     }
 
@@ -151,7 +196,7 @@ public static class Parsers
         }
         foreach (var pair in geneList)
         {
-            pair.Value.Sort((g1, g2) => g1.Region.Start.CompareTo(g2.Region.Start));
+            pair.Value.Sort((g1, g2) => g1.Range.Start.CompareTo(g2.Range.Start));
         }
         return geneList;
     }
