@@ -14,7 +14,7 @@ public class CNProfile
         var essCNs = Fitness.CalcCNs(geneLists[GeneListType.Essentiality], kar);
         
         double fitness = Fitness.Calculate(kar, geneLists, fParams);
-        double stress = Fitness.StressTerm(kar.CountBases(), kar.SexXX);
+        double stress = Fitness.StressTerm(kar.GenomeLen(), kar.SexXX);
         double tsg = -Fitness.TsgOgTerm(tsgCNs);
         double og = Fitness.TsgOgTerm(ogCNs);
         double ess = Fitness.EssTerm(essCNs);

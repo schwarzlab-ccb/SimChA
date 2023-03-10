@@ -18,7 +18,7 @@ public class Karyotype
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
     
-    public long CountBases() 
+    public long GenomeLen() 
         => _contigs.Sum(c => c.Length());
     
     private readonly List<Contig> _contigs;
@@ -55,7 +55,7 @@ public class Karyotype
         => _missingRanges.Sum(r => r.Length);
     
     public double CalcPloidy()
-        => 2.0 * CountBases() / HGRef.GetGenomeLen(SexXX);
+        => 2.0 * GenomeLen() / HGRef.GetGenomeLen(SexXX);
     
     public double CalcMissing()
         => 1 - (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
@@ -168,7 +168,19 @@ public class Karyotype
     
     public string ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence, List<long> breakpoints)
     {
-        throw new NotImplementedException();
+        var subcontigs = 
+            Enumerable.Range(0, contigIDs.Count)
+                .Select(i => _contigs[contigIDs[i]].Scatter(stops[i]))
+                .SelectMany(x => x)
+                .ToList();
+        var ordered = Contig.Concat(sequence.Select(i => subcontigs[i]));
+        var newContigs = ordered.Scatter(breakpoints).ToList();
+        for (var i = 0; i < contigIDs.Count; i++)
+        {
+            _contigs[contigIDs[i]] = newContigs[i];
+        }
+        var stringIDs = string.Join(",", contigIDs);
+        return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
 
 
@@ -239,19 +251,19 @@ public class Karyotype
                 int chrCount = Sampling.GetChromoplexySiteCount(rnd);
                 var contigIDs = new List<int>();
                 var stopsForConting = new List<List<long>>();
-                long totalLen = 0;
-                int totalFrags = 0;
+                var totalLen = 0L;
+                var totalFrags = 0;
                 for (var i = 0; i < chrCount; i++, IDsEnumerator.MoveNext())
                 {
                     contigIDs.Add(IDsEnumerator.Current);
                     totalLen += _contigs[IDsEnumerator.Current].Length();
                     int partsCount = Sampling.GetChromothripsisSiteCount(rnd, lenA);
                     totalFrags += partsCount;
-                    stopsForConting.Append(Sampling.GetStopsForShards(rnd, lenA, partsCount));
+                    stopsForConting.Add(Sampling.GetStopsForShards(rnd, lenA, partsCount));
                 }
                 var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd);
                 var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
-                return "";
+                return ApplyChromoplexy(contigIDs, stopsForConting, sequence, breakpoints);
                 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);

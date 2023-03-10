@@ -63,13 +63,13 @@ public class TestFitness
     {
         var xxKaryotype = new Karyotype(true);
         var xyKaryotype = new Karyotype(false);
-        Assert.AreEqual(0, Fitness.StressTerm(xxKaryotype.CountBases(), true), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(xyKaryotype.CountBases(), false), EPSILON);
-        Assert.AreNotEqual(0, Fitness.StressTerm(xxKaryotype.CountBases(), false));
+        Assert.AreEqual(0, Fitness.StressTerm(xxKaryotype.GenomeLen(), true), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(xyKaryotype.GenomeLen(), false), EPSILON);
+        Assert.AreNotEqual(0, Fitness.StressTerm(xxKaryotype.GenomeLen(), false));
         xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(xxKaryotype.CountBases(), true), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(xxKaryotype.GenomeLen(), true), EPSILON);
         foreach (int i in Enumerable.Range(0, HGRef.CHR_COUNT)) { xyKaryotype.ApplyContigDeletion(i); }
-        Assert.AreEqual(1, Fitness.StressTerm(xyKaryotype.CountBases(), false), EPSILON);
+        Assert.AreEqual(1, Fitness.StressTerm(xyKaryotype.GenomeLen(), false), EPSILON);
     }
     
     [Test]

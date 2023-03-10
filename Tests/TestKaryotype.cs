@@ -139,6 +139,31 @@ public class TestKaryotype
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));
     }
     
+    
+    [Test]
+    public void TestChromoplexyRnd()
+    {
+        Assert.AreNotEqual("", _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)));
+    }
+    
+    [Test]
+    public void TestChromoplexy()
+    {
+        var ids = new List<int> { 0, 1, 2 };
+        var stops = new List<List<long>>
+        {
+            new() { TEST_FRAC * 1, TEST_FRAC * 2 },
+            new() { TEST_FRAC * 3, TEST_FRAC * 4, TEST_FRAC * 5 },
+            new() { TEST_FRAC * 6, TEST_FRAC * 7 },
+        };
+        var sequence = new List<int> { 0, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+        var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
+        var result = _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
+        Assert.AreEqual("contigs:[0,1,2];fragments:10", result);
+        Assert.AreEqual(46, _kar.CountContigs());
+        Assert.AreEqual(HGRef.GetGenomeLen(_kar.SexXX), _kar.GenomeLen());
+    }
+    
     [Test]
     public void TestClean()
     {

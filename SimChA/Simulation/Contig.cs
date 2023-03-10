@@ -19,6 +19,9 @@ public class Contig
 
     public Contig(Contig other) 
         => _regions = new List<Region>(other._regions);
+    
+    public static Contig Concat(IEnumerable<Contig> contigs) 
+        => new(contigs.SelectMany(c => c._regions));
 
     public long Length() 
         => Length(_regions);
@@ -83,6 +86,12 @@ public class Contig
             var inverse = RegionOps.InvertRegions(first);
             _regions = RegionOps.ConcatRegions(first, inverse);
         }
+    }
+
+    public IEnumerable<Contig> Scatter(List<long> locs)
+    {
+        var regions = RegionOps.Scatter(locs, _regions);
+        return regions.Select(r => new Contig(r));
     }
 
     public void ScatterAndGather(List<long> locs, IEnumerable<int> indices)

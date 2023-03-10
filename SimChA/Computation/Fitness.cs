@@ -16,7 +16,7 @@ public static class Fitness
         var ogCNs = CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
         return 1 
-               + fParams.Stress * StressTerm(karyotype.CountBases(), karyotype.SexXX) 
+               + fParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
                + fParams.TsgOg * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
                + fParams.Essentiality * EssTerm(essCNs);
     }
