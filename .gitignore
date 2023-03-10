@@ -11,6 +11,7 @@ in*/
 
 # Notebooks
 notebooks*
+playground/*
 
 # Jupyter Notebooks
 .ipynb_checkpoints
