@@ -7,6 +7,8 @@ namespace SimChA.Simulation;
 
 public class Contig
 {
+    public bool Circular { get; set; }
+    
     private List<Region> _regions;
 
     public Contig(Region initialRegion) 

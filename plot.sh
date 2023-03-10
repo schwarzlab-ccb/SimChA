@@ -5,7 +5,7 @@ if [ $# -gt 0 ]; then out=$1; else out="./out"; fi
 
 echo "Selected data folder $out"
 echo "Creating consistent segmentation"
-python3 scripts/consistent_segmentation.py -i $out/copynumbers.out -o $out/copynumbers_consistent.out
+python3 scripts/consistent_segmentation.py -i $out/copynumbers.tsv -o $out/copynumbers_consistent.out
 
 echo "Plotting CN Tracks"
 # check if tree file exists
