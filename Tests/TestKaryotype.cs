@@ -128,6 +128,24 @@ public class TestKaryotype
         Assert.AreEqual(contigLen, _kar.ContigLen(1));
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
     }
+    
+    [Test]
+    public void TestApplyAberation()
+    {
+        var pars = new Dictionary<string, double> { ["Mean"] = 0.1 };
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.ChromDeletion, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.ChromDuplication, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalDuplication, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalInversion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InvertedDuplication, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Translocation, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
+    }
 
     [Test]
     public void TestChromothripsis()
@@ -138,13 +156,7 @@ public class TestKaryotype
         _kar.ApplyChromothripsis(0, stops, selection);
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));
     }
-    
-    
-    [Test]
-    public void TestChromoplexyRnd()
-    {
-        Assert.AreNotEqual("", _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)));
-    }
+
     
     [Test]
     public void TestChromoplexy()
