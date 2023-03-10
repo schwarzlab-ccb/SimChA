@@ -184,7 +184,7 @@ public class Karyotype
     }
 
 
-    public string ApplyAberration(Random rnd, CNEventP cnEventP)
+    public string ApplyCNEvent(Random rnd, CNEventP cnEventP)
     {
         using var IDsEnumerator = Enumerable
             .Range(0, _contigs.Count)

@@ -46,7 +46,7 @@ public class Simulator
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {i+1}/{child.DistToParent}. Attempt {++j}");
                 var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
                 var eventP = SignatureHelper.PickRandomEventP(_rnd, sig.Events);
-                string eventString = child.Karyotype.ApplyAberration(_rnd, eventP);
+                string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + i;
                 double dFit = newFitness - oldFitness;

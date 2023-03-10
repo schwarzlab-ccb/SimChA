@@ -130,21 +130,21 @@ public class TestKaryotype
     }
     
     [Test]
-    public void TestApplyAberation()
+    public void TestApplyCNEvent()
     {
         var pars = new Dictionary<string, double> { ["Mean"] = 0.1 };
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.ChromDeletion, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.ChromDuplication, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalInversion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InvertedDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Translocation, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyAberration(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.ChromDeletion, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.ChromDuplication, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDuplication, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalInversion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InvertedDuplication, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Translocation, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
     }
 
     [Test]
@@ -181,7 +181,7 @@ public class TestKaryotype
     {
         for (int i = 0; i < HGRef.CHR_COUNT; i++)
         {
-            _kar.ApplyAberration(_rnd, _del);
+            _kar.ApplyCNEvent(_rnd, _del);
         }
         Assert.AreEqual("[]", _kar.ToString());
     }
@@ -198,7 +198,7 @@ public class TestKaryotype
         Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
         
         // Removes a gene and a contig at the same time
-        _kar.ApplyAberration(_rnd, _del);
+        _kar.ApplyCNEvent(_rnd, _del);
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
     }
