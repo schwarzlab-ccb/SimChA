@@ -20,7 +20,7 @@ public static class Sampling
         => rnd.Next(1, (int)Math.Pow(contigLen, 1 / 3f));
     
     // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
-    private static int GetChromoplexySiteCount(Random rnd)
+    public static int GetChromoplexySiteCount(Random rnd)
         => rnd.NextSingle() switch
         {
             var n when n < .46 => 3,

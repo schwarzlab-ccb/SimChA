@@ -1,4 +1,5 @@
 ﻿using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.Computation;
 
@@ -160,4 +161,25 @@ public static class RegionOps
     
     public static long GetLength(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
+    public static List<List<Region>> Scatter(List<long> locs, List<Region> regions)
+    {
+        // First region
+        var newRegions = new List<List<Region>> { RegionOps.CopyRange(regions, 0, locs[0]) };
+        // Internal regions
+        for (int i = 0; i < locs.Count - 1; i++)
+        {
+            long start = locs[i];
+            long end = locs[i + 1];
+            var copy = RegionOps.CopyRange(regions, start, end);
+            newRegions.Add(copy);
+        }
+        // Last region
+        newRegions.Add(RegionOps.CopyRange(regions, locs.Last(), Contig.Length(regions)));
+        return newRegions;
+    }
+    public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices)
+    {
+        var selectedRegions = indices.Select(i => newRegions[i]);
+        return RegionOps.GlueNeighbours(RegionOps.ConcatRegions(selectedRegions));
+    }
 }

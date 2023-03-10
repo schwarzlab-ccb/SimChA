@@ -166,6 +166,12 @@ public class Karyotype
         return $"contig:{contigID};fragments:{stops.Count + 1};lost:{contigLen - contig.Length()}B";
     }
     
+    public string ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence, List<long> breakpoints)
+    {
+        throw new NotImplementedException();
+    }
+
+
     public string ApplyAberration(Random rnd, CNEventP cnEventP)
     {
         using var IDsEnumerator = Enumerable
@@ -230,6 +236,23 @@ public class Karyotype
                 return ApplyChromothripsis(contigA, stops, order);
    
             case CNEventType.Chromoplexy:
+                int chrCount = Sampling.GetChromoplexySiteCount(rnd);
+                var contigIDs = new List<int>();
+                var stopsForConting = new List<List<long>>();
+                long totalLen = 0;
+                int totalFrags = 0;
+                for (var i = 0; i < chrCount; i++, IDsEnumerator.MoveNext())
+                {
+                    contigIDs.Add(IDsEnumerator.Current);
+                    totalLen += _contigs[IDsEnumerator.Current].Length();
+                    int partsCount = Sampling.GetChromothripsisSiteCount(rnd, lenA);
+                    totalFrags += partsCount;
+                    stopsForConting.Append(Sampling.GetStopsForShards(rnd, lenA, partsCount));
+                }
+                var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd);
+                var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
+                return "";
+                
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
