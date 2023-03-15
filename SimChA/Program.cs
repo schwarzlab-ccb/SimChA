@@ -57,7 +57,7 @@ else
     }
     else
     {
-        clones = Simulator.MakeClones(options.Value.Distance, options.Value.Repeats, simParams.SexXX);   
+        clones = Simulator.MakeClones(rnd, options.Value.Distance, options.Value.Repeats, simParams.SexXX);   
     }
     cnEvents = simulator.ApplyEvents(clones[0], clones);
     clones = clones.Where(c => c.CloneId != 0).ToList();

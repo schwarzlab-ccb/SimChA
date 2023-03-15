@@ -139,12 +139,12 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDuplication, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalInversion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InvertedDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Translocation, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.WholeGenomeDoubling, 1.0)); });
     }
 
     [Test]
@@ -155,6 +155,14 @@ public class TestKaryotype
         var selection = new List<int> { 3, 1}; // Keep only a TEST_FRAC chunk and the tail
         _kar.ApplyChromothripsis(0, stops, selection);
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));
+    }
+
+    
+    
+    [Test]
+    public void TestRnd()
+    {
+        _rnd.Next(1, 1);
     }
 
     
