@@ -58,6 +58,7 @@ public static class Parsers
                     case CNEventType.InternalDeletion:
                     case CNEventType.InternalDuplication:
                     case CNEventType.InternalInversion:
+                    case CNEventType.InvertedDuplication:
                         if (ev.Params == null || !ev.Params.ContainsKey("Mean"))
                         {
                             throw new Exception($"The mean of {ev.Type} in signature {sig.Id} not specified.");
@@ -68,7 +69,7 @@ public static class Parsers
                     case CNEventType.Chromoplexy:
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException($"Unknown event type {ev.Type}");
                 }
             }
         }
