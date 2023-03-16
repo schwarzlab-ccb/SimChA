@@ -22,7 +22,7 @@ The program has been tested on:
 
 ### Simulation
 
-The simulation code is written in **C# 8**. **.NET 5.0** or newer is requred. We recommend installation using *Conda*:
+The simulation code is written in **C# 8**. **.NET 6.1** is requred. We recommend installation using *Conda*:
 ```
 conda install -c conda-forge dotnet
 ``` 
@@ -187,12 +187,16 @@ TODO
 
 ### Pyrgo 
 ![Pyrgo](./doc/img/pyrgo_128.png)
+TODO
 
 ### Rigma
 ![Rigma](./doc/img/rigma_128.png)
+TODO
 
 ### Tyfonas
 ![Tyfonas](./doc/img/tyfonas_128.png)
+
+TODO
 
 ## Output
 
