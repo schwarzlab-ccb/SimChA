@@ -26,7 +26,7 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, GenomeAssembly.hg38, fitness, null);
+    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null);
 }
 
 HGRef.Assembly = simParams.Assembly;
@@ -57,7 +57,7 @@ else
     }
     else
     {
-        clones = Simulator.MakeClones(rnd, options.Value.Distance, options.Value.Repeats, simParams.SexXX);   
+        clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
     }
     cnEvents = simulator.ApplyEvents(clones[0], clones);
     clones = clones.Where(c => c.CloneId != 0).ToList();

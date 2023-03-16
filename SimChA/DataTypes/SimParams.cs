@@ -5,6 +5,8 @@ namespace SimChA.DataTypes;
 public record SimParams(
     int Seed,
     bool SexXX,
+    int EventCount,
+    Distribution Distribution,
     GenomeAssembly Assembly,
     FitnessParams Fitness,
     List<Signature>? Signatures);

@@ -53,41 +53,29 @@ Use `dotnet run -- [options]` to specify any of the following:
 
 ```
   -O, --output    (Default: ./out) The path to the output files.
-  -C, --config    (Default: ) A json file with configuration of the experiment.
-  -N --newick     (Default: ) A path to a newick file with the phylogenetic tree.
-  -D --distance   (Default: 1) A number of mutations (mutation distance) to simulate if a newick file is not provided.
-  -G --genes (Default: /) The path for the tsv-files with the essential-, tsg- and og-genes with scores
+  -C, --config    (Default: ./default_params.json) A json file with configuration of the experiment.
+  -N --newick path     A path to a newick file with the phylogenetic tree.
+  -R --repeats n   Will run the simulation and generate n independent samples.
+  -P --profile path   A path to a file with copy number profiles.
+  --data (Default: ./data) The path for the tsv-files with the essential-, tsg- and og-genes with scores. The files should be named: essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.
 ```
 
 ## Parameters
 
-Default parameters are found in the file: `default_params.json`.
+Default parameters are found in the file: `default_params.json`. The exact parameters are dependent on the execution mode. The parameters are:
 
-We simulate a complex set of chromosomal aberrations (copy number changes), whose parametrizations are provided by the configuration file. 
+### Common
+* `Seed: int` - The seed for the random number generator.
+* `SexXX: bool` - If true, uses the XX genome, otherwise the XY genome.
+* `Assembly: string` - The assembly to use. Currently hg19 and hg38 are supported.
+* `Fitness: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
 
-The parameters change based on the nature of the aberration. 
+### Repeats mode
+* `EventCount: int` - The mean number of events per sample.
+* `Distribution: ["Uniform", "Exponential", "Normal"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
 
-### Likelihood 
+### Simulation mode
 
-A common to all aberrations is `Likelihood`. This is scaled across all aberrations, the probability that an abberation x is selected is the `Likelihood` of x divided by the sum of `Likelihood` across all aberrations.
-
-### MeanLength
-
-For aberrations that affect a subsection of a chromosome, the length of this subsection is sampled from an exponential distribution with `Lambda = 1 / MeanLength`, meaning that the average length of the subsection is the number of bases of the chromosome times `MeanLength`.
-
-The lenght of the selected segment is always at most the length of the chromosome - 2.
-
-![MeanLength distribution plot](./doc/img/tailLength.png)
-
-**Note:** the length of the chromosome is at the time of the mutation, not the length of the reference!
-
-### Other parameters
-
-The following general parameters are set in the config file.
-
-* `Seed: int` The random seed for mutations generator.
-* `IsFemale: bool` Wether the Genome should include two X chromosomes (true) or one X and one Y chromosome (false).
-* `Assembly: hg19 or hg38` Which assembly for gene locations the program should use.
 
 ## Fitness calculation
 
@@ -111,7 +99,7 @@ For each gene, the:
 A single chromosome is selected at random and removed.
 
 ##### Params:
-* `Likelihood: float`.
+* `Prob: float`.
 
 
 ### Chromosome Duplication
@@ -119,23 +107,23 @@ A single chromosome is selected at random and removed.
 A single chromosome is selected at random and duplicated.
 
 ##### Params:
-* `Likelihood: float`.
+* `Prob: float`.
 
 ### Tail Deletion
 
 A single chromosome is selected, then an either end thereof, lastly a length of the segmend. The segment is then removed from the end of the chromosome.
 
 ##### Params:
-* `Likelihood: float`,
-* `MeanLength: float`.
+* `Prob: float`,
+* `Mean: float`.
 
 ### Internal Deletion
 
 A single chromosome is selected, then a length of the segmend. This segment is then removed from a uniformly distrubuted position on the chromosome excluding the first and the last base.
 
 ##### Params:
-* `Likelihood: float`,
-* `MeanLength: float`.
+* `Prob: float`,
+* `Mean: float`.
 
 ### Internal Duplication
 A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
@@ -143,15 +131,22 @@ A single chromosome is selected, then a length of the segmend. This segment is t
 ![Translocation Cartoon](./doc/img/InternalDuplication.png)
 
 ##### Params:
-* `Likelihood: float`,
-* `MeanLength: float`.
+* `Prob: float`,
+* `Mean: float`.
 
 ### Internal Inversion
 A single chromosome is selected, then a length of the segmend. This segment is then cut and pasted to the original position in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
 
 ##### Params:
-* `Likelihood: float`,
-* `MeanLength: float`.
+* `Prob: float`,
+* `Mean: float`.
+
+### Inverted Duplication
+A single chromosome is selected, then a length of the segmend. This segment is then copied and pasted at the end of the segment in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+
+##### Params:
+* `Prob: float`,
+* `Mean: float`.
 
 ### Translocation
 Two chromosomes are selected and on each of those a single uniformly distributed position. 
@@ -161,7 +156,7 @@ Each of the choromosomes is split on the position. The first part of the first c
 ![Translocation Cartoon](./doc/img/translocation.png)
 
 ##### Params:
-* `Likelihood: float`.
+* `Prob: float`.
 
 ### BreakageFusionBridge
 
@@ -171,18 +166,22 @@ A chromosome and its tail is selected (see above). The tail is then removed, the
 ![Translocation Cartoon](./doc/img/BFB_cartoon.png)
 
 ##### Params:
-* `Likelihood: float`,
-* `MeanLength: float`.
+* `Prob: float`,
+* `Mean: float`.
 
 ### WholeGenomeDoubling
 
 All the existing chromosomes are duplicated.
 
 ##### Params:
-* `Likelihood: float`.
+* `Prob: float`.
 
 
 ### Chromothripsis
+
+TODO
+
+### Chromoplexy
 
 TODO
 
@@ -190,11 +189,7 @@ TODO
 
 The text files are primarily used as source for plots shown below.
 
-#### `baf.out`
-
-B-allele frequency of the selected clones. Used for copy number calculation in ASCAT / Refphase.
-
-#### `copynumbers.out`
+#### `copynumbers.tsv`
 
 CN output in the format examplifed as:
 
@@ -203,24 +198,16 @@ CN output in the format examplifed as:
 |-----------|-------|-------|-------|------|------|
 |0          |	chr1  |	24721 |	98434 |	1    |   	4 |
 
+#### `clone_tree.new`
 
-#### `logr.out`
+An evolutionary tree with mutation distances and population sizes between the individual subclones. The graph is written in the [newick format](https://en.wikipedia.org/wiki/Newick_format).
 
-Log-R calculation for the selected clones. Used for copy number calculation in ASCAT / Refphase.
-
-#### `parent_graph.dot`
-
-An evolutionary tree with mutation distances and population sizes between the individual subclones. The graph is written in the [DOT language](https://graphviz.org/doc/info/lang.html).
-
-#### `parent_graph.new` 
-
-The same as above, but in the [newick format](https://en.wikipedia.org/wiki/Newick_format).
 
 #### `sim_params.json` 
 
 Stores configuration parameters used for this simulation, including the random seed. If this file is provided on input, the exact same simulation will be executed.
 
-#### `subclones.out`  
+#### `clones.tsv`  
 
 Information about the individual subclones at the end of the simulation. This file has the chromosome ranges. A range is in the format:
 
@@ -230,11 +217,21 @@ where `*` is either `+` for 5' to 3' or `-` for 3' to 5'.
 
 The start position is inclusive, the end exclusive.
 
+
+#### `events.tsv`
+
+Information about the individual events in the simulation. The columns are:
+
+| Id | 	EventType	| EventString	| dFitness |	tFitness |	Mutations |
+|----|------------|-------------|----------|-----------|------------|
+|  0 | ChromDuplication | contig:23 | 11.53782375 | 11.53782375 | 1 |
+
+
 ### Plots (created by `./plots.sh`)
 
 In order to run `./plots.sh` you first have to install the consistent segmentation routine with by running `python setup.py build_ext --inplace` in the `simcha/scripts/segmentation_cython` directory (with [Cython](https://anaconda.org/anaconda/cython) installed).
 
-#### `copy_numbers.png` 
+#### `copy_numbers_heatmap.png` 
 The copy number tracks
 
 ## Contact

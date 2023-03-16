@@ -16,7 +16,7 @@ public class FileIO
     private const string BAF_FILENAME = "baf.out";
     private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
-    private const string CN_EVENTS_FILENAME = "abberations.tsv";
+    private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
@@ -83,22 +83,22 @@ public class FileIO
         file.WriteLine(jsonString);
     }
     
-    public void WriteEvents(List<CNEvent> abberationList)
+    public void WriteEvents(List<CNEvent> cnEvents)
     {
         //TODO: Format output, talk with Tom about readable ideas
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
-        abberationString.Append("Clone Name\tAbberation\tEventString\tDelta Fitness\tTotal Fitness\tNumber of mutations\n");
-        foreach (var abberation in abberationList)
+        abberationString.Append("Id\tEventType\tEventString\tdFitness\ttFitness\tMutations\n");
+        foreach (var cnEvent in cnEvents)
         {
-            abberationString.Append($"{abberation.CloneName}\t" +
-                                    $"{abberation.AberrationType}\t" +
-                                    $"{abberation.Region}\t" +
-                                    $"{Math.Round((decimal)abberation.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
-                                    $"{Math.Round((decimal)abberation.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
-                                    $"{abberation.NrOfMutation.ToString()}\n");
+            abberationString.Append($"{cnEvent.CloneId}\t" +
+                                    $"{cnEvent.EventType}\t" +
+                                    $"{cnEvent.Description}\t" +
+                                    $"{Math.Round((decimal)cnEvent.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
+                                    $"{Math.Round((decimal)cnEvent.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
+                                    $"{cnEvent.NrOfMutation.ToString()}\n");
         }
         outputFile.Write(abberationString.ToString());
     }

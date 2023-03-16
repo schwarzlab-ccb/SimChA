@@ -1,5 +1,5 @@
 ﻿using SimChA.DataTypes;
-using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
+using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
@@ -48,7 +48,7 @@ public class Simulator
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEvent(child.Name, eventP.Type, mutationCount, eventString, dFit, newFitness);
+                var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);
                 events.Add(abberation);
                 oldFitness = newFitness;
             }
@@ -57,20 +57,30 @@ public class Simulator
         }
     }
     
-    private static int GetMutations(Clone clone, List<Clone> clones)
+    private static int GetMutations(Clone clone, IReadOnlyList<Clone> clones)
     {
         int mutCount = clone.ParentId != -1 ? GetMutations(clones[clone.ParentId], clones) : 0;
         mutCount += clone.DistToParent;
         return mutCount;
     }
+    
+    private static double GetSample(Random rnd, Distribution dist)
+    {
+        return dist switch
+        {
+            Distribution.Exponential => EDists.ExponentialDistribution.Sample(rnd, 1),
+            Distribution.Normal => EDists.NormalDistribution.Sample(rnd, 1, 1),
+            _ => 1
+        };
+    }
 
-    public static List<Clone> MakeClones(Random rnd, int distance, int repeats, bool sexXX)
+    public static List<Clone> MakeClones(Random rnd, int repeats, bool sexXX, int distance, Distribution distribution)
     {
         var parent = new Clone(0, -1, "0-0", 0, new Karyotype(sexXX), 0);
         var clones = new List<Clone> { parent };
         for (var i = 1; i <= repeats; i++)
         {
-            double sample = Extreme.Statistics.Distributions.ExponentialDistribution.Sample(rnd, 1);
+            double sample = GetSample(rnd, distribution);
             var mutCount = (int) Math.Round(distance * sample);
             var child = new Clone(i, 0, $"{i}-{mutCount}", mutCount, new Karyotype(sexXX), mutCount);
             parent.ChildrenIDs.Add(child.CloneId);
