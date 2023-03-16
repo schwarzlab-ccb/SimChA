@@ -185,6 +185,15 @@ TODO
 
 TODO
 
+### Pyrgo 
+![Pyrgo](./doc/img/pyrgo_128.png)
+
+### Rigma
+![Rigma](./doc/img/rigma_128.png)
+
+### Tyfonas
+![Tyfonas](./doc/img/tyfonas_128.png)
+
 ## Output
 
 The text files are primarily used as source for plots shown below.
