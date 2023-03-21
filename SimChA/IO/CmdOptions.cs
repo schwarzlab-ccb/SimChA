@@ -21,4 +21,8 @@ public class CmdOptions
 
     [Option("data", Required = false, Default = "./data", HelpText = "Folder with three files for OGs, TSGs and essential genes in the format of essentials.tsv, ogs.tsv and tsgs.tsv")]
     public string GenesFolder { get; set;}
+
+    [Option("mcmc", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events.")]
+    public bool MCMC_ON {get; set;}
+
 }
