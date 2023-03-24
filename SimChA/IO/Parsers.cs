@@ -68,6 +68,10 @@ public static class Parsers
                         break;
                     case CNEventType.Chromoplexy:
                         break;
+                    case CNEventType.ChainTemplatedInsertions:
+                    case CNEventType.BridgeTemplatedInsertions:
+                    case CNEventType.CycleTemplatedInsertions:
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException($"Unknown event type {ev.Type}");
                 }
