@@ -41,13 +41,13 @@ public static class Sampling
     // Only two to seven regions were added therefore max of 7 -> https://doi.org/10.1038/s41586-019-1913-9
     public static int BetaDistribution(Random rnd)
     {
-        var a = 0.5;
-        var b = 3.0;
-        var u1 = rnd.NextDouble();
-        var u2 = rnd.NextDouble();
-        var x = Math.Pow(u1, 1.0 / a) * Math.Pow(1.0 - u2, 1.0 / (b - 1));
-        x = x / (x + Math.Pow(1.0 - u1, 1.0 / a) * Math.Pow(u2, 1.0 / (b - 1)));
-        return (int)Math.Round(2.0 + 5.0 * x);
+        double u1 = rnd.NextDouble();
+        double u2 = rnd.NextDouble();
+
+        double x = Math.Pow(u1, 1.0/0.1);
+        double y = Math.Pow(u2, 1.0/7.0);
+
+        return (int)Math.Round((x/(x+y)*5)+2);
     }
 
     public static long LongRandom(long min, long max, Random rnd)
