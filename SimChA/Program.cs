@@ -37,6 +37,7 @@ files.WriteSimParams(simParams);
 
 // Obtain clones
 var newick = "";
+var fitnessDict = new Dictionary<string, double>();
 List<Clone> clones = new();
 List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
@@ -49,11 +50,11 @@ else
     Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
     var simulator = new Simulator(rnd, simParams, geneLists);
-
     if (options.Value.NewickFile != "")
     {
         newick = FileIO.ReadNewick(options.Value.NewickFile);
         clones = Parsers.ParseNewick(newick, simParams.SexXX);
+        fitnessDict = FileIO.ReadFitnessValues(options.Value.NewickFile);
     }
     else
     {

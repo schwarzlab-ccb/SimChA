@@ -306,4 +306,17 @@ public static class Parsers
         Console.Write(branchLength ? "" : "No branch-lengths were found, using 1 as branch-length.");
         return branchLength;
     }
+
+    public static Dictionary<string, double> ParseFitness(string file)
+    {
+        var fitnessDict = new Dictionary<string, double>();
+        var textLines = File.ReadAllLines(file);
+        foreach(var line in textLines)
+        {
+            var fitness = Double.Parse(line.Split("Fitness: ")[1], System.Globalization.CultureInfo.InvariantCulture);
+            var id = line.Split("ID:")[1].Split(',')[0];
+            fitnessDict.Add(id, fitness);
+        }
+        return fitnessDict;
+    }
 }
