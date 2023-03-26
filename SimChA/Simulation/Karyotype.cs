@@ -183,10 +183,10 @@ public class Karyotype
         return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
 
-    public string ApplyChainTemplatedInsertions(int contigID, List<Region> regions, Contig lastContig)
+    public string ApplyChainTemplatedInsertions(int contigID, List<Region> regions, int lastContigID)
     {
         var contig = _contigs[contigID];
-        regions.AddRange(lastContig.GetRegionsAfterRegion(regions.Last()));
+        regions.AddRange(_contigs[lastContigID].GetRegionsAfterRegion(regions.Last()));
         contig.AddRegions(regions);
         var regionIDs = string.Join(",", regions);
         return $"contig:{contigID};regions:{regionIDs}";
@@ -303,7 +303,7 @@ public class Karyotype
                 }
                 return cnEventP.Type switch
                 {
-                    CNEventType.ChainTemplatedInsertions => ApplyChainTemplatedInsertions(contigA, regions, contigs.Last()),
+                    CNEventType.ChainTemplatedInsertions => ApplyChainTemplatedInsertions(contigA, regions, _contigs.IndexOf(contigs.Last())),
                     CNEventType.CycleTemplatedInsertions => ApplyCycleTemplatedInsertions(contigA, regions, rnd),
                     CNEventType.BridgeTemplatedInsertions => ApplyBridgeTemplatedInsertions(contigA, regions)
                 };
