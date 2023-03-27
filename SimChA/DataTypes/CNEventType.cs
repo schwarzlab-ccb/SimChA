@@ -19,9 +19,9 @@ public enum CNEventType
     WholeGenomeDoubling,
     Chromothripsis,
     Chromoplexy,
-    ChainTemplatedInsertions,
-    CycleTemplatedInsertions,
-    BridgeTemplatedInsertions,
+    TIChain,
+    TICycle,
+    TIBridge,
     Pyrgo,
     Rigma,
     Tyfonas

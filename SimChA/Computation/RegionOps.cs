@@ -178,18 +178,10 @@ public static class RegionOps
         newRegions.Add(CopyRange(regions, locs.Last(), Contig.Length(regions)));
         return newRegions;
     }
+    
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices)
     {
         var selectedRegions = indices.Select(i => newRegions[i]);
         return GlueNeighbours(ConcatRegions(selectedRegions));
-    }
-
-    public static Region CreateRandomRegion(List<Region> regions, Random rnd)
-    {
-        var region = regions.OrderBy(x => rnd.Next()).First();
-        var start = Sampling.LongRandom(region.Start, region.End, rnd);
-        var stop = Sampling.LongRandom(start, region.End, rnd);
-        var newRegion = new Region(start, stop, region.ChrID, rnd.CoinFlip());
-        return newRegion;
     }
 }

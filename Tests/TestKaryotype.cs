@@ -155,9 +155,9 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.WholeGenomeDoubling, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.ChainTemplatedInsertions, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.BridgeTemplatedInsertions, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.CycleTemplatedInsertions, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIChain, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIBridge, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TICycle, 1.0)); });
     }
 
     [Test]

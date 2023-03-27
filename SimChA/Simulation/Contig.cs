@@ -106,7 +106,7 @@ public class Contig
     }
     
     public Region GetRandomRegion(Random rnd)
-        => RegionOps.CreateRandomRegion(_regions, rnd);
+        => Sampling.CreateRandomRegion(_regions, rnd);
     
 
     public void AddRegions(List<Region> regions)

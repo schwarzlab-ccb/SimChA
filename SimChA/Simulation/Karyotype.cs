@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Misc;
@@ -254,7 +255,7 @@ public class Karyotype
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
                 long segLen = Sampling.GetSegLength(rnd, lenA, cnEventP.Params["Mean"]);
-                long start = Sampling.GetInternalPos(rnd, lenA- segLen);
+                long start = Sampling.GetInternalPos(rnd, lenA - segLen);
                 long end = start + segLen;
                 return cnEventP.Type switch
                 {
@@ -298,23 +299,25 @@ public class Karyotype
                 var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
                 return ApplyChromoplexy(contigIDs, stopsForConting, sequence, breakpoints);
             
-            //TODO: needs better estimation
-            case CNEventType.ChainTemplatedInsertions:
-            case CNEventType.CycleTemplatedInsertions:
-            case CNEventType.BridgeTemplatedInsertions:
-                var numberOfRegions = Sampling.BetaDistribution(rnd);
-                var contigs = _contigs.OrderBy(x => rnd.Next()).Take(numberOfRegions);
+            case CNEventType.TIChain:
+            case CNEventType.TICycle:
+            case CNEventType.TIBridge:
+                const double probabilityOfSuccess = 0.9; // TODO: should be dependent on the event type possibly,
+                                                         // also the value should be better justified
+                                                         // see https://www.nature.com/articles/s41586-019-1913-9/figures/9
+                int numberOfRegions = GeometricDistribution.Sample(rnd, probabilityOfSuccess);
                 var regions = new List<Region>();
-                foreach(var contig in contigs)
+                for (var i = 0; i < numberOfRegions; i++, IDsEnumerator.MoveNext())
                 {
-                    regions.Add(contig.GetRandomRegion(rnd));
+                    regions.Add(_contigs[IDsEnumerator.Current].GetRandomRegion(rnd));
                 }
                 return cnEventP.Type switch
                 {
-                    CNEventType.ChainTemplatedInsertions => ApplyChainTemplatedInsertions(contigA, regions, _contigs.IndexOf(contigs.Last())),
-                    CNEventType.CycleTemplatedInsertions => ApplyCycleTemplatedInsertions(contigA, regions, rnd),
-                    CNEventType.BridgeTemplatedInsertions => ApplyBridgeTemplatedInsertions(contigA, regions)
+                    CNEventType.TIChain => ApplyChainTemplatedInsertions(contigA, regions, IDsEnumerator.Current),
+                    CNEventType.TICycle => ApplyCycleTemplatedInsertions(contigA, regions, rnd),
+                    CNEventType.TIBridge => ApplyBridgeTemplatedInsertions(contigA, regions)
                 };
+            
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
