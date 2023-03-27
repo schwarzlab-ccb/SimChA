@@ -8,6 +8,10 @@ public static class Extensions
     public static bool CoinFlip(this Random rnd)
         => rnd.Next(0, 2) == 0;
     
+    // Biased coin, the higher the bias, the more likely it is to return true
+    public static bool CoinFlip(this Random rnd, double bias)
+        => rnd.NextDouble() < bias;
+    
     public static int GetRandIndex<T>(this IEnumerable<T> source, Random rnd)
         => rnd.Next(source.Count());
 

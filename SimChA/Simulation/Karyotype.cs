@@ -78,6 +78,9 @@ public class Karyotype
     public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
         => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
 
+    public void GlueNeighbours()
+        => _contigs.ForEach(c => c.GlueNeighbours());
+    
     public string ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
@@ -139,14 +142,18 @@ public class Karyotype
         return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
 
-    // TODO: This is only crossing in the 5-3 direction on both strands. Should be check against literature.
-    public string ApplyTranslocation(int contigA, int contigB, long posA, long posB)
+    // Translocation might invert based on the orientation of the holiday Junction https://en.wikipedia.org/wiki/Holliday_junction
+    public string ApplyTranslocation(int contigA, int contigB, long posA, long posB, bool inverted)
     {
         var refContig = _contigs[contigA];
         var altContig = _contigs[contigB];
+        if (inverted)
+        {
+            altContig.Invert();
+        }
         var splitRef = refContig.Split(posA, true);
         var splitAlt = altContig.Split(posB, true);
-        string descriptor = $"contig_A:{contigA};gave:{splitRef.Length()};contig_B:{contigB};gave:{splitAlt.Length()};";
+        var descriptor = $"contig_A:{contigA};gave:{splitRef.Length()};contig_B:{contigB};gave:{splitAlt.Length()};inverted_B:{inverted}";
         refContig.Join(splitAlt);
         altContig.Join(splitRef);
         return descriptor;
@@ -263,7 +270,8 @@ public class Karyotype
                 long lenB = _contigs[contigB].Length();
                 long posA = Sampling.GetInternalPos(rnd, lenA);
                 long posB = Sampling.GetInternalPos(rnd, lenB);
-                return ApplyTranslocation(contigA, contigB, posA, posB);
+                bool inverted = cnEventP.Params.ContainsKey("InvProb") ? rnd.CoinFlip(cnEventP.Params["InvProb"]) : false;
+                return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
             
             case CNEventType.Chromothripsis:
                 int shardCount = Sampling.GetChromothripsisSiteCount(rnd, lenA);

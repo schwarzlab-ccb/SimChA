@@ -66,11 +66,16 @@ public class Contig
         _regions = RegionOps.ConcatRegions(new[] { first, inverse, second });
     }
 
+    public void Invert()
+    {
+        _regions = RegionOps.InvertRegions(_regions);
+    }
+
     public void DuplicateRange(long start, long end)
     {
         var copy = RegionOps.CopyRange(_regions, start, end);
         var (first, second) = RegionOps.SplitRegions(_regions, start);
-        _regions = RegionOps.GlueNeighbours(RegionOps.ConcatRegions(new[] { first, copy, second }));
+        _regions = RegionOps.ConcatRegions(new[] { first, copy, second });
     }
 
     public void Bridge(long pos, bool cutFront)
@@ -107,6 +112,9 @@ public class Contig
     public void AddRegions(List<Region> regions)
         => _regions.AddRange(regions);
 
+    public void GlueNeighbours()
+        => _regions = RegionOps.GlueNeighbours(_regions);
+
     public List<Region> GetRegionsAfterRegion(Region region)
     {
         var regions = new List<Region>();
@@ -120,6 +128,7 @@ public class Contig
         }
         return regions;
     }
+    
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
 }
