@@ -15,7 +15,7 @@ public static class Sampling
     public static long GetInternalPos(Random rnd, long contigLen)
         => rnd.NextInt64(1, contigLen - 1);
     
-    // Needs better estimation
+    // TODO: Needs better estimation
     public static int GetChromothripsisSiteCount(Random rnd, long contigLen)
         => rnd.Next(1, (int)Math.Pow(contigLen, 1 / 3f));
     
@@ -52,6 +52,7 @@ public static class Sampling
 
     public static long LongRandom(long min, long max, Random rnd)
     {
+        
         byte[] buf = new byte[8];
         rnd.NextBytes(buf);
         long longRand = BitConverter.ToInt64(buf, 0);

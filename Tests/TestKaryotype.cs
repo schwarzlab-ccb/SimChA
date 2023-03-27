@@ -119,14 +119,24 @@ public class TestKaryotype
         Assert.AreEqual((len - TEST_FRAC) * 2, newLen);
     }
     
+    
     [Test]
     public void TestTranslocation()
     {
+        var desc = _kar.ToString();
         long contigLen = _kar.ContigLen(0);
         long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC);
+        
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, false);
         Assert.AreEqual(contigLen, _kar.ContigLen(1));
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, true);
+        Assert.AreEqual(contigLen, _kar.ContigLen(0));
+
+        _kar.ApplyInternalInversion(0, 0, TEST_FRAC);
+        _kar.GlueNeighbours();
+        Assert.AreEqual(desc, _kar.ToString());
     }
     
     [Test]
@@ -159,15 +169,6 @@ public class TestKaryotype
         _kar.ApplyChromothripsis(0, stops, selection);
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));
     }
-
-    
-    
-    [Test]
-    public void TestRnd()
-    {
-        _rnd.Next(1, 1);
-    }
-
     
     [Test]
     public void TestChromoplexy()
