@@ -1,4 +1,6 @@
 ﻿using Extreme.Statistics.Distributions;
+using SimChA.DataTypes;
+using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
@@ -37,25 +39,13 @@ public static class Sampling
             .OrderBy(i => i)
             .ToList();
     
-
-    // Only two to seven regions were added therefore max of 7 -> https://doi.org/10.1038/s41586-019-1913-9
-    public static int BetaDistribution(Random rnd)
+    // TODO: Unify with internal operations
+    public static Region CreateRandomRegion(List<Region> regions, Random rnd)
     {
-        double u1 = rnd.NextDouble();
-        double u2 = rnd.NextDouble();
-
-        double x = Math.Pow(u1, 1.0/0.1);
-        double y = Math.Pow(u2, 1.0/7.0);
-
-        return (int)Math.Round((x/(x+y)*5)+2);
-    }
-
-    public static long LongRandom(long min, long max, Random rnd)
-    {
-        
-        byte[] buf = new byte[8];
-        rnd.NextBytes(buf);
-        long longRand = BitConverter.ToInt64(buf, 0);
-        return (Math.Abs(longRand % (max-min)) + min);
+        var region = regions.OrderBy(x => rnd.Next()).First();
+        long start = rnd.NextInt64(region.Start, region.End - 1);
+        long stop = rnd.NextInt64(start + 1, region.End);
+        var newRegion = new Region(start, stop, region.ChrID, rnd.CoinFlip());
+        return newRegion;
     }
 }
