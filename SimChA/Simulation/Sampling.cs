@@ -36,4 +36,25 @@ public static class Sampling
             .Distinct()
             .OrderBy(i => i)
             .ToList();
+    
+
+    // Only two to seven regions were added therefore max of 7 -> https://doi.org/10.1038/s41586-019-1913-9
+    public static int BetaDistribution(Random rnd)
+    {
+        double u1 = rnd.NextDouble();
+        double u2 = rnd.NextDouble();
+
+        double x = Math.Pow(u1, 1.0/0.1);
+        double y = Math.Pow(u2, 1.0/7.0);
+
+        return (int)Math.Round((x/(x+y)*5)+2);
+    }
+
+    public static long LongRandom(long min, long max, Random rnd)
+    {
+        byte[] buf = new byte[8];
+        rnd.NextBytes(buf);
+        long longRand = BitConverter.ToInt64(buf, 0);
+        return (Math.Abs(longRand % (max-min)) + min);
+    }
 }

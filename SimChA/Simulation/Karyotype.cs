@@ -183,6 +183,31 @@ public class Karyotype
         return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
 
+    public string ApplyChainTemplatedInsertions(int contigID, List<Region> regions, int lastContigID)
+    {
+        var contig = _contigs[contigID];
+        regions.AddRange(_contigs[lastContigID].GetRegionsAfterRegion(regions.Last()));
+        contig.AddRegions(regions);
+        var regionIDs = string.Join(",", regions);
+        return $"contig:{contigID};regions:{regionIDs}";
+    }    
+    
+    public string ApplyBridgeTemplatedInsertions(int contigID, List<Region> regions)
+    {
+        var contig = _contigs[contigID];
+        contig.AddRegions(regions);
+        var regionIDs = string.Join(",", regions);
+        return $"contig:{contigID};regions:{regionIDs}";
+    }    
+    
+    public string ApplyCycleTemplatedInsertions(int contigID, List<Region> regions, Random rnd)
+    {
+        var contig = _contigs[contigID];
+        regions.Add(contig.GetRandomRegion(rnd));
+        contig.AddRegions(regions);
+        var regionIDs = string.Join(",", regions);
+        return $"contig:{contigID};regions:{regionIDs}";
+    }
 
     public string ApplyCNEvent(Random rnd, CNEventP cnEventP)
     {
@@ -264,7 +289,24 @@ public class Karyotype
                 var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd);
                 var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
                 return ApplyChromoplexy(contigIDs, stopsForConting, sequence, breakpoints);
-                
+            
+            //TODO: needs better estimation
+            case CNEventType.ChainTemplatedInsertions:
+            case CNEventType.CycleTemplatedInsertions:
+            case CNEventType.BridgeTemplatedInsertions:
+                var numberOfRegions = Sampling.BetaDistribution(rnd);
+                var contigs = _contigs.OrderBy(x => rnd.Next()).Take(numberOfRegions);
+                var regions = new List<Region>();
+                foreach(var contig in contigs)
+                {
+                    regions.Add(contig.GetRandomRegion(rnd));
+                }
+                return cnEventP.Type switch
+                {
+                    CNEventType.ChainTemplatedInsertions => ApplyChainTemplatedInsertions(contigA, regions, _contigs.IndexOf(contigs.Last())),
+                    CNEventType.CycleTemplatedInsertions => ApplyCycleTemplatedInsertions(contigA, regions, rnd),
+                    CNEventType.BridgeTemplatedInsertions => ApplyBridgeTemplatedInsertions(contigA, regions)
+                };
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }

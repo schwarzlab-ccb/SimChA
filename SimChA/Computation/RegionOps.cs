@@ -1,5 +1,6 @@
 ﻿using SimChA.DataTypes;
 using SimChA.Simulation;
+using SimChA.Misc;
 
 namespace SimChA.Computation;
 
@@ -181,5 +182,14 @@ public static class RegionOps
     {
         var selectedRegions = indices.Select(i => newRegions[i]);
         return RegionOps.GlueNeighbours(RegionOps.ConcatRegions(selectedRegions));
+    }
+
+    public static Region CreateRandomRegion(List<Region> regions, Random rnd)
+    {
+        var region = regions.OrderBy(x => rnd.Next()).First();
+        var start = Sampling.LongRandom(region.Start, region.End, rnd);
+        var stop = Sampling.LongRandom(start, region.End, rnd);
+        var newRegion = new Region(start, stop, region.ChrID, rnd.CoinFlip());
+        return newRegion;
     }
 }

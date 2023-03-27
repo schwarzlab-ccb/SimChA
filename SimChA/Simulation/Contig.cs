@@ -100,6 +100,26 @@ public class Contig
         _regions = RegionOps.Gather(newRegions, indices);
     }
     
+    public Region GetRandomRegion(Random rnd)
+        => RegionOps.CreateRandomRegion(_regions, rnd);
+    
+
+    public void AddRegions(List<Region> regions)
+        => _regions.AddRange(regions);
+
+    public List<Region> GetRegionsAfterRegion(Region region)
+    {
+        var regions = new List<Region>();
+        if(region.Forward)
+        {
+            regions = _regions.Where(x => x.Start < region.Start && x.End < region.End).ToList();
+        }
+        else
+        {
+            regions = _regions.Where(x => x.Start > region.Start && x.End > region.End).ToList();
+        }
+        return regions;
+    }
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
 }

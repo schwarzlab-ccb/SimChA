@@ -145,6 +145,9 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.WholeGenomeDoubling, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.ChainTemplatedInsertions, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.BridgeTemplatedInsertions, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.CycleTemplatedInsertions, 1.0)); });
     }
 
     [Test]
@@ -209,5 +212,36 @@ public class TestKaryotype
         _kar.ApplyCNEvent(_rnd, _del);
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
+    }
+
+    [Test]
+    public void TestBridgeTemplatedInsertion()
+    {
+        var regions = new List<Region>();
+        regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
+        regions.Add(new Region(3000, 5000, new ChrID(ChrNo.chr2, true), true));
+        _kar.ApplyBridgeTemplatedInsertions(0, regions);
+        Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 3000);
+    }
+
+    [Test]
+    public void TestChainTemplatedInsertion()
+    {
+        var regions = new List<Region>();
+        regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
+        regions.Add(new Region(7000, 8000, new ChrID(ChrNo.chr2, true), true));
+        _kar.ApplyInternalDuplication(1, 6000, 7000);
+        _kar.ApplyChainTemplatedInsertions(0, regions, 1);
+        Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 9000);
+    }
+
+    [Test]
+    public void TestCycleTemplatedInsertions()
+    {
+        var regions = new List<Region>();
+        regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
+        regions.Add(new Region(7000, 8000, new ChrID(ChrNo.chr2, false), true));
+        _kar.ApplyCycleTemplatedInsertions(0, regions, new Random());
+        Assert.Greater(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 2000);
     }
 }
