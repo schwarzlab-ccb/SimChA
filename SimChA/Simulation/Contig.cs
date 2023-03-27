@@ -105,28 +105,28 @@ public class Contig
         _regions = RegionOps.Gather(newRegions, indices);
     }
     
-    public Region GetRandomRegion(Random rnd)
-        => Sampling.CreateRandomRegion(_regions, rnd);
-    
+    public List<Region> GetRandomRegion(long start, long end)
+        => RegionOps.CopyRange(_regions, start, end);   
 
-    public void AddRegions(List<Region> regions)
-        => _regions.AddRange(regions);
+    public void AddRegions(List<Region> regions, long insertion)
+    {
+        var (first, second) = RegionOps.SplitRegions(_regions, insertion);
+        _regions = RegionOps.ConcatRegions(new[] {first, regions, second});
+    }
 
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);
 
-    public List<Region> GetRegionsAfterRegion(Region region)
+    public List<Region> GetSplitRegion(long pos, bool foreward)
     {
-        var regions = new List<Region>();
-        if(region.Forward)
-        {
-            regions = _regions.Where(x => x.Start < region.Start && x.End < region.End).ToList();
-        }
-        else
-        {
-            regions = _regions.Where(x => x.Start > region.Start && x.End > region.End).ToList();
-        }
-        return regions;
+        var (first, second) = RegionOps.SplitRegions(_regions, pos);
+        return foreward ? second : first;
+    }
+
+    public void AddRegionsChain(List<Region> regions, long splitPos)
+    {
+        var (first, second) = RegionOps.SplitRegions(_regions, splitPos);
+        _regions = RegionOps.ConcatRegions(new[] {first, regions});
     }
     
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)

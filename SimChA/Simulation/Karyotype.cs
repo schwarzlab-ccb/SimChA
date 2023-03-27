@@ -167,7 +167,7 @@ public class Karyotype
     }
 
     public string ApplyChromothripsis(int contigID, List<long> stops, IEnumerable<int> selection)
-    {            
+    {
         var contig = _contigs[contigID];
         long contigLen = contig.Length();
         contig.ScatterAndGather(stops, selection);
@@ -191,28 +191,33 @@ public class Karyotype
         return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
 
-    public string ApplyChainTemplatedInsertions(int contigID, List<Region> regions, int lastContigID)
+    public string ApplyTIChain(int contigID, List<Region> regions, int lastContigID, long splitPos, Random rnd, double mean)
     {
         var contig = _contigs[contigID];
-        regions.AddRange(_contigs[lastContigID].GetRegionsAfterRegion(regions.Last()));
-        contig.AddRegions(regions);
+        regions.AddRange(_contigs[lastContigID].GetSplitRegion(splitPos, regions.Last().Forward));
+        splitPos = Sampling.GetSegLength(rnd, contig.Length(), mean);
+        contig.AddRegionsChain(regions, splitPos);
         var regionIDs = string.Join(",", regions);
         return $"contig:{contigID};regions:{regionIDs}";
     }    
     
-    public string ApplyBridgeTemplatedInsertions(int contigID, List<Region> regions)
+    public string ApplyTIBridge(int contigID, List<Region> regions, Random rnd, double mean)
     {
         var contig = _contigs[contigID];
-        contig.AddRegions(regions);
+        var splitPos = Sampling.GetSegLength(rnd, contig.Length(), mean);
+        contig.AddRegions(regions, splitPos);
         var regionIDs = string.Join(",", regions);
         return $"contig:{contigID};regions:{regionIDs}";
     }    
     
-    public string ApplyCycleTemplatedInsertions(int contigID, List<Region> regions, Random rnd)
+    public string ApplyTICycle(int contigID, List<Region> regions, Random rnd, double mean)
     {
         var contig = _contigs[contigID];
-        regions.Add(contig.GetRandomRegion(rnd));
-        contig.AddRegions(regions);
+        var segmentLen = Sampling.GetSegLength(rnd, contig.Length(), mean);
+        var startRegion = Sampling.GetInternalPos(rnd, contig.Length());
+        var endRegion = startRegion + segmentLen;
+        regions.AddRange(contig.GetRandomRegion(startRegion, endRegion));
+        contig.Split(startRegion, true);
         var regionIDs = string.Join(",", regions);
         return $"contig:{contigID};regions:{regionIDs}";
     }
@@ -307,15 +312,21 @@ public class Karyotype
                                                          // see https://www.nature.com/articles/s41586-019-1913-9/figures/9
                 int numberOfRegions = GeometricDistribution.Sample(rnd, probabilityOfSuccess);
                 var regions = new List<Region>();
+                var mean = cnEventP.Params["mean"];
+                long endRegion = 0;
                 for (var i = 0; i < numberOfRegions; i++, IDsEnumerator.MoveNext())
                 {
-                    regions.Add(_contigs[IDsEnumerator.Current].GetRandomRegion(rnd));
+                    var contigLen = _contigs[IDsEnumerator.Current].Length();
+                    var segmentLen = Sampling.GetSegLength(rnd, contigLen, cnEventP.Params["Mean"]);
+                    var startRegion = Sampling.GetInternalPos(rnd, contigLen);
+                    endRegion = startRegion + segmentLen;
+                    regions.AddRange(_contigs[IDsEnumerator.Current].GetRandomRegion(startRegion, endRegion));
                 }
                 return cnEventP.Type switch
                 {
-                    CNEventType.TIChain => ApplyChainTemplatedInsertions(contigA, regions, IDsEnumerator.Current),
-                    CNEventType.TICycle => ApplyCycleTemplatedInsertions(contigA, regions, rnd),
-                    CNEventType.TIBridge => ApplyBridgeTemplatedInsertions(contigA, regions)
+                    CNEventType.TIChain => ApplyTIChain(contigA, regions, IDsEnumerator.Current, endRegion, rnd, mean),
+                    CNEventType.TICycle => ApplyTICycle(contigA, regions, rnd, mean),
+                    CNEventType.TIBridge => ApplyTIBridge(contigA, regions, rnd, mean)
                 };
             
             default:
