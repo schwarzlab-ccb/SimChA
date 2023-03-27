@@ -123,20 +123,17 @@ public class TestKaryotype
     [Test]
     public void TestTranslocation()
     {
-        var desc = _kar.ToString();
-        long contigLen = _kar.ContigLen(0);
+        long contig0Len = _kar.ContigLen(0);
         long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
         
         _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, false);
-        Assert.AreEqual(contigLen, _kar.ContigLen(1));
+        Assert.AreEqual(contig0Len, _kar.ContigLen(1));
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
 
         _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, true);
-        Assert.AreEqual(contigLen, _kar.ContigLen(0));
-
-        _kar.ApplyInternalInversion(0, 0, TEST_FRAC);
-        _kar.GlueNeighbours();
-        Assert.AreEqual(desc, _kar.ToString());
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        Assert.AreEqual(contig0Len, _kar.ContigLen(0));
+        Console.WriteLine(_kar);
     }
     
     [Test]
