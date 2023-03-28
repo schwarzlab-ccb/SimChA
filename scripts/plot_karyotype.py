@@ -67,12 +67,12 @@ def parse_karyotype(kar):
 
 def draw_horizontal_arrow(ax, x, y, dx, dy, color, last_left):
     width = 0.1
-    head_len = min(5, abs(dx / 2))
-    arrow = mpatches.FancyArrow(x, y - width/2, dx, dy, fc=color, ec=color, width=width, head_width=0.5, head_length=head_len, length_includes_head=True, overhang=.5, alpha=0.5)
+    head_len = min(2.5, abs(dx / 2))
+    arrow = mpatches.FancyArrow(x, y, dx, dy, fc=color, ec=color, width=width, head_width=0.5, head_length=head_len, length_includes_head=True, overhang=.5, alpha=0.5)
     if last_left and dx > 0:
-        end_width = min(1, abs(dx / 2))
+        end_width = min(.5, abs(dx / 2))
         end_height = 0.5
-        ending = mpatches.Rectangle((x - end_width / 2, y - end_height / 2), end_width, end_height, fc=color, ec=color, alpha=0.3)        
+        ending = mpatches.Rectangle((x - end_width / 2, y - end_height / 2), end_width, end_height, fc=color, ec=color, alpha=0.5, linewidth=0)        
         ax.add_patch(ending)    
     ax.add_patch(arrow)
     return dx < 0
@@ -107,7 +107,7 @@ def plot_karyotype(data, sample_name, output_file):
     fig, ax = plt.subplots()
     # set figure to full hd, tight layout
     fig.set_size_inches(1920 / dpi, 1080 / dpi)
-    fig.tight_layout(pad=1.25, rect=[0.025, 0, .925, 1])    
+    fig.tight_layout(pad=1.3, rect=[0.02, 0, .94, 1])    
 
     # Set the y-axis labels
     ax.set_yticks([i for i in range(sample_count)])
