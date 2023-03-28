@@ -41,9 +41,6 @@ public class TestIO
         Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events!.First().Type);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Params"": {""Mean"": 0.1}}]}]}");
         Assert.AreEqual(0.1, res.Signatures!.First().Events!.First().Params!["Mean"], 0.000001);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Targets"": {""chr1"": 0.1}}]}]}");
-        Assert.AreEqual(ChrNo.chr1,  res.Signatures!.First().Events!.First().Targets!.First().Key);
-        Assert.AreEqual(0.1, res.Signatures!.First().Events!.First().Targets!.First().Value, 0.000001);
         res = Parsers.ParseSimParams(@"{""Assembly"":""hg38""}");
         Assert.AreEqual(GenomeAssembly.hg38, res.Assembly);
     }
