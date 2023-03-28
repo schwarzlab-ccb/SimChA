@@ -8,5 +8,5 @@ public record ChrID(ChrNo ChrNo, bool Parent)
         => Parent ?"H1" : "H2";
     
     public override string ToString()
-        => $"{ChrNo.ToString()},{ParentID()}";
+        => $"{ChrNo.ToString()}_{ParentID()}";
 }
