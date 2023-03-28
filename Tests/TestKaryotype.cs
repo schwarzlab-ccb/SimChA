@@ -94,10 +94,10 @@ public class TestKaryotype
         long len = _kar.ContigLen(0);
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
-        var regions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        Assert.AreEqual(3, regions.Count(r => r.ChrID.Parent));
-        Assert.AreEqual(1, regions.Count(r => !r.Forward));
-        Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).Start);
+        var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        Assert.AreEqual(3, gluedRegions.Count(r => r.ChrID.Parent));
+        Assert.AreEqual(1, gluedRegions.Count(r => !r.Forward));
+        Assert.AreEqual(TEST_FRAC, gluedRegions.First(r => !r.Forward).Start);
     }
     
     [Test]
