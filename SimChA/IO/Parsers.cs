@@ -81,10 +81,10 @@ public static class Parsers
 
     private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
     {
-        regionsA = RegionOps.GlueNeighbours(regionsA);
+        regionsA = RegionOps.StitchRegions(regionsA);
         var contigA = new Contig(regionsA);
-        regionsB = RegionOps.GlueNeighbours(regionsB);
-        var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
+        regionsB = RegionOps.StitchRegions(regionsB);
+        var contigB = new Contig(regionsB);
         // Add full missing chromosomes
         var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, c => false);
         regionsA.ForEach(r => chrPresent[r.ChrNo] = true);

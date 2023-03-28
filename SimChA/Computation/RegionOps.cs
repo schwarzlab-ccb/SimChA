@@ -124,7 +124,7 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
 
-    public static List<T> GlueNeighbours<T>(List<T> regions) where T : GenRange
+    public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
     {
         var newRegions = new List<T>();
         var merged = new bool[regions.Count];
@@ -143,6 +143,32 @@ public static class RegionOps
                 {
                     continue;
                 }
+                newRegion = newRegion with {End = regions[j].End};
+                merged[j] = true;
+            }
+            newRegions.Add(newRegion);
+        }
+        return newRegions;
+    }
+    
+    public static List<Region> GlueNeighbours(List<Region> regions)
+    {
+        var newRegions = new List<Region>();
+        var merged = new bool[regions.Count];
+        for (int i = 0; i < regions.Count; i++)
+        {
+            if (merged[i])
+            {
+                continue;
+            }
+            var newRegion = regions[i];
+            int j = i + 1; 
+            if (j < regions.Count
+                && !merged[j] 
+                && regions[j].ChrNo == newRegion.ChrNo 
+                && regions[j].Start == newRegion.End 
+                && regions[j].Forward == newRegion.Forward)
+            {
                 newRegion = newRegion with {End = regions[j].End};
                 merged[j] = true;
             }
@@ -179,9 +205,6 @@ public static class RegionOps
         return newRegions;
     }
     
-    public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices)
-    {
-        var selectedRegions = indices.Select(i => newRegions[i]);
-        return GlueNeighbours(ConcatRegions(selectedRegions));
-    }
+    public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
+        => ConcatRegions(indices.Select(i => newRegions[i]));
 }
