@@ -33,7 +33,7 @@ public class Contig
         => regions.Sum(r => r.Length);
 
     public static string ToString(IEnumerable<Region> regions)
-        => "[" + string.Join(",", regions.Select(r => r.ToString())) + "]";
+        => "[" + string.Join("~", regions.Select(r => r.ToString())) + "]";
 
     public override string ToString()
         => ToString(_regions);

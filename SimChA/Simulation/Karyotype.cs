@@ -47,7 +47,7 @@ public class Karyotype
     }
 
     public override string ToString()
-        => CountContigs() > 0 ? "[" + string.Join(",", _contigs.Where(c => c.Any())) + "]" : "[]";
+        => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
     public bool IsMissing(GenRange other)
         => _missingRanges.Any(range => range.Overlaps(other));
@@ -271,7 +271,7 @@ public class Karyotype
                 long lenB = _contigs[contigB].Length();
                 long posA = Sampling.GetInternalPos(rnd, lenA);
                 long posB = Sampling.GetInternalPos(rnd, lenB);
-                bool inverted = cnEventP.Params.ContainsKey("InvProb") ? rnd.CoinFlip(cnEventP.Params["InvProb"]) : false;
+                bool inverted = cnEventP.Params != null && cnEventP.Params.ContainsKey("InvProb") && rnd.CoinFlip(cnEventP.Params["InvProb"]);
                 return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
             
             case CNEventType.Chromothripsis:

@@ -11,113 +11,78 @@
   },
   "Signatures": [
     {
-      "Id": null,
+      "Id": "sig1",
       "Prob": 1,
       "Circularization": 0,
       "Events": [
         {
           "Type": "ChromDeletion",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
+          "Prob": 1
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
+          "Prob": 1
         },
         {
           "Type": "InternalDuplication",
           "Prob": 10,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "InternalDeletion",
           "Prob": 20,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "InternalInversion",
           "Prob": 10,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "InvertedDuplication",
           "Prob": 10,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "BreakageFusionBridge",
           "Prob": 10,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "TailDeletion",
           "Prob": 10,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "Translocation",
           "Prob": 10,
           "Params": {
             "Mean": 0.1
-          },
-          "Targets": null
+          }
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.1,
-          "Params": null,
-          "Targets": null
+          "Prob": 0.1
         },
         {
           "Type": "Chromoplexy",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
+          "Prob": 1
         },
         {
           "Type": "Chromothripsis",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
-        },
-        {
-          "Type": "ChainTemplatedInsertions",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
-        },
-        {
-          "Type": "CycleTemplatedInsertions",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
-        },
-        {
-          "Type": "BridgeTemplatedInsertions",
-          "Prob": 1,
-          "Params": null,
-          "Targets": null
+          "Prob": 1
         }
       ]
     }
