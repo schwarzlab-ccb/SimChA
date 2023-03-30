@@ -221,7 +221,7 @@ public class Karyotype
     public string ApplyPyrgo(int contigID, List<(long start, long len)> frags)
     {
         var contig = _contigs[contigID];
-        var res = "contig:{contigID};";
+        var res = $"contig:{contigID};";
         long offset = 0;
         foreach ((long start, long len) in frags)
         {
@@ -250,7 +250,7 @@ public class Karyotype
     {
         var contig = _contigs[contigID];
         var lastWasDeletion = false;
-        var res = "contig:{contigID};";
+        var res = $"contig:{contigID};";
         foreach (long len in rigmaLens)
         {
             if (lastWasDeletion)
@@ -260,8 +260,7 @@ public class Karyotype
             else
             {
                 contig.DeleteRange(rigmaStart, rigmaStart + len);
-                rigmaStart -= len;
-                res += "start:{rigmaStart};end:{rigmaStart + len};";
+                res += $"start:{rigmaStart};end:{rigmaStart + len};";
             }
             lastWasDeletion = !lastWasDeletion;
         }
@@ -349,7 +348,7 @@ public class Karyotype
                 double rigmaMean = cnEventP.Get("Mean", 0.1);
                 long rigmaStart = Sampling.GetInternalPos(rnd, lenA - rigmaLen);
                 int rigmaCount = Sampling.GetSiteCount(rnd, rigmaMean);
-                var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, lenA, rigmaMean)).ToList();
+                var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, rigmaLen, rigmaMean)).ToList();
                 return ApplyRigma(contigA, rigmaStart, rigmaStops);
 
             case CNEventType.Chromoplexy:

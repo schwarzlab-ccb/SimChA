@@ -136,7 +136,8 @@ public class TestIO
         var projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
         var kar = new Karyotype(false);
-        kar.ApplyCNEvent(new Random(1), new CNEventP(CNEventType.Rigma, 1.0));
+        string eventDesc = kar.ApplyCNEvent(new Random(0), new CNEventP(CNEventType.Pyrgo, 1.0));
+        Console.WriteLine(eventDesc);
         var clone = new Clone(1, -1, "test", 0, kar, 1);
         files.WriteClones(new List<Clone> {clone});
     }
