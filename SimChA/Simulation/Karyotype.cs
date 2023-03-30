@@ -338,7 +338,7 @@ public class Karyotype
             case CNEventType.Pyrgo:
                 long pyrgoLen = cnEventP.Get("Size", 1_000_000L);
                 double pyrgoMean = cnEventP.Get("Mean", 0.1);
-                long pyrgoFrag = Sampling.GetExpSeg(rnd, lenA, pyrgoLen);
+                long pyrgoFrag = Sampling.GetNormSeg(rnd, pyrgoLen, 1.0);
                 long pyrgoStart = Sampling.GetInternalPos(rnd, lenA - pyrgoFrag);
                 var frags = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
                 return ApplyPyrgo(contigA, frags);

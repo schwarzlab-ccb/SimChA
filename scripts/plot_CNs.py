@@ -36,14 +36,9 @@ def get_copy_numbers(chr_data, breakpoints):
 
 
 # a plot with rectangles between start-end on a line given by the copy number
-def plot_chr(ax, breakpoints, cnas, chr, hap, start = 0, end = 0):    
-    ax.set_ylabel(f"CN {chr}")
+def plot_hap(ax, breakpoints, cnas, chr, hap):    
     if (len(breakpoints) == 0):
         return
-    end = breakpoints[-1] / 1000000 if end == 0 else end
-    ax.set_xlim(start, end)
-    ax.set_ylim(-0.5, max(cnas) + .5)
-    ax.set_yticks(np.arange(0, max(cnas) + 1, 1))
     for i in range(len(breakpoints) - 1):
         start = breakpoints[i] / 1000000
         end = breakpoints[i + 1] / 1000000
@@ -56,12 +51,33 @@ def plot_chr(ax, breakpoints, cnas, chr, hap, start = 0, end = 0):
             y_pos = copy_number - .25
         else:
             height = .5
-            y_pos = copy_number - .25
-            
+            y_pos = copy_number - .25            
         ax.add_patch(mpatches.Rectangle((start, y_pos), end - start, height, fc=pk.chromosome_colors[chr], edgecolor="black"))
-        # add a thin line for every y tick
-        for y in range(max(cnas) + 1):
-            ax.plot([start, end], [y, y], color="black", linewidth=0.1, alpha=0.5)
+            
+
+def plot_chr(ax, data, chr, start = 0, end = 0):
+    ax.set_ylabel(f"CN {chr}")
+    # set figure to full hd, tight layout 
+    breakpoints = []
+    cnas = [] 
+    for hap in ["1", "2"]:
+        hap_data = get_chr_data(data, chr, hap)
+        breakpoints.append(get_segmentation(hap_data))
+        cnas.append(get_copy_numbers(hap_data, breakpoints[-1]))        
+
+    max_end = max([points[-1] if len(points) > 0 else 0 for points in breakpoints]) 
+    max_cna = max([max(cna) if len(cna) > 0 else 0 for cna in cnas])
+    end = max_end / 1000000 if end == 0 else end
+    ax.set_xlim(start, end)
+    ax.set_ylim(-0.5,  max_cna + .5)
+    ax.set_yticks(np.arange(0, max_cna + 1, 1))
+
+    # add a thin line for every y tick
+    for y in range(max_cna + 1):
+        ax.plot([start, end], [y, y], color="black", linewidth=0.1, alpha=0.5)
+    
+    plot_hap(ax, breakpoints[0], cnas[0], chr, "1")
+    plot_hap(ax, breakpoints[1], cnas[1], chr, "2")
 
 
 def plot_CNs(data, sample, dpi=200):
@@ -71,12 +87,7 @@ def plot_CNs(data, sample, dpi=200):
     fig.set_size_inches(1920 / dpi, 1080 / dpi * 8)
     axs[0].set_title(f"Haplotype-specific CNs of sample {sample}")
     for i, chr_name in enumerate(chr_names):
-        # set figure to full hd, tight layout  
-        for hap in ["1", "2"]:
-            chr_data = get_chr_data(data, chr_name, hap)
-            breakpoints = get_segmentation(chr_data)
-            cnas = get_copy_numbers(chr_data, breakpoints)
-            plot_chr(axs[i], breakpoints, cnas, chr_name, hap)
+        plot_chr(axs[i], data, chr_name)
 
 
 if __name__ == "__main__":

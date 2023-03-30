@@ -6,14 +6,11 @@ namespace SimChA.Simulation;
 
 public static class Sampling
 {
-    public static long GetNormSeg(Random rnd, long contigLen, long meanLen)
-        => Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanLen)), contigLen - 2);
-    
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac)), contigLen - 2);
+        => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen - 2));
     
     public static long GetExpSeg(Random rnd, long contigLen, long meanLen) 
-        => Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, 1.0 / meanLen)), contigLen - 2);
+        => Math.Min((long) Math.Round(ExponentialDistribution.Sample(rnd, meanLen)), contigLen - 2);
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen - 2);
