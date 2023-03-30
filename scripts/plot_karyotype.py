@@ -32,6 +32,18 @@ chromosome_colors = {
     'chrY': 'darkslateblue'
 }
    
+def get_test_data():
+    # Four datasets with length (float) and direction (bool)
+    return [[
+        {"chr": "chr3", "length": 3.2, "direction": True},
+        {"chr": "chr1", "length": 4.6, "direction": False},
+        {"chr": "chr2", "length": 2.8, "direction": True},
+        {"chr": "chr3", "length": 5.1, "direction": False},
+    ],[
+        {"chr": "chr8", "length": 6.2, "direction": True},
+        {"chr": "chr4", "length": 5.1, "direction": False},
+    ]]
+
 
 def parse_region_string(s):
     # Define the regular expression pattern to match the string
@@ -46,15 +58,14 @@ def parse_region_string(s):
         direction = True if match.group(3) == '>' else False
         start = int(match.group(4))
         end = int(match.group(5))
-        # Calculate the length in millions and round to 2 decimal places
-        length = round((end - start) / 1000000, 2)
 
         # Return the extracted values as a dictionary
         return {
             'chr': chromosome,
             'haplotype': haplotype,
             'direction': direction,
-            'length': length
+            'start': start,
+            'end': end
         }
     else:
         return None
@@ -84,7 +95,7 @@ def get_data(input_file, sample_name):
         open(input_file, 'r')
     except IOError:
         print(f"File {input_file} not found")
-        return
+        raise SystemExit
     clones = pd.read_csv(input_file, sep='\t')
 
     # set clones["ID"] to string
@@ -100,8 +111,7 @@ def get_data(input_file, sample_name):
     return parse_karyotype(sample["Karyotype"])
 
 
-def plot_karyotype(data, sample_name, output_file):
-    dpi = 150
+def plot_karyotype(data, sample_name, dpi=150):
     sample_count = len(data)
 
     fig, ax = plt.subplots()
@@ -121,7 +131,10 @@ def plot_karyotype(data, sample_name, output_file):
         last_left = False
         for j, item in enumerate(sample):
             chr_no = item["chr"]
-            length = item["length"]
+            start = item["start"]
+            end = item["end"]
+            # Calculate the length in millions and round to 2 decimal places
+            length =  round((end - start) / 1000000, 2)
             direction = item["direction"]
             x = starts[i] + (0 if direction else length)
             dx = length if direction else -length
@@ -139,8 +152,6 @@ def plot_karyotype(data, sample_name, output_file):
         ax.plot(0, 0, color=color, label=chr_no)
         ax.legend(loc="upper left", bbox_to_anchor=(1, 1))
 
-    # Show the plot
-    plt.savefig(output_file, dpi=dpi)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
@@ -150,4 +161,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     data = get_data(args.input, args.sample)
-    plot_karyotype(data, args.sample, args.output)
+    plot_karyotype(data, args.sample, dpi=150)
+    plt.savefig(args.output, dpi=150)

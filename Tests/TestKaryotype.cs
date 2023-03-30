@@ -157,7 +157,7 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIBridge, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TICycle, 1.0)); });
     }
-
+    
     [Test]
     public void TestChromothripsis()
     {
