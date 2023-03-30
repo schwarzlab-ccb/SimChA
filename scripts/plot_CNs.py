@@ -55,17 +55,17 @@ def plot_hap(ax, breakpoints, cnas, chr, hap):
         ax.add_patch(mpatches.Rectangle((start, y_pos), end - start, height, fc=pk.chromosome_colors[chr], edgecolor="black"))
             
 
-def plot_chr(ax, data, chr, start = 0, end = 0):
+def plot_chr(ax, data, chr, start = 0, end = 0, join_haps = False):
     ax.set_ylabel(f"CN {chr}")
-    # set figure to full hd, tight layout 
     breakpoints = []
     cnas = [] 
-    for hap in ["1", "2"]:
+    haps = ["both"] if join_haps else ["1", "2"]
+    for hap in haps:
         hap_data = get_chr_data(data, chr, hap)
         breakpoints.append(get_segmentation(hap_data))
         cnas.append(get_copy_numbers(hap_data, breakpoints[-1]))        
 
-    max_end = max([points[-1] if len(points) > 0 else 0 for points in breakpoints]) 
+    max_end = max([points[-1] if len(points) > 0 else 1 for points in breakpoints]) 
     max_cna = max([max(cna) if len(cna) > 0 else 0 for cna in cnas])
     end = max_end / 1000000 if end == 0 else end
     ax.set_xlim(start, end)
@@ -76,18 +76,18 @@ def plot_chr(ax, data, chr, start = 0, end = 0):
     for y in range(max_cna + 1):
         ax.plot([start, end], [y, y], color="black", linewidth=0.1, alpha=0.5)
     
-    plot_hap(ax, breakpoints[0], cnas[0], chr, "1")
-    plot_hap(ax, breakpoints[1], cnas[1], chr, "2")
+    for i in range(len(haps)):
+        plot_hap(ax, breakpoints[i], cnas[i], chr, haps[i])
 
 
-def plot_CNs(data, sample, dpi=200):
+def plot_CNs(data, sample, join_haps = False, dpi=200):
     chr_names = pk.chromosome_colors.keys()
     # set 24 subplots vertically stacked
     fig, axs = plt.subplots(len(chr_names), 1)
     fig.set_size_inches(1920 / dpi, 1080 / dpi * 8)
     axs[0].set_title(f"Haplotype-specific CNs of sample {sample}")
     for i, chr_name in enumerate(chr_names):
-        plot_chr(axs[i], data, chr_name)
+        plot_chr(axs[i], data, chr_name, join_haps = join_haps)
 
 
 if __name__ == "__main__":
@@ -95,10 +95,11 @@ if __name__ == "__main__":
     parser.add_argument("--input", default="./out/clones.tsv", help="Input file path")
     parser.add_argument("--sample", default="1", help="Sample ID")
     parser.add_argument("--output", default="./out/karyotype.png", help="Output file path")
+    parser.add_argument("--joint", action="store_true", help="Plot both haplotypes jointly (default: False))")
     args = parser.parse_args()
 
     data = pk.get_data(args.input, args.sample)
-    plot_CNs(data, args.sample, dpi=200)
+    plot_CNs(data, args.sample, join_haps = args.joint, dpi=200)
     # save using tight layout
     plt.tight_layout()
     plt.savefig(args.output, dpi=200)
