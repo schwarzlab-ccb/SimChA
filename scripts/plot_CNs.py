@@ -80,7 +80,7 @@ def plot_CNs(data, sample, dpi=200):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
+    parser = argparse.ArgumentParser(description="Plot haplotype specific Copy Numbers for a sample")
     parser.add_argument("--input", default="./out/clones.tsv", help="Input file path")
     parser.add_argument("--sample", default="1", help="Sample ID")
     parser.add_argument("--output", default="./out/karyotype.png", help="Output file path")
