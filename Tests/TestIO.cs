@@ -8,6 +8,7 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace Tests;
 
@@ -88,7 +89,7 @@ public class TestIO
             174
         };
 
-        for(int i = 0; i < newickTestStrings.Length; i++)
+        for (int i = 0; i < newickTestStrings.Length; i++)
         {
             var clones = Parsers.ParseNewick(newickTestStrings[i], true);
             foreach(var clone in clones)
@@ -127,5 +128,18 @@ public class TestIO
         tsgList[ChrNo.chr2].Add(gene2);
         listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), true);
         Assert.AreEqual(tsgList, listFromString);
+    }
+
+    [Test]
+    public void TestWrite()
+    {
+        var projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
+        var files = new FileIO(projectPath + "/out");
+        var kar = new Karyotype(false);
+        var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
+        string eventDesc = kar.ApplyCNEvent(new Random(48), new CNEventP(CNEventType.Rigma, 1.0, ceParams));
+        Console.WriteLine(eventDesc);
+        var clone = new Clone(1, -1, "test", 0, kar, 1);
+        files.WriteClones(new List<Clone> {clone});
     }
 }

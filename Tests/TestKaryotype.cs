@@ -151,12 +151,13 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Translocation, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.WholeGenomeDoubling, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Pyrgo, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Rigma, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIChain, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIBridge, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TICycle, 1.0)); });
     }
-
+    
     [Test]
     public void TestChromothripsis()
     {
@@ -210,6 +211,23 @@ public class TestKaryotype
         _kar.ApplyCNEvent(_rnd, _del);
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
+    }
+    
+    [Test]
+    public void TestPyrgo()
+    {
+        long contigLen = _kar.ContigLen(0);
+        var frags = new List<(long, long)> { (TEST_FRAC, TEST_FRAC), (TEST_FRAC, TEST_FRAC * 2) };
+        _kar.ApplyPyrgo(0, frags);
+        Assert.AreEqual(contigLen, _kar.ContigLen(0) - TEST_FRAC * 3);
+    }
+    
+    [Test]
+    public void TestRigma()
+    {
+        long contigLen = _kar.ContigLen(0);
+        _kar.ApplyRigma(0, TEST_FRAC, new List<long> {TEST_FRAC, TEST_FRAC, TEST_FRAC});
+        Assert.AreEqual(contigLen, _kar.ContigLen(0) + TEST_FRAC * 2);
     }
 
     [Test]

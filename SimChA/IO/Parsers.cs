@@ -31,7 +31,7 @@ public static class Parsers
         }
         return res;
     }
-
+    
     public static void ValidateSignatures(List<Signature>? signatures)
     {
         if (signatures is null || signatures.Count == 0)
