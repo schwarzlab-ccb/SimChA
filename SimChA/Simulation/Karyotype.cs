@@ -221,7 +221,7 @@ public class Karyotype
     public string ApplyPyrgo(int contigID, List<(long start, long len)> frags)
     {
         var contig = _contigs[contigID];
-        var res = $"contig:{contigID};";
+        var res = "contig:{contigID};";
         long offset = 0;
         foreach ((long start, long len) in frags)
         {
@@ -250,7 +250,7 @@ public class Karyotype
     {
         var contig = _contigs[contigID];
         var lastWasDeletion = false;
-        var res = $"contig:{contigID};";
+        var res = "contig:{contigID};";
         foreach (long len in rigmaLens)
         {
             if (lastWasDeletion)
@@ -260,7 +260,8 @@ public class Karyotype
             else
             {
                 contig.DeleteRange(rigmaStart, rigmaStart + len);
-                res += $"start:{rigmaStart};end:{rigmaStart + len};";
+                rigmaStart -= len;
+                res += "start:{rigmaStart};end:{rigmaStart + len};";
             }
             lastWasDeletion = !lastWasDeletion;
         }
@@ -305,12 +306,8 @@ public class Karyotype
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-<<<<<<< HEAD
-                long segLen = Sampling.GetSegLength(rnd, lenA, cnEventP.Params["Mean"]);
-=======
                 long internalSize = cnEventP.Get("Size", 100_000);
                 long segLen = Sampling.GetExpSeg(rnd, lenA, internalSize);
->>>>>>> origin/main
                 long start = Sampling.GetInternalPos(rnd, lenA - segLen);
                 long end = start + segLen;
                 return cnEventP.Type switch
@@ -327,12 +324,8 @@ public class Karyotype
                 long lenB = _contigs[contigB].Length();
                 long posA = Sampling.GetInternalPos(rnd, lenA);
                 long posB = Sampling.GetInternalPos(rnd, lenB);
-<<<<<<< HEAD
-                bool inverted = cnEventP.Params != null && cnEventP.Params.ContainsKey("InvProb") && rnd.CoinFlip(cnEventP.Params["InvProb"]);
-=======
                 double invProb = cnEventP.Get("InvProb", 0.0);
                 bool inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
->>>>>>> origin/main
                 return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
             
             case CNEventType.Chromothripsis:
@@ -346,7 +339,7 @@ public class Karyotype
             case CNEventType.Pyrgo:
                 long pyrgoLen = cnEventP.Get("Size", 1_000_000L);
                 double pyrgoMean = cnEventP.Get("Mean", 0.1);
-                long pyrgoFrag = Sampling.GetNormSeg(rnd, pyrgoLen, 1.0);
+                long pyrgoFrag = Sampling.GetExpSeg(rnd, lenA, pyrgoLen);
                 long pyrgoStart = Sampling.GetInternalPos(rnd, lenA - pyrgoFrag);
                 var frags = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
                 return ApplyPyrgo(contigA, frags);
@@ -356,7 +349,7 @@ public class Karyotype
                 double rigmaMean = cnEventP.Get("Mean", 0.1);
                 long rigmaStart = Sampling.GetInternalPos(rnd, lenA - rigmaLen);
                 int rigmaCount = Sampling.GetSiteCount(rnd, rigmaMean);
-                var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, rigmaLen, rigmaMean)).ToList();
+                var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, lenA, rigmaMean)).ToList();
                 return ApplyRigma(contigA, rigmaStart, rigmaStops);
 
             case CNEventType.Chromoplexy:
@@ -376,11 +369,7 @@ public class Karyotype
                 }
                 var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd);
                 var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
-<<<<<<< HEAD
-                return ApplyChromoplexy(contigIDs, stopsForConting, sequence, breakpoints);
-=======
                 return ApplyChromoplexy(contigIDs, stopsForContig, sequence, breakpoints);
->>>>>>> origin/main
             
             case CNEventType.TIChain:
             case CNEventType.TICycle:
@@ -400,11 +389,7 @@ public class Karyotype
                     CNEventType.TICycle => ApplyCycleTemplatedInsertions(contigA, regions, rnd),
                     CNEventType.TIBridge => ApplyBridgeTemplatedInsertions(contigA, regions)
                 };
-<<<<<<< HEAD
-            
-=======
 
->>>>>>> origin/main
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
