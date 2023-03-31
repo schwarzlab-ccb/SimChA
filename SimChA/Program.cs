@@ -29,6 +29,8 @@ else
     simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null);
 }
 
+float mean_fit = -3.0f;
+
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
@@ -60,8 +62,17 @@ else
     {
         clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
     }
+    var cloneCopy = clones;
     cnEvents = simulator.ApplyEvents(clones[0], clones);
     clones = clones.Where(c => c.CloneId != 0).ToList();
+
+    if (options.Value.MCMC_ON)
+    {
+        // TODO: how do I combine this with the fitness Dictionary
+        Console.WriteLine("Sampling possible events to produce this clone");
+        simulator.MCSampleEvents(cloneCopy[0], cloneCopy, mean_fit);
+        //clones = clones.Where(c => c.CloneId != 0).ToList();
+    }
 }
 
 // Fitness data

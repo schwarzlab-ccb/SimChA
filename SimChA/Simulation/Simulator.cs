@@ -1,5 +1,6 @@
 ﻿using SimChA.DataTypes;
 using EDists = Extreme.Statistics.Distributions;
+using SimChA.Computation;
 
 namespace SimChA.Simulation;
 
@@ -94,5 +95,88 @@ public class Simulator
         var i = 1;
         var res = profiles.Select(pair => new Clone(i++, 0, pair.Key, 1, pair.Value, 1));
         return res.ToList();
+    }
+
+    public void MCSampleEvents(Clone rootClone, List<Clone> clones, float fitness)
+    {
+        List<CNEvent> events = new();
+        int counter = 1;
+        MCSampleCNEventsRec(rootClone, clones, events, fitness, ref counter);
+        Console.WriteLine();
+        return;
+    }
+
+
+    private CNEventP newEventP()
+    {
+        // Pick a random allowed signature
+        var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
+        // Return the event weight
+        return SignatureHelper.PickRandomEventP(_rnd, sig.Events);
+    }
+
+    // Method to generate the starting events
+    private List<CNEventP> InitEvents(int nMutations)
+    {
+        List<CNEventP> tempEventPs = new();
+        for (int mutNo = 0; mutNo < nMutations; mutNo++)
+        {   
+            tempEventPs.Add(newEventP());
+        }
+        return tempEventPs;
+    }
+
+    private void MCSampleCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, float fitness, ref int counter)
+    {
+        foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
+        {
+            child.Karyotype = node.CopyKaryotype();
+            double oldFitness = node.Karyotype.FitnessVal;
+            int parentMutations = GetMutations(node, clones);
+            // TODO: Maybe I need a dummy Karyotype object to apply events to
+
+            // Parameters needed for the MH algorithm
+            // Number of trial events
+            int burn_in = 1000;
+            int n_samples = burn_in + 20000;
+            float SwapEventP = 0.5f;
+            float AlterEventStart = 0.5f;
+            float AlterEventLength = 0.5f;
+
+            Console.WriteLine("Generating starting events:");
+            // Generate a starting set of mutations
+            List<CNEventP> nowEventPs  = InitEvents(child.DistToParent);
+            // Storage for the set of events giving best agreement with mean fitness
+            List<CNEventP> bestEventPs = nowEventPs;
+            
+            // Calculate the overall fitness of this clone
+            double nowFitness = 0.0f;
+            double bestFitness  = nowFitness;
+            //string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
+            //double newFitness = Fitness.Calculate(this, geneLists, fParams);
+
+            // Now we perform the Metropolis-Hastings algorithm
+            Console.WriteLine("\nPerforming Metropolis-Hastings");
+            for (int i = 0; i < n_samples; i++)
+            {   
+                //Console.WriteLine($"{i%1000}");
+                // Printing out benchmarks in sampling
+                if (i > burn_in && i%1000 == 0)
+                {
+                    Console.Write($"\rEvent {i-burn_in}   ");
+                }
+                // Select a random CNEventP to modify
+                int index = _rnd.Next(bestEventPs.Count);
+                // Choose whether to swap the event entirely
+                if (EDists.ContinuousUniformDistribution.Sample(_rnd, 0, 1) < SwapEventP)
+                {
+                    nowEventPs[index] = newEventP();
+                }
+
+
+            }
+            //counter++;
+            //ApplyCNEventsRec(child, clones, events, ref counter);
+        }
     }
 }
