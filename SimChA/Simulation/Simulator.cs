@@ -127,34 +127,23 @@ public class Simulator
         return tempEventPs;
     }
 
-    // The conditional probability of a given event occuring, given the signature
-    private double MutationPotential(List<CNEventP> eventPs)
-    {
-        // Probability of picking this signature
-        var signatures = _simParams.Signatures;
-        var sig_potential = 1.0;
-        if (signatures != null)
-        {
-            sig_potential = _sig.Prob / signatures.Sum(s => s.Prob);
-        }
-        // Probability of picking this set of events
-        double event_potential_total = 1.0;
-        foreach (CNEventP eP in eventPs)
-        {
-            event_potential_total *= eP.Prob;
-        }
-        // Normalize the event potential
-        event_potential_total /= Math.Pow(_sig.Events.Sum(e => e.Prob), eventPs.Count);
-        return sig_potential * event_potential_total;
-    }
-
+    // The conditional probability of this set of events occuring, 
+    // given the individual events and the signature
+    // TODO: do we need to change the eventPs as a result
     private double Potential(Clone node, List<CNEventP> eventPs)
     {
-        double fitness_potential = 0.0;
+        double fitnessPotential = 0.0;
 
         // Probability of picking this set of events
-        double event_potential_total = 1.0;
+        double eventPotentialTotal = 1.0;
         double meanFitness = 0.0;
+        // Probability of picking this signature
+        var signatures = _simParams.Signatures;
+        var sigPotential = 1.0;
+        if (signatures != null)
+        {
+            sigPotential = _sig.Prob / signatures.Sum(s => s.Prob);
+        }
 
         // Make a temporary copy of the adult clone
         var karyotype = node.CopyKaryotype();
@@ -163,20 +152,20 @@ public class Simulator
         {
             string eventString = karyotype.ApplyCNEvent(_rnd, eventP);
             // Update the probability for the event potential
-            event_potential_total *= eventP.Prob;
+            eventPotentialTotal *= eventP.Prob;
         }
 
         double newFitness = karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
         // Normalize the event potential
-        event_potential_total /= Math.Pow(_sig.Events.Sum(e => e.Prob), eventPs.Count);
-
-        double thetaFitness = 1.0;
+        eventPotentialTotal /= Math.Pow(_sig.Events.Sum(e => e.Prob), eventPs.Count);
+        double dFit = newFitness - meanFitness;
+        double thetaFitness = 10.0;
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
-        fitness_potential = Math.Pow(newFitness, thetaFitness);
-        //double mean_fit_potential = Exp();
+        fitnessPotential = Math.Exp(-thetaFitness*Math.Abs(dFit));
+        // Gaussian form
+        //fitness_potential = Math.Exp(-thetaFitness*((dFit)**2));
         
-        
-        return fitness_potential * event_potential_total;
+        return fitnessPotential * eventPotentialTotal * sigPotential;
     }
 
     private void MCSampleCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, float fitness, ref int counter)
@@ -198,16 +187,17 @@ public class Simulator
 
             Console.WriteLine("Generating starting events:");
             // Generate a starting set of mutations
-            List<CNEventP> currentEventPs  = InitEvents(child.DistToParent);
+            List<CNEventP> currentEventPs = InitEvents(child.DistToParent);
 
             // Calculate the overall fitness of this clone
-            double currentPotential = 0.0f;
+            double currentPotential = Potential(node, currentEventPs);
             
             //string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
             //double newFitness = Fitness.Calculate(this, geneLists, fParams);
 
             // Now we perform the Metropolis-Hastings algorithm
             Console.WriteLine("\nPerforming Metropolis-Hastings");
+            
             for (int i = 0; i < n_samples; i++)
             {   
                 var proposedEventPs = currentEventPs;
@@ -228,7 +218,7 @@ public class Simulator
                 // With the newly selected event, we need to calculate the new
                 // fitness of the clone
                 // TODO: calc fitness
-                double proposalPotential = MutationPotential(proposedEventPs);//EDists.ContinuousUniformDistribution.Sample(_rnd, 0, 1);
+                double proposalPotential = Potential(node, currentEventPs);
                 double acceptProb = proposalPotential/currentPotential;
                 if (acceptProb >= 1 || acceptProb > EDists.ContinuousUniformDistribution.Sample(_rnd,0,1))
                 {
