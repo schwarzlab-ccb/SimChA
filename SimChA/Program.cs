@@ -63,15 +63,20 @@ else
         clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
     }
     var cloneCopy = clones;
-    cnEvents = simulator.ApplyEvents(clones[0], clones);
-    clones = clones.Where(c => c.CloneId != 0).ToList();
 
+    // Monte Carlo sampling of copy-number altering events
     if (options.Value.MCMC_ON)
     {
-        // TODO: how do I combine this with the fitness Dictionary
         Console.WriteLine("Sampling possible events to produce this clone");
-        simulator.MCSampleEvents(cloneCopy[0], cloneCopy, mean_fit);
+        cnEvents = simulator.MCSampleEvents(cloneCopy[0], cloneCopy, fitnessDict);
+        clones = clones.Where(c => c.CloneId != 0).ToList();
         //clones = clones.Where(c => c.CloneId != 0).ToList();
+    }
+    // Otherwise we choose to stochastically sample from the signatures
+    else
+    {
+        cnEvents = simulator.ApplyEvents(clones[0], clones);
+        clones = clones.Where(c => c.CloneId != 0).ToList();
     }
 }
 

@@ -11,6 +11,8 @@ public class Simulator
     private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
 
     private Signature _sig;
+
+    private Dictionary<string, double> _fitnessDict;
     public Simulator(
         Random rnd, 
         SimParams simParams, 
@@ -98,13 +100,14 @@ public class Simulator
         return res.ToList();
     }
 
-    public void MCSampleEvents(Clone rootClone, List<Clone> clones, float fitness)
+    public List<CNEvent> MCSampleEvents(Clone rootClone, List<Clone> clones, Dictionary<string, double> fitnessDictionary)
     {
+        // TODO: How do I actually use the fitness dictionary?
         List<CNEvent> events = new();
         int counter = 1;
-        MCSampleCNEventsRec(rootClone, clones, events, fitness, ref counter);
+        MCSampleCNEventsRec(rootClone, clones, events, ref counter);
         Console.WriteLine();
-        return;
+        return events;
     }
 
 
@@ -168,7 +171,7 @@ public class Simulator
         return fitnessPotential * eventPotentialTotal * sigPotential;
     }
 
-    private void MCSampleCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, float fitness, ref int counter)
+    private void MCSampleCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
@@ -179,8 +182,8 @@ public class Simulator
 
             // Parameters needed for the MH algorithm
             // Number of trial events
-            int burn_in = 1000;
-            int n_samples = burn_in + 20000;
+            int burn_in = 100;
+            int n_samples = burn_in + 2000;
             float SwapEventP = 1.0f;
             float AlterEventStart = 0.5f;
             float AlterEventLength = 0.5f;
@@ -188,7 +191,6 @@ public class Simulator
             Console.WriteLine("Generating starting events:");
             // Generate a starting set of mutations
             List<CNEventP> currentEventPs = InitEvents(child.DistToParent);
-
             // Calculate the overall fitness of this clone
             double currentPotential = Potential(node, currentEventPs);
             
@@ -196,6 +198,8 @@ public class Simulator
             //double newFitness = Fitness.Calculate(this, geneLists, fParams);
 
             // Now we perform the Metropolis-Hastings algorithm
+            // and sample a set of events that give the closest agreement with
+            // fitness given by SMITH
             Console.WriteLine("\nPerforming Metropolis-Hastings");
             
             for (int i = 0; i < n_samples; i++)
@@ -225,8 +229,22 @@ public class Simulator
                     currentPotential = proposalPotential;
                     currentEventPs   = proposedEventPs;
                 }
-
             }
+            // Finalize the mutated karyotype by applying the best-fit set of events
+            // and move onto the next clone
+            for (int mutNo = 0; mutNo < currentEventPs.Count(); mutNo++)
+            {
+                Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
+                var eventP = currentEventPs[mutNo];
+                string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
+                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
+                int mutationCount = parentMutations + 1 + mutNo;
+                double dFit = newFitness - oldFitness;
+                var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);
+                events.Add(abberation);
+            }
+            counter++;
+            MCSampleCNEventsRec(child, clones, events, ref counter);
             //counter++;
             //ApplyCNEventsRec(child, clones, events, ref counter);
         }
