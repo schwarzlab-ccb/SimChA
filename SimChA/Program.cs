@@ -26,7 +26,7 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null);
+    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null, null);
 }
 
 float mean_fit = -3.0f;
@@ -67,9 +67,16 @@ else
     // Monte Carlo sampling of copy-number altering events
     if (options.Value.MCMC_ON)
     {
-        Console.WriteLine("Sampling possible events to produce this clone");
-        cnEvents = simulator.MCSampleEvents(cloneCopy[0], cloneCopy, fitnessDict);
-        clones = clones.Where(c => c.CloneId != 0).ToList();
+        if (simParams.MCParams == null)
+        {
+            Console.WriteLine("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
+        }
+        else
+        {
+            Console.WriteLine("Sampling possible events to produce this clone");
+            cnEvents = simulator.MCSampleEvents(cloneCopy[0], cloneCopy, fitnessDict);
+            clones = clones.Where(c => c.CloneId != 0).ToList();
+        }
         //clones = clones.Where(c => c.CloneId != 0).ToList();
     }
     // Otherwise we choose to stochastically sample from the signatures

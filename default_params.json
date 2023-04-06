@@ -86,5 +86,11 @@
         }
       ]
     }
-  ]
+  ],
+  "MCParams": {
+    "NumBurnIn": 100,
+    "NumSamples": 2000,
+    "ThetaFitness": 1.0,
+    "SwapEventP" : 1.0
+  }
 }

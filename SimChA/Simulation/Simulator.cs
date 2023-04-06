@@ -13,6 +13,8 @@ public class Simulator
     private Signature _sig;
 
     private Dictionary<string, double> _fitnessDict;
+
+    private MCParams _mcParams;
     public Simulator(
         Random rnd, 
         SimParams simParams, 
@@ -102,8 +104,10 @@ public class Simulator
 
     public List<CNEvent> MCSampleEvents(Clone rootClone, List<Clone> clones, Dictionary<string, double> fitnessDictionary)
     {
-        // TODO: How do I actually use the fitness dictionary?
         List<CNEvent> events = new();
+        _mcParams = _simParams.MCParams;
+        // TODO: How do I actually use the fitness dictionary?
+        
         int counter = 1;
         MCSampleCNEventsRec(rootClone, clones, events, ref counter);
         Console.WriteLine();
@@ -135,8 +139,6 @@ public class Simulator
     // TODO: do we need to change the eventPs as a result
     private double Potential(Clone node, List<CNEventP> eventPs)
     {
-        double fitnessPotential = 0.0;
-
         // Probability of picking this set of events
         double eventPotentialTotal = 1.0;
         double meanFitness = 0.0;
@@ -162,9 +164,8 @@ public class Simulator
         // Normalize the event potential
         eventPotentialTotal /= Math.Pow(_sig.Events.Sum(e => e.Prob), eventPs.Count);
         double dFit = newFitness - meanFitness;
-        double thetaFitness = 10.0;
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
-        fitnessPotential = Math.Exp(-thetaFitness*Math.Abs(dFit));
+        double fitnessPotential = Math.Exp(- _mcParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
         //fitness_potential = Math.Exp(-thetaFitness*((dFit)**2));
         
@@ -182,9 +183,7 @@ public class Simulator
 
             // Parameters needed for the MH algorithm
             // Number of trial events
-            int burn_in = 100;
-            int n_samples = burn_in + 2000;
-            float SwapEventP = 1.0f;
+            int n_samples = _mcParams.NumBurnIn + _mcParams.NumSamples;
             float AlterEventStart = 0.5f;
             float AlterEventLength = 0.5f;
 
@@ -202,20 +201,20 @@ public class Simulator
             // fitness given by SMITH
             Console.WriteLine("\nPerforming Metropolis-Hastings");
             
-            for (int i = 0; i < n_samples; i++)
+            for (int i = 0; i < _mcParams.NumSamples; i++)
             {   
                 var proposedEventPs = currentEventPs;
                 //Console.WriteLine($"{i%1000}");
                 // Printing out benchmarks in sampling
-                if (i > burn_in && i%1000 == 0)
+                if (i > _mcParams.NumBurnIn && i%1000 == 0)
                 {
-                    Console.Write($"\rEvent {i-burn_in}   ");
+                    Console.Write($"\rEvent {i-_mcParams.NumBurnIn}   ");
                 }
                 
                 // Select a random CNEventP to modify
                 int index = _rnd.Next(proposedEventPs.Count);
                 // Choose whether to swap the event entirely
-                if (EDists.ContinuousUniformDistribution.Sample(_rnd, 0, 1) < SwapEventP)
+                if (EDists.ContinuousUniformDistribution.Sample(_rnd, 0, 1) < _mcParams.SwapEventP)
                 {
                     proposedEventPs[index] = newEventP();
                 }
