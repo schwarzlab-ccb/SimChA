@@ -21,7 +21,7 @@ public class FileIO
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
     private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
-    private const string FITNEES_INPUT_FILE = "subclones.out";
+    private const string FITNESS_INPUT_FILE = "subclones.out";
     private string Timestamp { get; }
     private string OutFolder { get; }
 
@@ -217,10 +217,10 @@ public class FileIO
     {
         var fitnessDict = new Dictionary<string, double>();
         string fileFullPath = Path.GetDirectoryName(Path.GetFullPath(newickFile));
-        if(!File.Exists(Path.Combine(fileFullPath, FITNEES_INPUT_FILE)))
+        if(!File.Exists(Path.Combine(fileFullPath, FITNESS_INPUT_FILE)))
             Console.WriteLine("File for fitness values not found. Generating mutations based on probability.");
         else
-            fitnessDict = Parsers.ParseFitness(Path.Combine(fileFullPath, FITNEES_INPUT_FILE));
+            fitnessDict = Parsers.ParseFitness(Path.Combine(fileFullPath, FITNESS_INPUT_FILE));
         return fitnessDict;
     }
 }

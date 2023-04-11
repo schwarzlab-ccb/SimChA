@@ -107,8 +107,9 @@ public class Simulator
         List<CNEvent> events = new();
         _mcParams = _simParams.MCParams;
         // TODO: How do I actually use the fitness dictionary?
-        
+        _fitnessDict = fitnessDictionary;
         int counter = 1;
+        Console.WriteLine("\nPerforming Metropolis-Hastings");
         MCSampleCNEventsRec(rootClone, clones, events, ref counter);
         Console.WriteLine();
         return events;
@@ -141,15 +142,16 @@ public class Simulator
     {
         // Probability of picking this set of events
         double eventPotentialTotal = 1.0;
-        double meanFitness = 0.0;
+        double meanFitness = 0.0;//_fitnessDict[node.CloneId.ToString()];
         // Probability of picking this signature
         var signatures = _simParams.Signatures;
         var sigPotential = 1.0;
+        
+        /* Currently assume one signature
         if (signatures != null)
         {
             sigPotential = _sig.Prob / signatures.Sum(s => s.Prob);
-        }
-
+        }*/
         // Make a temporary copy of the adult clone
         var karyotype = node.CopyKaryotype();
         // Apply the events
@@ -176,18 +178,24 @@ public class Simulator
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
+            // Skip any clones that don't have any mutational distance from their
+            // parent
+            if (child.DistToParent == 0)
+                continue;
+            
+            // Initialize all the relevant quantities
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
+            
             // TODO: Maybe I need a dummy Karyotype object to apply events to
-
             // Parameters needed for the MH algorithm
             // Number of trial events
             int n_samples = _mcParams.NumBurnIn + _mcParams.NumSamples;
             float AlterEventStart = 0.5f;
             float AlterEventLength = 0.5f;
 
-            Console.WriteLine("Generating starting events:");
+            //Console.WriteLine("\nGenerating starting events:");
             // Generate a starting set of mutations
             List<CNEventP> currentEventPs = InitEvents(child.DistToParent);
             // Calculate the overall fitness of this clone
@@ -199,18 +207,17 @@ public class Simulator
             // Now we perform the Metropolis-Hastings algorithm
             // and sample a set of events that give the closest agreement with
             // fitness given by SMITH
-            Console.WriteLine("\nPerforming Metropolis-Hastings");
             
             for (int i = 0; i < _mcParams.NumSamples; i++)
             {   
                 var proposedEventPs = currentEventPs;
                 //Console.WriteLine($"{i%1000}");
                 // Printing out benchmarks in sampling
-                if (i > _mcParams.NumBurnIn && i%1000 == 0)
+                /*if (i > _mcParams.NumBurnIn && i%1000 == 0)
                 {
                     Console.Write($"\rEvent {i-_mcParams.NumBurnIn}   ");
                 }
-                
+                */
                 // Select a random CNEventP to modify
                 int index = _rnd.Next(proposedEventPs.Count);
                 // Choose whether to swap the event entirely
