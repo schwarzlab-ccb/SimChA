@@ -184,40 +184,27 @@ public class Simulator
                 continue;
             
             // Initialize all the relevant quantities
-            child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
             
             // TODO: Maybe I need a dummy Karyotype object to apply events to
             // Parameters needed for the MH algorithm
             // Number of trial events
-            int n_samples = _mcParams.NumBurnIn + _mcParams.NumSamples;
-            float AlterEventStart = 0.5f;
-            float AlterEventLength = 0.5f;
+            //int nSamples = _mcParams.NumBurnIn + _mcParams.NumSamples;
+            float alterEventStart = 0.5f;
+            float alterEventLength = 0.5f;
 
-            //Console.WriteLine("\nGenerating starting events:");
             // Generate a starting set of mutations
             List<CNEventP> currentEventPs = InitEvents(child.DistToParent);
             // Calculate the overall fitness of this clone
             double currentPotential = Potential(node, currentEventPs);
-            
-            //string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
-            //double newFitness = Fitness.Calculate(this, geneLists, fParams);
 
             // Now we perform the Metropolis-Hastings algorithm
             // and sample a set of events that give the closest agreement with
             // fitness given by SMITH
-            
             for (int i = 0; i < _mcParams.NumSamples; i++)
             {   
-                var proposedEventPs = currentEventPs;
-                //Console.WriteLine($"{i%1000}");
-                // Printing out benchmarks in sampling
-                /*if (i > _mcParams.NumBurnIn && i%1000 == 0)
-                {
-                    Console.Write($"\rEvent {i-_mcParams.NumBurnIn}   ");
-                }
-                */
+                var proposedEventPs = currentEventPs.ToList();
                 // Select a random CNEventP to modify
                 int index = _rnd.Next(proposedEventPs.Count);
                 // Choose whether to swap the event entirely
@@ -238,6 +225,8 @@ public class Simulator
             }
             // Finalize the mutated karyotype by applying the best-fit set of events
             // and move onto the next clone
+            // Copy its parent
+            child.Karyotype = node.CopyKaryotype();
             for (int mutNo = 0; mutNo < currentEventPs.Count(); mutNo++)
             {
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
