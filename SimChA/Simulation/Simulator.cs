@@ -1,5 +1,4 @@
 ﻿using SimChA.DataTypes;
-using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
@@ -45,7 +44,7 @@ public class Simulator
             for (int mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
-                var sig = SignatureHelper.RndSignature(_rnd, _simParams.Signatures);
+                var sig = SignatureHelper.RndSignature(_rnd, Signatures);
                 var eventP = SignatureHelper.RndEventP(_rnd, sig.Events);
                 string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
@@ -66,16 +65,6 @@ public class Simulator
         mutCount += clone.DistToParent;
         return mutCount;
     }
-    
-    private static double GetSample(Random rnd, Distribution dist)
-    {
-        return dist switch
-        {
-            Distribution.Exponential => EDists.ExponentialDistribution.Sample(rnd, 1),
-            Distribution.Normal => EDists.NormalDistribution.Sample(rnd, 1, 1),
-            _ => 1
-        };
-    }
 
     public static List<Clone> MakeClones(Random rnd, int repeats, bool sexXX, int distance, Distribution distribution)
     {
@@ -83,7 +72,7 @@ public class Simulator
         var clones = new List<Clone> { parent };
         for (var i = 1; i <= repeats; i++)
         {
-            double sample = GetSample(rnd, distribution);
+            double sample = Sampling.SampleDist(rnd, distribution);
             var mutCount = (int) Math.Round(distance * sample);
             var child = new Clone(i, 0, $"{i}-{mutCount}", mutCount, new Karyotype(sexXX), mutCount);
             parent.ChildrenIDs.Add(child.CloneId);

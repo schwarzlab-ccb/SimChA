@@ -49,4 +49,14 @@ public static class Sampling
         var newRegion = new Region(start, stop, region.ChrID, rnd.CoinFlip());
         return newRegion;
     }
+    
+    public static double SampleDist(Random rnd, DataTypes.Distribution dist)
+    {
+        return dist switch
+        {
+            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, 1),
+            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, 1),
+            _ => 1
+        };
+    }
 }
