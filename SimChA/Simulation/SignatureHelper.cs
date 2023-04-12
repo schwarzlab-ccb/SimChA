@@ -7,7 +7,7 @@ namespace SimChA.Simulation;
 
 public static class SignatureHelper
 {
-    public static Signature PickRandomSignature(Random rnd, List<Signature> sigs)
+    public static Signature RndSignature(Random rnd, List<Signature> sigs)
     {
         double probSum = sigs.Sum(ev => ev.Prob);
         double sample = ContinuousUniformDistribution.Sample(rnd, 0, probSum);
@@ -23,7 +23,7 @@ public static class SignatureHelper
         return sigs.Last();
     }
     
-    public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
+    public static CNEventP RndEventP(Random rnd, List<CNEventP> eventPs)
     {
         double probSum = eventPs.Sum(ev => ev.Prob);
         double sample = ContinuousUniformDistribution.Sample(rnd, 0, probSum);

@@ -1,12 +1,9 @@
-// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-
 namespace SimChA.DataTypes;
 
 // Parameters used in the MCMC sampling
 // Input: 
 
 
-// 
 public record MCParams(
     int NumBurnIn, int NumSamples, // number of burn-in events, and number of true samples
     double ThetaFitness, // exponential multiplier for fitness
