@@ -7,6 +7,7 @@ using NUnit.Framework;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.Computation;
+using SimChA.EventData;
 
 namespace Tests;
 

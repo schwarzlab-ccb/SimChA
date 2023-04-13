@@ -2,6 +2,7 @@
 using CommandLine;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;
 

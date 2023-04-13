@@ -14,4 +14,10 @@
         <PackageReference Include="Extreme.Numerics" Version="8.1.5" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="EventData\CNEventP.cs">
+        <DependentUpon>CNEvent.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

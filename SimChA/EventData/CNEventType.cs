@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace SimChA.DataTypes;
+namespace SimChA.EventData;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CNEventType

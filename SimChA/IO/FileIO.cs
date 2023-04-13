@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.Simulation;
 
 namespace SimChA.IO;

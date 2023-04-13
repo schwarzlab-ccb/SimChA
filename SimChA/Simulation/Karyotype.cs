@@ -3,6 +3,7 @@
 using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.Misc;
 
 namespace SimChA.Simulation;
@@ -395,17 +396,41 @@ public class Karyotype
         }
     }
 
-    public string ApplyEventProperties(Random rnd, CNEventProperties eventProperties)
+
+    private string ApplyContigEvent(ContigEventData eventData)
     {
-        int contigA = 0;
-        switch (eventProperties.EventType)
+        switch (eventData.EventType)
         {
             // Whole chromosome events
             case CNEventType.ChromDeletion:
-                return ApplyContigDeletion(eventProperties.ContigId);
+                return ApplyContigDeletion(eventData.ContigId);
 
             case CNEventType.ChromDuplication:
-                return ApplyContigDuplication(eventProperties.ContigId);
+                return ApplyContigDuplication(eventData.ContigId);
+            
+            default:
+                throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null);
+        }
+    }
+
+    private string ApplyTailEvent(OtherEventData eventData)
+    {
+        int contigA = (eventData as OtherEventData).ContigId;
+        long delFraction = (eventData as OtherEventData).DelFraction;
+        bool delDirection = (eventData as OtherEventData).Direction;
+        return eventData.EventType == CNEventType.TailDeletion
+            ? ApplyTailDeletion(contigA, delFraction, delDirection)
+            : ApplyBFB(contigA, delFraction, delDirection);
+    }
+    
+    public string ApplyEventProperties(BaseEventData eventData)
+    {
+        switch (eventData.EventType)
+        {
+            // Whole chromosome events
+            case CNEventType.ChromDeletion:
+            case CNEventType.ChromDuplication:
+                return ApplyContigEvent(eventData as ContigEventData);
 
             case CNEventType.WholeGenomeDoubling:
                 return ApplyWGD();
@@ -413,44 +438,48 @@ public class Karyotype
             // Tail events
             case CNEventType.TailDeletion:
             case CNEventType.BreakageFusionBridge:
-                contigA = eventProperties.ContigId;
-                long delFraction = eventProperties.DelFraction;
-                bool delDirection = eventProperties.Direction;
-                return eventProperties.EventType == CNEventType.TailDeletion
-                    ? ApplyTailDeletion(contigA, delFraction, delDirection)
-                    : ApplyBFB(contigA, delFraction, delDirection);
+                return ApplyTailEvent(eventData as OtherEventData);
 
             // Internal events
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-                contigA = eventProperties.ContigId;
-                long start = eventProperties.Start;
-                long end = eventProperties.End;
-                return eventProperties.EventType switch
-                {
-                    CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
-                    CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
-                    CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
-                    CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
-                };
+                return ApplyInternalEvent(eventData as OtherEventData);
 
             case CNEventType.Translocation:
-                contigA = eventProperties.ContigIdList[0];
-                int contigB = eventProperties.ContigIdList[1];
-                long posA = eventProperties.PosA;
-                long posB = eventProperties.PosB;
-                bool inverted = eventProperties.Direction;
-                return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
+                return ApplyPairEvent(eventData as PairEventData);
             
             default:
-                throw new ArgumentOutOfRangeException(nameof(eventProperties.EventType), eventProperties.EventType, null);
+                throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null);
         }
-        
     }
     
-    public CNEventProperties GenerateCNEventProperties(Random rnd, CNEventP cnEventP)
+    private string ApplyPairEvent(PairEventData eventData)
+    {
+        int contigA = eventData.ContigIdList[0];
+        int contigB = eventData.ContigIdList[1];
+        long posA = eventData.PosA;
+        long posB = eventData.PosB;
+        bool inverted = eventData.Direction;
+        return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
+    }
+    
+    private string ApplyInternalEvent(OtherEventData eventData)
+    {
+        int contigA = eventData.ContigId;
+        long start = eventData.Start;
+        long end = eventData.End;
+        return eventData.EventType switch
+        {
+            CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
+            CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
+            CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
+            CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
+        };
+    }
+
+    public BaseEventData GenerateCNEventProperties(Random rnd, CNEventP cnEventP)
     {
         using var IDsEnumerator = Enumerable
             .Range(0, _contigs.Count)
@@ -462,17 +491,17 @@ public class Karyotype
         long lenA = _contigs[contigA].Length();
 
         var affectedContigIds = new List<int>();
-        CNEventProperties properties;
+        OtherEventData data;
 
         switch (cnEventP.Type)
         {
             // Whole chromosome events
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
-                return new CNEventProperties(cnEventP, contigA);
+                return new ContigEventData(cnEventP, contigA);
             
             case CNEventType.WholeGenomeDoubling:
-                return new CNEventProperties(cnEventP);
+                return new BaseEventData(cnEventP);
             
             // Tail events
             case CNEventType.TailDeletion:
@@ -480,7 +509,7 @@ public class Karyotype
                 long tailSize = cnEventP.Get("Size", 1_000_000);
                 long delFraction = Sampling.GetExpSeg(rnd, lenA, tailSize);
                 bool delDirection = rnd.CoinFlip();
-                return new CNEventProperties(cnEventP, contigA, delFraction, delDirection);
+                return new OtherEventData(cnEventP, contigA, delFraction, delDirection);
 
             // Internal events
             case CNEventType.InternalDuplication:
@@ -491,7 +520,7 @@ public class Karyotype
                 long segLen = Sampling.GetExpSeg(rnd, lenA, internalSize);
                 long start = Sampling.GetInternalPos(rnd, lenA - segLen);
                 long end = start + segLen;
-                return new CNEventProperties(cnEventP, contigA, start, end);
+                return new OtherEventData(cnEventP, contigA, start, end);
             
             case CNEventType.Translocation:
                 IDsEnumerator.MoveNext();
@@ -504,7 +533,8 @@ public class Karyotype
                 
                 affectedContigIds.Add(contigA);
                 affectedContigIds.Add(contigB);
-                return new CNEventProperties(cnEventP, affectedContigIds, posA, posB, inverted);
+                return new PairEventData(cnEventP, affectedContigIds, posA, posB, inverted);
+            
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }

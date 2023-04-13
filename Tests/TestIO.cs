@@ -8,6 +8,7 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.Simulation;
 
 namespace Tests;

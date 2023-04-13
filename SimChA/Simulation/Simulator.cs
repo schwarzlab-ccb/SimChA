@@ -1,4 +1,5 @@
 ﻿using SimChA.DataTypes;
+using SimChA.EventData;
 
 namespace SimChA.Simulation;
 
@@ -98,23 +99,19 @@ public class Simulator
         return events;
     }
 
-    public List<CNEventProperties> InitEvents(Clone node, Signature sig, int nMutations)
+    public List<BaseEventData> InitEvents(Clone node, Signature sig, int nMutations)
     {
         var eventPs = InitEventPs(sig, nMutations).ToList();
-        List<CNEventProperties> eventProperties = new List<CNEventProperties>();
-        var karyotype = node.CopyKaryotype();
-        foreach (var e in eventPs)
-            eventProperties.Add(karyotype.GenerateCNEventProperties(_rnd, e));
-
-        return eventProperties;
+        return eventPs.Select(e => node.Karyotype.GenerateCNEventProperties(_rnd, e)).ToList();
     }
-    public IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
+
+    private IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
         => Enumerable.Range(0, nMutations).Select(_ => SignatureHelper.RndEventP(_rnd, sig.Events));
 
     // The conditional probability of this set of events occuring, 
     // given the individual events and the signature
     // TODO: do we need to change the eventPs as a result
-    private double Potential(Clone node, Signature sig, List<CNEventProperties> events)
+    private double Potential(Clone node, Signature sig, List<BaseEventData> events)
     {
         // Probability of picking this set of events
         double eventPotentialTotal = 1.0;
@@ -214,7 +211,7 @@ public class Simulator
             {
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
                 var eventProperties = currentEventProps[mutNo];
-                string eventString = child.Karyotype.ApplyEventProperties(_rnd, eventProperties);
+                string eventString = child.Karyotype.ApplyEventProperties(eventProperties);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
