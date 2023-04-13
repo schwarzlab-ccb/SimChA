@@ -394,4 +394,119 @@ public class Karyotype
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
     }
+
+    public string ApplyEventProperties(Random rnd, CNEventProperties eventProperties)
+    {
+        int contigA = 0;
+        switch (eventProperties.EventType)
+        {
+            // Whole chromosome events
+            case CNEventType.ChromDeletion:
+                return ApplyContigDeletion(eventProperties.ContigId);
+
+            case CNEventType.ChromDuplication:
+                return ApplyContigDuplication(eventProperties.ContigId);
+
+            case CNEventType.WholeGenomeDoubling:
+                return ApplyWGD();
+
+            // Tail events
+            case CNEventType.TailDeletion:
+            case CNEventType.BreakageFusionBridge:
+                contigA = eventProperties.ContigId;
+                long delFraction = eventProperties.DelFraction;
+                bool delDirection = eventProperties.Direction;
+                return eventProperties.EventType == CNEventType.TailDeletion
+                    ? ApplyTailDeletion(contigA, delFraction, delDirection)
+                    : ApplyBFB(contigA, delFraction, delDirection);
+
+            // Internal events
+            case CNEventType.InternalDuplication:
+            case CNEventType.InternalDeletion:
+            case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
+                contigA = eventProperties.ContigId;
+                long start = eventProperties.Start;
+                long end = eventProperties.End;
+                return eventProperties.EventType switch
+                {
+                    CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
+                    CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
+                    CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
+                    CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
+                };
+
+            case CNEventType.Translocation:
+                contigA = eventProperties.ContigIdList[0];
+                int contigB = eventProperties.ContigIdList[1];
+                long posA = eventProperties.PosA;
+                long posB = eventProperties.PosB;
+                bool inverted = eventProperties.Direction;
+                return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
+            
+            default:
+                throw new ArgumentOutOfRangeException(nameof(eventProperties.EventType), eventProperties.EventType, null);
+        }
+        
+    }
+    
+    public CNEventProperties GenerateCNEventProperties(Random rnd, CNEventP cnEventP)
+    {
+        using var IDsEnumerator = Enumerable
+            .Range(0, _contigs.Count)
+            .Where(i => _contigs[i].Any())
+            .Shuffle(rnd)
+            .GetEnumerator();
+        IDsEnumerator.MoveNext();
+        int contigA = IDsEnumerator.Current;
+        long lenA = _contigs[contigA].Length();
+
+        var affectedContigIds = new List<int>();
+        CNEventProperties properties;
+
+        switch (cnEventP.Type)
+        {
+            // Whole chromosome events
+            case CNEventType.ChromDeletion:
+            case CNEventType.ChromDuplication:
+                return new CNEventProperties(cnEventP, contigA);
+            
+            case CNEventType.WholeGenomeDoubling:
+                return new CNEventProperties(cnEventP);
+            
+            // Tail events
+            case CNEventType.TailDeletion:
+            case CNEventType.BreakageFusionBridge:
+                long tailSize = cnEventP.Get("Size", 1_000_000);
+                long delFraction = Sampling.GetExpSeg(rnd, lenA, tailSize);
+                bool delDirection = rnd.CoinFlip();
+                return new CNEventProperties(cnEventP, contigA, delFraction, delDirection);
+
+            // Internal events
+            case CNEventType.InternalDuplication:
+            case CNEventType.InternalDeletion:
+            case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
+                long internalSize = cnEventP.Get("Size", 100_000);
+                long segLen = Sampling.GetExpSeg(rnd, lenA, internalSize);
+                long start = Sampling.GetInternalPos(rnd, lenA - segLen);
+                long end = start + segLen;
+                return new CNEventProperties(cnEventP, contigA, start, end);
+            
+            case CNEventType.Translocation:
+                IDsEnumerator.MoveNext();
+                int contigB = IDsEnumerator.Current;
+                long lenB = _contigs[contigB].Length();
+                long posA = Sampling.GetInternalPos(rnd, lenA);
+                long posB = Sampling.GetInternalPos(rnd, lenB);
+                double invProb = cnEventP.Get("InvProb", 0.0);
+                bool inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
+                
+                affectedContigIds.Add(contigA);
+                affectedContigIds.Add(contigB);
+                return new CNEventProperties(cnEventP, affectedContigIds, posA, posB, inverted);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
+        }
+    }
 }
