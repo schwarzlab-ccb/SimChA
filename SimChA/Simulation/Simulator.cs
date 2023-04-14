@@ -114,38 +114,29 @@ public class Simulator
     // The conditional probability of this set of events occuring, 
     // given the individual events and the signature
     // TODO: do we need to change the eventPs as a result
-    private double Potential(Clone node, Signature sig, List<CNEventProperties> events)
+    private (double, double) Potential(Clone node, Signature sig, Dictionary<string, double> fitnessMap, List<CNEventProperties> events)
     {
-        // Probability of picking this set of events
+        // Probability of picking this set of events (ignore normalization, divides out)
         double eventPotentialTotal = 1.0;
-        double meanFitness = 0.0; //_fitnessDict[node.CloneId.ToString()];
-        // Probability of picking this signature, no need to normalize, since it will
-        // divide out when comparing sets of events
+        double targetFitness = fitnessMap[node.CloneId.ToString()];
+        
+        // Probability of picking this signature (ignore normalization, divides out)
         var sigPotential = sig.Prob;
-        
-        /* Currently assume one signature
-        if (signatures != null)
-        {
-            sigPotential = sig.Prob / signatures.Sum(s => s.Prob);
-        }*/
-        
+
         var karyotype = node.CopyKaryotype();
         foreach (var e in events)
         {
-            karyotype.ApplyCNEvent(_rnd, e.EventP);
+            karyotype.ApplyEventProperties(_rnd, e);
             eventPotentialTotal *= e.EventP.Prob;
         }
 
         double newFitness = karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
-        // Normalize the event potential
-        //eventPotentialTotal /= Math.Pow(sig.Events.Sum(e => e.Prob), eventPs.Count);
-        double dFit = newFitness - meanFitness;
+        double dFit = newFitness - targetFitness;
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
         double fitnessPotential = Math.Exp(-McParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
         //double fitnessPotential = Math.Exp(-McParams.ThetaFitness*Math.Pow(dFit,2));
-        
-        return fitnessPotential * eventPotentialTotal * sigPotential;
+        return (fitnessPotential * eventPotentialTotal * sigPotential, newFitness);
     }
 
     private void MCSampleCNEventsRec(Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap, List<CNEvent> events,  ref int counter)
@@ -171,7 +162,7 @@ public class Simulator
             // Generate a starting set of mutations and its potential
             var sig = SignatureHelper.RndSignature(_rnd, Signatures);
             var currentEventProps = InitEvents(node, sig, child.DistToParent);
-            double currentPotential = Potential(node, sig, currentEventProps);
+            (double, double) currentPotential = Potential(node, sig, fitnessMap, currentEventProps);
 
             var startEventProps = currentEventProps.ToList();
             // Now we perform the Metropolis-Hastings algorithm
@@ -196,8 +187,8 @@ public class Simulator
                 }
                 // With the newly selected event, we need to calculate the new
                 // fitness of the clone
-                double proposalPotential = Potential(node, sig, currentEventProps);
-                double acceptProb = proposalPotential/currentPotential;
+                (double, double) proposalPotential = Potential(node, sig, fitnessMap, proposedEventProps);
+                double acceptProb = proposalPotential.Item1/currentPotential.Item1;
                 
                 if (acceptProb < 1 && acceptProb <= _rnd.NextDouble()) 
                     continue;
