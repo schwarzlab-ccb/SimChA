@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -41,12 +42,5 @@ public class TestSimulator
             {GeneListType.Oncogene, new Dictionary<ChrNo, List<Gene>>()}
         };
         _sim = new Simulator(_rnd, _simParams, _geneLists);
-    }
-
-    [Test]
-    public void TestRepeat()
-    {
-        var evs = _sim.InitEvents(_signatures[0], 10).ToList();
-        Assert.AreEqual(10, evs.Count);
     }
 }

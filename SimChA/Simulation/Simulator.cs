@@ -1,4 +1,5 @@
 ﻿using SimChA.DataTypes;
+using SimChA.EventData;
 
 namespace SimChA.Simulation;
 
@@ -98,23 +99,19 @@ public class Simulator
         return events;
     }
 
-    public List<CNEventProperties> InitEvents(Clone node, Signature sig, int nMutations)
+    public List<BaseEventData> InitEvents(Clone node, Signature sig, int nMutations)
     {
         var eventPs = InitEventPs(sig, nMutations).ToList();
-        List<CNEventProperties> eventProperties = new List<CNEventProperties>();
-        var karyotype = node.CopyKaryotype();
-        foreach (var e in eventPs)
-            eventProperties.Add(karyotype.GenerateCNEventProperties(_rnd, e));
-
-        return eventProperties;
+        return eventPs.Select(e => node.Karyotype.GenerateCNEventProperties(_rnd, e)).ToList();
     }
-    public IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
+
+    private IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
         => Enumerable.Range(0, nMutations).Select(_ => SignatureHelper.RndEventP(_rnd, sig.Events));
 
     // The conditional probability of this set of events occuring, 
     // given the individual events and the signature
     // TODO: do we need to change the eventPs as a result
-    private (double, double) Potential(Clone node, Signature sig, Dictionary<string, double> fitnessMap, List<CNEventProperties> events)
+    private double Potential(Clone node, Signature sig, List<BaseEventData> events)
     {
         // Probability of picking this set of events (ignore normalization, divides out)
         double eventPotentialTotal = 1.0;
@@ -136,7 +133,8 @@ public class Simulator
         double fitnessPotential = Math.Exp(-McParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
         //double fitnessPotential = Math.Exp(-McParams.ThetaFitness*Math.Pow(dFit,2));
-        return (fitnessPotential * eventPotentialTotal * sigPotential, newFitness);
+        
+        return fitnessPotential * eventPotentialTotal * sigPotential;
     }
 
     private void MCSampleCNEventsRec(Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap, List<CNEvent> events,  ref int counter)
@@ -162,7 +160,7 @@ public class Simulator
             // Generate a starting set of mutations and its potential
             var sig = SignatureHelper.RndSignature(_rnd, Signatures);
             var currentEventProps = InitEvents(node, sig, child.DistToParent);
-            (double, double) currentPotential = Potential(node, sig, fitnessMap, currentEventProps);
+            double currentPotential = Potential(node, sig, currentEventProps);
 
             var startEventProps = currentEventProps.ToList();
             // Now we perform the Metropolis-Hastings algorithm
@@ -187,8 +185,8 @@ public class Simulator
                 }
                 // With the newly selected event, we need to calculate the new
                 // fitness of the clone
-                (double, double) proposalPotential = Potential(node, sig, fitnessMap, proposedEventProps);
-                double acceptProb = proposalPotential.Item1/currentPotential.Item1;
+                double proposalPotential = Potential(node, sig, proposedEventProps);
+                double acceptProb = proposalPotential/currentPotential;
                 
                 if (acceptProb < 1 && acceptProb <= _rnd.NextDouble()) 
                     continue;
@@ -205,7 +203,7 @@ public class Simulator
             {
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
                 var eventProperties = currentEventProps[mutNo];
-                string eventString = child.Karyotype.ApplyEventProperties(_rnd, eventProperties);
+                string eventString = child.Karyotype.ApplyEventProperties(eventProperties);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
