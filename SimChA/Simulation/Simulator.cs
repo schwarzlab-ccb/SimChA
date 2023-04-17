@@ -110,12 +110,20 @@ public class Simulator
 
     // The conditional probability of this set of events occuring, 
     // given the individual events and the signature
-    // TODO: do we need to change the eventPs as a result
-    private double Potential(Clone node, Signature sig, List<BaseEventData> events)
+    private double Potential(Clone node, Signature sig, Dictionary<string, double> fitnessMap, 
+        List<BaseEventData> events, ref bool thresholdAccept)
     {
         // Probability of picking this set of events (ignore normalization, divides out)
         double eventPotentialTotal = 1.0;
-        double targetFitness = fitnessMap[node.CloneId.ToString()];
+        double targetFitness;
+        try
+        {
+            targetFitness = fitnessMap[node.CloneId.ToString()];
+        }
+        catch (Exception _)
+        {
+            targetFitness = 0.0;
+        }
         
         // Probability of picking this signature (ignore normalization, divides out)
         var sigPotential = sig.Prob;
@@ -123,12 +131,14 @@ public class Simulator
         var karyotype = node.CopyKaryotype();
         foreach (var e in events)
         {
-            karyotype.ApplyEventProperties(_rnd, e);
+            karyotype.ApplyEventProperties(e);
             eventPotentialTotal *= e.EventP.Prob;
         }
 
         double newFitness = karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
         double dFit = newFitness - targetFitness;
+        thresholdAccept = Math.Abs(dFit / targetFitness) < McParams.ThresholdFit;
+            
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
         double fitnessPotential = Math.Exp(-McParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
@@ -156,11 +166,14 @@ public class Simulator
             //int nSamples = _mcParams.NumBurnIn + _mcParams.NumSamples;
             float alterEventStart = 0.5f;
             float alterEventLength = 0.5f;
+            // The tracker to accept sets of events if they are within the threshold tolerance from
+            // the target fitness
+            bool thresholdAccept = false;
 
             // Generate a starting set of mutations and its potential
             var sig = SignatureHelper.RndSignature(_rnd, Signatures);
             var currentEventProps = InitEvents(node, sig, child.DistToParent);
-            double currentPotential = Potential(node, sig, currentEventProps);
+            double currentPotential = Potential(node, sig, fitnessMap, currentEventProps, ref thresholdAccept);
 
             var startEventProps = currentEventProps.ToList();
             // Now we perform the Metropolis-Hastings algorithm
@@ -168,6 +181,12 @@ public class Simulator
             // fitness given by SMITH
             for (int i = 0; i < McParams.NumSamples; i++)
             {
+                if (i % 1000 == 0)
+                {
+                    Console.WriteLine($"Event {i}");
+                }
+                // Reset the automatic acceptance
+                thresholdAccept = false;
                 var proposedEventProps = currentEventProps.ToList();
                 // Select a random CNEventP to modify
                 int index = _rnd.Next(proposedEventProps.Count);
@@ -177,22 +196,27 @@ public class Simulator
                     var e = SignatureHelper.RndEventP(_rnd, sig.Events);
                     proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, e);
                 }
-                // Otherwise we modify some quantity of the event
+                // Otherwise we modify some quantity of the event, but keep the event itself the same
                 // TODO: Implement
                 else
                 {
-                    var eventProp = proposedEventProps[index];
+                    // Keep the event type the same, but redo all parameters:
+                    var e = proposedEventProps[index].EventP;
+                    proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, e);
+                    
                 }
                 // With the newly selected event, we need to calculate the new
                 // fitness of the clone
-                double proposalPotential = Potential(node, sig, proposedEventProps);
+                double proposalPotential = Potential(node, sig, fitnessMap, proposedEventProps, ref thresholdAccept);
                 double acceptProb = proposalPotential/currentPotential;
-                
-                if (acceptProb < 1 && acceptProb <= _rnd.NextDouble()) 
-                    continue;
-                
-                currentPotential = proposalPotential;
-                currentEventProps = proposedEventProps;
+                if (acceptProb >= _rnd.NextDouble())
+                {
+                    currentPotential = proposalPotential;
+                    currentEventProps = proposedEventProps;
+                    // Break out of the sampling if we have reached the threshold
+                    if (thresholdAccept)
+                        break;
+                }
             }
 
             // Finalize the mutated karyotype by applying the best-fit set of events

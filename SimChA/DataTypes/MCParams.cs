@@ -7,5 +7,6 @@ namespace SimChA.DataTypes;
 public record MCParams(
     int NumBurnIn, int NumSamples, // number of burn-in events, and number of true samples
     double ThetaFitness, // exponential multiplier for fitness
-    double SwapEventP // Probability of completely swapping an event
+    double SwapEventP, // Probability of completely swapping an event
+    double ThresholdFit // Percentage difference allowed between accepted and target fitness
     );

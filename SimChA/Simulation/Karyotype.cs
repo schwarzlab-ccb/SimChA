@@ -491,7 +491,6 @@ public class Karyotype
         long lenA = _contigs[contigA].Length();
 
         var affectedContigIds = new List<int>();
-        OtherEventData data;
 
         switch (cnEventP.Type)
         {
