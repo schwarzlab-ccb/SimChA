@@ -181,10 +181,6 @@ public class Simulator
             // fitness given by SMITH
             for (int i = 0; i < McParams.NumSamples; i++)
             {
-                if (i % 1000 == 0)
-                {
-                    Console.WriteLine($"Event {i}");
-                }
                 // Reset the automatic acceptance
                 thresholdAccept = false;
                 var proposedEventProps = currentEventProps.ToList();

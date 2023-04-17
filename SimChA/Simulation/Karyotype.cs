@@ -450,6 +450,11 @@ public class Karyotype
             case CNEventType.Translocation:
                 return ApplyPairEvent(eventData as PairEventData);
             
+            case CNEventType.Chromoplexy:
+                return ApplyChromoplexyEvent(eventData as ChromoplexyEventData);
+            case CNEventType.Chromothripsis:
+                return ApplyChromothripsisEvent(eventData as ChromothripsisEventData);
+            
             default:
                 throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null);
         }
@@ -477,6 +482,16 @@ public class Karyotype
             CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
             CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
         };
+    }
+
+    private string ApplyChromothripsisEvent(ChromothripsisEventData data)
+    {
+        return ApplyChromothripsis(data.ContigId, data.StopsList, data.GetSelection());
+    }
+
+    private string ApplyChromoplexyEvent(ChromoplexyEventData data)
+    {
+        return ApplyChromoplexy(data.ContigIdList, data.StopsList, data.GetSequence(), data.BreakpointsList);
     }
 
     public BaseEventData GenerateCNEventProperties(Random rnd, CNEventP cnEventP)
@@ -534,6 +549,33 @@ public class Karyotype
                 affectedContigIds.Add(contigB);
                 return new PairEventData(cnEventP, affectedContigIds, posA, posB, inverted);
             
+            case CNEventType.Chromothripsis:
+                long chromothripsisLen = cnEventP.Get("Size", 100_000_000L);
+                int shardCount = Sampling.GetSiteCount(rnd, lenA / (double) chromothripsisLen);
+                var stops = Sampling.GetStopsForShards(rnd, lenA, shardCount);
+                int shardsKept = rnd.Next(1, stops.Count);
+                var order = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept).ToList();
+                return new ChromothripsisEventData(cnEventP, contigA, stops, order);
+
+            case CNEventType.Chromoplexy:
+                int chrCount = Sampling.GetChromoplexySiteCount(rnd);
+                var contigIDs = new List<int>();
+                var stopsForContig = new List<List<long>>();
+                var totalLen = 0L;
+                var totalFrags = 0;
+                for (var i = 0; i < chrCount; i++, IDsEnumerator.MoveNext())
+                {
+                    contigIDs.Add(IDsEnumerator.Current);
+                    long thisLen = _contigs[IDsEnumerator.Current].Length();
+                    totalLen += thisLen;
+                    int partsCount = Sampling.GetSiteCount(rnd, thisLen / (double) lenA);
+                    totalFrags += partsCount;
+                    stopsForContig.Add(Sampling.GetStopsForShards(rnd, lenA, partsCount));
+                }
+                var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
+                var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
+                return new ChromoplexyEventData(cnEventP, contigIDs,stopsForContig, sequence, breakpoints);
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
