@@ -18,8 +18,8 @@ public class FileIO
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
-    private const string OGS_TSV = "ogs.tsv";
-    private const string TSGS_TSV = "tsgs.tsv";
+    private const string OGS_TSV = "OGs.tsv";
+    private const string TSGS_TSV = "TSGs.tsv";
     private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
     private const string FITNEES_INPUT_FILE = "subclones.out";
     private string Timestamp { get; }
