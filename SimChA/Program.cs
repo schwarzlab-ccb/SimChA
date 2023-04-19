@@ -26,7 +26,7 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, GenomeAssembly.hg38, fitness, null);
+    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null);
 }
 
 HGRef.Assembly = simParams.Assembly;
@@ -37,6 +37,7 @@ files.WriteSimParams(simParams);
 
 // Obtain clones
 var newick = "";
+var fitnessDict = new Dictionary<string, double>();
 List<Clone> clones = new();
 List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
@@ -49,15 +50,15 @@ else
     Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
     var simulator = new Simulator(rnd, simParams, geneLists);
-
     if (options.Value.NewickFile != "")
     {
         newick = FileIO.ReadNewick(options.Value.NewickFile);
         clones = Parsers.ParseNewick(newick, simParams.SexXX);
+        fitnessDict = FileIO.ReadFitnessValues(options.Value.NewickFile);
     }
     else
     {
-        clones = Simulator.MakeClones(options.Value.Distance, options.Value.Repeats, simParams.SexXX);   
+        clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
     }
     cnEvents = simulator.ApplyEvents(clones[0], clones);
     clones = clones.Where(c => c.CloneId != 0).ToList();

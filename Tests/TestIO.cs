@@ -8,6 +8,7 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace Tests;
 
@@ -18,7 +19,7 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        var simParams = new SimParams(14, true, GenomeAssembly.hg38, fit, null);
+        var simParams = new SimParams(0, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fit, null);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);
@@ -32,15 +33,15 @@ public class TestIO
     {
         var res = Parsers.ParseSimParams(@"{}");
         Assert.AreEqual(0, res.Seed);
+        res = Parsers.ParseSimParams(@"{""EventCount"": 10, ""Distribution"": ""Normal""}");
+        Assert.AreEqual(10, res.EventCount);
+        Assert.AreEqual(Distribution.Normal, res.Distribution);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1}]}");
         Assert.AreEqual(1, res.Signatures!.First().Prob, 0.000001);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""WholeGenomeDoubling"", ""Prob"": 0.1}]}]}");
         Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events!.First().Type);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Params"": {""Mean"": 0.1}}]}]}");
         Assert.AreEqual(0.1, res.Signatures!.First().Events!.First().Params!["Mean"], 0.000001);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Targets"": {""chr1"": 0.1}}]}]}");
-        Assert.AreEqual(ChrNo.chr1,  res.Signatures!.First().Events!.First().Targets!.First().Key);
-        Assert.AreEqual(0.1, res.Signatures!.First().Events!.First().Targets!.First().Value, 0.000001);
         res = Parsers.ParseSimParams(@"{""Assembly"":""hg38""}");
         Assert.AreEqual(GenomeAssembly.hg38, res.Assembly);
     }
@@ -88,7 +89,7 @@ public class TestIO
             174
         };
 
-        for(int i = 0; i < newickTestStrings.Length; i++)
+        for (int i = 0; i < newickTestStrings.Length; i++)
         {
             var clones = Parsers.ParseNewick(newickTestStrings[i], true);
             foreach(var clone in clones)
@@ -127,5 +128,18 @@ public class TestIO
         tsgList[ChrNo.chr2].Add(gene2);
         listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), true);
         Assert.AreEqual(tsgList, listFromString);
+    }
+
+    [Test]
+    public void TestWrite()
+    {
+        var projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
+        var files = new FileIO(projectPath + "/out");
+        var kar = new Karyotype(false);
+        var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
+        string eventDesc = kar.ApplyCNEvent(new Random(48), new CNEventP(CNEventType.Rigma, 1.0, ceParams));
+        Console.WriteLine(eventDesc);
+        var clone = new Clone(1, -1, "test", 0, kar, 1);
+        files.WriteClones(new List<Clone> {clone});
     }
 }

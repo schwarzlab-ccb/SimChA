@@ -19,4 +19,10 @@ public enum CNEventType
     WholeGenomeDoubling,
     Chromothripsis,
     Chromoplexy,
+    TIChain,
+    TICycle,
+    TIBridge,
+    Pyrgo,
+    Rigma,
+    Tyfonas
 }

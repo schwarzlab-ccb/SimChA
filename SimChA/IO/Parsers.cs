@@ -31,7 +31,7 @@ public static class Parsers
         }
         return res;
     }
-
+    
     public static void ValidateSignatures(List<Signature>? signatures)
     {
         if (signatures is null || signatures.Count == 0)
@@ -58,6 +58,7 @@ public static class Parsers
                     case CNEventType.InternalDeletion:
                     case CNEventType.InternalDuplication:
                     case CNEventType.InternalInversion:
+                    case CNEventType.InvertedDuplication:
                         if (ev.Params == null || !ev.Params.ContainsKey("Mean"))
                         {
                             throw new Exception($"The mean of {ev.Type} in signature {sig.Id} not specified.");
@@ -67,8 +68,12 @@ public static class Parsers
                         break;
                     case CNEventType.Chromoplexy:
                         break;
+                    case CNEventType.TIChain:
+                    case CNEventType.TIBridge:
+                    case CNEventType.TICycle:
+                        break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException($"Unknown event type {ev.Type}");
                 }
             }
         }
@@ -76,10 +81,10 @@ public static class Parsers
 
     private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
     {
-        regionsA = RegionOps.GlueNeighbours(regionsA);
+        regionsA = RegionOps.StitchRegions(regionsA);
         var contigA = new Contig(regionsA);
-        regionsB = RegionOps.GlueNeighbours(regionsB);
-        var contigB = new Contig(RegionOps.GlueNeighbours(regionsB));
+        regionsB = RegionOps.StitchRegions(regionsB);
+        var contigB = new Contig(regionsB);
         // Add full missing chromosomes
         var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, c => false);
         regionsA.ForEach(r => chrPresent[r.ChrNo] = true);
@@ -300,5 +305,18 @@ public static class Parsers
 
         Console.Write(branchLength ? "" : "No branch-lengths were found, using 1 as branch-length.");
         return branchLength;
+    }
+
+    public static Dictionary<string, double> ParseFitness(string file)
+    {
+        var fitnessDict = new Dictionary<string, double>();
+        var textLines = File.ReadAllLines(file);
+        foreach(var line in textLines)
+        {
+            var fitness = Double.Parse(line.Split("Fitness: ")[1], System.Globalization.CultureInfo.InvariantCulture);
+            var id = line.Split("ID:")[1].Split(',')[0];
+            fitnessDict.Add(id, fitness);
+        }
+        return fitnessDict;
     }
 }

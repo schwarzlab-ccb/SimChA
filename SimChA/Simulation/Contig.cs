@@ -33,7 +33,7 @@ public class Contig
         => regions.Sum(r => r.Length);
 
     public static string ToString(IEnumerable<Region> regions)
-        => "[" + string.Join(",", regions.Select(r => r.ToString())) + "]";
+        => "[" + string.Join("~", regions.Select(r => r.ToString())) + "]";
 
     public override string ToString()
         => ToString(_regions);
@@ -66,11 +66,16 @@ public class Contig
         _regions = RegionOps.ConcatRegions(new[] { first, inverse, second });
     }
 
+    public void Invert()
+    {
+        _regions = RegionOps.InvertRegions(_regions);
+    }
+
     public void DuplicateRange(long start, long end)
     {
         var copy = RegionOps.CopyRange(_regions, start, end);
         var (first, second) = RegionOps.SplitRegions(_regions, start);
-        _regions = RegionOps.GlueNeighbours(RegionOps.ConcatRegions(new[] { first, copy, second }));
+        _regions = RegionOps.ConcatRegions(new[] { first, copy, second });
     }
 
     public void Bridge(long pos, bool cutFront)
@@ -98,6 +103,30 @@ public class Contig
     {
         var newRegions = RegionOps.Scatter(locs, _regions);
         _regions = RegionOps.Gather(newRegions, indices);
+    }
+    
+    public Region GetRandomRegion(Random rnd)
+        => Sampling.CreateRandomRegion(_regions, rnd);
+    
+
+    public void AddRegions(List<Region> regions)
+        => _regions.AddRange(regions);
+
+    public void GlueNeighbours()
+        => _regions = RegionOps.GlueNeighbours(_regions);
+
+    public List<Region> GetRegionsAfterRegion(Region region)
+    {
+        var regions = new List<Region>();
+        if(region.Forward)
+        {
+            regions = _regions.Where(x => x.Start < region.Start && x.End < region.End).ToList();
+        }
+        else
+        {
+            regions = _regions.Where(x => x.Start > region.Start && x.End > region.End).ToList();
+        }
+        return regions;
     }
     
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)

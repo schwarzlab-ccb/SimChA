@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using SimChA.DataTypes;
@@ -69,5 +70,38 @@ public class TestContig
         long length = _contig1.Length();
         _contig1.ScatterAndGather(new List<long>{1000, 2000, 3000}, new List<int>{3, 1, 2, 0});
         Assert.AreEqual(length, _contig1.Length());
+    }
+
+    [Test]
+    public void TestGetRandomRegion()
+    {
+        var rnd = new Random();
+        var region = _contig1.GetRandomRegion(rnd);
+        Assert.LessOrEqual(region.Length, _contig1.Length());
+    }
+
+    [Test]
+    public void TestAddRegions()
+    {
+        var rnd = new Random();
+        var regions = new List<Region>();
+        for(int i = 0; i <= 2; i++)
+        {
+            regions.Add(_contig1.GetRandomRegion(rnd));
+        }
+        _contigX.AddRegions(regions);
+        Assert.AreEqual(_contigX.FindRegionsOfChr(ChrNo.chr1), regions);
+    }
+
+    [Test]
+    public void TestGetRegionsAfterRegion()
+    {
+        var regionAdd1 = new Region(0, 1000, new ChrID(ChrNo.chr1, false));
+        var regionAdd2 = new Region(1000, 2000, new ChrID(ChrNo.chr1, false));
+        var regionTest1 = new Region(500, 1500, new ChrID(ChrNo.chr1, false));
+        var regionTest2 = new Region(500, 1500, new ChrID(ChrNo.chr1, false), false);
+        _contig1.AddRegions(new List<Region>{regionAdd1, regionAdd2});
+        Assert.AreEqual(_contig1.GetRegionsAfterRegion(regionTest1), new List<Region>{regionAdd1});
+        Assert.AreEqual(_contig1.GetRegionsAfterRegion(regionTest2), new List<Region>{regionAdd2});
     }
 }

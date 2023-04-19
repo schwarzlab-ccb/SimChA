@@ -94,10 +94,10 @@ public class TestKaryotype
         long len = _kar.ContigLen(0);
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
-        var regions = _kar.FindRegionsOfChr(ChrNo.chr1).ToList();
-        Assert.AreEqual(3, regions.Count(r => r.ChrID.Parent));
-        Assert.AreEqual(1, regions.Count(r => !r.Forward));
-        Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).Start);
+        var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        Assert.AreEqual(3, gluedRegions.Count(r => r.ChrID.Parent));
+        Assert.AreEqual(1, gluedRegions.Count(r => !r.Forward));
+        Assert.AreEqual(TEST_FRAC, gluedRegions.First(r => !r.Forward).Start);
     }
     
     [Test]
@@ -119,14 +119,21 @@ public class TestKaryotype
         Assert.AreEqual((len - TEST_FRAC) * 2, newLen);
     }
     
+    
     [Test]
     public void TestTranslocation()
     {
-        long contigLen = _kar.ContigLen(0);
+        long contig0Len = _kar.ContigLen(0);
         long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC);
-        Assert.AreEqual(contigLen, _kar.ContigLen(1));
+        
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, false);
+        Assert.AreEqual(contig0Len, _kar.ContigLen(1));
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, true);
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        Assert.AreEqual(contig0Len, _kar.ContigLen(0));
+        Console.WriteLine(_kar);
     }
     
     [Test]
@@ -139,14 +146,18 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDuplication, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalInversion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InvertedDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Translocation, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Pyrgo, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.Rigma, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIChain, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TIBridge, 1.0)); });
+        Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.TICycle, 1.0)); });
     }
-
+    
     [Test]
     public void TestChromothripsis()
     {
@@ -156,7 +167,6 @@ public class TestKaryotype
         _kar.ApplyChromothripsis(0, stops, selection);
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));
     }
-
     
     [Test]
     public void TestChromoplexy()
@@ -201,5 +211,53 @@ public class TestKaryotype
         _kar.ApplyCNEvent(_rnd, _del);
         tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
+    }
+    
+    [Test]
+    public void TestPyrgo()
+    {
+        long contigLen = _kar.ContigLen(0);
+        var frags = new List<(long, long)> { (TEST_FRAC, TEST_FRAC), (TEST_FRAC, TEST_FRAC * 2) };
+        _kar.ApplyPyrgo(0, frags);
+        Assert.AreEqual(contigLen, _kar.ContigLen(0) - TEST_FRAC * 3);
+    }
+    
+    [Test]
+    public void TestRigma()
+    {
+        long contigLen = _kar.ContigLen(0);
+        _kar.ApplyRigma(0, TEST_FRAC, new List<long> {TEST_FRAC, TEST_FRAC, TEST_FRAC});
+        Assert.AreEqual(contigLen, _kar.ContigLen(0) + TEST_FRAC * 2);
+    }
+
+    [Test]
+    public void TestBridgeTemplatedInsertion()
+    {
+        var regions = new List<Region>();
+        regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
+        regions.Add(new Region(3000, 5000, new ChrID(ChrNo.chr2, true), true));
+        _kar.ApplyBridgeTemplatedInsertions(0, regions);
+        Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 3000);
+    }
+
+    [Test]
+    public void TestChainTemplatedInsertion()
+    {
+        var regions = new List<Region>();
+        regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
+        regions.Add(new Region(7000, 8000, new ChrID(ChrNo.chr2, true), true));
+        _kar.ApplyInternalDuplication(1, 6000, 7000);
+        _kar.ApplyChainTemplatedInsertions(0, regions, 1);
+        Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 9000);
+    }
+
+    [Test]
+    public void TestCycleTemplatedInsertions()
+    {
+        var regions = new List<Region>();
+        regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
+        regions.Add(new Region(7000, 8000, new ChrID(ChrNo.chr2, false), true));
+        _kar.ApplyCycleTemplatedInsertions(0, regions, new Random());
+        Assert.Greater(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 2000);
     }
 }

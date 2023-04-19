@@ -1,28 +1,90 @@
 {
-  "Seed": 0,
+  "Seed": -1,
   "SexXX": true,
-  "Assembly": "hg19",
+  "EventCount": 100,
+  "Distribution": "Exponential",
+  "Assembly": "hg38",
   "Fitness": {
     "Stress": 1,
-    "TsgOg": 0.01,
-    "Essentiality": 0.01
+    "TsgOg": 1,
+    "Essentiality": 1
   },
   "Signatures": [
-    { 
-      "Id": "sigA",
-      "Prob": 0.7,
+    {
+      "Id": "sig1",
+      "Prob": 1,
+      "Circularization": 0,
       "Events": [
-        { "Type" : "ChromDeletion", "Prob" : 0.2 }, 
-        { "Type" : "InternalDuplication", "Prob" : 0.8, "Params": { "Mean": 0.1 } }
+        {
+          "Type": "ChromDeletion",
+          "Prob": 1
+        },
+        {
+          "Type": "ChromDuplication",
+          "Prob": 1
+        },
+        {
+          "Type": "InternalDuplication",
+          "Prob": 10,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "InternalDeletion",
+          "Prob": 20,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "InternalInversion",
+          "Prob": 10,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "InvertedDuplication",
+          "Prob": 10,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "BreakageFusionBridge",
+          "Prob": 10,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 10,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "Translocation",
+          "Prob": 10,
+          "Params": {
+            "Mean": 0.1
+          }
+        },
+        {
+          "Type": "WholeGenomeDoubling",
+          "Prob": 0.1
+        },
+        {
+          "Type": "Chromoplexy",
+          "Prob": 1
+        },
+        {
+          "Type": "Chromothripsis",
+          "Prob": 1
+        }
       ]
-    },
-    { 
-      "Id": "sigB",
-      "Prob": 0.3,
-      "Events": [
-        { "Type" : "ChromDuplication", "Prob" : 0.3 }, 
-        { "Type" : "InternalDeletion", "Prob" : 0.7, "Params": { "Mean": 0.2 } }
-      ]
-    }    
+    }
   ]
 }

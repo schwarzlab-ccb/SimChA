@@ -3,9 +3,9 @@
 namespace SimChA.DataTypes;
 
 public record CNEvent(
-    string CloneName, 
-    CNEventType AberrationType, 
+    int CloneId,  
     int NrOfMutation,
-    string Region = "",
+    CNEventType EventType,
+    string Description = "",
     double DeltaFitness = 0, 
     double TotalFitness = 0);

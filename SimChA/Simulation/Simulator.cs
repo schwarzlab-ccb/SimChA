@@ -1,5 +1,5 @@
 ﻿using SimChA.DataTypes;
-using ExtremeBinDist = Extreme.Statistics.Distributions.BinomialDistribution;
+using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
@@ -39,42 +39,50 @@ public class Simulator
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
-            int i = 0;
-            int j = 0;
-            while (i < child.DistToParent)
+            for (int mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
-                Console.Write($"\rClone {counter}/{clones.Count-1}. Event {i+1}/{child.DistToParent}. Attempt {++j}");
+                Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
                 var sig = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures);
                 var eventP = SignatureHelper.PickRandomEventP(_rnd, sig.Events);
                 string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
-                int mutationCount = parentMutations + 1 + i;
+                int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEvent(child.Name, eventP.Type, mutationCount, eventString, dFit, newFitness);
+                var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);
                 events.Add(abberation);
                 oldFitness = newFitness;
-                i++;
-                j = 0;
             }
             counter++;
             ApplyCNEventsRec(child, clones, events, ref counter);
         }
     }
     
-    private static int GetMutations(Clone clone, List<Clone> clones)
+    private static int GetMutations(Clone clone, IReadOnlyList<Clone> clones)
     {
         int mutCount = clone.ParentId != -1 ? GetMutations(clones[clone.ParentId], clones) : 0;
         mutCount += clone.DistToParent;
         return mutCount;
     }
+    
+    private static double GetSample(Random rnd, Distribution dist)
+    {
+        return dist switch
+        {
+            Distribution.Exponential => EDists.ExponentialDistribution.Sample(rnd, 1),
+            Distribution.Normal => EDists.NormalDistribution.Sample(rnd, 1, 1),
+            _ => 1
+        };
+    }
 
-    public static List<Clone> MakeClones(int distance, int repeats, bool sexXX)
+    public static List<Clone> MakeClones(Random rnd, int repeats, bool sexXX, int distance, Distribution distribution)
     {
         var parent = new Clone(0, -1, "0-0", 0, new Karyotype(sexXX), 0);
         var clones = new List<Clone> { parent };
         for (var i = 1; i <= repeats; i++)
         {
-            var child = new Clone(i, 0, $"{i}-{distance}", distance, new Karyotype(sexXX), distance);
+            double sample = GetSample(rnd, distribution);
+            var mutCount = (int) Math.Round(distance * sample);
+            var child = new Clone(i, 0, $"{i}-{mutCount}", mutCount, new Karyotype(sexXX), mutCount);
             parent.ChildrenIDs.Add(child.CloneId);
             clones.Add(child);
         }

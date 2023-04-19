@@ -1,4 +1,5 @@
 ﻿using SimChA.DataTypes;
+using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.Computation;
@@ -123,7 +124,7 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
 
-    public static List<T> GlueNeighbours<T>(List<T> regions) where T : GenRange
+    public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
     {
         var newRegions = new List<T>();
         var merged = new bool[regions.Count];
@@ -149,6 +150,32 @@ public static class RegionOps
         }
         return newRegions;
     }
+    
+    public static List<Region> GlueNeighbours(List<Region> regions)
+    {
+        var newRegions = new List<Region>();
+        var merged = new bool[regions.Count];
+        for (int i = 0; i < regions.Count; i++)
+        {
+            if (merged[i])
+            {
+                continue;
+            }
+            var newRegion = regions[i];
+            int j = i + 1; 
+            if (j < regions.Count
+                && !merged[j] 
+                && regions[j].ChrNo == newRegion.ChrNo 
+                && regions[j].Start == newRegion.End 
+                && regions[j].Forward == newRegion.Forward)
+            {
+                newRegion = newRegion with {End = regions[j].End};
+                merged[j] = true;
+            }
+            newRegions.Add(newRegion);
+        }
+        return newRegions;
+    }
 
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
         => regions.Select(r => r with { Forward = false }).Reverse().ToList();
@@ -164,22 +191,20 @@ public static class RegionOps
     public static List<List<Region>> Scatter(List<long> locs, List<Region> regions)
     {
         // First region
-        var newRegions = new List<List<Region>> { RegionOps.CopyRange(regions, 0, locs[0]) };
+        var newRegions = new List<List<Region>> { CopyRange(regions, 0, locs[0]) };
         // Internal regions
         for (int i = 0; i < locs.Count - 1; i++)
         {
             long start = locs[i];
             long end = locs[i + 1];
-            var copy = RegionOps.CopyRange(regions, start, end);
+            var copy = CopyRange(regions, start, end);
             newRegions.Add(copy);
         }
         // Last region
-        newRegions.Add(RegionOps.CopyRange(regions, locs.Last(), Contig.Length(regions)));
+        newRegions.Add(CopyRange(regions, locs.Last(), Contig.Length(regions)));
         return newRegions;
     }
-    public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices)
-    {
-        var selectedRegions = indices.Select(i => newRegions[i]);
-        return RegionOps.GlueNeighbours(RegionOps.ConcatRegions(selectedRegions));
-    }
+    
+    public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
+        => ConcatRegions(indices.Select(i => newRegions[i]));
 }

@@ -122,11 +122,15 @@ public class TestRegions
     public void TestSplit()
     {
         var regions = new List<Region> { _cRegion };
+        
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
-        Console.WriteLine(Contig.ToString(before));
-        Assert.AreEqual(2000, Contig.Length(before));
-        Console.WriteLine(Contig.ToString(after));
-        Assert.AreEqual(_cRegion.Length - 2000, Contig.Length(after));
+        Assert.AreEqual(regions[0]  with { End = 2000}, before[0]);
+        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
+
+        regions = RegionOps.InvertRegions(regions);
+        (before, after) = RegionOps.SplitRegions(regions, 2000);
+        Assert.AreEqual(regions[0] with { End = 2000}, before[0]);
+        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
     }
     
     [Test]
