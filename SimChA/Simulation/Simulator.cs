@@ -27,19 +27,19 @@ public class Simulator
     {
         List<CNEvent> events = new();
         int counter = 1;
-        var cnEventParams = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures).Events;
-        ApplyCNEventsRec(rootClone, clones, cnEventParams, events, ref counter);
+        ApplyCNEventsRec(rootClone, clones, events, ref counter);
         Console.WriteLine();
         return events;
     }
     
-    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEventP> cnEventParams, List<CNEvent> events, ref int counter)
+    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
+            var cnEventParams = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures).Events;
             for (int mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
@@ -53,7 +53,7 @@ public class Simulator
                 oldFitness = newFitness;
             }
             counter++;
-            ApplyCNEventsRec(child, clones, cnEventParams, events, ref counter);
+            ApplyCNEventsRec(child, clones, events, ref counter);
         }
     }
     

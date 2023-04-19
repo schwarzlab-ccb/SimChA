@@ -59,10 +59,6 @@ public static class Parsers
                     case CNEventType.InternalDuplication:
                     case CNEventType.InternalInversion:
                     case CNEventType.InvertedDuplication:
-                        if (ev.Params == null || !ev.Params.ContainsKey("Mean"))
-                        {
-                            throw new Exception($"The mean of {ev.Type} in signature {sig.Id} not specified.");
-                        }
                         break;
                     case CNEventType.Chromothripsis:
                         break;
