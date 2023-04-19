@@ -662,7 +662,7 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
                            cmap=cmap,
                            norm=color_norm)
 
-        for _, line in chr_ends.iteritems():
+        for _, line in chr_ends.items():
             ax.axvline(x_pos[line], color='black', linewidth=0.75)
 
         xtick_pos = np.append([0], x_pos[chr_ends.values][:-1])
