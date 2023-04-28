@@ -41,7 +41,7 @@ public static class Sampling
             .ToList();
     
     // TODO: Unify with internal operations
-    public static Region CreateRandomRegion(List<Region> regions, Random rnd)
+    public static Region CreateRandomRegion(Random rnd, List<Region> regions)
     {
         var region = regions.OrderBy(x => rnd.Next()).First();
         long start = rnd.NextInt64(region.Start, region.End - 1);
@@ -49,4 +49,7 @@ public static class Sampling
         var newRegion = new Region(start, stop, region.ChrID, rnd.CoinFlip());
         return newRegion;
     }
+    
+    public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
+        => new DirichletDistribution(concentrations).Sample(rnd).ToList();
 }

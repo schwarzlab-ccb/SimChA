@@ -27,21 +27,22 @@ public class Simulator
     {
         List<CNEvent> events = new();
         int counter = 1;
-        ApplyCNEventsRec(rootClone, clones, events, ref counter);
+        var sigs = new List<Signature>();
+        ApplyCNEventsRec(rootClone, clones, events, sigs, ref counter);
         Console.WriteLine();
         return events;
     }
     
-    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> events, ref int counter)
+    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> eventSeq, List<Signature> sigs, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
-            var cnEventParams = SignatureHelper.PickRandomSignature(_rnd, _simParams.Signatures).Events;
             for (int mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
+                var cnEventParams = SignatureHelper.PickRandomSignature(_rnd, sigs).Events;
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
                 var eventP = SignatureHelper.PickRandomEventP(_rnd, cnEventParams);
                 string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
@@ -49,11 +50,11 @@ public class Simulator
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
                 var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);
-                events.Add(abberation);
+                eventSeq.Add(abberation);
                 oldFitness = newFitness;
             }
             counter++;
-            ApplyCNEventsRec(child, clones, events, ref counter);
+            ApplyCNEventsRec(child, clones, eventSeq, sigs, ref counter);
         }
     }
     
