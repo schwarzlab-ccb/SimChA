@@ -6,16 +6,20 @@ namespace SimChA.Simulation;
 public class Simulator
 {
     private readonly Random _rnd;
-    private readonly SimParams _simParams;
+    private readonly FitnessParams _fitness;
+    private readonly List<Signature> _signatures;
     private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
+    
     
     public Simulator(
         Random rnd, 
-        SimParams simParams, 
+        FitnessParams fitnessParams,
+        List<Signature> signatures,
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
     {
         _rnd = rnd;
-        _simParams = simParams;
+        _fitness = fitnessParams;
+        _signatures = signatures;
         _geneLists = geneLists;
     }
     
@@ -27,26 +31,26 @@ public class Simulator
     {
         List<CNEvent> events = new();
         int counter = 1;
-        var sigs = new List<Signature>();
-        ApplyCNEventsRec(rootClone, clones, events, sigs, ref counter);
+        ApplyCNEventsRec(rootClone, clones, events, ref counter);
         Console.WriteLine();
         return events;
     }
     
-    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> eventSeq, List<Signature> sigs, ref int counter)
+    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> eventSeq, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
-            for (int mutNo = 0; mutNo < child.DistToParent; mutNo++)
+            for (var mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
-                var cnEventParams = SignatureHelper.PickRandomSignature(_rnd, sigs).Events;
+                int mixtureIndex = Sampling.PickRandomIndex(_rnd, child.SigMixture);
+                var cnEventParams = _signatures[mixtureIndex].Events;
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
-                var eventP = SignatureHelper.PickRandomEventP(_rnd, cnEventParams);
+                var eventP = Sampling.PickRandomEventP(_rnd, cnEventParams);
                 string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
-                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
+                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
                 var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);
@@ -54,7 +58,7 @@ public class Simulator
                 oldFitness = newFitness;
             }
             counter++;
-            ApplyCNEventsRec(child, clones, eventSeq, sigs, ref counter);
+            ApplyCNEventsRec(child, clones, eventSeq, ref counter);
         }
     }
     

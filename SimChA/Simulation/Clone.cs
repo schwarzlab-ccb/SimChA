@@ -13,6 +13,7 @@ public class Clone
         Karyotype = new Karyotype(refKaryotype);
         ChildrenIDs = new List<int>();
         TotalMutations = totalMutations;
+        SigMixture = new List<double>();
     }
     
     public int CloneId { get; }
@@ -22,6 +23,7 @@ public class Clone
     public string Name { get; }
     public Karyotype Karyotype { set; get; }
     public int TotalMutations { get; }
+    public List<double> SigMixture { set; get; }
     public static string Header() => "ID\tName\tSex\tParent\tEvents\tPloidy\tMissing\tKaryotype";
     public override string ToString() 
         => $"{CloneId}\t{Name}\t{Karyotype.Sex}\t{ParentId}\t{DistToParent}\t{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{Karyotype}";

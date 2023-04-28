@@ -31,48 +31,56 @@ public static class Parsers
         }
         return res;
     }
-    
-    public static void ValidateSignatures(List<Signature>? signatures)
+
+    public static void ValidateEvent(CNEventP cnEventP)
     {
+        switch (cnEventP.Type)
+        {
+            case CNEventType.Translocation:
+            case CNEventType.ChromDeletion:
+            case CNEventType.ChromDuplication:
+            case CNEventType.BreakageFusionBridge:
+            case CNEventType.WholeGenomeDoubling:
+            case CNEventType.TailDeletion:
+            case CNEventType.InternalDeletion:
+            case CNEventType.InternalDuplication:
+            case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
+            case CNEventType.Chromothripsis:
+            case CNEventType.Chromoplexy:
+            case CNEventType.TIChain:
+            case CNEventType.TIBridge:
+            case CNEventType.TICycle:
+            case CNEventType.Pyrgo:
+            case CNEventType.Rigma:
+            case CNEventType.Tyfonas:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException($"Unknown event type {cnEventP.Type}");
+        }
+    }
+    
+    // Removes signatures with probability <=0 and validates the rest
+    public static List<Signature> ValidateSignatures(List<Signature>? signatures)
+    {
+        var validated = new List<Signature>();
         if (signatures is null || signatures.Count == 0)
         {
             throw new Exception("No signatures were provided.");
         }
-        foreach (var sig in signatures)
+        foreach (var sig in signatures.Where(sig => sig.Prob > 0))
         {
             if (sig.Events is null || sig.Events.Count == 0)
             {
                 throw new Exception($"Signature {sig.Id} does not have any events.");
             }
-            foreach(var ev in sig.Events)
+            foreach(var cnEventP in sig.Events)
             {
-                switch (ev.Type)
-                {
-                    case CNEventType.Translocation:
-                    case CNEventType.ChromDeletion:
-                    case CNEventType.ChromDuplication:
-                    case CNEventType.BreakageFusionBridge:
-                    case CNEventType.WholeGenomeDoubling:
-                        break;
-                    case CNEventType.TailDeletion:
-                    case CNEventType.InternalDeletion:
-                    case CNEventType.InternalDuplication:
-                    case CNEventType.InternalInversion:
-                    case CNEventType.InvertedDuplication:
-                        break;
-                    case CNEventType.Chromothripsis:
-                        break;
-                    case CNEventType.Chromoplexy:
-                        break;
-                    case CNEventType.TIChain:
-                    case CNEventType.TIBridge:
-                    case CNEventType.TICycle:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException($"Unknown event type {ev.Type}");
-                }
+                ValidateEvent(cnEventP);
             }
+            validated.Add(sig);
         }
+        return validated;
     }
 
     private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)

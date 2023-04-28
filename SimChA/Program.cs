@@ -38,27 +38,33 @@ files.WriteSimParams(simParams);
 // Obtain clones
 var newick = "";
 var fitnessDict = new Dictionary<string, double>();
-List<Clone> clones = new();
-List<CNEvent> cnEvents = new();
+List<Clone> clones;
+List<CNEvent>? cnEvents;
 if (options.Value.CNProfiles != "")
 {
     var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
     clones = Simulator.ClonesFromProfiles(profiles);
+    cnEvents = new List<CNEvent>();
 }
 else
 {
-    Parsers.ValidateSignatures(simParams.Signatures);
+    var signatures = Parsers.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
-    var simulator = new Simulator(rnd, simParams, geneLists);
+    var simulator = new Simulator(rnd, simParams.Fitness, signatures, geneLists);
     if (options.Value.NewickFile != "")
     {
         newick = FileIO.ReadNewick(options.Value.NewickFile);
         clones = Parsers.ParseNewick(newick, simParams.SexXX);
-        fitnessDict = FileIO.ReadFitnessValues(options.Value.NewickFile);
+        fitnessDict = FileIO.ReadFitnessValues(options.Value.NewickFile); // This information
     }
     else
     {
         clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
+    }
+    double[] sigProbs = signatures.Select(s => s.Prob).ToArray();
+    foreach (var clone in clones)
+    {
+        clone.SigMixture = Sampling.CreateRandomMixture(rnd, sigProbs);
     }
     cnEvents = simulator.ApplyEvents(clones[0], clones);
     clones = clones.Where(c => c.CloneId != 0).ToList();
@@ -81,6 +87,7 @@ try
     files.WriteClones(clones);
     files.WriteCopyNumbers(clones, simParams.SexXX);
     files.WriteSampleFitness(results);
+    // Check if cnEvents was assigned
     if (cnEvents.Any())
     {
         files.WriteEvents(cnEvents);

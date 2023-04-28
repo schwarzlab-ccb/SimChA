@@ -51,5 +51,28 @@ public static class Sampling
     }
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
-        => new DirichletDistribution(concentrations).Sample(rnd).ToList();
+        => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
+
+    
+    public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
+    {
+        var probs = eventPs.Select(ev => ev.Prob).ToList();
+        probs = probs.Select(p => p / probs.Sum()).ToList();
+        int index = Sampling.PickRandomIndex(rnd, probs);
+        return eventPs[index];
+    }
+    
+    public static int PickRandomIndex(Random rnd, List<double> probs)
+    {
+        double val = rnd.NextDouble();
+        for (var i = 0; i < probs.Count; i++)
+        {
+            if (val < probs[i])
+            {
+                return i;
+            }
+            val -= probs[i];
+        }
+        return probs.Count - 1;
+    }
 }
