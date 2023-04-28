@@ -103,10 +103,10 @@ public class Simulator
         return eventPs.Select(e => node.Karyotype.GenerateCNEventProperties(_rnd, e)).ToList();
     }
 
-    private IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
+    public IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
         => Enumerable.Range(0, nMutations).Select(_ => SignatureHelper.RndEventP(_rnd, sig.Events));
 
-    // The conditional probability of this set of events occuring, 
+    // The conditional (unnormalized) probability of this set of events occuring, 
     // given the individual events and the signature
     private double Potential(Clone node, Signature sig, Dictionary<string, double> fitnessMap, 
         List<BaseEventData> events, ref bool thresholdAccept)

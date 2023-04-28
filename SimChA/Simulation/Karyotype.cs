@@ -448,28 +448,28 @@ public class Karyotype
             ? ApplyTailDeletion(contigA, delFraction, delDirection)
             : ApplyBFB(contigA, delFraction, delDirection);
     }
-    private string ApplyEvent(ChromothripsisEventData data)
+    public string ApplyEvent(ChromothripsisEventData data)
     {
         return ApplyChromothripsis(data.ContigId, data.StopsList, data.GetSelection());
     }
-    private string ApplyEvent(ChromoplexyEventData data)
+    public string ApplyEvent(ChromoplexyEventData data)
     {
         return ApplyChromoplexy(data.ContigIdList, data.StopsList, data.GetSequence(), data.BreakpointsList);
     }
-    private string ApplyEvent(PyrgoEventData data)
+    public string ApplyEvent(PyrgoEventData data)
     {
         return ApplyPyrgo(data.ContigId, data.FragmentsList);
     }
-    private string ApplyEvent(RigmaEventData data)
+    public string ApplyEvent(RigmaEventData data)
     {
         return ApplyRigma(data.ContigId, data.Start, data.StopsList);
     }
-    private string ApplyEvent(BaseEventData data)
+    public string ApplyEvent(BaseEventData data)
     {
         return ApplyWGD();
     }
 
-    private string ApplyEvent(InternalEventData eventData)
+    public string ApplyEvent(InternalEventData eventData)
     {
         int contigA = eventData.ContigId;
         long start = eventData.Start;
@@ -482,7 +482,7 @@ public class Karyotype
             CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
         };
     }
-    private string ApplyEvent(PairEventData eventData)
+    public string ApplyEvent(PairEventData eventData)
     {
         int contigA = eventData.ContigIdList[0];
         int contigB = eventData.ContigIdList[1];
@@ -533,7 +533,7 @@ public class Karyotype
         }
     }
 
-    private string ApplyPairEvent(PairEventData eventData)
+    public string ApplyPairEvent(PairEventData eventData)
     {
         int contigA = eventData.ContigIdList[0];
         int contigB = eventData.ContigIdList[1];
@@ -543,7 +543,7 @@ public class Karyotype
         return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
     }
     
-    private string ApplyInternalEvent(InternalEventData eventData)
+    public string ApplyInternalEvent(InternalEventData eventData)
     {
         int contigA = eventData.ContigId;
         long start = eventData.Start;
@@ -557,22 +557,22 @@ public class Karyotype
         };
     }
 
-    private string ApplyChromothripsisEvent(ChromothripsisEventData data)
+    public string ApplyChromothripsisEvent(ChromothripsisEventData data)
     {
         return ApplyChromothripsis(data.ContigId, data.StopsList, data.GetSelection());
     }
 
-    private string ApplyChromoplexyEvent(ChromoplexyEventData data)
+    public string ApplyChromoplexyEvent(ChromoplexyEventData data)
     {
         return ApplyChromoplexy(data.ContigIdList, data.StopsList, data.GetSequence(), data.BreakpointsList);
     }
 
-    private string ApplyPyrgoEvent(PyrgoEventData data)
+    public string ApplyPyrgoEvent(PyrgoEventData data)
     {
         return ApplyPyrgo(data.ContigId, data.FragmentsList);
     }
 
-    private string ApplyRigmaEvent(RigmaEventData data)
+    public string ApplyRigmaEvent(RigmaEventData data)
     {
         return ApplyRigma(data.ContigId, data.Start, data.StopsList);
     }
