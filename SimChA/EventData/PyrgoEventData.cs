@@ -1,18 +1,18 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using Extreme.Mathematics;
 using SimChA.DataTypes;
 
 namespace SimChA.EventData;
 
-public record ContigEventData : BaseEventData
+public record PyrgoEventData : BaseEventData
 {
     public readonly int ContigId = -1;
-    
-    // Constructor used for whole-chromosome events
-    public ContigEventData(CNEventP eventP, int contigId)  : base(eventP)
+    public readonly List<(long, long)>? FragmentsList = new();
+    public PyrgoEventData(CNEventP eventP, int contigId, List<(long,long)> frags) : base(eventP)
     {
         ContigId = contigId;
+        FragmentsList = frags;
     }
-    
     public override string ToString() => $"{EventType}\t{ContigId}";
 }

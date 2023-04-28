@@ -18,9 +18,9 @@ public record ChromoplexyEventData : BaseEventData
         SequenceList = sequence;
         BreakpointsList = breakpoints;
     }
-
     public IEnumerable<int> GetSequence()
     {
         return SequenceList;
     }
+    
 }

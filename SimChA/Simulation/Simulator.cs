@@ -93,9 +93,7 @@ public class Simulator
     {
         List<CNEvent> events = new();
         var counter = 1;
-        Console.WriteLine("\nPerforming Metropolis-Hastings");
         MCSampleCNEventsRec(rootClone, clones, fitnessMap, events, ref counter);
-        Console.WriteLine();
         return events;
     }
 
@@ -131,7 +129,7 @@ public class Simulator
         var karyotype = node.CopyKaryotype();
         foreach (var e in events)
         {
-            karyotype.ApplyEventProperties(e);
+            karyotype.ApplyEventData(e);
             eventPotentialTotal *= e.EventP.Prob;
         }
 
@@ -162,8 +160,6 @@ public class Simulator
             
             // TODO: Maybe I need a dummy Karyotype object to apply events to
             // Parameters needed for the MH algorithm
-            // Number of trial events
-            //int nSamples = _mcParams.NumBurnIn + _mcParams.NumSamples;
             float alterEventStart = 0.5f;
             float alterEventLength = 0.5f;
             // The tracker to accept sets of events if they are within the threshold tolerance from
@@ -179,7 +175,7 @@ public class Simulator
             // Now we perform the Metropolis-Hastings algorithm
             // and sample a set of events that give the closest agreement with
             // fitness given by SMITH
-            for (int i = 0; i < McParams.NumSamples; i++)
+            for (int i = 0; i < McParams.NumSamplesTotal; i++)
             {
                 // Reset the automatic acceptance
                 thresholdAccept = false;
@@ -210,7 +206,8 @@ public class Simulator
                     currentPotential = proposalPotential;
                     currentEventProps = proposedEventProps;
                     // Break out of the sampling if we have reached the threshold
-                    if (thresholdAccept)
+                    // and have reached the minimum number of samples required
+                    if (thresholdAccept && i > McParams.NumSamplesMin)
                         break;
                 }
             }
@@ -223,7 +220,7 @@ public class Simulator
             {
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
                 var eventProperties = currentEventProps[mutNo];
-                string eventString = child.Karyotype.ApplyEventProperties(eventProperties);
+                string eventString = child.Karyotype.ApplyEventData(eventProperties);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
