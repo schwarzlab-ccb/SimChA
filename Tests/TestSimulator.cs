@@ -102,7 +102,27 @@ public class TestSimulator
         events = new List<CNEventP> {new(CNEventType.ChromDeletion, 1)};
         var sig2 = new Signature("test2", 0, events);
         var sigs = new List<Signature>() { sig1, sig2 };
-        // TODO: finish this test
-        
+        // Init a new Simulator instance
+        int seed = 0;
+        var sex = false;
+        var simParams = new SimParams(
+            seed, 
+            sex, 
+            1, 
+            Distribution.Uniform, 
+            GenomeAssembly.hg38, 
+            _fitnessParams, 
+            sigs, 
+            null);
+        _sim = new Simulator(_rnd, simParams, _geneLists);
+        var kar = new Karyotype(sex);
+        var clone = new Clone(1, -1, "test", 0, kar, 1);
+        int nMutations = 5;
+        var eventData = _sim.InitEvents(clone, nMutations);
+        foreach (var data in eventData)
+        {
+            Assert.AreEqual(data.EventType, CNEventType.ChromDuplication);
+        }
+        Assert.AreEqual(eventData.Count(), nMutations);
     }
 }
