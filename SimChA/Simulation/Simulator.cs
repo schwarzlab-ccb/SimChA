@@ -11,7 +11,8 @@ public class Simulator
 
     private MCParams? McParams => _simParams.MCParams;
     private List<Signature>? Signatures => _simParams.Signatures;
-    
+    public List<Signature> SelectedSignatures;
+
     public Simulator(
         Random rnd, 
         SimParams simParams, 
@@ -97,21 +98,31 @@ public class Simulator
         return events;
     }
 
-    public List<BaseEventData> InitEvents(Clone node, Signature sig, int nMutations)
+    public List<BaseEventData> InitEvents(Clone node, int nMutations)
     {
-        var eventPs = InitEventPs(sig, nMutations).ToList();
+        // Reset the selected signatures
+        SelectedSignatures = new List<Signature>();
+        var eventPs = InitEventPs(nMutations);
         return eventPs.Select(e => node.Karyotype.GenerateCNEventProperties(_rnd, e)).ToList();
     }
 
-    public IEnumerable<CNEventP> InitEventPs(Signature sig, int nMutations)
-        => Enumerable.Range(0, nMutations).Select(_ => SignatureHelper.RndEventP(_rnd, sig.Events));
+    public List<CNEventP> InitEventPs(int nMutations)
+    {
+        List<CNEventP> eventPs = new List<CNEventP>();
+        for (int i = 0; i < nMutations; i++)
+        {
+            var sig = SignatureHelper.RndSignature(_rnd, Signatures);
+            SelectedSignatures.Add(sig);
+            eventPs.Add(SignatureHelper.RndEventP(_rnd, sig.Events));
+        }
+        return eventPs;
+    }
 
     // The conditional (unnormalized) probability of this set of events occuring, 
     // given the individual events and the signature
-    private double Potential(Clone node, Signature sig, Dictionary<string, double> fitnessMap, 
+    private double Potential(Clone node, Dictionary<string, double> fitnessMap, 
         List<BaseEventData> events, ref bool thresholdAccept)
     {
-        // Probability of picking this set of events (ignore normalization, divides out)
         double eventPotentialTotal = 1.0;
         double targetFitness;
         try
@@ -122,15 +133,17 @@ public class Simulator
         {
             targetFitness = 0.0;
         }
-        
-        // Probability of picking this signature (ignore normalization, divides out)
-        var sigPotential = sig.Prob;
-
+        // Create a dummy karyotype for the events to act on
         var karyotype = node.CopyKaryotype();
-        foreach (var e in events)
+        double sigPotential = 1.0;
+        
+        // Probability of picking each event and their corresponding signature
+        // (ignore normalization, divides out when we do the accept/reject)
+        for (int i = 0; i < events.Count(); i++)
         {
-            karyotype.ApplyEventData(e);
-            eventPotentialTotal *= e.EventP.Prob;
+            sigPotential *= SelectedSignatures[i].Prob;
+            karyotype.ApplyEventData(events[i]);
+            eventPotentialTotal *= events[i].EventP.Prob;
         }
 
         double newFitness = karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
@@ -144,7 +157,6 @@ public class Simulator
         
         return fitnessPotential * eventPotentialTotal * sigPotential;
     }
-
     private void MCSampleCNEventsRec(Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap, List<CNEvent> events,  ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
@@ -167,9 +179,8 @@ public class Simulator
             bool thresholdAccept = false;
 
             // Generate a starting set of mutations and its potential
-            var sig = SignatureHelper.RndSignature(_rnd, Signatures);
-            var currentEventProps = InitEvents(node, sig, child.DistToParent);
-            double currentPotential = Potential(node, sig, fitnessMap, currentEventProps, ref thresholdAccept);
+            var currentEventProps = InitEvents(node, child.DistToParent);
+            double currentPotential = Potential(node, fitnessMap, currentEventProps, ref thresholdAccept);
 
             var startEventProps = currentEventProps.ToList();
             // Now we perform the Metropolis-Hastings algorithm
@@ -185,6 +196,9 @@ public class Simulator
                 // Choose whether to swap the event entirely
                 if (_rnd.NextDouble() < McParams.SwapEventP)
                 {
+                    // Get the new signature and the corresponding event
+                    var sig = SignatureHelper.RndSignature(_rnd, Signatures);
+                    SelectedSignatures[index] = sig;
                     var e = SignatureHelper.RndEventP(_rnd, sig.Events);
                     proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, e);
                 }
@@ -199,7 +213,7 @@ public class Simulator
                 }
                 // With the newly selected event, we need to calculate the new
                 // fitness of the clone
-                double proposalPotential = Potential(node, sig, fitnessMap, proposedEventProps, ref thresholdAccept);
+                double proposalPotential = Potential(node, fitnessMap, proposedEventProps, ref thresholdAccept);
                 double acceptProb = proposalPotential/currentPotential;
                 if (acceptProb >= _rnd.NextDouble())
                 {
