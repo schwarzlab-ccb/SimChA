@@ -310,9 +310,9 @@ public class Karyotype
                 const double probabilityOfSuccess = 0.9; // TODO: should be dependent on the event type possibly,
                                                          // also the value should be better justified
                                                          // see https://www.nature.com/articles/s41586-019-1913-9/figures/9
-                int numberOfRegions = GeometricDistribution.Sample(rnd, probabilityOfSuccess);
+                int numberOfRegions = GeometricDistribution.Sample(rnd, probabilityOfSuccess) + 1;
                 var regions = new List<Region>();
-                var mean = cnEventP.Params["mean"];
+                var mean = cnEventP.Params["Mean"];
                 long endRegion = 0;
                 for (var i = 0; i < numberOfRegions; i++, IDsEnumerator.MoveNext())
                 {
