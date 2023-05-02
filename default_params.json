@@ -102,21 +102,27 @@
           "Targets": null
         },
         {
-          "Type": "ChainTemplatedInsertions",
+          "Type": "TIChain",
           "Prob": 1,
-          "Params": null,
+          "Params": {
+            "Mean": 0.1
+          },
           "Targets": null
         },
         {
-          "Type": "CycleTemplatedInsertions",
+          "Type": "TICycle",
           "Prob": 1,
-          "Params": null,
+          "Params": {
+            "Mean": 0.1
+          },
           "Targets": null
         },
         {
-          "Type": "BridgeTemplatedInsertions",
+          "Type": "TIBridge",
           "Prob": 1,
-          "Params": null,
+          "Params": {
+            "Mean": 0.1
+          },
           "Targets": null
         }
       ]
