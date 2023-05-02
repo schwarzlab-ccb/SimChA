@@ -191,12 +191,11 @@ public class Karyotype
         return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
 
-    public string ApplyTIChain(int contigID, List<Region> regions, int lastContigID, long splitPos, Random rnd, double mean)
+    public string ApplyTIChain(int contigID, List<Region> regions, long splitPos, Random rnd, double mean)
     {
         var contig = _contigs[contigID];
-        regions.AddRange(_contigs[lastContigID].GetSplitRegion(splitPos, regions.Last().Forward));
         splitPos = Sampling.GetSegLength(rnd, contig.Length(), mean);
-        contig.AddRegionsChain(regions, splitPos);
+        contig.AddRegions(regions, splitPos);
         var regionIDs = string.Join(",", regions);
         return $"contig:{contigID};regions:{regionIDs}";
     }    
@@ -217,7 +216,7 @@ public class Karyotype
         var startRegion = Sampling.GetInternalPos(rnd, contig.Length());
         var endRegion = startRegion + segmentLen;
         regions.AddRange(contig.GetRandomRegion(startRegion, endRegion));
-        contig.Split(startRegion, true);
+        contig.AddRegions(regions, startRegion);
         var regionIDs = string.Join(",", regions);
         return $"contig:{contigID};regions:{regionIDs}";
     }
@@ -324,7 +323,7 @@ public class Karyotype
                 }
                 return cnEventP.Type switch
                 {
-                    CNEventType.TIChain => ApplyTIChain(contigA, regions, IDsEnumerator.Current, endRegion, rnd, mean),
+                    CNEventType.TIChain => ApplyTIChain(contigA, regions, endRegion, rnd, mean),
                     CNEventType.TICycle => ApplyTICycle(contigA, regions, rnd, mean),
                     CNEventType.TIBridge => ApplyTIBridge(contigA, regions, rnd, mean)
                 };

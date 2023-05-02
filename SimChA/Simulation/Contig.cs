@@ -123,12 +123,6 @@ public class Contig
         return foreward ? second : first;
     }
 
-    public void AddRegionsChain(List<Region> regions, long splitPos)
-    {
-        var (first, second) = RegionOps.SplitRegions(_regions, splitPos);
-        _regions = RegionOps.ConcatRegions(new[] {first, regions});
-    }
-    
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
 }
