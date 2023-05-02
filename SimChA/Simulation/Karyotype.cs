@@ -307,12 +307,12 @@ public class Karyotype
             case CNEventType.TIChain:
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
-                const double probabilityOfSuccess = 0.9; // TODO: should be dependent on the event type possibly,
-                                                         // also the value should be better justified
-                                                         // see https://www.nature.com/articles/s41586-019-1913-9/figures/9
-                int numberOfRegions = GeometricDistribution.Sample(rnd, probabilityOfSuccess) + 1;
+                // TODO: Probability should be dependent on the event type possibly,
+                // also the value should be better justified
+                // see https://www.nature.com/articles/s41586-019-1913-9/figures/9
+                int numberOfRegions = GeometricDistribution.Sample(rnd, cnEventP.Params["Prob"]) + 1;
                 var regions = new List<Region>();
-                var mean = cnEventP.Params["Mean"];
+                var mean = cnEventP.Params["mean"];
                 long endRegion = 0;
                 for (var i = 0; i < numberOfRegions; i++, IDsEnumerator.MoveNext())
                 {
