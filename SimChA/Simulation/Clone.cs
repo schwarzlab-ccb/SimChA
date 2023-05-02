@@ -24,8 +24,8 @@ public class Clone
     public Karyotype Karyotype { set; get; }
     public int TotalMutations { get; }
     public List<double> SigMixture { set; get; }
-    public static string Header() => "ID\tName\tSex\tParent\tEvents\tPloidy\tMissing\tKaryotype";
+    public static string Header() => "ID\tName\tSex\tParent\tEvents\tPloidy\tMissing\tMixture\tKaryotype";
     public override string ToString() 
-        => $"{CloneId}\t{Name}\t{Karyotype.Sex}\t{ParentId}\t{DistToParent}\t{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{Karyotype}";
+        => $"{CloneId}\t{Name}\t{Karyotype.Sex}\t{ParentId}\t{DistToParent}\t{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{string.Join(";", SigMixture)}\t{Karyotype}";
     public Karyotype CopyKaryotype() => new(Karyotype);
 }
