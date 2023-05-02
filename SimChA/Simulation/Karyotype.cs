@@ -267,7 +267,7 @@ public class Karyotype
                     CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
                     CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
                     CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
-                    CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
+                    CNEventType.InvertedDuplication => ApplyInvertedDuplication(contigA, start, end),
                 };
 
             case CNEventType.Translocation:
