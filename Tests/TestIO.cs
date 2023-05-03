@@ -1,4 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
+﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,13 @@ namespace Tests;
 [TestFixture]
 public class TestIO
 {
+    [Test]
+    public void TestContig()
+    {
+        var clone = new Clone(-1, 0, "test", 1, new Karyotype(false), 1);
+        Assert.DoesNotThrow(() => clone.ToString());
+    }
+    
     [Test]
     public void TestConfigSerialization()
     {
