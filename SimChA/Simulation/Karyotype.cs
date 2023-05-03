@@ -209,14 +209,11 @@ public class Karyotype
     // Fragments that do not return to the original chromosome
     public string ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
     {
-        var host = _contigs[frags[0].id];
-        var template = host.GetSubContig(0, frags[0].start);
-        foreach (var frag in frags.Skip(1).Take(frags.Count - 2))
+        var template = new Contig();
+        foreach (var frag in frags)
         {
             template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
         }
-        var last = _contigs[frags.Last().id];
-        template.AppendContig(last.GetSubContig(frags.Last().start, last.Length()));
         _contigs.Add(template);
         return FragsToString(frags);
     }    
@@ -228,7 +225,8 @@ public class Karyotype
         var template = new Contig();
         foreach (var frag in frags.Skip(1))
         {
-            template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
+            var contig = _contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len, frag.dir);
+            template.AppendContig(contig);
         }
         host.InsertContig(template, frags[0].start);
         return FragsToString(frags);
@@ -241,7 +239,8 @@ public class Karyotype
         var template = new Contig();
         foreach (var frag in frags)
         {
-            template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
+            var contig = _contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len, frag.dir);
+            template.AppendContig(contig);
         }
         host.InsertContig(template, frags[0].start);
         return FragsToString(frags);
@@ -402,7 +401,7 @@ public class Karyotype
                                    i == fragCount - 1 && cnEventP.Type == CNEventType.TIChain;
                     var fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
                     var fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
-                    var dir = rnd.CoinFlip();
+                    var dir = i == 0 || rnd.CoinFlip();
                     fragments.Add((id, fragStart, fragLen, dir));
                 }
                 return cnEventP.Type switch

@@ -237,7 +237,7 @@ public class TestKaryotype
         var frags = new List<(int, long, long, bool)>
         {
             (0, TEST_FRAC, 0, true),
-            (1, TEST_FRAC, TEST_FRAC, true),
+            (1, TEST_FRAC, TEST_FRAC, false),
             (2, TEST_FRAC * 2, TEST_FRAC * 2, true)
         };
         _kar.ApplyTIBridge(frags);
@@ -248,16 +248,15 @@ public class TestKaryotype
     [Test]
     public void TestTIChain()
     {
-        long contigLen = _kar.ContigLen(2);
         var frags = new List<(int, long, long, bool)>
         {
-            (0, TEST_FRAC, 0, true),
-            (1, TEST_FRAC, TEST_FRAC, true),
-            (2, TEST_FRAC, 0, true)
+            (0, TEST_FRAC, TEST_FRAC, true),
+            (1, TEST_FRAC, TEST_FRAC * 2, false),
+            (2, TEST_FRAC * 2, TEST_FRAC, true)
         };
         _kar.ApplyTIChain(frags);
         Assert.AreEqual(47, _kar.CountContigs());
-        Assert.AreEqual(contigLen + TEST_FRAC, _kar.ContigLen(46));
+        Assert.AreEqual(TEST_FRAC * 4, _kar.ContigLen(46));
     }
 
     [Test]
@@ -267,7 +266,7 @@ public class TestKaryotype
         var frags = new List<(int, long, long, bool)>
         {
             (0, TEST_FRAC, TEST_FRAC, true),
-            (1, TEST_FRAC, TEST_FRAC, true),
+            (1, TEST_FRAC, TEST_FRAC, false),
             (2, TEST_FRAC * 2, TEST_FRAC * 2, true)
         };
         _kar.ApplyTICycle(frags);

@@ -105,9 +105,16 @@ public class Contig
         var newRegions = RegionOps.Scatter(locs, _regions);
         _regions = RegionOps.Gather(newRegions, indices);
     }
-    
-    public Contig GetSubContig(long start, long end)
-        => new (RegionOps.CopyRange(_regions, start, end));   
+
+    public Contig GetSubContig(long start, long end, bool inverse = false)
+    {
+        var ranges = RegionOps.CopyRange(_regions, start, end);
+        if (inverse)
+        {
+            ranges = RegionOps.InvertRegions(ranges);
+        }
+        return new Contig(ranges);
+    }
 
     public void InsertContig(Contig other, long location)
     {
