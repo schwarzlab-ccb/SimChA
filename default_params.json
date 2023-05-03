@@ -1,5 +1,5 @@
 {
-  "Seed": 1249191585,
+  "Seed": 0,
   "SexXX": true,
   "EventCount": 100,
   "Distribution": "Exponential",
@@ -25,7 +25,7 @@
         },
         {
           "Type": "InternalDuplication",
-          "Prob": 20
+          "Prob": 10
         },
         {
           "Type": "InternalDeletion",
@@ -33,11 +33,11 @@
         },
         {
           "Type": "InternalInversion",
-          "Prob": 20
+          "Prob": 10
         },
         {
           "Type": "InvertedDuplication",
-          "Prob": 20
+          "Prob": 10
         },
         {
           "Type": "BreakageFusionBridge",
@@ -65,7 +65,7 @@
         },
         {
           "Type": "Pyrgo",
-          "Prob": 2
+          "Prob": 1
         },
         {
           "Type": "Rigma",
@@ -73,15 +73,15 @@
         },
         {
           "Type": "TIChain",
-          "Prob": 5
+          "Prob": 2
         },
         {
           "Type": "TICycle",
-          "Prob": 5
+          "Prob": 2
         },
         {
           "Type": "TIBridge",
-          "Prob": 5
+          "Prob": 2
         }
       ]
     }

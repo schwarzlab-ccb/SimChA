@@ -246,7 +246,6 @@ public class Karyotype
         return FragsToString(frags);
     }
     
-    
     public string ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
     {
         var contig = _contigs[contigID];
@@ -389,8 +388,9 @@ public class Karyotype
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
                 var size = cnEventP.Get("Size", 1_000_000L);
-                var prob = cnEventP.Get("Frag", 10.0);
-                var fragCount = GeometricDistribution.Sample(rnd, 1 / prob) + (cnEventP.Type != CNEventType.TIBridge ? 1 : 2);
+                var fragMean = cnEventP.Get("Frag", 10.0);
+                var fragCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
+                                 + (cnEventP.Type != CNEventType.TIBridge ? 1 : 2);
                 var fragments = new List<(int id, long start, long len, bool dir)>();
                 for (var i = 0; i < fragCount; i++, IDsEnumerator.MoveNext())
                 {

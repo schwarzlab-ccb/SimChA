@@ -17,7 +17,7 @@ public static class Sampling
 
     // Get two positions within the contig (boundaries are excluded)
     public static long GetInternalPos(Random rnd, long contigLen)
-        => rnd.NextInt64(1, contigLen - 1);
+        => rnd.NextInt64(1, Math.Max(1, contigLen - 1));
     
     public static int GetFragCount(Random rnd, double mean)
         => (int) Math.Max(1, Math.Round(NormalDistribution.Sample(rnd, mean)));
@@ -47,7 +47,7 @@ public static class Sampling
     {
         var probs = eventPs.Select(ev => ev.Prob).ToList();
         probs = probs.Select(p => p / probs.Sum()).ToList();
-        int index = Sampling.PickRandomIndex(rnd, probs);
+        int index = PickRandomIndex(rnd, probs);
         return eventPs[index];
     }
     
