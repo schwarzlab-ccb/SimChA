@@ -100,8 +100,6 @@ public class Simulator
 
     public List<BaseEventData> InitEvents(Clone node, int nMutations)
     {
-        // Reset the selected signatures
-        SelectedSignatures = new List<Signature>();
         var eventPs = InitEventPs(nMutations);
         return eventPs.Select(e => node.Karyotype.GenerateCNEventProperties(_rnd, e)).ToList();
     }
@@ -109,6 +107,8 @@ public class Simulator
     public List<CNEventP> InitEventPs(int nMutations)
     {
         List<CNEventP> eventPs = new List<CNEventP>();
+        // Reset the selected signatures
+        SelectedSignatures = new List<Signature>();
         for (int i = 0; i < nMutations; i++)
         {
             var sig = SignatureHelper.RndSignature(_rnd, Signatures);
@@ -120,18 +120,19 @@ public class Simulator
 
     // The conditional (unnormalized) probability of this set of events occuring, 
     // given the individual events and the signature
-    private double Potential(Clone node, Dictionary<string, double> fitnessMap, 
+    public double Potential(Clone node, Dictionary<string, double> fitnessMap, 
         List<BaseEventData> events, ref bool thresholdAccept)
     {
         double eventPotentialTotal = 1.0;
         double targetFitness;
+        // TODO: sort out 
         try
         {
             targetFitness = fitnessMap[node.CloneId.ToString()];
         }
         catch (Exception _)
         {
-            targetFitness = 0.0;
+            targetFitness = 1.0;
         }
         // Create a dummy karyotype for the events to act on
         var karyotype = node.CopyKaryotype();
@@ -149,7 +150,7 @@ public class Simulator
         double newFitness = karyotype.UpdateFitness(_geneLists, _simParams.Fitness);
         double dFit = newFitness - targetFitness;
         thresholdAccept = Math.Abs(dFit / targetFitness) < McParams.ThresholdFit;
-            
+
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
         double fitnessPotential = Math.Exp(-McParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
@@ -203,7 +204,7 @@ public class Simulator
                     proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, e);
                 }
                 // Otherwise we modify some quantity of the event, but keep the event itself the same
-                // TODO: Implement
+                // TODO: Implement the modifications to the quantities?
                 else
                 {
                     // Keep the event type the same, but redo all parameters:
