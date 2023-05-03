@@ -589,7 +589,7 @@ def plot_cn_bars(copynumbers, tree=None, fraction=False, y_posns=None, cmax=8, t
 def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_numbers=False,
                     alleles=['cn_a', 'cn_b'], tree_width_ratio=1, cbar_width_ratio=0.05, figsize=(20, 10),
                     tree_line_width=0.5, tree_marker_size=1, hide_internal_nodes=True, title='',
-                    tree_label_colors=None, cmap='coolwarm', normal_name=0,
+                    tree_label_colors=None, cmap='coolwarm', normal_name=0, max_num_samples=100,
                     ignore_segment_lengths=False):
 
     copynumbers = copynumbers[alleles].copy()
@@ -675,9 +675,10 @@ def plot_cn_heatmap(copynumbers, tree=None, y_posns=None, cmax=8, total_copy_num
         ax.set_yticks([])
 
     # add sample names
-    cn_axes[0].set_yticks(np.arange(len(cur_sample_labels)) + 0.5)
-    cn_axes[0].set_yticklabels(cur_sample_labels, ha='right',
-                               va='center', fontsize=YLABEL_FONT_SIZE)
+    if len(cur_sample_labels) < max_num_samples:
+        cn_axes[0].set_yticks(np.arange(len(cur_sample_labels)) + 0.5)
+        cn_axes[0].set_yticklabels(cur_sample_labels, ha='right',
+                                va='center', fontsize=YLABEL_FONT_SIZE)
 
     # add colorbar
     cax.pcolormesh([0, 1],
