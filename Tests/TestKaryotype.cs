@@ -231,20 +231,47 @@ public class TestKaryotype
     }
 
     [Test]
-    public void TestBridgeTemplatedInsertion()
+    public void TestTIBridge()
     {
-
+        long contigLen = _kar.ContigLen(0);
+        var frags = new List<(int, long, long, bool)>
+        {
+            (0, TEST_FRAC, 0, true),
+            (1, TEST_FRAC, TEST_FRAC, true),
+            (2, TEST_FRAC * 2, TEST_FRAC * 2, true)
+        };
+        _kar.ApplyTIBridge(frags);
+        Assert.AreEqual(46, _kar.CountContigs());
+        Assert.AreEqual(contigLen + TEST_FRAC * 3, _kar.ContigLen(0));
     }
 
     [Test]
-    public void TestChainTemplatedInsertion()
+    public void TestTIChain()
     {
-
+        long contigLen = _kar.ContigLen(2);
+        var frags = new List<(int, long, long, bool)>
+        {
+            (0, TEST_FRAC, 0, true),
+            (1, TEST_FRAC, TEST_FRAC, true),
+            (2, TEST_FRAC, 0, true)
+        };
+        _kar.ApplyTIChain(frags);
+        Assert.AreEqual(47, _kar.CountContigs());
+        Assert.AreEqual(contigLen + TEST_FRAC, _kar.ContigLen(46));
     }
 
     [Test]
-    public void TestCycleTemplatedInsertions()
+    public void TestTICycle()
     {
-
+        long contigLen = _kar.ContigLen(0);
+        var frags = new List<(int, long, long, bool)>
+        {
+            (0, TEST_FRAC, TEST_FRAC, true),
+            (1, TEST_FRAC, TEST_FRAC, true),
+            (2, TEST_FRAC * 2, TEST_FRAC * 2, true)
+        };
+        _kar.ApplyTICycle(frags);
+        Assert.AreEqual(46, _kar.CountContigs());
+        Assert.AreEqual(contigLen + TEST_FRAC * 4, _kar.ContigLen(0));
     }
 }

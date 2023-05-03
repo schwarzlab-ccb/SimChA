@@ -210,13 +210,13 @@ public class Karyotype
     public string ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
     {
         var host = _contigs[frags[0].id];
-        var template = host.GetSubContig(0, frags[0].len);
+        var template = host.GetSubContig(0, frags[0].start);
         foreach (var frag in frags.Skip(1).Take(frags.Count - 2))
         {
             template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
         }
-        var last = frags.Last();
-        template.AppendContig(_contigs[last.id].GetSubContig(last.start, last.len - last.start));
+        var last = _contigs[frags.Last().id];
+        template.AppendContig(last.GetSubContig(frags.Last().start, last.Length()));
         _contigs.Add(template);
         return FragsToString(frags);
     }    
