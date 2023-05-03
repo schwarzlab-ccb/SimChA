@@ -40,20 +40,9 @@ public static class Sampling
             .OrderBy(i => i)
             .ToList();
     
-    // TODO: Unify with internal operations
-    public static Region CreateRandomRegion(Random rnd, List<Region> regions)
-    {
-        var region = regions.OrderBy(x => rnd.Next()).First();
-        long start = rnd.NextInt64(region.Start, region.End - 1);
-        long stop = rnd.NextInt64(start + 1, region.End);
-        var newRegion = new Region(start, stop, region.ChrID, rnd.CoinFlip());
-        return newRegion;
-    }
-    
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
 
-    
     public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
     {
         var probs = eventPs.Select(ev => ev.Prob).ToList();

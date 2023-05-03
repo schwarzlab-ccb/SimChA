@@ -236,7 +236,7 @@ public class TestKaryotype
         var regions = new List<Region>();
         regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
         regions.Add(new Region(3000, 5000, new ChrID(ChrNo.chr2, true), true));
-        _kar.ApplyBridgeTemplatedInsertions(0, regions);
+        _kar.ApplyTIBridge(0, regions, new Random(), 0.1);
         Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 3000);
     }
 
@@ -246,9 +246,8 @@ public class TestKaryotype
         var regions = new List<Region>();
         regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
         regions.Add(new Region(7000, 8000, new ChrID(ChrNo.chr2, true), true));
-        _kar.ApplyInternalDuplication(1, 6000, 7000);
-        _kar.ApplyChainTemplatedInsertions(0, regions, 1);
-        Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 9000);
+        _kar.ApplyTIChain(0, regions, 2000, new Random(), 0.1);
+        Assert.AreEqual(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 2000);
     }
 
     [Test]
@@ -257,7 +256,8 @@ public class TestKaryotype
         var regions = new List<Region>();
         regions.Add(new Region(1000, 2000, new ChrID(ChrNo.chr1, false), false));
         regions.Add(new Region(7000, 8000, new ChrID(ChrNo.chr2, false), true));
-        _kar.ApplyCycleTemplatedInsertions(0, regions, new Random());
+        _kar.ApplyTICycle(0, regions, new Random(), 0.1);
         Assert.Greater(_kar.ContigLen(0), HGRef.GetChromLen(ChrNo.chr1) + 2000);
+        Assert.AreEqual(_kar.FindRegionsOfChr(ChrNo.chr1).Count(), 5);
     }
 }
