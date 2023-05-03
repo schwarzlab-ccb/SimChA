@@ -118,10 +118,9 @@ public class TestSimulator
         var sig2 = new Signature("test2", 0, events);
         var sigs = new List<Signature>() { sig1, sig2 };
         // Init a new Simulator instance
-        var sex = true;
         var simParams = new SimParams(
             _seed, 
-            sex, 
+            _sexXX, 
             1, 
             Distribution.Uniform, 
             GenomeAssembly.hg38, 
@@ -131,6 +130,30 @@ public class TestSimulator
         _sim = new Simulator(_rnd, simParams, _geneLists);
         int nMutations = 5;
         var eventData = _sim.InitEvents(_clone, nMutations);
+        foreach (var data in eventData)
+        {
+            Assert.AreEqual(data.EventType, CNEventType.ChromDuplication);
+        }
+        Assert.AreEqual(eventData.Count(), nMutations);
+        
+        // Test that it will never sample 0 prob events in non-zero prob signatures
+        events = new List<CNEventP> {new(CNEventType.ChromDuplication, 1)};
+        sig1 = new Signature("test1", 1, events);
+        events = new List<CNEventP> {new(CNEventType.ChromDeletion, 0)};
+        sig2 = new Signature("test2", 1, events);
+        sigs = new List<Signature>() { sig1, sig2 };
+        // Init a new Simulator instance
+        simParams = new SimParams(
+            _seed, 
+            _sexXX, 
+            1, 
+            Distribution.Uniform, 
+            GenomeAssembly.hg38, 
+            _fitnessParams, 
+            sigs, 
+            _mcParams);
+        _sim = new Simulator(_rnd, simParams, _geneLists);
+        eventData = _sim.InitEvents(_clone, nMutations);
         foreach (var data in eventData)
         {
             Assert.AreEqual(data.EventType, CNEventType.ChromDuplication);

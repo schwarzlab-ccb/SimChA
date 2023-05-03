@@ -109,12 +109,18 @@ public class Simulator
         List<CNEventP> eventPs = new List<CNEventP>();
         // Reset the selected signatures
         SelectedSignatures = new List<Signature>();
-        for (int i = 0; i < nMutations; i++)
+        int i = 0;
+        do
         {
             var sig = SignatureHelper.RndSignature(_rnd, Signatures);
-            SelectedSignatures.Add(sig);
-            eventPs.Add(SignatureHelper.RndEventP(_rnd, sig.Events));
-        }
+            // Check that there are actually available events (i.e. prob not 0)
+            if (sig.Events.Sum(e => e.Prob) > Double.Epsilon)
+            {
+                i++;
+                SelectedSignatures.Add(sig);
+                eventPs.Add(SignatureHelper.RndEventP(_rnd, sig.Events));
+            }
+        } while (i < nMutations);
         return eventPs;
     }
 
