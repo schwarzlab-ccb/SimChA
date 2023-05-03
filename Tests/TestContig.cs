@@ -76,19 +76,15 @@ public class TestContig
     [Test]
     public void TestGetRandomRegion()
     {
-        var region = _contig1.GetSubContig(0, _contig1.Length());
-        Assert.LessOrEqual(_contig1.Length(), region.Sum(r => r.Length));
+        var res = _contig1.GetSubContig(1, _contig1.Length() - 1);
+        Assert.LessOrEqual(_contig1.Length() - 2, res.Length());
     }
 
     [Test]
-    public void TestAddRegions()
+    public void TestInsertContig()
     {
-        var regions = new List<Region>();
-        for(int i = 0; i <= 2; i++)
-        {
-            regions.AddRange(_contig1.GetSubContig(1, _contig1.Length() - 1));
-        }
-        _contigX.AddRegions(regions, 0);
-        Assert.AreEqual(_contigX.FindRegionsOfChr(ChrNo.chr1), regions);
+        var copyOfContig1 = new Contig(_contig1);
+        copyOfContig1.InsertContig(_contigX, _contig1.Length() / 2);
+        Assert.AreEqual(_contig1.Length() + _contigX.Length(), copyOfContig1.Length());
     }
 }

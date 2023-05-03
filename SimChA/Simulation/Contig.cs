@@ -7,10 +7,11 @@ namespace SimChA.Simulation;
 
 public class Contig
 {
-    public bool Circular { get; set; }
-    
     private List<Region> _regions;
 
+    public Contig()
+        => _regions = new List<Region>();
+    
     public Contig(Region initialRegion) 
         => _regions = new List<Region> { initialRegion };
 
@@ -105,14 +106,27 @@ public class Contig
         _regions = RegionOps.Gather(newRegions, indices);
     }
     
-    public List<Region> GetSubContig(long start, long end)
-        => RegionOps.CopyRange(_regions, start, end);   
+    public Contig GetSubContig(long start, long end)
+        => new (RegionOps.CopyRange(_regions, start, end));   
 
-    public void AddRegions(List<Region> regions, long insertion)
+    public void InsertContig(Contig other, long location)
     {
-        var (first, second) = RegionOps.SplitRegions(_regions, insertion);
-        _regions = RegionOps.ConcatRegions(new[] {first, regions, second});
+        if (location >= other.Length() - 1)
+        {
+            AppendContig(other);
+        }
+        else
+        {
+            var (first, second) = RegionOps.SplitRegions(_regions, location);
+            _regions = RegionOps.ConcatRegions(new[] {first, other._regions, second});
+        }
     }
+    
+    public void AppendContig(Contig other)
+    {
+        _regions = RegionOps.ConcatRegions(_regions, other._regions);
+    }
+
 
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);

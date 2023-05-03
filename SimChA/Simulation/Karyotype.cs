@@ -78,9 +78,6 @@ public class Karyotype
     
     public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
         => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
-
-    public void GlueNeighbours()
-        => _contigs.ForEach(c => c.GlueNeighbours());
     
     public string ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
@@ -187,41 +184,10 @@ public class Karyotype
         {
             _contigs[contigIDs[i]] = newContigs[i];
         }
-        var stringIDs = string.Join(",", contigIDs);
+        string stringIDs = string.Join(",", contigIDs);
         return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
-
-    public string ApplyTIChain(int contigID, List<Region> regions, long splitPos, Random rnd, double mean)
-    {
-        var contig = _contigs[contigID];
-        splitPos = Sampling.GetExpSeg(rnd, contig.Length(), mean);
-        contig.AddRegions(regions, splitPos);
-        var regionIDs = string.Join(",", regions);
-        return $"contig:{contigID};regions:{regionIDs}";
-    }    
     
-    public string ApplyTIBridge(int contigID, List<Region> regions, Random rnd, double mean)
-    {
-        var contig = _contigs[contigID];
-        var splitPos = Sampling.GetExpSeg(rnd, contig.Length(), mean);
-        contig.AddRegions(regions, splitPos);
-        var regionIDs = string.Join(",", regions);
-        return $"contig:{contigID};regions:{regionIDs}";
-    }    
-    
-    public string ApplyTICycle(int contigID, List<Region> regions, Random rnd, double mean)
-    {
-        var contig = _contigs[contigID];
-        var segmentLen = Sampling.GetExpSeg(rnd, contig.Length(), mean);
-        var startRegion = Sampling.GetInternalPos(rnd, contig.Length());
-        var endRegion = startRegion + segmentLen;
-        regions.AddRange(contig.GetSubContig(startRegion, endRegion));
-        contig.AddRegions(regions, startRegion);
-        var regionIDs = string.Join(",", regions);
-        return $"contig:{contigID};regions:{regionIDs}";
-    }
-
-
     public string ApplyPyrgo(int contigID, List<(long start, long len)> frags)
     {
         var contig = _contigs[contigID];
@@ -235,21 +201,53 @@ public class Karyotype
         }
         return res;
     }
+    
+    private static string DirToStr(bool dir) => dir ? ">" : "<";
+    private static string FragsToString(IEnumerable<(int id, long start, long len, bool dir)> frags) 
+        => string.Join(",", frags.Select(x => $"({x.id},{x.start},{x.len},{DirToStr(x.dir)})"));
 
-    public static List<(long, long)> GetSubsegments(Random rnd, long start, long fragmentLen, double mean)
+    // Fragments that do not return to the original chromosome
+    public string ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
     {
-        long meanSize = (long) (fragmentLen * mean);
-        int fracCount = Sampling.GetSiteCount(rnd, mean);
-        var frags = new List<(long, long)>();
-        for (int i = 0; i < fracCount; i++)
+        var host = _contigs[frags[0].id];
+        var template = host.GetSubContig(0, frags[0].len);
+        foreach (var frag in frags.Skip(1).Take(frags.Count - 2))
         {
-            long fracLen = Sampling.GetExpSeg(rnd, fragmentLen, meanSize);
-            long fracStart = Sampling.GetInternalPos(rnd, fragmentLen - fracLen);
-            frags.Add((start + fracStart, fracLen));
+            template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
         }
-        return frags;
+        var last = frags.Last();
+        template.AppendContig(_contigs[last.id].GetSubContig(last.start, last.len - last.start));
+        _contigs.Add(template);
+        return FragsToString(frags);
+    }    
+    
+    // First segment is the host, but there is no repetition
+    public string ApplyTIBridge(List<(int id, long start, long len, bool dir)> frags) 
+    {
+        var host = _contigs[frags[0].id];
+        var template = new Contig();
+        foreach (var frag in frags.Skip(1))
+        {
+            template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
+        }
+        host.InsertContig(template, frags[0].start);
+        return FragsToString(frags);
+    }    
+    
+    // First segment is the host, with repetition
+    public string ApplyTICycle(List<(int id, long start, long len, bool dir)> frags)
+    {
+        var host = _contigs[frags[0].id];
+        var template = new Contig();
+        foreach (var frag in frags)
+        {
+            template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
+        }
+        host.InsertContig(template, frags[0].start);
+        return FragsToString(frags);
     }
-
+    
+    
     public string ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
     {
         var contig = _contigs[contigID];
@@ -271,6 +269,20 @@ public class Karyotype
         return res;
     }
 
+    private static List<(long, long)> GetSubsegments(Random rnd, long start, long fragmentLen, double mean)
+    {
+        long meanSize = (long) (fragmentLen * mean);
+        int fracCount = Sampling.GetSiteCount(rnd, mean);
+        var frags = new List<(long, long)>();
+        for (int i = 0; i < fracCount; i++)
+        {
+            long fracLen = Sampling.GetExpSeg(rnd, fragmentLen, meanSize);
+            long fracStart = Sampling.GetInternalPos(rnd, fragmentLen - fracLen);
+            frags.Add((start + fracStart, fracLen));
+        }
+        return frags;
+    }
+    
     public string ApplyCNEvent(Random rnd, CNEventP cnEventP)
     {
         using var IDsEnumerator = Enumerable
@@ -377,26 +389,27 @@ public class Karyotype
             case CNEventType.TIChain:
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
-                // TODO: Probability should be dependent on the event type possibly,
-                // also the value should be better justified
-                // see https://www.nature.com/articles/s41586-019-1913-9/figures/9
-                int numberOfRegions = GeometricDistribution.Sample(rnd, cnEventP.Params["Prob"]) + 1;
-                var regions = new List<Region>();
-                var mean = cnEventP.Params["mean"];
-                long endRegion = 0;
-                for (var i = 0; i < numberOfRegions; i++, IDsEnumerator.MoveNext())
+                var size = cnEventP.Get("Size", 1_000_000L);
+                var prob = cnEventP.Get("Prob", 0.1);
+                var fragCount = GeometricDistribution.Sample(rnd, prob) + cnEventP.Type != CNEventType.TIBridge ? 1 : 2;
+                var fragments = new List<(int id, long start, long len, bool dir)>();
+                for (var i = 0; i < fragCount; i++)
                 {
-                    var contigLen = _contigs[IDsEnumerator.Current].Length();
-                    var segmentLen = Sampling.GetExpSeg(rnd, contigLen, cnEventP.Params["Mean"]);
-                    var startRegion = Sampling.GetInternalPos(rnd, contigLen);
-                    endRegion = startRegion + segmentLen;
-                    regions.AddRange(_contigs[IDsEnumerator.Current].GetSubContig(startRegion, endRegion));
+                    var id = IDsEnumerator.Current;
+                    var contigLen = _contigs[id].Length();
+                    // First segment of a bridge, or first and last on a chain do not have a length
+                    bool skipLen = i == 0 && cnEventP.Type != CNEventType.TICycle ||
+                                   i == fragCount - 1 && cnEventP.Type == CNEventType.TIChain;
+                    var fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
+                    var fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
+                    var dir = rnd.CoinFlip();
+                    fragments.Add((id, fragStart, fragLen, dir));
                 }
                 return cnEventP.Type switch
                 {
-                    CNEventType.TIChain => ApplyTIChain(contigA, regions, endRegion, rnd, mean),
-                    CNEventType.TICycle => ApplyTICycle(contigA, regions, rnd, mean),
-                    CNEventType.TIBridge => ApplyTIBridge(contigA, regions, rnd, mean)
+                    CNEventType.TIChain => ApplyTIChain(fragments),
+                    CNEventType.TIBridge => ApplyTIBridge(fragments),
+                    CNEventType.TICycle => ApplyTICycle(fragments)
                 };
 
             default:
