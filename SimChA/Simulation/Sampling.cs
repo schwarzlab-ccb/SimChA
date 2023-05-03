@@ -10,10 +10,10 @@ public static class Sampling
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen - 2));
     
     public static long GetExpSeg(Random rnd, long contigLen, long meanLen) 
-        => Math.Min((long) Math.Round(ExponentialDistribution.Sample(rnd, meanLen)), contigLen - 2);
+        => Math.Max(1, Math.Min((long) Math.Round(ExponentialDistribution.Sample(rnd, meanLen)), contigLen - 2));
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen - 2);
+        => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen - 2));
 
     // Get two positions within the contig (boundaries are excluded)
     public static long GetInternalPos(Random rnd, long contigLen)

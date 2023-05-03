@@ -1,5 +1,5 @@
 {
-  "Seed": -1,
+  "Seed": 1249191585,
   "SexXX": true,
   "EventCount": 100,
   "Distribution": "Exponential",
@@ -65,11 +65,11 @@
         },
         {
           "Type": "Pyrgo",
-          "Prob": 5
+          "Prob": 2
         },
         {
           "Type": "Rigma",
-          "Prob": 5
+          "Prob": 2
         },
         {
           "Type": "TIChain",

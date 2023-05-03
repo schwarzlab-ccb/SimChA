@@ -352,15 +352,15 @@ public class Karyotype
             
             case CNEventType.Pyrgo:
                 long pyrgoLen = cnEventP.Get("Size", 1_000_000L);
-                double pyrgoMean = cnEventP.Get("Frag", 10);
-                long pyrgoFrag = Sampling.GetNormSeg(rnd, pyrgoLen, 1.0);
+                double pyrgoMean = cnEventP.Get("Mean", 0.1);
+                long pyrgoFrag = Sampling.GetExpSeg(rnd, pyrgoLen, pyrgoLen);
                 long pyrgoStart = Sampling.GetInternalPos(rnd, lenA - pyrgoFrag);
                 var frags = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
                 return ApplyPyrgo(contigA, frags);
             
             case CNEventType.Rigma:
                 long rigmaLen = cnEventP.Get("Size", 1_000_000L);
-                double rigmaMean = cnEventP.Get("Frag", 10);
+                double rigmaMean = cnEventP.Get("Mean", 0.1);
                 long rigmaStart = Sampling.GetInternalPos(rnd, lenA - rigmaLen);
                 int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
                 var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, rigmaLen, rigmaMean)).ToList();
