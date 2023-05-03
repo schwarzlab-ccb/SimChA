@@ -19,8 +19,8 @@ public static class Sampling
     public static long GetInternalPos(Random rnd, long contigLen)
         => rnd.NextInt64(1, contigLen - 1);
     
-    public static int GetSiteCount(Random rnd, double frac)
-        => (int) Math.Max(1, Math.Round(NormalDistribution.Sample(rnd, 1 / frac)));
+    public static int GetFragCount(Random rnd, double mean)
+        => (int) Math.Max(1, Math.Round(NormalDistribution.Sample(rnd, mean)));
 
     // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
     public static int GetChromoplexySiteCount(Random rnd)

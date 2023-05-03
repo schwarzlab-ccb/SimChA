@@ -25,52 +25,31 @@
         },
         {
           "Type": "InternalDuplication",
-          "Prob": 10,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 20
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 20,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 20
         },
         {
           "Type": "InternalInversion",
-          "Prob": 10,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 20
         },
         {
           "Type": "InvertedDuplication",
-          "Prob": 10,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 20
         },
         {
           "Type": "BreakageFusionBridge",
-          "Prob": 10,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 5
         },
         {
           "Type": "TailDeletion",
-          "Prob": 10,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 5
         },
         {
           "Type": "Translocation",
-          "Prob": 10,
-          "Params": {
-            "Mean": 0.1
-          }
+          "Prob": 5
         },
         {
           "Type": "WholeGenomeDoubling",
@@ -83,6 +62,26 @@
         {
           "Type": "Chromothripsis",
           "Prob": 1
+        },
+        {
+          "Type": "Pyrgo",
+          "Prob": 5
+        },
+        {
+          "Type": "Rigma",
+          "Prob": 5
+        },
+        {
+          "Type": "TIChain",
+          "Prob": 5
+        },
+        {
+          "Type": "TICycle",
+          "Prob": 5
+        },
+        {
+          "Type": "TIBridge",
+          "Prob": 5
         }
       ]
     }

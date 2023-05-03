@@ -271,7 +271,7 @@ public class Karyotype
     private static List<(long, long)> GetSubsegments(Random rnd, long start, long fragmentLen, double mean)
     {
         long meanSize = (long) (fragmentLen * mean);
-        int fracCount = Sampling.GetSiteCount(rnd, mean);
+        int fracCount = Sampling.GetFragCount(rnd, mean);
         var frags = new List<(long, long)>();
         for (int i = 0; i < fracCount; i++)
         {
@@ -308,7 +308,7 @@ public class Karyotype
             // Tail events
             case CNEventType.TailDeletion:
             case CNEventType.BreakageFusionBridge:
-                long tailSize = cnEventP.Get("Size", 1_000_000);
+                long tailSize = cnEventP.Get("Size", 1_000_000L);
                 long delFraction = Sampling.GetExpSeg(rnd, lenA, tailSize);
                 bool delDirection = rnd.CoinFlip();
                 return cnEventP.Type == CNEventType.TailDeletion 
@@ -320,7 +320,7 @@ public class Karyotype
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-                long internalSize = cnEventP.Get("Size", 100_000);
+                long internalSize = cnEventP.Get("Size", 1_000_000L);
                 long segLen = Sampling.GetExpSeg(rnd, lenA, internalSize);
                 long start = Sampling.GetInternalPos(rnd, lenA - segLen);
                 long end = start + segLen;
@@ -344,7 +344,7 @@ public class Karyotype
             
             case CNEventType.Chromothripsis:
                 long chromothripsisLen = cnEventP.Get("Size", 100_000_000L);
-                int shardCount = Sampling.GetSiteCount(rnd, lenA / (double) chromothripsisLen);
+                int shardCount = Sampling.GetFragCount(rnd, lenA / (double) chromothripsisLen);
                 var stops = Sampling.GetStopsForShards(rnd, lenA, shardCount);
                 int shardsKept = rnd.Next(1, stops.Count);
                 var order = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept);
@@ -352,7 +352,7 @@ public class Karyotype
             
             case CNEventType.Pyrgo:
                 long pyrgoLen = cnEventP.Get("Size", 1_000_000L);
-                double pyrgoMean = cnEventP.Get("Mean", 0.1);
+                double pyrgoMean = cnEventP.Get("Frag", 10);
                 long pyrgoFrag = Sampling.GetNormSeg(rnd, pyrgoLen, 1.0);
                 long pyrgoStart = Sampling.GetInternalPos(rnd, lenA - pyrgoFrag);
                 var frags = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
@@ -360,9 +360,9 @@ public class Karyotype
             
             case CNEventType.Rigma:
                 long rigmaLen = cnEventP.Get("Size", 1_000_000L);
-                double rigmaMean = cnEventP.Get("Mean", 0.1);
+                double rigmaMean = cnEventP.Get("Frag", 10);
                 long rigmaStart = Sampling.GetInternalPos(rnd, lenA - rigmaLen);
-                int rigmaCount = Sampling.GetSiteCount(rnd, rigmaMean);
+                int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
                 var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, rigmaLen, rigmaMean)).ToList();
                 return ApplyRigma(contigA, rigmaStart, rigmaStops);
 
@@ -377,7 +377,7 @@ public class Karyotype
                     contigIDs.Add(IDsEnumerator.Current);
                     long thisLen = _contigs[IDsEnumerator.Current].Length();
                     totalLen += thisLen;
-                    int partsCount = Sampling.GetSiteCount(rnd, thisLen / (double) lenA);
+                    int partsCount = Sampling.GetFragCount(rnd,  (double) lenA / thisLen);
                     totalFrags += partsCount;
                     stopsForContig.Add(Sampling.GetStopsForShards(rnd, lenA, partsCount));
                 }
@@ -389,10 +389,10 @@ public class Karyotype
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
                 var size = cnEventP.Get("Size", 1_000_000L);
-                var prob = cnEventP.Get("Prob", 0.1);
-                var fragCount = GeometricDistribution.Sample(rnd, prob) + cnEventP.Type != CNEventType.TIBridge ? 1 : 2;
+                var prob = cnEventP.Get("Frag", 10.0);
+                var fragCount = GeometricDistribution.Sample(rnd, 1 / prob) + (cnEventP.Type != CNEventType.TIBridge ? 1 : 2);
                 var fragments = new List<(int id, long start, long len, bool dir)>();
-                for (var i = 0; i < fragCount; i++)
+                for (var i = 0; i < fragCount; i++, IDsEnumerator.MoveNext())
                 {
                     var id = IDsEnumerator.Current;
                     var contigLen = _contigs[id].Length();

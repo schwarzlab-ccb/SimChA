@@ -139,7 +139,7 @@ public class TestKaryotype
     [Test]
     public void TestApplyCNEvent()
     {
-        var pars = new Dictionary<string, double> { ["Mean"] = 0.1 };
+        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000 };
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.ChromDeletion, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.ChromDuplication, 1.0)); });
         Assert.DoesNotThrow(() => { _kar.ApplyCNEvent(_rnd, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
