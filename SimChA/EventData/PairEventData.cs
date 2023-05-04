@@ -18,15 +18,20 @@ public record PairEventData : BaseEventData
     public PairEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigA, int contigB) : base(eventP)
     {
         ContigIdA = contigA;
-        ContigIdB = contigB;
         long lenA = kar.ContigLen(contigA);
-        long lenB = kar.ContigLen(contigB);
         PosA = Sampling.GetInternalPos(rnd, lenA);
+        
+        ContigIdB = contigB;
+        long lenB = kar.ContigLen(contigB);
         PosB = Sampling.GetInternalPos(rnd, lenB);
+        
         double invProb = eventP.Get("InvProb", 0.0);
         Direction = invProb != 0.0 && rnd.CoinFlip(invProb);
     }
     
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    public override void ApplyEvent(Karyotype kar)
+        => kar.ApplyTranslocation(ContigIdA, ContigIdB, PosA, PosB, Direction);
+    
+    public override string ToString()
+        => $"contigA:{ContigIdA};contigB:{ContigIdB};posA:{PosA};posB:{PosB};dir:{Direction}";
 }

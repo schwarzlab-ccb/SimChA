@@ -8,7 +8,9 @@ namespace SimChA.EventData;
 public record BaseEventData(CNEventP EventP)
 {
     public CNEventType EventType => EventP.Type;
-    public override string ToString() => $"{EventType}";
-    public virtual string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    
+    public virtual void ApplyEvent(Karyotype kar)
+    {
+        kar.ApplyWGD();
+    }
 }

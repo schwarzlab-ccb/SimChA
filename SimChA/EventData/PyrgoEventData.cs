@@ -11,20 +11,6 @@ public record PyrgoEventData : BaseEventData
     public int ContigId { get; }
     public List<(long, long)> FragmentsList { get; }
     
-    private static List<(long, long)> GetSubsegments(Random rnd, long start, long fragmentLen, double mean)
-    {
-        var meanSize = (long) (fragmentLen * mean);
-        int fracCount = Sampling.GetFragCount(rnd, mean);
-        var frags = new List<(long, long)>();
-        for (int i = 0; i < fracCount; i++)
-        {
-            long fracLen = Sampling.GetExpSeg(rnd, fragmentLen, meanSize);
-            long fracStart = Sampling.GetInternalPos(rnd, fragmentLen - fracLen);
-            frags.Add((start + fracStart, fracLen));
-        }
-        return frags;
-    }
-    
     public PyrgoEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
     {
         ContigId = contigId;
@@ -33,11 +19,21 @@ public record PyrgoEventData : BaseEventData
         double pyrgoMean = eventP.Get("Mean", 0.1);
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, pyrgoLen);
         long pyrgoStart = Sampling.GetInternalPos(rnd, contigLen - pyrgoFrag);
-        FragmentsList = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
+        
+        var meanSize = (long)(pyrgoFrag * pyrgoMean);
+        int fracCount = Sampling.GetFragCount(rnd, pyrgoMean);
+        FragmentsList = new List<(long, long)>();
+        for (int i = 0; i < fracCount; i++)
+        {
+            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, meanSize);
+            long fracStart = Sampling.GetInternalPos(rnd, pyrgoFrag - fracLen);
+            FragmentsList.Add((pyrgoStart + fracStart, fracLen));
+        }
     }
-    
-    public override string ToString() => $"{EventType}\t{ContigId}";
-    
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+
+    public override void ApplyEvent(Karyotype kar)
+        => kar.ApplyPyrgo(ContigId, FragmentsList);
+
+    public override string ToString()
+        => $"contig:{ContigId};frags:{string.Join(",", FragmentsList)}";
 }

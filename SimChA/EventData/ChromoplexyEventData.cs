@@ -9,32 +9,38 @@ namespace SimChA.EventData;
 
 public record ChromoplexyEventData : BaseEventData
 {
-    public List<int> ContigIdList { get; }
-    public List<List<long>> StopsList { get; }
-    public List<int> SequenceList { get; }
-    public List<long> BreakpointsList{ get; }
+    public List<int> ContigIds { get; }
+    public List<List<long>> Stops { get; }
+    public List<int> Sequence { get; }
+    public List<long> Breakpoints { get; }
     
-    public ChromoplexyEventData(Random rnd, Karyotype kar, CNEventP eventP, IEnumerator<int> IDsEnumerator) : base(eventP)
+    // TODO: Validate
+    public ChromoplexyEventData(Random rnd, Karyotype kar, CNEventP eventP, IEnumerable<int> ids) : base(eventP)
     {
-        int chrCount = Sampling.GetChromoplexySiteCount(rnd);
-        ContigIdList = new List<int>();
-        StopsList = new List<List<long>>();
-        long contigLen = kar.ContigLen(IDsEnumerator.Current); 
+        int contigCount = Sampling.GetChromoplexySiteCount(rnd);
+        double size = eventP.Get("Size", 10_000_000L);
+        ContigIds = ids.Take(contigCount).ToList();
+        Stops = new List<List<long>>(); 
         var totalLen = 0L;
         var totalFrags = 0;
-        for (var i = 0; i < chrCount; i++, IDsEnumerator.MoveNext())
+        foreach (int id in ContigIds)
         {
-            ContigIdList.Add(IDsEnumerator.Current);
-            long thisLen = kar.ContigLen(IDsEnumerator.Current); 
+            long thisLen = kar.ContigLen(id); 
             totalLen += thisLen;
-            int partsCount = Sampling.GetFragCount(rnd, thisLen / (double) contigLen);
+            int partsCount = Sampling.GetFragCount(rnd, thisLen / size);
             totalFrags += partsCount;
-            StopsList.Add(Sampling.GetStopsForShards(rnd, contigLen, partsCount));
+            Stops.Add(Sampling.GetStopsForShards(rnd, id, partsCount));
         }
-        SequenceList = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-        BreakpointsList = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
+        Sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
+        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount);
     }
 
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    public override void ApplyEvent(Karyotype kar)
+        => kar.ApplyChromoplexy(ContigIds, Stops, Sequence, Breakpoints);
+
+    public override string ToString()
+        => $"contigs:[{string.Join(",", ContigIds)}];" +
+           $"stops:[{string.Join(",", Stops.Select(s => $"[{string.Join(",", s)}]"))}];" +
+           $"sequence:[{string.Join(",", Sequence)}];" +
+           $"breakpoints:[{string.Join(",", Breakpoints)}]";
 }

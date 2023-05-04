@@ -24,6 +24,11 @@ public record ChromothripsisEventData : BaseEventData
         SelectionList = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept).ToList();
     }
     
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    public override void ApplyEvent(Karyotype kar)
+        => kar.ApplyChromothripsis(ContigId, StopsList, SelectionList);
+
+    public override string ToString()
+        => $"contig:{ContigId};" +
+           $"stops:{string.Join(",", StopsList)};" +
+           $"selection:{string.Join(",", SelectionList)}";
 }

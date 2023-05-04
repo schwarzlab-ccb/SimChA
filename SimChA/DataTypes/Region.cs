@@ -6,7 +6,9 @@ namespace SimChA.DataTypes;
 // TODO: The direction should not be part of the region, should be part of the chromosome
 public record Region(long Start, long End, ChrID ChrID, bool Forward = true) : GenRange(Start, End, ChrID.ChrNo)
 {
-    private string DirString => Forward ? ">" : "<";
+    public static string DirToStr(bool dir) => dir ? ">" : "<";
+
+    private string DirString => DirToStr(Forward);
     
     public override string ToString() => $"{ChrID}{DirString}[{Start}:{End})";
 }

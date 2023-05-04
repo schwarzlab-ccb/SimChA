@@ -6,8 +6,8 @@ namespace SimChA.EventData;
 
 public record TailEventData : ContigEventData
 {
-    public readonly long DelFraction= -1;
-    public readonly bool Direction;
+    public long DelFraction { get; }
+    public bool Direction { get; }
     
     // Constructor used for Tail Events
     public TailEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP, contigId)
@@ -17,16 +17,18 @@ public record TailEventData : ContigEventData
         Direction = rnd.CoinFlip();
     }
 
-    public override string ToString()
+    public override void ApplyEvent(Karyotype kar)
     {
-        return EventType switch
+        if (EventType == CNEventType.TailDeletion)
         {
-            CNEventType.TailDeletion => $"{EventType}\t{ContigId}\t{DelFraction}\t{Direction}",
-            CNEventType.BreakageFusionBridge => $"{EventType}\t{ContigId}\t{DelFraction}\t{Direction}",
-            _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, null)
-        };
+            kar.ApplyTailDeletion(ContigId, DelFraction, Direction);
+        }
+        else if (EventType == CNEventType.BreakageFusionBridge)
+        {
+            kar.ApplyBFB(ContigId, DelFraction, Direction);
+        }
     }
     
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    public override string ToString()
+        => $"contig:{ContigId};delFraction:{DelFraction};dir:{Direction}";
 }

@@ -54,11 +54,12 @@ public class Simulator
                 var cnEventParams = _signatures[mixtureIndex].Events;
                 Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
                 var eventP = Sampling.PickRandomEventP(_rnd, cnEventParams);
-                string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
+                var eventData = Sampling.GenerateCNEventData(_rnd, child.Karyotype, eventP);
+                eventData.ApplyEvent(child.Karyotype);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);
+                var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventData.ToString(), dFit, newFitness);
                 eventSeq.Add(abberation);
                 oldFitness = newFitness;
             }
@@ -73,24 +74,14 @@ public class Simulator
         mutCount += clone.DistToParent;
         return mutCount;
     }
-
-    private static double GetSample(Random rnd, Distribution dist)
-    {
-        return dist switch
-        {
-            Distribution.Exponential => EDists.ExponentialDistribution.Sample(rnd, 1),
-            Distribution.Normal => EDists.NormalDistribution.Sample(rnd, 1, 1),
-            _ => 1
-        };
-    }
-
+    
     public static List<Clone> MakeClones(Random rnd, int repeats, bool sexXX, int distance, Distribution distribution)
     {
         var parent = new Clone(0, -1, "0-0", 0, new Karyotype(sexXX), 0);
         var clones = new List<Clone> { parent };
         for (var i = 1; i <= repeats; i++)
         {
-            double sample = GetSample(rnd, distribution);
+            double sample = Sampling.SampleDist(rnd, distribution);
             var mutCount = (int)Math.Round(distance * sample);
             var child = new Clone(i, 0, $"{i}-{mutCount}", mutCount, new Karyotype(sexXX), mutCount);
             parent.ChildrenIDs.Add(child.CloneId);
@@ -117,7 +108,7 @@ public class Simulator
     public List<BaseEventData> InitEvents(Clone node, int nMutations)
     {
         var eventPs = InitEventPs(node, nMutations);
-        return eventPs.Select(e => node.Karyotype.GenerateCNEventData(_rnd, e)).ToList();
+        return eventPs.Select(e => Sampling.GenerateCNEventData(_rnd, node.Karyotype, e)).ToList();
     }
 
     public List<CNEventP> InitEventPs(Clone node, int nMutations)
@@ -212,14 +203,14 @@ public class Simulator
                     var sig = _signatures[mixtureIndex];
                     SelectedSignatures[index] = sig;
                     var cnEventP = Sampling.PickRandomEventP(_rnd, sig.Events);
-                    proposedEventProps[index] = node.Karyotype.GenerateCNEventData(_rnd, cnEventP);
+                    proposedEventProps[index] = Sampling.GenerateCNEventData(_rnd, node.Karyotype, cnEventP);
                 }
                 // Otherwise we modify some quantity of the event, but keep the event itself the same
                 else
                 {
                     // Keep the event type the same, but redo all parameters:
                     var cnEventP = proposedEventProps[index].EventP;
-                    proposedEventProps[index] = node.Karyotype.GenerateCNEventData(_rnd, cnEventP);
+                    proposedEventProps[index] = Sampling.GenerateCNEventData(_rnd, node.Karyotype, cnEventP);
 
                 }
                 // With the newly selected event, we need to calculate the new
@@ -244,13 +235,13 @@ public class Simulator
             for (int mutNo = 0; mutNo < currentEventProps.Count; mutNo++)
             {
                 Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
-                var eventProperties = currentEventProps[mutNo];
-                string eventString =  eventProperties.ApplyEvent(child.Karyotype);
+                var eventData = currentEventProps[mutNo];
+                eventData.ApplyEvent(child.Karyotype);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEvent(child.CloneId, mutationCount, eventProperties.EventType, eventString, dFit,
-                    newFitness);
+                var abberation = new CNEvent(child.CloneId, mutationCount, eventData.EventType, 
+                    eventData.ToString(), dFit, newFitness);
                 events.Add(abberation);
             }
 

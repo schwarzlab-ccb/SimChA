@@ -1,6 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using Extreme.Mathematics;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 
@@ -11,6 +10,7 @@ public record RigmaEventData : BaseEventData
     public int ContigId { get; }
     public long Start { get; }
     public List<long> StopsList { get; }
+    
     public RigmaEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
     {
         ContigId = contigId;
@@ -22,6 +22,9 @@ public record RigmaEventData : BaseEventData
         StopsList = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, contigLen, rigmaMean)).ToList();
     }
     
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    public override void ApplyEvent(Karyotype kar)
+        => kar.ApplyRigma(ContigId, Start, StopsList);
+
+    public override string ToString()
+        => $"contig:{ContigId};start{Start};stops:{string.Join(",", StopsList)}";
 }
