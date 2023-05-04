@@ -73,15 +73,15 @@
         },
         {
           "Type": "TIChain",
-          "Prob": 2
+          "Prob": 0
         },
         {
           "Type": "TICycle",
-          "Prob": 2
+          "Prob": 0
         },
         {
           "Type": "TIBridge",
-          "Prob": 2
+          "Prob": 0
         }
       ]
     }

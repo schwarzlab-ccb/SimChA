@@ -156,8 +156,7 @@ public class FileIO
         }
         try
         {
-            var newickBuild = new StringBuilder(File.ReadAllText(fileFullPath));
-            return newickBuild.ToString();
+            return File.ReadAllText(fileFullPath);
         }
         catch (Exception e)
         {
@@ -165,7 +164,9 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder, bool isFemale, 
+    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
+        string folder, 
+        bool isFemale, 
         GenomeAssembly assembly)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
@@ -218,10 +219,11 @@ public class FileIO
     {
         var fitnessDict = new Dictionary<string, double>();
         string fileFullPath = Path.GetDirectoryName(Path.GetFullPath(newickFile));
-        if(!File.Exists(Path.Combine(fileFullPath, FITNESS_INPUT_FILE)))
-            Console.WriteLine("File for fitness values not found. Generating mutations based on probability.");
-        else
-            fitnessDict = Parsers.ParseFitness(Path.Combine(fileFullPath, FITNESS_INPUT_FILE));
+        if (!File.Exists(Path.Combine(fileFullPath, FITNESS_INPUT_FILE)))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        fitnessDict = Parsers.ParseFitness(Path.Combine(fileFullPath, FITNESS_INPUT_FILE));
         return fitnessDict;
     }
 }

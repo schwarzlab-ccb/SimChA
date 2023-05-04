@@ -218,13 +218,13 @@ public static class Parsers
         {
             return clones;
         }
-        
         const string regexPattern = @"(?<closeChildren>[(])|" +
                                     @"(?<openChildren>[)])|" +
                                     @"(?<branchLength>:+[0-9a-zA-Z-_.]+)|" +
                                     @"(?<nodeName>[0-9a-zA-Z-_.]+)|" +
                                     @"(?<nextNode>[,])|" +
                                     @"(?<root>[;])";
+        
         //Reverse order of newick file to start with root
         const RegexOptions regexOptions = RegexOptions.RightToLeft | RegexOptions.IgnorePatternWhitespace;
 
@@ -275,7 +275,12 @@ public static class Parsers
     }
 
     //create clone from newick Match
-    private static Clone CreateClone(int id, int parentId, Match branchLengthMatch, Match nameMatch, bool isFemale,
+    private static Clone CreateClone(
+        int id, 
+        int parentId, 
+        Match branchLengthMatch, 
+        Match nameMatch, 
+        bool isFemale,
         bool branchLength,
         int parentMutations)
     {
@@ -283,7 +288,7 @@ public static class Parsers
             ? nameMatch.Value
             : branchLengthMatch.Groups["nodeName"].Value != ""
                 ? branchLengthMatch.Value
-                : "C" + id;
+                : $"{id}";
         int mutCount = branchLengthMatch.Groups["branchLength"].Value != ""
             ?
             (int) Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0, 1)))

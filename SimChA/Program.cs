@@ -37,7 +37,7 @@ var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX,
 files.WriteSimParams(simParams);
 
 // Obtain clones
-var newick = "";
+var newickContent = "";
 var fitnessDict = new Dictionary<string, double>();
 List<Clone> clones;
 List<CNEvent> cnEvents = new();
@@ -54,8 +54,8 @@ else
     var simulator = new Simulator(rnd, simParams.Fitness, signatures, simParams.MCParams, geneLists);
     if (options.Value.NewickFile != "")
     {
-        newick = FileIO.ReadNewick(options.Value.NewickFile);
-        clones = Parsers.ParseNewick(newick, simParams.SexXX);
+        newickContent = FileIO.ReadNewick(options.Value.NewickFile);
+        clones = Parsers.ParseNewick(newickContent, simParams.SexXX);
         fitnessDict = FileIO.ReadFitnessValues(options.Value.NewickFile); // This information
     }
     else
@@ -112,9 +112,9 @@ try
     {
         files.WriteEvents(cnEvents);
     }
-    if (newick != "")
+    if (newickContent != "")
     {
-        files.WriteNewick(newick);
+        files.WriteNewick(newickContent);
     }
 }
 catch (Exception e)

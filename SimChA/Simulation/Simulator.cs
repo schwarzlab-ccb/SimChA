@@ -143,23 +143,15 @@ public class Simulator
         List<BaseEventData> events, ref bool thresholdAccept)
     {
         double eventPotentialTotal = 1.0;
-        double targetFitness;
-        // TODO: sort out 
-        try
-        {
-            targetFitness = fitnessMap[node.CloneId.ToString()];
-        }
-        catch (Exception _)
-        {
-            targetFitness = 1.0;
-        }
+        double targetFitness = fitnessMap[node.Name];
+
         // Create a dummy karyotype for the events to act on
         var karyotype = node.CopyKaryotype();
         double sigPotential = 1.0;
 
         // Probability of picking each event and their corresponding signature
         // (ignore normalization, divides out when we do the accept/reject)
-        for (int i = 0; i < events.Count(); i++)
+        for (int i = 0; i < events.Count; i++)
         {
             sigPotential *= SelectedSignatures[i].Prob;
             karyotype.ApplyEventData(events[i]);
@@ -191,7 +183,6 @@ public class Simulator
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
 
-            // TODO: Maybe I need a dummy Karyotype object to apply events to
             // Parameters needed for the MH algorithm
             float alterEventStart = 0.5f;
             float alterEventLength = 0.5f;
@@ -203,7 +194,6 @@ public class Simulator
             var currentEventProps = InitEvents(node, child.DistToParent);
             double currentPotential = Potential(node, fitnessMap, currentEventProps, ref thresholdAccept);
 
-            var startEventProps = currentEventProps.ToList();
             // Now we perform the Metropolis-Hastings algorithm
             // and sample a set of events that give the closest agreement with
             // fitness given by SMITH
@@ -225,7 +215,6 @@ public class Simulator
                     proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, cnEventP);
                 }
                 // Otherwise we modify some quantity of the event, but keep the event itself the same
-                // TODO: Implement the modifications to the quantities?
                 else
                 {
                     // Keep the event type the same, but redo all parameters:
