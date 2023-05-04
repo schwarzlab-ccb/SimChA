@@ -69,7 +69,7 @@ public static class Parsers
         {
             throw new Exception("No signatures were provided.");
         }
-        foreach (var sig in signatures.Where(sig => sig.Prob > 0))
+        foreach (var sig in signatures.Where(sig => sig.Prob > 0 && sig.Events.Any(e => e.Prob > 0)))
         {
             if (sig.Events is null || sig.Events.Count == 0)
             {

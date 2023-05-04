@@ -2,6 +2,7 @@
 using CommandLine;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;
 
@@ -39,7 +40,7 @@ files.WriteSimParams(simParams);
 var newick = "";
 var fitnessDict = new Dictionary<string, double>();
 List<Clone> clones;
-List<CNEvent>? cnEvents;
+List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
 {
     var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
