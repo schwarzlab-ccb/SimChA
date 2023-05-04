@@ -291,18 +291,13 @@ public class Karyotype
 
     public string ApplyEvent(ContigEventData eventData)
     {
-        switch (eventData.EventType)
+        return eventData.EventType switch
         {
             // Whole chromosome events
-            case CNEventType.ChromDeletion:
-                return ApplyContigDeletion(eventData.ContigId);
-
-            case CNEventType.ChromDuplication:
-                return ApplyContigDuplication(eventData.ContigId);
-            
-            default:
-                throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null);
-        }
+            CNEventType.ChromDeletion => ApplyContigDeletion(eventData.ContigId),
+            CNEventType.ChromDuplication => ApplyContigDuplication(eventData.ContigId),
+            _ => throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null)
+        };
     }
 
     public string ApplyEvent(TailEventData eventData)
@@ -331,22 +326,35 @@ public class Karyotype
     {
         return ApplyRigma(data.ContigId, data.Start, data.StopsList);
     }
+    
     public string ApplyEvent(BaseEventData data)
     {
         return ApplyWGD();
     }
 
-    public string ApplyEvent(InternalEventData eventData)
+    public string ApplyEvent(TemplatedEventData data)
     {
-        int contigA = eventData.ContigId;
-        long start = eventData.Start;
-        long end = eventData.End;
-        return eventData.EventType switch
+        return data.EventType switch
+        {
+            CNEventType.TIBridge => ApplyTIBridge(data.Frags),
+            CNEventType.TIChain => ApplyTIChain(data.Frags),
+            CNEventType.TICycle => ApplyTICycle(data.Frags),
+            _ => throw new ArgumentOutOfRangeException(nameof(data.EventType), data.EventType, null)
+        };
+    }
+
+    public string ApplyEvent(InternalEventData data)
+    {
+        int contigA = data.ContigId;
+        long start = data.Start;
+        long end = data.End;
+        return data.EventType switch
         {
             CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
             CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
             CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
             CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
+            _ => throw new ArgumentOutOfRangeException(nameof(data.EventType), data.EventType, null)
         };
     }
     public string ApplyEvent(PairEventData eventData)
