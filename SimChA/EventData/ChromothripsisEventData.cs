@@ -2,24 +2,27 @@
 
 using Extreme.Mathematics;
 using SimChA.DataTypes;
+using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
 public record ChromothripsisEventData : BaseEventData
 {
-    public readonly int ContigId = -1;
-    public readonly List<long>? StopsList = new();
-    public readonly List<int>? SelectionList = new();
-    public ChromothripsisEventData(CNEventP eventP, int contigId, List<long> stops, List<int> selection) : base(eventP)
+    public int ContigId { get; }
+    public List<long> StopsList { get; }
+    public List<int> SelectionList { get; }
+    
+    public ChromothripsisEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
     {
         ContigId = contigId;
-        StopsList = stops;
-        SelectionList = selection;
+        long contigLen = kar.ContigLen(ContigId);
+        double chromothripsisLen = eventP.Get("Size", 100_000_000L);
+        int shardCount = Sampling.GetFragCount(rnd, contigLen / chromothripsisLen);
+        StopsList = Sampling.GetStopsForShards(rnd, contigLen, shardCount);
+        int shardsKept = rnd.Next(1, StopsList.Count);
+        SelectionList = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept).ToList();
     }
-
-    public IEnumerable<int> GetSelection()
-        => SelectionList;
     
     public override string ApplyEvent(Karyotype kar)
         => kar.ApplyEvent(this);

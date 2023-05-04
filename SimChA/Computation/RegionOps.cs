@@ -188,6 +188,7 @@ public static class RegionOps
     
     public static long GetLength(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
+    
     public static List<List<Region>> Scatter(List<long> locs, List<Region> regions)
     {
         // First region

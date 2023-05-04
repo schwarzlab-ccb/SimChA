@@ -9,12 +9,6 @@ public record BaseEventData(CNEventP EventP)
 {
     public CNEventType EventType => EventP.Type;
     public override string ToString() => $"{EventType}";
-
-    public virtual Type GetType()
-    {
-        return typeof(BaseEventData);
-    }
-
     public virtual string ApplyEvent(Karyotype kar)
         => kar.ApplyEvent(this);
 }

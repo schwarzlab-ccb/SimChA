@@ -1,4 +1,5 @@
 using SimChA.DataTypes;
+using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -9,10 +10,11 @@ public record TailEventData : ContigEventData
     public readonly bool Direction;
     
     // Constructor used for Tail Events
-    public TailEventData(CNEventP eventP, int contigId, long delFraction, bool delDirection) : base(eventP, contigId)
+    public TailEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP, contigId)
     {
-        DelFraction = delFraction;
-        Direction = delDirection;
+        long tailSize = eventP.Get("Size", 1_000_000);
+        DelFraction = Sampling.GetExpSeg(rnd, kar.ContigLen(contigId), tailSize);
+        Direction = rnd.CoinFlip();
     }
 
     public override string ToString()

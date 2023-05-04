@@ -5,14 +5,17 @@ namespace SimChA.EventData;
 
 public record InternalEventData : ContigEventData
 {
-    public readonly long Start = -1;
-    public readonly long End = -1;
+    public long Start { get; }
+    public long End { get; }
 
     // Constructor used for internal events
-    public InternalEventData(CNEventP eventP, int contigId, long start, long end) : base(eventP, contigId)
+    public InternalEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId): base(eventP, contigId)
     {
-        Start = start;
-        End = end;
+        long internalSize = eventP.Get("Size", 100_000);
+        long contigLen = kar.ContigLen(contigId);
+        long segLen = Sampling.GetExpSeg(rnd, contigLen, internalSize);
+        Start = Sampling.GetInternalPos(rnd, contigLen - segLen);
+        End = Start + segLen;
     }
 
     public override string ToString()
