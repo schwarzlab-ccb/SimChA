@@ -2,6 +2,7 @@
 
 using Extreme.Mathematics;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
@@ -16,4 +17,7 @@ public record RigmaEventData : BaseEventData
         Start = startPoint;
         StopsList = stops;
     }
+    
+    public override string ApplyEvent(Karyotype kar)
+        => kar.ApplyEvent(this);
 }

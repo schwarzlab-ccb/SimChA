@@ -42,7 +42,7 @@ public class TestSimulator
         _sim = new Simulator(_rnd, _fitness, _signatures, _mcParams, _geneLists);
         _fitnessDict = new Dictionary<string, double> { {"0", 1.0} };
         var kar = new Karyotype(_sexXX);
-        _clone = new Clone(1, -1, "test", 0, kar, 1)
+        _clone = new Clone(0, -1, "0", 0, kar, 1)
         {
             SigMixture = new List<double> { 1.0 }
         };

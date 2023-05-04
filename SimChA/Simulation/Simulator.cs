@@ -117,7 +117,7 @@ public class Simulator
     public List<BaseEventData> InitEvents(Clone node, int nMutations)
     {
         var eventPs = InitEventPs(node, nMutations);
-        return eventPs.Select(e => node.Karyotype.GenerateCNEventProperties(_rnd, e)).ToList();
+        return eventPs.Select(e => node.Karyotype.GenerateCNEventData(_rnd, e)).ToList();
     }
 
     public List<CNEventP> InitEventPs(Clone node, int nMutations)
@@ -154,7 +154,7 @@ public class Simulator
         for (int i = 0; i < events.Count; i++)
         {
             sigPotential *= SelectedSignatures[i].Prob;
-            karyotype.ApplyEventData(events[i]);
+            events[i].ApplyEvent(karyotype);
             eventPotentialTotal *= events[i].EventP.Prob;
         }
 
@@ -212,14 +212,14 @@ public class Simulator
                     var sig = _signatures[mixtureIndex];
                     SelectedSignatures[index] = sig;
                     var cnEventP = Sampling.PickRandomEventP(_rnd, sig.Events);
-                    proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, cnEventP);
+                    proposedEventProps[index] = node.Karyotype.GenerateCNEventData(_rnd, cnEventP);
                 }
                 // Otherwise we modify some quantity of the event, but keep the event itself the same
                 else
                 {
                     // Keep the event type the same, but redo all parameters:
                     var cnEventP = proposedEventProps[index].EventP;
-                    proposedEventProps[index] = node.Karyotype.GenerateCNEventProperties(_rnd, cnEventP);
+                    proposedEventProps[index] = node.Karyotype.GenerateCNEventData(_rnd, cnEventP);
 
                 }
                 // With the newly selected event, we need to calculate the new
@@ -245,7 +245,7 @@ public class Simulator
             {
                 Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
                 var eventProperties = currentEventProps[mutNo];
-                string eventString = child.Karyotype.ApplyEventData(eventProperties);
+                string eventString =  eventProperties.ApplyEvent(child.Karyotype);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;

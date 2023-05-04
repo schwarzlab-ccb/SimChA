@@ -1,6 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
@@ -13,4 +14,7 @@ public record BaseEventData(CNEventP EventP)
     {
         return typeof(BaseEventData);
     }
+
+    public virtual string ApplyEvent(Karyotype kar)
+        => kar.ApplyEvent(this);
 }

@@ -2,6 +2,7 @@
 
 using Extreme.Mathematics;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
@@ -15,4 +16,7 @@ public record PyrgoEventData : BaseEventData
         FragmentsList = frags;
     }
     public override string ToString() => $"{EventType}\t{ContigId}";
+    
+    public override string ApplyEvent(Karyotype kar)
+        => kar.ApplyEvent(this);
 }

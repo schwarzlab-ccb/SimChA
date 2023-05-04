@@ -2,6 +2,7 @@
 
 using Extreme.Mathematics;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
@@ -19,8 +20,8 @@ public record ChromoplexyEventData : BaseEventData
         BreakpointsList = breakpoints;
     }
     public IEnumerable<int> GetSequence()
-    {
-        return SequenceList;
-    }
-    
+        => SequenceList;
+
+    public override string ApplyEvent(Karyotype kar)
+        => kar.ApplyEvent(this);
 }

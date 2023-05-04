@@ -284,139 +284,12 @@ public class Karyotype
     
     public string ApplyCNEvent(Random rnd, CNEventP cnEventP)
     {
-        using var IDsEnumerator = Enumerable
-            .Range(0, _contigs.Count)
-            .Where(i => _contigs[i].Any())
-            .Shuffle(rnd)
-            .GetEnumerator();
-        IDsEnumerator.MoveNext();
-        int contigA = IDsEnumerator.Current;
-        long lenA = _contigs[contigA].Length();
-        
-        switch (cnEventP.Type)
-        {
-            // Whole chromosome events
-            case CNEventType.ChromDeletion:
-                return ApplyContigDeletion(contigA);
-
-            case CNEventType.ChromDuplication:
-                return ApplyContigDuplication(contigA);
-            
-            case CNEventType.WholeGenomeDoubling:
-                return ApplyWGD();
-            
-            // Tail events
-            case CNEventType.TailDeletion:
-            case CNEventType.BreakageFusionBridge:
-                long tailSize = cnEventP.Get("Size", 1_000_000L);
-                long delFraction = Sampling.GetExpSeg(rnd, lenA, tailSize);
-                bool delDirection = rnd.CoinFlip();
-                return cnEventP.Type == CNEventType.TailDeletion 
-                    ? ApplyTailDeletion(contigA, delFraction, delDirection) 
-                    : ApplyBFB(contigA, delFraction, delDirection);
-
-            // Internal events
-            case CNEventType.InternalDuplication:
-            case CNEventType.InternalDeletion:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-                long internalSize = cnEventP.Get("Size", 1_000_000L);
-                long segLen = Sampling.GetExpSeg(rnd, lenA, internalSize);
-                long start = Sampling.GetInternalPos(rnd, lenA - segLen);
-                long end = start + segLen;
-                return cnEventP.Type switch
-                {
-                    CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
-                    CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
-                    CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
-                    CNEventType.InvertedDuplication => ApplyInvertedDuplication(contigA, start, end),
-                };
-
-            case CNEventType.Translocation:
-                IDsEnumerator.MoveNext();
-                int contigB = IDsEnumerator.Current;
-                long lenB = _contigs[contigB].Length();
-                long posA = Sampling.GetInternalPos(rnd, lenA);
-                long posB = Sampling.GetInternalPos(rnd, lenB);
-                double invProb = cnEventP.Get("InvProb", 0.0);
-                bool inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
-                return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
-            
-            case CNEventType.Chromothripsis:
-                long chromothripsisLen = cnEventP.Get("Size", 100_000_000L);
-                int shardCount = Sampling.GetFragCount(rnd, lenA / (double) chromothripsisLen);
-                var stops = Sampling.GetStopsForShards(rnd, lenA, shardCount);
-                int shardsKept = rnd.Next(1, stops.Count);
-                var order = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept);
-                return ApplyChromothripsis(contigA, stops, order);
-            
-            case CNEventType.Pyrgo:
-                long pyrgoLen = cnEventP.Get("Size", 1_000_000L);
-                double pyrgoMean = cnEventP.Get("Mean", 0.1);
-                long pyrgoFrag = Sampling.GetExpSeg(rnd, pyrgoLen, pyrgoLen);
-                long pyrgoStart = Sampling.GetInternalPos(rnd, lenA - pyrgoFrag);
-                var frags = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
-                return ApplyPyrgo(contigA, frags);
-            
-            case CNEventType.Rigma:
-                long rigmaLen = cnEventP.Get("Size", 1_000_000L);
-                double rigmaMean = cnEventP.Get("Mean", 0.1);
-                long rigmaStart = Sampling.GetInternalPos(rnd, lenA - rigmaLen);
-                int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
-                var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, rigmaLen, rigmaMean)).ToList();
-                return ApplyRigma(contigA, rigmaStart, rigmaStops);
-
-            case CNEventType.Chromoplexy:
-                int chrCount = Sampling.GetChromoplexySiteCount(rnd);
-                var contigIDs = new List<int>();
-                var stopsForContig = new List<List<long>>();
-                var totalLen = 0L;
-                var totalFrags = 0;
-                for (var i = 0; i < chrCount; i++, IDsEnumerator.MoveNext())
-                {
-                    contigIDs.Add(IDsEnumerator.Current);
-                    long thisLen = _contigs[IDsEnumerator.Current].Length();
-                    totalLen += thisLen;
-                    int partsCount = Sampling.GetFragCount(rnd,  (double) lenA / thisLen);
-                    totalFrags += partsCount;
-                    stopsForContig.Add(Sampling.GetStopsForShards(rnd, lenA, partsCount));
-                }
-                var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd);
-                var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
-                return ApplyChromoplexy(contigIDs, stopsForContig, sequence, breakpoints);
-            
-            case CNEventType.TIChain:
-            case CNEventType.TICycle:
-            case CNEventType.TIBridge:
-                var size = cnEventP.Get("Size", 1_000_000L);
-                var fragMean = cnEventP.Get("Frag", 10.0);
-                var fragCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
-                                 + (cnEventP.Type != CNEventType.TIBridge ? 1 : 2);
-                var fragments = new List<(int id, long start, long len, bool dir)>();
-                for (var i = 0; i < fragCount; i++, IDsEnumerator.MoveNext())
-                {
-                    var id = IDsEnumerator.Current;
-                    var contigLen = _contigs[id].Length();
-                    // First segment of a bridge, or first and last on a chain do not have a length
-                    bool skipLen = i == 0 && cnEventP.Type != CNEventType.TICycle ||
-                                   i == fragCount - 1 && cnEventP.Type == CNEventType.TIChain;
-                    var fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
-                    var fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
-                    var dir = i == 0 || rnd.CoinFlip();
-                    fragments.Add((id, fragStart, fragLen, dir));
-                }
-                return cnEventP.Type switch
-                {
-                    CNEventType.TIChain => ApplyTIChain(fragments),
-                    CNEventType.TIBridge => ApplyTIBridge(fragments),
-                    CNEventType.TICycle => ApplyTICycle(fragments)
-                };
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
-        }
+        // TODO: Replace for inline in usages
+        var eventData = GenerateCNEventData(rnd, cnEventP);
+        return eventData.ApplyEvent(this);
     }
-     private string ApplyContigEvent(ContigEventData eventData)
+
+    public string ApplyEvent(ContigEventData eventData)
     {
         switch (eventData.EventType)
         {
@@ -432,7 +305,7 @@ public class Karyotype
         }
     }
 
-    private string ApplyTailEvent(TailEventData eventData)
+    public string ApplyEvent(TailEventData eventData)
     {
         int contigA = eventData.ContigId;
         long delFraction = eventData.DelFraction;
@@ -441,32 +314,7 @@ public class Karyotype
             ? ApplyTailDeletion(contigA, delFraction, delDirection)
             : ApplyBFB(contigA, delFraction, delDirection);
     }
-
-    private string ApplyEvent(ContigEventData eventData)
-    {
-        switch (eventData.EventType)
-        {
-            // Whole chromosome events
-            case CNEventType.ChromDeletion:
-                return ApplyContigDeletion(eventData.ContigId);
-
-            case CNEventType.ChromDuplication:
-                return ApplyContigDuplication(eventData.ContigId);
-            
-            default:
-                throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null);
-        }
-    }
-
-    private string ApplyEvent(TailEventData eventData)
-    {
-        int contigA = eventData.ContigId;
-        long delFraction = eventData.DelFraction;
-        bool delDirection = eventData.Direction;
-        return eventData.EventType == CNEventType.TailDeletion
-            ? ApplyTailDeletion(contigA, delFraction, delDirection)
-            : ApplyBFB(contigA, delFraction, delDirection);
-    }
+    
     public string ApplyEvent(ChromothripsisEventData data)
     {
         return ApplyChromothripsis(data.ContigId, data.StopsList, data.GetSelection());
@@ -510,94 +358,8 @@ public class Karyotype
         bool inverted = eventData.Direction;
         return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
     }
-    
-    public string ApplyEventData(dynamic eventData)
-    {
-        return ApplyEvent(eventData);
-        switch (eventData.EventType)
-        {
-            // Whole chromosome events
-            case CNEventType.ChromDeletion:
-            case CNEventType.ChromDuplication:
-                return ApplyContigEvent(eventData as ContigEventData);
-                
-            case CNEventType.TailDeletion:
-            case CNEventType.BreakageFusionBridge:
-                return ApplyTailEvent(eventData as TailEventData);
 
-            case CNEventType.WholeGenomeDoubling:
-                return ApplyWGD();
-
-            // Internal events
-            case CNEventType.InternalDuplication:
-            case CNEventType.InternalDeletion:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-                return ApplyInternalEvent(eventData as InternalEventData);
-
-            case CNEventType.Translocation:
-                return ApplyPairEvent(eventData as PairEventData);
-            
-            case CNEventType.Chromoplexy:
-                return ApplyChromoplexyEvent(eventData as ChromoplexyEventData);
-            case CNEventType.Chromothripsis:
-                return ApplyChromothripsisEvent(eventData as ChromothripsisEventData);
-            
-            case CNEventType.Pyrgo:
-                return ApplyPyrgoEvent(eventData as PyrgoEventData);
-            case CNEventType.Rigma:
-                return ApplyRigmaEvent(eventData as RigmaEventData);
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null);
-        }
-    }
-
-    public string ApplyPairEvent(PairEventData eventData)
-    {
-        int contigA = eventData.ContigIdList[0];
-        int contigB = eventData.ContigIdList[1];
-        long posA = eventData.PosA;
-        long posB = eventData.PosB;
-        bool inverted = eventData.Direction;
-        return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
-    }
-    
-    public string ApplyInternalEvent(InternalEventData eventData)
-    {
-        int contigA = eventData.ContigId;
-        long start = eventData.Start;
-        long end = eventData.End;
-        return eventData.EventType switch
-        {
-            CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
-            CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
-            CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
-            CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
-        };
-    }
-
-    public string ApplyChromothripsisEvent(ChromothripsisEventData data)
-    {
-        return ApplyChromothripsis(data.ContigId, data.StopsList, data.GetSelection());
-    }
-
-    public string ApplyChromoplexyEvent(ChromoplexyEventData data)
-    {
-        return ApplyChromoplexy(data.ContigIdList, data.StopsList, data.GetSequence(), data.BreakpointsList);
-    }
-
-    public string ApplyPyrgoEvent(PyrgoEventData data)
-    {
-        return ApplyPyrgo(data.ContigId, data.FragmentsList);
-    }
-
-    public string ApplyRigmaEvent(RigmaEventData data)
-    {
-        return ApplyRigma(data.ContigId, data.Start, data.StopsList);
-    }
-    
-    public BaseEventData GenerateCNEventProperties(Random rnd, CNEventP cnEventP)
+    public BaseEventData GenerateCNEventData(Random rnd, CNEventP cnEventP)
     {
         using var IDsEnumerator = Enumerable
             .Range(0, _contigs.Count)
@@ -694,6 +456,28 @@ public class Karyotype
                 int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
                 var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, lenA, rigmaMean)).ToList();
                 return new RigmaEventData(cnEventP, contigA, rigmaStart, rigmaStops);
+            
+            case CNEventType.TIChain:
+            case CNEventType.TICycle:
+            case CNEventType.TIBridge:
+                var size = cnEventP.Get("Size", 1_000_000L);
+                var fragMean = cnEventP.Get("Frag", 10.0);
+                var fragCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
+                                + (cnEventP.Type != CNEventType.TIBridge ? 1 : 2);
+                var fragments = new List<(int id, long start, long len, bool dir)>();
+                for (var i = 0; i < fragCount; i++, IDsEnumerator.MoveNext())
+                {
+                    var id = IDsEnumerator.Current;
+                    var contigLen = _contigs[id].Length();
+                    // First segment of a bridge, or first and last on a chain do not have a length
+                    bool skipLen = i == 0 && cnEventP.Type != CNEventType.TICycle ||
+                                   i == fragCount - 1 && cnEventP.Type == CNEventType.TIChain;
+                    var fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
+                    var fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
+                    var dir = i == 0 || rnd.CoinFlip();
+                    fragments.Add((id, fragStart, fragLen, dir));
+                }
+                return new TemplatedEventData(cnEventP, fragments);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);

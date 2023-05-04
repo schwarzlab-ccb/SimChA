@@ -2,6 +2,7 @@
 
 using Extreme.Mathematics;
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
@@ -18,7 +19,8 @@ public record ChromothripsisEventData : BaseEventData
     }
 
     public IEnumerable<int> GetSelection()
-    {
-        return SelectionList;
-    }
+        => SelectionList;
+    
+    public override string ApplyEvent(Karyotype kar)
+        => kar.ApplyEvent(this);
 }

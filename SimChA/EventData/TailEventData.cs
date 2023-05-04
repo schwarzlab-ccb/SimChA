@@ -1,4 +1,5 @@
 using SimChA.DataTypes;
+using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
@@ -23,5 +24,7 @@ public record TailEventData : ContigEventData
             _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, null)
         };
     }
-
+    
+    public override string ApplyEvent(Karyotype kar)
+        => kar.ApplyEvent(this);
 }
