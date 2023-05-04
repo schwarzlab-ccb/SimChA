@@ -64,4 +64,14 @@ public static class Sampling
         }
         return probs.Count - 1;
     }
+    
+    public static double SampleDist(Random rnd, DataTypes.Distribution dist)
+    {
+        return dist switch
+        {
+            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, 1),
+            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, 1),
+            _ => 1
+        };
+    }
 }

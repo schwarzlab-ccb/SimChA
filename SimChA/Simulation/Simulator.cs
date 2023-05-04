@@ -1,4 +1,5 @@
 ﻿using SimChA.DataTypes;
+using SimChA.EventData;
 using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
@@ -8,18 +9,22 @@ public class Simulator
     private readonly Random _rnd;
     private readonly FitnessParams _fitness;
     private readonly List<Signature> _signatures;
+    private readonly MCParams _mcParams;
     private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-    
-    
+
+    public List<Signature> SelectedSignatures;
+
     public Simulator(
         Random rnd, 
         FitnessParams fitnessParams,
         List<Signature> signatures,
+        MCParams mcParams,
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
     {
         _rnd = rnd;
         _fitness = fitnessParams;
         _signatures = signatures;
+        _mcParams = mcParams;
         _geneLists = geneLists;
     }
     
