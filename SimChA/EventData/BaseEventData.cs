@@ -13,4 +13,7 @@ public record BaseEventData(CNEventP EventP)
     {
         kar.ApplyWGD();
     }
+
+    public override string ToString()
+        => "";
 }

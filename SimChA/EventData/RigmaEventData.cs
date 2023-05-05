@@ -11,10 +11,9 @@ public record RigmaEventData : BaseEventData
     public long Start { get; }
     public List<long> StopsList { get; }
     
-    public RigmaEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
+    public RigmaEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP)
     {
         ContigId = contigId;
-        long contigLen = kar.ContigLen(contigId);
         long rigmaLen = eventP.Get("Size", 1_000_000L);
         double rigmaMean = eventP.Get("Mean", 0.1);
         Start= Sampling.GetInternalPos(rnd, contigLen - rigmaLen);

@@ -9,12 +9,11 @@ namespace SimChA.EventData;
 public record PyrgoEventData : BaseEventData
 {
     public int ContigId { get; }
-    public List<(long, long)> FragmentsList { get; }
+    public List<(long start, long length)> FragmentsList { get; }
     
-    public PyrgoEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
+    public PyrgoEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP)
     {
         ContigId = contigId;
-        long contigLen = kar.ContigLen(contigId);
         long pyrgoLen = eventP.Get("Size", 1_000_000L);
         double pyrgoMean = eventP.Get("Mean", 0.1);
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, pyrgoLen);

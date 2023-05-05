@@ -14,6 +14,9 @@ public static class Extensions
     
     public static int GetRandIndex<T>(this IEnumerable<T> source, Random rnd)
         => rnd.Next(source.Count());
+    
+    public static T GetRndElem<T>(this List<T> source, Random rnd)
+        => source[rnd.Next(source.Count)];
 
     public static IEnumerable<int> GetRandIndices<T>(this IEnumerable<T> source, int count, Random rnd)
         => Enumerable.Range(0, source.Count()).Shuffle(rnd).Take(count);

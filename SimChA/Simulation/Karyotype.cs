@@ -1,10 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.EventData;
-using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
@@ -14,8 +11,6 @@ public class Karyotype
     public double FitnessVal { get; private set; }
     
     public bool SexXX { get;  }
-
-    public string Sex => SexXX ? "XX" : "XY";
     
     public int CountContigs() 
         => _contigs.Count(c => c.Any());

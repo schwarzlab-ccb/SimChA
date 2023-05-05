@@ -11,24 +11,23 @@ public record TemplatedEventData : BaseEventData
 {
     public List<(int id, long start, long len, bool dir)> Frags { get; } = new();
     
-    public TemplatedEventData(Random rnd, Karyotype kar, CNEventP eventP, IEnumerable<int> seq) : base(eventP)
+    public TemplatedEventData(Random rnd, CNEventP eventP, List<(int id, long len)> seq) : base(eventP)
     {
-        var size = eventP.Get("Size", 1_000_000L);
-        var fragMean = eventP.Get("Frag", 10.0);
-        var contigCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
+        long size = eventP.Get("Size", 1_000_000L);
+        double fragMean = eventP.Get("Frag", 10.0);
+        int contigCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
                           + (eventP.Type != CNEventType.TIBridge ? 1 : 2);
         
-        var contigIds = seq.Take(contigCount).ToList();
-        for (var i = 0; i < contigIds.Count; i++)
+        for (var i = 0; i < Math.Min(contigCount, seq.Count); i++)
         {
-            var id = contigIds[i];
-            var contigLen = kar.ContigLen(id); 
+            int id = seq[i].id;
+            long contigLen = seq[i].len;
             // First segment of a bridge, or first and last on a chain do not have a length
             bool skipLen = i == 0 && eventP.Type != CNEventType.TICycle ||
                            i == contigCount - 1 && eventP.Type == CNEventType.TIChain;
-            var fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
-            var fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
-            var dir = i == 0 || rnd.CoinFlip();
+            long fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
+            long fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
+            bool dir = i == 0 || rnd.CoinFlip();
             Frags.Add((id, fragStart, fragLen, dir));
         }
     }

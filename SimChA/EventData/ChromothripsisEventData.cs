@@ -13,10 +13,9 @@ public record ChromothripsisEventData : BaseEventData
     public List<long> StopsList { get; }
     public List<int> SelectionList { get; }
     
-    public ChromothripsisEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
+    public ChromothripsisEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP)
     {
         ContigId = contigId;
-        long contigLen = kar.ContigLen(ContigId);
         double chromothripsisLen = eventP.Get("Size", 100_000_000L);
         int shardCount = Sampling.GetFragCount(rnd, contigLen / chromothripsisLen);
         StopsList = Sampling.GetStopsForShards(rnd, contigLen, shardCount);

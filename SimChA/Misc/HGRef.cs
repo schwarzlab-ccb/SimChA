@@ -6,6 +6,8 @@ public static class HGRef
 {
     public const int CHR_COUNT = 46;
     public const int AUTOSOME_COUNT = 22;
+    
+    public static string Sex(bool isXX) => isXX ? "XX" : "XY";
 
     // https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh37
     private static readonly Dictionary<ChrNo, int> HG19Chrs = new()
