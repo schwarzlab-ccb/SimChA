@@ -61,6 +61,7 @@ else
     else
     {
         clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
+        fitnessDict = new Dictionary<string, double> { {$"{clones[1].Name}", 1.0} };
     }
     double[] sigProbs = signatures.Select(s => s.Prob).ToArray();
     foreach (var clone in clones)

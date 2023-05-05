@@ -6,6 +6,7 @@ namespace SimChA.Simulation;
 
 public static class Sampling
 {
+    private const double EPSILON = 0.0000000001;
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen - 2));
     
@@ -45,10 +46,11 @@ public static class Sampling
 
     public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
     {
-        var probs = eventPs.Where(ev => ev.Prob > 0).Select(ev => ev.Prob).ToList();
+        var localEventPs = eventPs.Where(ev => ev.Prob > EPSILON).ToList();
+        var probs = localEventPs.Select(ev => ev.Prob).ToList();
         probs = probs.Select(p => p / probs.Sum()).ToList();
         int index = PickRandomIndex(rnd, probs);
-        return eventPs[index];
+        return localEventPs[index];
     }
     
     public static int PickRandomIndex(Random rnd, List<double> probs)

@@ -89,7 +89,7 @@
   "MCParams": {
     "NumSamplesMin" : 100,
     "NumSamplesTotal": 2000,
-    "ThetaFitness": 1.0,
+    "ThetaFitness": 20.0,
     "SwapEventP" : 1.0,
     "ThresholdFit" : 0.01
   }

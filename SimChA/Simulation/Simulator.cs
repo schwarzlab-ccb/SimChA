@@ -129,7 +129,6 @@ public class Simulator
         {
             int mixtureIndex = Sampling.PickRandomIndex(_rnd, node.SigMixture);
             var sig = _signatures[mixtureIndex];
-            // Check that there are actually available events (i.e. prob not 0)
             SelectedSignatures.Add(sig);
             var eventP = Sampling.PickRandomEventP(_rnd, sig.Events);
             eventPs.Add(eventP);
@@ -137,12 +136,12 @@ public class Simulator
         return eventPs;
     }
 
-    // The conditional (unnormalized) probability of this set of events occuring, 
+    // The conditional probability of this set of events occuring, 
     // given the individual events and the signature
-    public double Potential(Clone node, Dictionary<string, double> fitnessMap,
+    public (double,double) LogPotential(Clone node, Dictionary<string, double> fitnessMap,
         List<BaseEventData> events, ref bool thresholdAccept)
     {
-        double eventPotentialTotal = 1.0;
+        double eventPotentialTotal = 0.0;
         double targetFitness = fitnessMap[node.Name];
 
         // Create a dummy karyotype for the events to act on
@@ -150,14 +149,13 @@ public class Simulator
         double sigPotential = 1.0;
 
         // Probability of picking each event and their corresponding signature
-        // (ignore normalization, divides out when we do the accept/reject)
         for (int i = 0; i < events.Count; i++)
         {
-            sigPotential *= SelectedSignatures[i].Prob;
+            sigPotential += Math.Log(SelectedSignatures[i].Prob) - Math.Log(_signatures.Sum(sig => sig.Prob));
             events[i].ApplyEvent(karyotype);
-            eventPotentialTotal *= events[i].EventP.Prob;
+            eventPotentialTotal += Math.Log(events[i].EventP.Prob) - Math.Log(SelectedSignatures[i].Events.Sum(e => e.Prob));
         }
-
+        
         double newFitness = karyotype.UpdateFitness(_geneLists, _fitness);
         double dFit = newFitness - targetFitness;
         thresholdAccept = Math.Abs(dFit / targetFitness) < _mcParams.ThresholdFit;
@@ -165,23 +163,23 @@ public class Simulator
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
         double fitnessPotential = Math.Exp(-_mcParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
-        //double fitnessPotential = Math.Exp(-McParams.ThetaFitness*Math.Pow(dFit,2));
+        //double fitnessPotential = Math.Exp(-_mcParams.ThetaFitness*Math.Pow(dFit,2));
 
-        return fitnessPotential * eventPotentialTotal * sigPotential;
+        eventPotentialTotal = 0.0;
+        sigPotential = 0.0;
+
+        return (Math.Log(fitnessPotential) + eventPotentialTotal + sigPotential, newFitness);
     }
     private void MCSampleCNEventsRec(Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap,
         List<CNEvent> events, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
-            // Skip any clones that don't have any mutational distance from their
-            // parent
-            if (child.DistToParent == 0)
-                continue;
-
+            Console.WriteLine($"\nTarget Fitness: {fitnessMap[child.Name]}");
             // Initialize all the relevant quantities
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
+            child.Karyotype = node.CopyKaryotype();
 
             // Parameters needed for the MH algorithm
             float alterEventStart = 0.5f;
@@ -192,8 +190,7 @@ public class Simulator
 
             // Generate a starting set of mutations and its potential
             var currentEventProps = InitEvents(node, child.DistToParent);
-            double currentPotential = Potential(node, fitnessMap, currentEventProps, ref thresholdAccept);
-
+            var currentPotential = LogPotential(child, fitnessMap, currentEventProps, ref thresholdAccept);
             // Now we perform the Metropolis-Hastings algorithm
             // and sample a set of events that give the closest agreement with
             // fitness given by SMITH
@@ -220,13 +217,12 @@ public class Simulator
                     // Keep the event type the same, but redo all parameters:
                     var cnEventP = proposedEventProps[index].EventP;
                     proposedEventProps[index] = node.Karyotype.GenerateCNEventData(_rnd, cnEventP);
-
                 }
                 // With the newly selected event, we need to calculate the new
                 // fitness of the clone
-                double proposalPotential = Potential(node, fitnessMap, proposedEventProps, ref thresholdAccept);
-                double acceptProb = proposalPotential / currentPotential;
-                if (acceptProb >= _rnd.NextDouble())
+                var proposalPotential = LogPotential(child, fitnessMap, proposedEventProps, ref thresholdAccept);
+                var logAcceptProb = proposalPotential.Item1 - currentPotential.Item1;
+                if (logAcceptProb >= Math.Log(_rnd.NextDouble()))
                 {
                     currentPotential = proposalPotential;
                     currentEventProps = proposedEventProps;
@@ -236,11 +232,11 @@ public class Simulator
                         break;
                 }
             }
+            Console.WriteLine($"Final sampled fitness: {currentPotential.Item2}");
+            //Console.WriteLine($"pot: {currentPotential.Item1}");
 
             // Finalize the mutated karyotype by applying the best-fit set of events
             // and move onto the next clone
-            // Copy its parent
-            child.Karyotype = node.CopyKaryotype();
             for (int mutNo = 0; mutNo < currentEventProps.Count; mutNo++)
             {
                 Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
@@ -253,7 +249,6 @@ public class Simulator
                     newFitness);
                 events.Add(abberation);
             }
-
             counter++;
             MCSampleCNEventsRec(child, clones, fitnessMap, events, ref counter);
         }
