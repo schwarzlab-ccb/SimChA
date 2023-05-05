@@ -137,7 +137,7 @@ public class Simulator
 
         // Create a dummy karyotype for the events to act on
         var karyotype = node.CopyKaryotype();
-        double sigPotential = 1.0;
+        double sigPotential = 0.0;
 
         // Probability of picking each event and their corresponding signature
         for (int i = 0; i < events.Count; i++)
@@ -155,9 +155,6 @@ public class Simulator
         double fitnessPotential = Math.Exp(-_mcParams.ThetaFitness * Math.Abs(dFit));
         // Gaussian form
         //double fitnessPotential = Math.Exp(-_mcParams.ThetaFitness*Math.Pow(dFit,2));
-
-        eventPotentialTotal = 0.0;
-        sigPotential = 0.0;
 
         return (Math.Log(fitnessPotential) + eventPotentialTotal + sigPotential, newFitness);
     }

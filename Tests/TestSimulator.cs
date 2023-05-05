@@ -63,8 +63,8 @@ public class TestSimulator
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
         _sim = new Simulator(_rnd, _fitness, _signatures, _mcParams, listGenes);
-        double potential = _sim.Potential(_clone, _fitnessDict, events, ref threshold);
-        Assert.AreEqual(potential,1.0,EPSILON);
+        double potential = _sim.LogPotential(_clone, _fitnessDict, events, ref threshold).Item1;
+        Assert.AreEqual(potential,0.0,EPSILON);
     }
     
     [Test]
