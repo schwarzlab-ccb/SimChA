@@ -5,18 +5,20 @@ using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
-public record ContigEventData : BaseEventData
+public record ContigEventData(CNEventP eventP, int ContigId) : BaseEventData(eventP)
 {
-    public readonly int ContigId = -1;
-    
-    // Constructor used for whole-chromosome events
-    public ContigEventData(CNEventP eventP, int contigId)  : base(eventP)
+    public override void ApplyEvent(Karyotype kar)
     {
-        ContigId = contigId;
+        if (EventType == CNEventType.ChromDeletion)
+        {
+            kar.ApplyContigDeletion(ContigId);
+        }
+        else if (EventType == CNEventType.ChromDuplication)
+        {
+            kar.ApplyContigDuplication(ContigId);
+        }
     }
     
-    public override string ToString() => $"{EventType}\t{ContigId}";
-    
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent( this);
+    public override string ToString() 
+        => $"contig:{ContigId}";
 }

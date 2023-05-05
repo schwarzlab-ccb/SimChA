@@ -145,8 +145,8 @@ public class TestIO
         var files = new FileIO(projectPath + "/out");
         var kar = new Karyotype(false);
         var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
-        string eventDesc = kar.ApplyCNEvent(new Random(48), new CNEventP(CNEventType.Rigma, 1.0, ceParams));
-        Console.WriteLine(eventDesc);
+        var rnd = new Random(48);
+        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventP(CNEventType.Rigma, 1.0, ceParams));
         var clone = new Clone(1, -1, "test", 0, kar, 1);
         files.WriteClones(new List<Clone> {clone});
     }

@@ -8,15 +8,32 @@ namespace SimChA.EventData;
 
 public record PyrgoEventData : BaseEventData
 {
-    public readonly int ContigId = -1;
-    public readonly List<(long, long)>? FragmentsList = new();
-    public PyrgoEventData(CNEventP eventP, int contigId, List<(long,long)> frags) : base(eventP)
+    public int ContigId { get; }
+    public List<(long, long)> FragmentsList { get; }
+    
+    public PyrgoEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP)
     {
         ContigId = contigId;
-        FragmentsList = frags;
+        long contigLen = kar.ContigLen(contigId);
+        long pyrgoLen = eventP.Get("Size", 1_000_000L);
+        double pyrgoMean = eventP.Get("Mean", 0.1);
+        long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, pyrgoLen);
+        long pyrgoStart = Sampling.GetInternalPos(rnd, contigLen - pyrgoFrag);
+        
+        var meanSize = (long)(pyrgoFrag * pyrgoMean);
+        int fracCount = Sampling.GetFragCount(rnd, pyrgoMean);
+        FragmentsList = new List<(long, long)>();
+        for (int i = 0; i < fracCount; i++)
+        {
+            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, meanSize);
+            long fracStart = Sampling.GetInternalPos(rnd, pyrgoFrag - fracLen);
+            FragmentsList.Add((pyrgoStart + fracStart, fracLen));
+        }
     }
-    public override string ToString() => $"{EventType}\t{ContigId}";
-    
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+
+    public override void ApplyEvent(Karyotype kar)
+        => kar.ApplyPyrgo(ContigId, FragmentsList);
+
+    public override string ToString()
+        => $"contig:{ContigId};frags:{string.Join(",", FragmentsList)}";
 }

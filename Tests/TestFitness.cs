@@ -83,9 +83,9 @@ public class TestFitness
         var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, _ => new List<Gene>());
         dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 2));
-        karyotype.ApplyCNEvent(rnd, deletion);
+        TestKaryotype.ApplyRandomEvent(rnd, karyotype, deletion);
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
-        karyotype.ApplyCNEvent(rnd, deletion);
+        TestKaryotype.ApplyRandomEvent(rnd, karyotype, deletion);
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
     }
 

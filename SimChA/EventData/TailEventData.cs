@@ -1,30 +1,34 @@
 using SimChA.DataTypes;
+using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
 public record TailEventData : ContigEventData
 {
-    public readonly long DelFraction= -1;
-    public readonly bool Direction;
+    public long DelFraction { get; }
+    public bool Direction { get; }
     
     // Constructor used for Tail Events
-    public TailEventData(CNEventP eventP, int contigId, long delFraction, bool delDirection) : base(eventP, contigId)
+    public TailEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP, contigId)
     {
-        DelFraction = delFraction;
-        Direction = delDirection;
+        long tailSize = eventP.Get("Size", 1_000_000);
+        DelFraction = Sampling.GetExpSeg(rnd, kar.ContigLen(contigId), tailSize);
+        Direction = rnd.CoinFlip();
     }
 
-    public override string ToString()
+    public override void ApplyEvent(Karyotype kar)
     {
-        return EventType switch
+        if (EventType == CNEventType.TailDeletion)
         {
-            CNEventType.TailDeletion => $"{EventType}\t{ContigId}\t{DelFraction}\t{Direction}",
-            CNEventType.BreakageFusionBridge => $"{EventType}\t{ContigId}\t{DelFraction}\t{Direction}",
-            _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, null)
-        };
+            kar.ApplyTailDeletion(ContigId, DelFraction, Direction);
+        }
+        else if (EventType == CNEventType.BreakageFusionBridge)
+        {
+            kar.ApplyBFB(ContigId, DelFraction, Direction);
+        }
     }
     
-    public override string ApplyEvent(Karyotype kar)
-        => kar.ApplyEvent(this);
+    public override string ToString()
+        => $"contig:{ContigId};delFraction:{DelFraction};dir:{Direction}";
 }

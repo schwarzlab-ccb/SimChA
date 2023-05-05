@@ -23,6 +23,9 @@ public class Karyotype
     public long GenomeLen() 
         => _contigs.Sum(c => c.Length());
     
+    public IEnumerable<int> ContigIds() 
+        => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
+
     private readonly List<Contig> _contigs;
     private readonly List<GenRange> _missingRanges;
     
@@ -80,69 +83,60 @@ public class Karyotype
     public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
         => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
     
-    public string ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
+    public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
         long tailSplit = GetTail(tailLen, contig, fiveToThree);
         (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.DeleteRange(tailStart, tailEnd);
-        return $"contig:{contigID};start:{tailStart};end{tailEnd}";
     }
 
-    public string ApplyBFB(int contigID, long tailLen, bool fiveToThree)
+    public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
         long tailSplit = GetTail(tailLen, contig, fiveToThree);
-        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.Bridge(tailSplit, fiveToThree);
-        return $"contig:{contigID};start:{tailStart};end{tailEnd}";
     }
     
-    public string ApplyContigDeletion(int contigID)
+    public void ApplyContigDeletion(int contigID)
     {
         var contig = _contigs[contigID];
         contig.Clear();
-        return $"contig:{contigID}";
     }
     
-    public string ApplyContigDuplication(int contigID)
+    public void ApplyContigDuplication(int contigID)
     {
         var contig = _contigs[contigID];
         _contigs.Add(new Contig(contig));
-        return $"contig:{contigID}";
     }
 
-    public string ApplyInternalDuplication(int contigID, long startPos, long endPos)
+    public void ApplyInternalDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.DuplicateRange(startPos, endPos);
-        return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
     
-    public string ApplyInvertedDuplication(int contigID, long startPos, long endPos)
+    public void ApplyInvertedDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.DuplicateRange(startPos, endPos);
         contig.InvertRange(endPos, endPos + (endPos - startPos));
-        return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
     
-    public string ApplyInternalInversion(int contigID, long startPos, long endPos)
+    public void ApplyInternalInversion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.InvertRange(startPos, endPos);
-        return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
 
-    public string ApplyInternalDeletion(int contigID, long startPos, long endPos)
+    public void ApplyInternalDeletion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
         contig.DeleteRange(startPos, endPos);
-        return  $"contig:{contigID};start:{startPos};end:{endPos}";
     }
 
     // Translocation might invert based on the orientation of the holiday Junction https://en.wikipedia.org/wiki/Holliday_junction
-    public string ApplyTranslocation(int contigA, int contigB, long posA, long posB, bool inverted)
+    public void ApplyTranslocation(int contigA, int contigB, long posA, long posB, bool inverted)
     {
         var refContig = _contigs[contigA];
         var altContig = _contigs[contigB];
@@ -152,27 +146,22 @@ public class Karyotype
         }
         var splitRef = refContig.Split(posA, true);
         var splitAlt = altContig.Split(posB, true);
-        var descriptor = $"contig_A:{contigA};gave:{splitRef.Length()};contig_B:{contigB};gave:{splitAlt.Length()};inverted_B:{inverted}";
         refContig.Join(splitAlt);
         altContig.Join(splitRef);
-        return descriptor;
     }
 
-    public string ApplyWGD()
+    public void ApplyWGD()
     {
         _contigs.AddRange(_contigs.Select(ch => new Contig(ch)).ToList());
-        return "";
     }
 
-    public string ApplyChromothripsis(int contigID, List<long> stops, IEnumerable<int> selection)
+    public void ApplyChromothripsis(int contigID, List<long> stops, IEnumerable<int> selection)
     {
         var contig = _contigs[contigID];
-        long contigLen = contig.Length();
         contig.ScatterAndGather(stops, selection);
-        return $"contig:{contigID};fragments:{stops.Count + 1};lost:{contigLen - contig.Length()}B";
     }
     
-    public string ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence, List<long> breakpoints)
+    public void ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence, List<long> breakpoints)
     {
         var subcontigs = 
             Enumerable.Range(0, contigIDs.Count)
@@ -185,30 +174,21 @@ public class Karyotype
         {
             _contigs[contigIDs[i]] = newContigs[i];
         }
-        string stringIDs = string.Join(",", contigIDs);
-        return $"contigs:[{stringIDs}];fragments:{subcontigs.Count}";
     }
     
-    public string ApplyPyrgo(int contigID, List<(long start, long len)> frags)
+    public void ApplyPyrgo(int contigID, List<(long start, long len)> frags)
     {
         var contig = _contigs[contigID];
-        var res = $"contig:{contigID};";
         long offset = 0;
         foreach ((long start, long len) in frags)
         {
             contig.DuplicateRange(start + offset, start + offset + len);
             offset += len;
-            res += $"start:{start + offset};end:{start + offset + len};";
         }
-        return res;
     }
-    
-    private static string DirToStr(bool dir) => dir ? ">" : "<";
-    private static string FragsToString(IEnumerable<(int id, long start, long len, bool dir)> frags) 
-        => string.Join(",", frags.Select(x => $"({x.id},{x.start},{x.len},{DirToStr(x.dir)})"));
 
     // Fragments that do not return to the original chromosome
-    public string ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
+    public void ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
     {
         var template = new Contig();
         foreach (var frag in frags)
@@ -216,11 +196,10 @@ public class Karyotype
             template.AppendContig(_contigs[frag.id].GetSubContig(frag.start, frag.start + frag.len));
         }
         _contigs.Add(template);
-        return FragsToString(frags);
     }    
     
     // First segment is the host, but there is no repetition
-    public string ApplyTIBridge(List<(int id, long start, long len, bool dir)> frags) 
+    public void ApplyTIBridge(List<(int id, long start, long len, bool dir)> frags) 
     {
         var host = _contigs[frags[0].id];
         var template = new Contig();
@@ -230,11 +209,10 @@ public class Karyotype
             template.AppendContig(contig);
         }
         host.InsertContig(template, frags[0].start);
-        return FragsToString(frags);
     }    
     
     // First segment is the host, with repetition
-    public string ApplyTICycle(List<(int id, long start, long len, bool dir)> frags)
+    public void ApplyTICycle(List<(int id, long start, long len, bool dir)> frags)
     {
         var host = _contigs[frags[0].id];
         var template = new Contig();
@@ -244,14 +222,12 @@ public class Karyotype
             template.AppendContig(contig);
         }
         host.InsertContig(template, frags[0].start);
-        return FragsToString(frags);
     }
     
-    public string ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
+    public void ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
     {
         var contig = _contigs[contigID];
         var lastWasDeletion = false;
-        var res = $"contig:{contigID};";
         foreach (long len in rigmaLens)
         {
             if (lastWasDeletion)
@@ -261,234 +237,8 @@ public class Karyotype
             else
             {
                 contig.DeleteRange(rigmaStart, rigmaStart + len);
-                res += $"start:{rigmaStart};end:{rigmaStart + len};";
             }
             lastWasDeletion = !lastWasDeletion;
-        }
-        return res;
-    }
-
-    private static List<(long, long)> GetSubsegments(Random rnd, long start, long fragmentLen, double mean)
-    {
-        long meanSize = (long) (fragmentLen * mean);
-        int fracCount = Sampling.GetFragCount(rnd, mean);
-        var frags = new List<(long, long)>();
-        for (int i = 0; i < fracCount; i++)
-        {
-            long fracLen = Sampling.GetExpSeg(rnd, fragmentLen, meanSize);
-            long fracStart = Sampling.GetInternalPos(rnd, fragmentLen - fracLen);
-            frags.Add((start + fracStart, fracLen));
-        }
-        return frags;
-    }
-    
-    public string ApplyCNEvent(Random rnd, CNEventP cnEventP)
-    {
-        // TODO: Replace for inline in usages
-        var eventData = GenerateCNEventData(rnd, cnEventP);
-        return eventData.ApplyEvent(this);
-    }
-
-    public string ApplyEvent(ContigEventData eventData)
-    {
-        return eventData.EventType switch
-        {
-            // Whole chromosome events
-            CNEventType.ChromDeletion => ApplyContigDeletion(eventData.ContigId),
-            CNEventType.ChromDuplication => ApplyContigDuplication(eventData.ContigId),
-            _ => throw new ArgumentOutOfRangeException(nameof(eventData.EventType), eventData.EventType, null)
-        };
-    }
-
-    public string ApplyEvent(TailEventData eventData)
-    {
-        int contigA = eventData.ContigId;
-        long delFraction = eventData.DelFraction;
-        bool delDirection = eventData.Direction;
-        return eventData.EventType == CNEventType.TailDeletion
-            ? ApplyTailDeletion(contigA, delFraction, delDirection)
-            : ApplyBFB(contigA, delFraction, delDirection);
-    }
-    
-    public string ApplyEvent(ChromothripsisEventData data)
-    {
-        return ApplyChromothripsis(data.ContigId, data.StopsList, data.GetSelection());
-    }
-    public string ApplyEvent(ChromoplexyEventData data)
-    {
-        return ApplyChromoplexy(data.ContigIdList, data.StopsList, data.GetSequence(), data.BreakpointsList);
-    }
-    public string ApplyEvent(PyrgoEventData data)
-    {
-        return ApplyPyrgo(data.ContigId, data.FragmentsList);
-    }
-    public string ApplyEvent(RigmaEventData data)
-    {
-        return ApplyRigma(data.ContigId, data.Start, data.StopsList);
-    }
-    
-    public string ApplyEvent(BaseEventData data)
-    {
-        return ApplyWGD();
-    }
-
-    public string ApplyEvent(TemplatedEventData data)
-    {
-        return data.EventType switch
-        {
-            CNEventType.TIBridge => ApplyTIBridge(data.Frags),
-            CNEventType.TIChain => ApplyTIChain(data.Frags),
-            CNEventType.TICycle => ApplyTICycle(data.Frags),
-            _ => throw new ArgumentOutOfRangeException(nameof(data.EventType), data.EventType, null)
-        };
-    }
-
-    public string ApplyEvent(InternalEventData data)
-    {
-        int contigA = data.ContigId;
-        long start = data.Start;
-        long end = data.End;
-        return data.EventType switch
-        {
-            CNEventType.InternalDuplication => ApplyInternalDuplication(contigA, start, end),
-            CNEventType.InternalDeletion => ApplyInternalDeletion(contigA, start, end),
-            CNEventType.InternalInversion => ApplyInternalInversion(contigA, start, end),
-            CNEventType.InvertedDuplication => ApplyInternalDuplication(contigA, start, end),
-            _ => throw new ArgumentOutOfRangeException(nameof(data.EventType), data.EventType, null)
-        };
-    }
-    public string ApplyEvent(PairEventData eventData)
-    {
-        int contigA = eventData.ContigIdList[0];
-        int contigB = eventData.ContigIdList[1];
-        long posA = eventData.PosA;
-        long posB = eventData.PosB;
-        bool inverted = eventData.Direction;
-        return ApplyTranslocation(contigA, contigB, posA, posB, inverted);
-    }
-
-    public BaseEventData GenerateCNEventData(Random rnd, CNEventP cnEventP)
-    {
-        using var IDsEnumerator = Enumerable
-            .Range(0, _contigs.Count)
-            .Where(i => _contigs[i].Any())
-            .Shuffle(rnd)
-            .GetEnumerator();
-        IDsEnumerator.MoveNext();
-        int contigA = IDsEnumerator.Current;
-        long lenA = _contigs[contigA].Length();
-
-        var affectedContigIds = new List<int>();
-
-        switch (cnEventP.Type)
-        {
-            // Whole chromosome events
-            case CNEventType.ChromDeletion:
-            case CNEventType.ChromDuplication:
-                return new ContigEventData(cnEventP, contigA);
-            
-            case CNEventType.WholeGenomeDoubling:
-                return new BaseEventData(cnEventP);
-            
-            // Tail events
-            case CNEventType.TailDeletion:
-            case CNEventType.BreakageFusionBridge:
-                long tailSize = cnEventP.Get("Size", 1_000_000);
-                long delFraction = Sampling.GetExpSeg(rnd, lenA, tailSize);
-                bool delDirection = rnd.CoinFlip();
-                return new TailEventData(cnEventP, contigA, delFraction, delDirection);
-
-            // Internal events
-            case CNEventType.InternalDuplication:
-            case CNEventType.InternalDeletion:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-                long internalSize = cnEventP.Get("Size", 100_000);
-                long segLen = Sampling.GetExpSeg(rnd, lenA, internalSize);
-                long start = Sampling.GetInternalPos(rnd, lenA - segLen);
-                long end = start + segLen;
-                return new InternalEventData(cnEventP, contigA, start, end);
-            
-            case CNEventType.Translocation:
-                IDsEnumerator.MoveNext();
-                int contigB = IDsEnumerator.Current;
-                long lenB = _contigs[contigB].Length();
-                long posA = Sampling.GetInternalPos(rnd, lenA);
-                long posB = Sampling.GetInternalPos(rnd, lenB);
-                double invProb = cnEventP.Get("InvProb", 0.0);
-                bool inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
-                
-                affectedContigIds.Add(contigA);
-                affectedContigIds.Add(contigB);
-                return new PairEventData(cnEventP, affectedContigIds, posA, posB, inverted);
-            
-            case CNEventType.Chromothripsis:
-                long chromothripsisLen = cnEventP.Get("Size", 100_000_000L);
-                int shardCount = Sampling.GetFragCount(rnd, lenA / (double) chromothripsisLen);
-                var stops = Sampling.GetStopsForShards(rnd, lenA, shardCount);
-                int shardsKept = rnd.Next(1, stops.Count);
-                var order = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept).ToList();
-                return new ChromothripsisEventData(cnEventP, contigA, stops, order);
-
-            case CNEventType.Chromoplexy:
-                int chrCount = Sampling.GetChromoplexySiteCount(rnd);
-                var contigIDs = new List<int>();
-                var stopsForContig = new List<List<long>>();
-                var totalLen = 0L;
-                var totalFrags = 0;
-                for (var i = 0; i < chrCount; i++, IDsEnumerator.MoveNext())
-                {
-                    contigIDs.Add(IDsEnumerator.Current);
-                    long thisLen = _contigs[IDsEnumerator.Current].Length();
-                    totalLen += thisLen;
-                    int partsCount = Sampling.GetFragCount(rnd, thisLen / (double) lenA);
-                    totalFrags += partsCount;
-                    stopsForContig.Add(Sampling.GetStopsForShards(rnd, lenA, partsCount));
-                }
-                var sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-                var breakpoints = Sampling.GetStopsForShards(rnd, totalLen, chrCount);
-                return new ChromoplexyEventData(cnEventP, contigIDs, stopsForContig, sequence, breakpoints);
-
-            case CNEventType.Pyrgo:
-                long pyrgoLen = cnEventP.Get("Size", 1_000_000L);
-                double pyrgoMean = cnEventP.Get("Mean", 0.1);
-                long pyrgoFrag = Sampling.GetExpSeg(rnd, lenA, pyrgoLen);
-                long pyrgoStart = Sampling.GetInternalPos(rnd, lenA - pyrgoFrag);
-                var frags = GetSubsegments(rnd, pyrgoStart, pyrgoFrag, pyrgoMean);
-                return new PyrgoEventData(cnEventP, contigA, frags);
-
-            case CNEventType.Rigma:
-                long rigmaLen = cnEventP.Get("Size", 1_000_000L);
-                double rigmaMean = cnEventP.Get("Mean", 0.1);
-                long rigmaStart = Sampling.GetInternalPos(rnd, lenA - rigmaLen);
-                int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
-                var rigmaStops = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, lenA, rigmaMean)).ToList();
-                return new RigmaEventData(cnEventP, contigA, rigmaStart, rigmaStops);
-            
-            case CNEventType.TIChain:
-            case CNEventType.TICycle:
-            case CNEventType.TIBridge:
-                var size = cnEventP.Get("Size", 1_000_000L);
-                var fragMean = cnEventP.Get("Frag", 10.0);
-                var fragCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
-                                + (cnEventP.Type != CNEventType.TIBridge ? 1 : 2);
-                var fragments = new List<(int id, long start, long len, bool dir)>();
-                for (var i = 0; i < fragCount; i++, IDsEnumerator.MoveNext())
-                {
-                    var id = IDsEnumerator.Current;
-                    var contigLen = _contigs[id].Length();
-                    // First segment of a bridge, or first and last on a chain do not have a length
-                    bool skipLen = i == 0 && cnEventP.Type != CNEventType.TICycle ||
-                                   i == fragCount - 1 && cnEventP.Type == CNEventType.TIChain;
-                    var fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
-                    var fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
-                    var dir = i == 0 || rnd.CoinFlip();
-                    fragments.Add((id, fragStart, fragLen, dir));
-                }
-                return new TemplatedEventData(cnEventP, fragments);
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
         }
     }
 }

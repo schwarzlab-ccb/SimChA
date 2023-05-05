@@ -1,5 +1,6 @@
 ﻿using Extreme.Statistics.Distributions;
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.Misc;
 
 namespace SimChA.Simulation;
@@ -36,7 +37,7 @@ public static class Sampling
 
     public static List<long> GetStopsForShards(Random rnd, long contigLen, int shardCount) 
         => Enumerable.Range(0, shardCount)
-            .Select(_ => Sampling.GetInternalPos(rnd, contigLen))
+            .Select(_ => GetInternalPos(rnd, contigLen))
             .Distinct()
             .OrderBy(i => i)
             .ToList();
@@ -75,5 +76,58 @@ public static class Sampling
             DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, 1),
             _ => 1
         };
+    }
+    
+    public static BaseEventData GenerateCNEventData(Random rnd, Karyotype kar, CNEventP cnEventP)
+    {
+        var seq = kar.ContigIds().Shuffle(rnd);
+        int contigId = seq.First();
+
+        switch (cnEventP.Type)
+        {
+            // Whole chromosome events
+            case CNEventType.ChromDeletion:
+            case CNEventType.ChromDuplication:
+                return new ContigEventData(cnEventP, contigId);
+            
+            case CNEventType.WholeGenomeDoubling:
+                return new BaseEventData(cnEventP);
+            
+            // Tail events
+            case CNEventType.TailDeletion:
+            case CNEventType.BreakageFusionBridge:
+                return new TailEventData(rnd, kar, cnEventP, contigId);
+
+            // Internal events
+            case CNEventType.InternalDuplication:
+            case CNEventType.InternalDeletion:
+            case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
+                return new InternalEventData(rnd, kar, cnEventP, contigId);
+            
+            case CNEventType.Translocation:
+                int secondId = seq.Skip(1).First();
+                return new PairEventData(rnd, kar, cnEventP, contigId, secondId);
+            
+            case CNEventType.Chromothripsis:
+                return new ChromothripsisEventData(rnd, kar, cnEventP, contigId);
+
+            case CNEventType.Chromoplexy:
+                return new ChromoplexyEventData(rnd, kar, cnEventP, seq);
+
+            case CNEventType.Pyrgo:
+                return new PyrgoEventData(rnd, kar, cnEventP, contigId);
+
+            case CNEventType.Rigma:
+                return new RigmaEventData(rnd, kar, cnEventP, contigId);
+            
+            case CNEventType.TIChain:
+            case CNEventType.TICycle:
+            case CNEventType.TIBridge:
+                return new TemplatedEventData(rnd, kar, cnEventP, seq);
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
+        }
     }
 }
