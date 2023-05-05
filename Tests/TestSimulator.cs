@@ -53,7 +53,7 @@ public class TestSimulator
         => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
     
     [Test]
-    public void TestPotential()
+    public void TestLogPotential()
     {
         var events = new List<BaseEventData>();
         bool threshold = false;
