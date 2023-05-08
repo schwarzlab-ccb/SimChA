@@ -43,29 +43,39 @@ public static class Sampling
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
-
-    public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
-    {
-        var probs = eventPs.Select(ev => Math.Max(0, ev.Prob)).ToList();
-        probs = probs.Select(p => p / probs.Sum()).ToList();
-        int index = PickRandomIndex(rnd, probs);
-        return eventPs[index];
-    }
+   
     
-    public static int PickRandomIndex(Random rnd, List<double> probs)
+    public static int PickRndIndex(Random rnd, List<double> elems) 
     {
         double val = rnd.NextDouble();
-        for (var i = 0; i < probs.Count; i++)
+        for (var i = 0; i < elems.Count; i++)
         {
-            if (val < probs[i])
+            if (val < elems[i])
             {
                 return i;
             }
-            val -= probs[i];
+            val -= elems[i];
         }
-        return probs.Count - 1;
+        return elems.Count - 1;
     }
     
+    public static int PickRndIndex<T>(Random rnd, List<T> elems) where T : IHasProb
+    {
+        double val = rnd.NextDouble();
+        for (var i = 0; i < elems.Count; i++)
+        {
+            if (val < elems[i].Prob)
+            {
+                return i;
+            }
+            val -= elems[i].Prob;
+        }
+        return elems.Count - 1;
+    }
+    
+    public static T PickRndElem<T>(Random rnd, List<T> elems) where T : IHasProb
+        => elems[PickRndIndex(rnd, elems)];
+
     public static double SampleDist(Random rnd, DataTypes.Distribution dist)
     {
         return dist switch

@@ -7,7 +7,7 @@ namespace SimChA.Computation;
 
 public class CNProfile
 {
-    public static ProfileStats GetProfileStats(Clone clone, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
+    public static CloneStat GetCloneStats(Clone clone, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
     {
         var kar = clone.Karyotype;
         var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], kar);
@@ -20,6 +20,6 @@ public class CNProfile
         double og = Fitness.TsgOgTerm(ogCNs);
         double ess = Fitness.EssTerm(essCNs);
 
-        return new ProfileStats(clone.Name, fitness, stress, tsg, og, ess);
+        return new CloneStat(clone.Name, fitness, stress, tsg, og, ess);
     }
 }

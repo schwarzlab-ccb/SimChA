@@ -19,7 +19,6 @@ public class TestKaryotype
     
     private int TEST_FRAC = 1000;
     
-    
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventP cnEventP)
     {
         var eventData = Sampling.GenerateCNEventData(rnd, kar, cnEventP);

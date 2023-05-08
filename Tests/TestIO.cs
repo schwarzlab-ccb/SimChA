@@ -48,9 +48,9 @@ public class TestIO
         Assert.AreEqual(Distribution.Normal, res.Distribution);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1}]}");
         Assert.AreEqual(1, res.Signatures!.First().Prob, 0.000001);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""WholeGenomeDoubling"", ""Prob"": 0.1}]}]}");
+        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""EventPs"": [{""Type"": ""WholeGenomeDoubling"", ""Prob"": 0.1}]}]}");
         Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events!.First().Type);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Params"": {""Mean"": 0.1}}]}]}");
+        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""EventPs"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Params"": {""Mean"": 0.1}}]}]}");
         Assert.AreEqual(0.1, res.Signatures!.First().Events!.First().Params!["Mean"], 0.000001);
         res = Parsers.ParseSimParams(@"{""Assembly"":""hg38""}");
         Assert.AreEqual(GenomeAssembly.hg38, res.Assembly);
@@ -150,7 +150,7 @@ public class TestIO
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventP(CNEventType.Rigma, 1.0, ceParams));
         var clone = new Clone(1, -1, "test", 0, kar, 1);
-        files.WriteClones(new List<Clone> {clone});
+        files.WriteClones(new List<Sample> { new Sample("test",  false, new List<Clone> { clone })});
     }
 
     [Test]

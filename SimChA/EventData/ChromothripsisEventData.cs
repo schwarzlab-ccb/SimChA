@@ -1,6 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using Extreme.Mathematics;
 using SimChA.DataTypes;
 using SimChA.Misc;
 using SimChA.Simulation;

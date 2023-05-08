@@ -13,7 +13,6 @@ public class Clone
         Karyotype = new Karyotype(refKaryotype);
         ChildrenIDs = new List<int>();
         TotalMutations = totalMutations;
-        SigMixture = new List<double>();
     }
     
     public int CloneId { get; }
@@ -23,11 +22,9 @@ public class Clone
     public string Name { get; }
     public Karyotype Karyotype { set; get; }
     public int TotalMutations { get; }
-    public List<double> SigMixture { set; get; }
-    public static string Header() => "ID\tName\tSex\tParent\tEvents\tPloidy\tMissing\tMixture\tKaryotype";
-    private string MixtureToString() => SigMixture.Any() ? string.Join(";", SigMixture) : "-";
+    public static string Header() => "clone_id\tname\tsex\tparent\tevents\tploidy\tmissing\tmixture\tkaryotype";
     public override string ToString() 
         => $"{CloneId}\t{Name}\t{HGRef.Sex(Karyotype.SexXX)}\t{ParentId}\t{DistToParent}\t" +
-           $"{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{MixtureToString()}\t{Karyotype}";
+           $"{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{Karyotype}";
     public Karyotype CopyKaryotype() => new(Karyotype);
 }

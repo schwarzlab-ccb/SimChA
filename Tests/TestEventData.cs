@@ -135,4 +135,18 @@ public class TestEventData
         Assert.AreEqual(eventData.ContigIds.Count - 1, eventData.Breakpoints.Count);
         Console.WriteLine(eventData);
     }
+
+    [Test]
+    public void TestChromothripsis()
+    {
+        const long len = 1_000_000;
+        var eventP = new CNEventP(CNEventType.Chromothripsis);
+        var eventData = new ChromothripsisEventData(_rnd, eventP, 0, len);
+        foreach (var stop in eventData.StopsList)
+        {
+            Assert.Greater(stop, 0);
+            Assert.Less(stop, len);
+        }
+        Assert.GreaterOrEqual(eventData.StopsList.Count + 1,eventData.SelectionList.Count);
+    }
 }

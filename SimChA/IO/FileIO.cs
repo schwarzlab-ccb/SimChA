@@ -12,6 +12,7 @@ public class FileIO
 {
     private const string DOT_FILENAME = "parent_graph.dot";
     private const string NEWICK_FILENAME = "parent_graph.new";
+    private const string SAMPLES_FILENAME = "samples.tsv";
     private const string SUBCLONES_FILENAME = "clones.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
     private const string BAF_FILENAME = "baf.out";
@@ -45,34 +46,52 @@ public class FileIO
         }
     }
 
-    public void WriteClones(IEnumerable<Clone> subClones)
+    public void WriteSamples(IEnumerable<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        outputFile.WriteLine(Sample.Header());
+        foreach (var sample in samples)
+        {
+            outputFile.WriteLine(sample.ToString());
+        }
+    }
+    
+    public void WriteClones(IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
-        outputFile.WriteLine(Clone.Header());
-        foreach (var subClone in subClones)
+        outputFile.WriteLine("sample_id\t" + Clone.Header());
+        foreach (var sample in samples)
         {
-            outputFile.WriteLine(subClone.ToString());
+            foreach (var clone in sample.Clones)
+            {
+                outputFile.WriteLine($"{sample.SampleId}\t{clone}");
+            }
         }
     }
     
-    public void WriteCopyNumbers(IEnumerable<Clone> subClones, bool isFemale)
+    public void WriteCopyNumbers(IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
         var copyNumbersString = new StringBuilder();
-        copyNumbersString.Append("sample_id\tchr\tstart\tend\tcn_a\tcn_b\n");
+        copyNumbersString.Append("sample_id\tclone_id\tchr\tstart\tend\tcn_a\tcn_b\n");
 
-        foreach (var subClone in subClones)
+        foreach (var sample in samples)
         {
-            var copynumbers = CopyNumbers.CalcCopyNumbers(subClone.Karyotype, isFemale);
-            copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, subClone.Name, false) + "\n");
+            foreach (var clone in sample.Clones)
+            {
+                var copynumbers = CopyNumbers.CalcCopyNumbers(clone.Karyotype, sample.SexXX);
+                copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, clone.Name, false) + "\n");
+            }
+            outputFile.Write(copyNumbersString.ToString());
         }
-        outputFile.Write(copyNumbersString.ToString());
     }
 
     public void WriteSimParams(SimParams simParams)
@@ -91,7 +110,7 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
-        abberationString.Append("Id\tEventType\tEventString\tdFitness\ttFitness\tMutations\n");
+        abberationString.Append("id\tevent_type\tevent_string\tdelta_fitness\ttotal_Fitness\tmutations\n");
         foreach (var cnEvent in cnEvents)
         {
             abberationString.Append($"{cnEvent.CloneId}\t" +
@@ -112,20 +131,23 @@ public class FileIO
         file.Write(newick);
     }
     
-    public void WriteSampleFitness(List<ProfileStats> samples)
+    public void WriteFitness(Dictionary<string, List<CloneStat>> sampleStats)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLE_FITNESS_FILE);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        var myT = typeof(ProfileStats);
+        var myT = typeof(CloneStat);
         var fileds = myT.GetProperties();
         var fieldNames = fileds.Select(f => f.Name).ToList();
-        file.WriteLine(string.Join("\t", fieldNames));
-        foreach (var sample in samples)
+        file.WriteLine("sample_id\t" + string.Join("\t", fieldNames));
+        foreach (var sample in sampleStats)
         {
-            // Get all the field values of the record sample
-            var values = fileds.Select(f => $"{f.GetValue(sample):f4}");
-            file.WriteLine(string.Join("\t", values));
+            foreach (var clone in sample.Value)
+            {
+                // Get all the field values of the record sample
+                var values = fileds.Select(f => $"{f.GetValue(clone):f4}");
+                file.WriteLine(sample.Key + "\t" + string.Join("\t", values));
+            }
         }
     }
     

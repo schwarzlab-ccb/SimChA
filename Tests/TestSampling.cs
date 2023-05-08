@@ -48,7 +48,7 @@ public class TestSampling
         {
             var rnd = new Random();
             var probs = new List<double> { 0.1, 0.2, 0.0, -1.0, 0.3, 0.4 };
-            int index = Sampling.PickRandomIndex(rnd, probs);
+            int index = Sampling.PickRndIndex(rnd, probs);
             Assert.GreaterOrEqual(index, 0);
             Assert.Less(index, probs.Count);
             Assert.AreNotEqual(index, 2);

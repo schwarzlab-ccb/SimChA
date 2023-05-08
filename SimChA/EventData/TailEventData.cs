@@ -9,7 +9,7 @@ public record TailEventData : ContigEventData
     public long DelFraction { get; }
     public bool Direction { get; }
     
-    // Constructor used for Tail Events
+    // Constructor used for Tail EventPs
     public TailEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP, contigId)
     {
         long tailSize = eventP.Get("Size", 1_000_000);

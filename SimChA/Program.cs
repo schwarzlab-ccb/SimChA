@@ -39,74 +39,78 @@ files.WriteSimParams(simParams);
 // Obtain clones
 var newickContent = "";
 var fitnessDict = new Dictionary<string, double>();
-List<Clone> clones;
+List<Sample> samples;
 List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
 {
     var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
-    clones = Simulator.ClonesFromProfiles(profiles);
+    samples = Simulator.SamplesFromProfiles(profiles);
     cnEvents = new List<CNEvent>();
 }
 else
 {
-    var signatures = Parsers.ValidateSignatures(simParams.Signatures);
+    var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations.");
-    var simulator = new Simulator(rnd, simParams.Fitness, signatures, simParams.MCParams, geneLists);
+    var simulator = new Simulator(rnd, simParams.Fitness, simParams.MCParams, geneLists);
     if (options.Value.NewickFile != "")
     {
         newickContent = FileIO.ReadNewick(options.Value.NewickFile);
-        clones = Parsers.ParseNewick(newickContent, simParams.SexXX);
-        fitnessDict = FileIO.ReadFitnessValues(options.Value.NewickFile); // This information
+        var clones = Parsers.ParseNewick(newickContent, simParams.SexXX);
+        var eventPs = Converters.PropagateSigs(sigs);
+        var newickSample = new Sample("Newick", simParams.SexXX, clones, eventPs);
+        samples = new List<Sample> { newickSample };
     }
     else
     {
-        clones = Simulator.MakeClones(rnd, options.Value.Repeats, simParams.SexXX, simParams.EventCount, simParams.Distribution);   
+        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs);   
     }
-    double[] sigProbs = signatures.Select(s => s.Prob).ToArray();
-    foreach (var clone in clones)
+    foreach (var sample in samples)
     {
-        clone.SigMixture = Sampling.CreateRandomMixture(rnd, sigProbs);
-    }
-    // Monte Carlo sampling of copy-number altering events
-    if (options.Value.MCMC_ON)
-    {
-        if (simParams.MCParams == null)
+        // Monte Carlo sampling of copy-number altering events
+        if (options.Value.MCMC_ON)
         {
-            Console.WriteLine("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
+            if (simParams.MCParams == null)
+            {
+                Console.WriteLine("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
+            }
+            else
+            {
+                Console.WriteLine("Sampling possible events to produce this clone");
+                cnEvents = simulator.MCSampleEvents(sample, fitnessDict);
+            }
         }
+        // Otherwise we choose to stochastically sample from the signatures
         else
         {
-            Console.WriteLine("Sampling possible events to produce this clone");
-            cnEvents = simulator.MCSampleEvents(clones[0], clones, fitnessDict);
-            clones = clones.Where(c => c.CloneId != 0).ToList();
+            cnEvents = simulator.SampleEvents(sample);
         }
-        //clones = clones.Where(c => c.CloneId != 0).ToList();
-    }
-    // Otherwise we choose to stochastically sample from the signatures
-    else
-    {
-        cnEvents = simulator.ApplyEvents(clones[0], clones);
-        clones = clones.Where(c => c.CloneId != 0).ToList();
     }
 }
 
 // Fitness data
 Console.WriteLine("Computing fitness.");
-var results = new List<ProfileStats>();
+var sampleStats = new Dictionary<string, List<CloneStat>>();
 var counter = 0;
-foreach (var clone in clones)
+int cloneCount = samples.Sum(s => s.Clones.Count);
+foreach (var sample in samples)
 {
-    Console.Write($"\r{++counter}/{clones.Count} samples processed.");
-    var profileStats = CNProfile.GetProfileStats(clone, geneLists, simParams.Fitness);
-    results.Add(profileStats);
+    var cloneStatsList = new List<CloneStat>();
+    foreach (var clone in sample.Clones)
+    {
+        Console.Write($"\r{++counter}/{cloneCount} clones processed.");
+        var cloneStats = CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness);
+        cloneStatsList.Add(cloneStats);
+    }
+    sampleStats[sample.SampleId] = cloneStatsList;
 }
 
 Console.WriteLine();
 try
 {
-    files.WriteClones(clones);
-    files.WriteCopyNumbers(clones, simParams.SexXX);
-    files.WriteSampleFitness(results);
+    files.WriteSamples(samples);
+    files.WriteClones(samples);
+    files.WriteCopyNumbers(samples);
+    files.WriteFitness(sampleStats);
     // Check if cnEvents was assigned
     if (cnEvents.Any())
     {

@@ -8,22 +8,17 @@ public class Simulator
 {
     private readonly Random _rnd;
     private readonly FitnessParams _fitness;
-    private readonly List<Signature> _signatures;
     private readonly MCParams _mcParams;
     private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-
-    public List<Signature> SelectedSignatures;
 
     public Simulator(
         Random rnd,
         FitnessParams fitnessParams,
-        List<Signature> signatures,
         MCParams mcParams,
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
     {
         _rnd = rnd;
         _fitness = fitnessParams;
-        _signatures = signatures;
         _mcParams = mcParams;
         _geneLists = geneLists;
     }
@@ -32,16 +27,19 @@ public class Simulator
     private static int GetTreeNodeCount(Clone root, List<Clone> clones)
         => 1 + root.ChildrenIDs.Select(id => GetTreeNodeCount(clones[id], clones)).Sum();
 
-    public List<CNEvent> ApplyEvents(Clone rootClone, List<Clone> clones)
+    public List<CNEvent> SampleEvents(Sample sample)
     {
-        List<CNEvent> events = new();
+        if (sample.EventPs == null || !sample.EventPs.Any())
+        {
+            throw new Exception("No events to sample from.");
+        }
+        var events = new List<CNEvent>();
         int counter = 1;
-        ApplyCNEventsRec(rootClone, clones, events, ref counter);
-        Console.WriteLine();
+        ApplyCNEventsRec(sample.EventPs, sample.Clones.First(), sample.Clones, events, ref counter);
         return events;
     }
 
-    private void ApplyCNEventsRec(Clone node, List<Clone> clones, List<CNEvent> eventSeq, ref int counter)
+    private void ApplyCNEventsRec(List<CNEventP> eventsPs, Clone node, List<Clone> clones, List<CNEvent> eventSeq, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
@@ -50,10 +48,8 @@ public class Simulator
             int parentMutations = GetMutations(node, clones);
             for (var mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
-                int mixtureIndex = Sampling.PickRandomIndex(_rnd, child.SigMixture);
-                var cnEventParams = _signatures[mixtureIndex].Events;
                 Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
-                var eventP = Sampling.PickRandomEventP(_rnd, cnEventParams);
+                var eventP =Sampling.PickRndElem(_rnd, eventsPs);
                 var eventData = Sampling.GenerateCNEventData(_rnd, child.Karyotype, eventP);
                 eventData.ApplyEvent(child.Karyotype);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
@@ -64,7 +60,7 @@ public class Simulator
                 oldFitness = newFitness;
             }
             counter++;
-            ApplyCNEventsRec(child, clones, eventSeq, ref counter);
+            ApplyCNEventsRec(eventsPs, child, clones, eventSeq, ref counter);
         }
     }
 
@@ -75,57 +71,34 @@ public class Simulator
         return mutCount;
     }
     
-    public static List<Clone> MakeClones(Random rnd, int repeats, bool sexXX, int distance, Distribution distribution)
+    public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
     {
-        var parent = new Clone(0, -1, "0-0", 0, new Karyotype(sexXX), 0);
-        var clones = new List<Clone> { parent };
-        for (var i = 1; i <= repeats; i++)
+        var samples = new List<Sample>();
+        foreach (var profile in profiles)
         {
-            double sample = Sampling.SampleDist(rnd, distribution);
-            var mutCount = (int)Math.Round(distance * sample);
-            var child = new Clone(i, 0, $"{i}-{mutCount}", mutCount, new Karyotype(sexXX), mutCount);
-            parent.ChildrenIDs.Add(child.CloneId);
-            clones.Add(child);
+            var clone = new Clone(0, -1, "0", 0, profile.Value, 0);
+            var sample = new Sample(profile.Key, profile.Value.SexXX, new List<Clone>{ clone });
+            samples.Add(sample);
         }
-        return clones;
+        return samples;
     }
 
-    public static List<Clone> ClonesFromProfiles(Dictionary<string, Karyotype> profiles)
-    {
-        var i = 1;
-        var res = profiles.Select(pair => new Clone(i++, 0, pair.Key, 1, pair.Value, 1));
-        return res.ToList();
-    }
-
-    public List<CNEvent> MCSampleEvents(Clone rootClone, List<Clone> clones, Dictionary<string, double> fitnessMap)
-    {
+    public List<CNEvent> MCSampleEvents(Sample sample, Dictionary<string, double> fitnessMap)
+    {        
+        if (sample.EventPs == null || !sample.EventPs.Any())
+        {
+            throw new Exception("No events to sample from.");
+        }
         List<CNEvent> events = new();
         var counter = 1;
-        MCSampleCNEventsRec(rootClone, clones, fitnessMap, events, ref counter);
+        MCSampleCNEventsRec(sample.EventPs, sample.Clones.First(), sample.Clones, fitnessMap, events, ref counter);
         return events;
     }
 
-    public List<BaseEventData> InitEvents(Clone node, int nMutations)
+    public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventP> cnEventPs)
     {
-        var eventPs = InitEventPs(node, nMutations);
-        return eventPs.Select(e => Sampling.GenerateCNEventData(_rnd, node.Karyotype, e)).ToList();
-    }
-
-    public List<CNEventP> InitEventPs(Clone node, int nMutations)
-    {
-        List<CNEventP> eventPs = new List<CNEventP>();
-        // Reset the selected signatures
-        SelectedSignatures = new List<Signature>();
-        for (int i = 0; i < nMutations; i++)
-        {
-            int mixtureIndex = Sampling.PickRandomIndex(_rnd, node.SigMixture);
-            var sig = _signatures[mixtureIndex];
-            // Check that there are actually available events (i.e. prob not 0)
-            SelectedSignatures.Add(sig);
-            var eventP = Sampling.PickRandomEventP(_rnd, sig.Events);
-            eventPs.Add(eventP);
-        }
-        return eventPs;
+        var eventPs = Enumerable.Range(0, nMutations).Select(i => Sampling.PickRndElem(_rnd, cnEventPs));
+        return eventPs.Select(e => Sampling.GenerateCNEventData(_rnd, kar, e)).ToList();
     }
 
     // The conditional (unnormalized) probability of this set of events occuring, 
@@ -138,13 +111,11 @@ public class Simulator
 
         // Create a dummy karyotype for the events to act on
         var karyotype = node.CopyKaryotype();
-        double sigPotential = 1.0;
 
         // Probability of picking each event and their corresponding signature
         // (ignore normalization, divides out when we do the accept/reject)
         for (int i = 0; i < events.Count; i++)
         {
-            sigPotential *= SelectedSignatures[i].Prob;
             events[i].ApplyEvent(karyotype);
             eventPotentialTotal *= events[i].EventP.Prob;
         }
@@ -158,9 +129,10 @@ public class Simulator
         // Gaussian form
         //double fitnessPotential = Math.Exp(-McParams.ThetaFitness*Math.Pow(dFit,2));
 
-        return fitnessPotential * eventPotentialTotal * sigPotential;
+        return fitnessPotential * eventPotentialTotal;
     }
-    private void MCSampleCNEventsRec(Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap,
+    
+    private void MCSampleCNEventsRec(List<CNEventP> eventsPs, Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap,
         List<CNEvent> events, ref int counter)
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
@@ -182,7 +154,7 @@ public class Simulator
             bool thresholdAccept = false;
 
             // Generate a starting set of mutations and its potential
-            var currentEventProps = InitEvents(node, child.DistToParent);
+            var currentEventProps = InitEvents(node.Karyotype, child.DistToParent, eventsPs);
             double currentPotential = Potential(node, fitnessMap, currentEventProps, ref thresholdAccept);
 
             // Now we perform the Metropolis-Hastings algorithm
@@ -199,10 +171,7 @@ public class Simulator
                 if (_rnd.NextDouble() < _mcParams.SwapEventP)
                 {
                     // Get the new signature and the corresponding event
-                    int mixtureIndex = Sampling.PickRandomIndex(_rnd, node.SigMixture);
-                    var sig = _signatures[mixtureIndex];
-                    SelectedSignatures[index] = sig;
-                    var cnEventP = Sampling.PickRandomEventP(_rnd, sig.Events);
+                    var cnEventP = Sampling.PickRndElem(_rnd, eventsPs);
                     proposedEventProps[index] = Sampling.GenerateCNEventData(_rnd, node.Karyotype, cnEventP);
                 }
                 // Otherwise we modify some quantity of the event, but keep the event itself the same
@@ -246,7 +215,7 @@ public class Simulator
             }
 
             counter++;
-            MCSampleCNEventsRec(child, clones, fitnessMap, events, ref counter);
+            MCSampleCNEventsRec(eventsPs, child, clones, fitnessMap, events, ref counter);
         }
     }
 }

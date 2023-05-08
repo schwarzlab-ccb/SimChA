@@ -33,57 +33,6 @@ public static class Parsers
         return res;
     }
 
-    public static void ValidateEvent(CNEventP cnEventP)
-    {
-        switch (cnEventP.Type)
-        {
-            case CNEventType.Translocation:
-            case CNEventType.ChromDeletion:
-            case CNEventType.ChromDuplication:
-            case CNEventType.BreakageFusionBridge:
-            case CNEventType.WholeGenomeDoubling:
-            case CNEventType.TailDeletion:
-            case CNEventType.InternalDeletion:
-            case CNEventType.InternalDuplication:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-            case CNEventType.Chromothripsis:
-            case CNEventType.Chromoplexy:
-            case CNEventType.TIChain:
-            case CNEventType.TIBridge:
-            case CNEventType.TICycle:
-            case CNEventType.Pyrgo:
-            case CNEventType.Rigma:
-            case CNEventType.Tyfonas:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException($"Unknown event type {cnEventP.Type}");
-        }
-    }
-    
-    // Removes signatures with probability <=0 and validates the rest
-    public static List<Signature> ValidateSignatures(List<Signature>? signatures)
-    {
-        var validated = new List<Signature>();
-        if (signatures is null || signatures.Count == 0)
-        {
-            throw new Exception("No signatures were provided.");
-        }
-        foreach (var sig in signatures.Where(sig => sig.Prob > 0 && sig.Events.Any(e => e.Prob > 0)))
-        {
-            if (sig.Events is null || sig.Events.Count == 0)
-            {
-                throw new Exception($"Signature {sig.Id} does not have any events.");
-            }
-            foreach(var cnEventP in sig.Events)
-            {
-                ValidateEvent(cnEventP);
-            }
-            validated.Add(sig);
-        }
-        return validated;
-    }
-
     private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
     {
         regionsA = RegionOps.StitchRegions(regionsA);
@@ -216,7 +165,7 @@ public static class Parsers
         List<Clone> clones = new();
         if (newickString == "")
         {
-            return clones;
+            throw new Exception("Newick file is empty.");
         }
         const string regexPattern = @"(?<closeChildren>[(])|" +
                                     @"(?<openChildren>[)])|" +
@@ -270,7 +219,6 @@ public static class Parsers
         {
             throw new Exception("No clones found in newick file. Might not be the right format.");
         }
-
         return clones;
     }
 
