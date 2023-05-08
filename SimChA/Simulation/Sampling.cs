@@ -46,7 +46,7 @@ public static class Sampling
 
     public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
     {
-        var localEventPs = eventPs.Select(ev => Math.Max(0, ev.Prob) > 0).ToList();
+        var localEventPs = eventPs.Where(ev => Math.Max(0, ev.Prob) > 0).ToList();
         var probs = localEventPs.Select(ev => ev.Prob).ToList();
         probs = probs.Select(p => p / probs.Sum()).ToList();
         int index = PickRandomIndex(rnd, probs);
