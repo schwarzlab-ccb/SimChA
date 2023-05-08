@@ -191,6 +191,11 @@ public static class RegionOps
     
     public static List<List<Region>> Scatter(List<long> locs, List<Region> regions)
     {
+        if (!locs.Any()) 
+        {
+            return new List<List<Region>> { regions };
+        }
+        
         // First region
         var newRegions = new List<List<Region>> { CopyRange(regions, 0, locs[0]) };
         // Internal regions

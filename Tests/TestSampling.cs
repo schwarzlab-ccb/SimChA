@@ -44,9 +44,15 @@ public class TestSampling
     [Test]
     public void TestIndexPicker()
     {
-        var probs = new List<double> {0.1, 0.2, 0.3, 0.4};
-        int index = Sampling.PickRandomIndex(_rnd, probs);
-        Assert.GreaterOrEqual(index, 0);
-        Assert.Less(index, probs.Count);
+        for (int i = 0; i < 10; i++)
+        {
+            var rnd = new Random();
+            var probs = new List<double> { 0.1, 0.2, 0.0, -1.0, 0.3, 0.4 };
+            int index = Sampling.PickRandomIndex(rnd, probs);
+            Assert.GreaterOrEqual(index, 0);
+            Assert.Less(index, probs.Count);
+            Assert.AreNotEqual(index, 2);
+            Assert.AreNotEqual(index, 3);
+        }
     }
 }

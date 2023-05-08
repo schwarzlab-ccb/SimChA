@@ -19,7 +19,7 @@ public record ChromothripsisEventData : BaseEventData
         double chromothripsisLen = eventP.Get("Size", 100_000_000L);
         int shardCount = Sampling.GetFragCount(rnd, contigLen / chromothripsisLen);
         StopsList = Sampling.GetStopsForShards(rnd, contigLen, shardCount);
-        int shardsKept = rnd.Next(1, StopsList.Count);
+        int shardsKept = rnd.Next(1, shardCount);
         SelectionList = Enumerable.Range(0, shardCount).Shuffle(rnd).Take(shardsKept).ToList();
     }
     

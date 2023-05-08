@@ -16,13 +16,13 @@ public record ChromoplexyEventData : BaseEventData
     // TODO: Validate
     public ChromoplexyEventData(Random rnd, CNEventP eventP, List<(int id, long len)> seq) : base(eventP)
     {
-        int contigCount = Sampling.GetChromoplexySiteCount(rnd);
+        int contigCount = Math.Min(seq.Count, Sampling.GetChromoplexySiteCount(rnd));
         double size = eventP.Get("Size", 10_000_000L);
         ContigIds = new List<int>();
         Stops = new List<List<long>>(); 
         var totalLen = 0L;
         var totalFrags = 0;
-        for (int i = 0; i < Math.Min(contigCount, seq.Count); i++)
+        for (int i = 0; i <contigCount; i++)
         {
             ContigIds.Add(seq[i].id);
             totalLen += seq[i].len;
@@ -31,7 +31,7 @@ public record ChromoplexyEventData : BaseEventData
             Stops.Add(Sampling.GetStopsForShards(rnd, seq[i].len, partsCount));
         }
         Sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount - 1);
+        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount);
     }
 
     public override void ApplyEvent(Karyotype kar)

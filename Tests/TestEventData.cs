@@ -125,13 +125,14 @@ public class TestEventData
         var eventP = new CNEventP(CNEventType.Chromoplexy);
         var frags = new List<(int, long)>
         {
-            (0, 100_000),
-            (1, 1_000_000),
-            (2, 2_000_000),
-            (3, 3_000_000),
+            (0, 1_000_000),
+            (1, 10_000_000),
+            (2, 20_000_000),
+            (3, 30_000_000),
         };
         var eventData = new ChromoplexyEventData(_rnd, eventP, frags);
         Assert.AreEqual(eventData.Stops.Sum(s => s.Count + 1), eventData.Sequence.Count);
         Assert.AreEqual(eventData.ContigIds.Count - 1, eventData.Breakpoints.Count);
+        Console.WriteLine(eventData);
     }
 }
