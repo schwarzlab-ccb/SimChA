@@ -10,10 +10,10 @@ public record TailEventData : ContigEventData
     public bool Direction { get; }
     
     // Constructor used for Tail Events
-    public TailEventData(Random rnd, Karyotype kar, CNEventP eventP, int contigId) : base(eventP, contigId)
+    public TailEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP, contigId)
     {
         long tailSize = eventP.Get("Size", 1_000_000);
-        DelFraction = Sampling.GetExpSeg(rnd, kar.ContigLen(contigId), tailSize);
+        DelFraction = Sampling.GetExpSeg(rnd, contigLen, tailSize);
         Direction = rnd.CoinFlip();
     }
 

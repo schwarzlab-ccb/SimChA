@@ -1,4 +1,6 @@
-﻿namespace SimChA.Simulation;
+﻿using SimChA.DataTypes;
+
+namespace SimChA.Simulation;
 
 public class Clone
 {
@@ -25,7 +27,7 @@ public class Clone
     public static string Header() => "ID\tName\tSex\tParent\tEvents\tPloidy\tMissing\tMixture\tKaryotype";
     private string MixtureToString() => SigMixture.Any() ? string.Join(";", SigMixture) : "-";
     public override string ToString() 
-        => $"{CloneId}\t{Name}\t{Karyotype.Sex}\t{ParentId}\t{DistToParent}\t" +
+        => $"{CloneId}\t{Name}\t{HGRef.Sex(Karyotype.SexXX)}\t{ParentId}\t{DistToParent}\t" +
            $"{Karyotype.CalcPloidy()}\t{Karyotype.CalcMissing()}\t{MixtureToString()}\t{Karyotype}";
     public Karyotype CopyKaryotype() => new(Karyotype);
 }

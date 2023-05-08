@@ -7,7 +7,6 @@ namespace SimChA.Simulation;
 
 public static class Sampling
 {
-    private const double EPSILON = 0.0000000001;
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen - 2));
     
@@ -36,7 +35,7 @@ public static class Sampling
         };
 
     public static List<long> GetStopsForShards(Random rnd, long contigLen, int shardCount) 
-        => Enumerable.Range(0, shardCount)
+        => Enumerable.Range(0, shardCount - 1)
             .Select(_ => GetInternalPos(rnd, contigLen))
             .Distinct()
             .OrderBy(i => i)
@@ -47,7 +46,7 @@ public static class Sampling
 
     public static CNEventP PickRandomEventP(Random rnd, List<CNEventP> eventPs)
     {
-        var localEventPs = eventPs.Where(ev => ev.Prob > EPSILON).ToList();
+        var localEventPs = eventPs.Select(ev => Math.Max(0, ev.Prob) > 0).ToList();
         var probs = localEventPs.Select(ev => ev.Prob).ToList();
         probs = probs.Select(p => p / probs.Sum()).ToList();
         int index = PickRandomIndex(rnd, probs);
@@ -80,15 +79,14 @@ public static class Sampling
     
     public static BaseEventData GenerateCNEventData(Random rnd, Karyotype kar, CNEventP cnEventP)
     {
-        var seq = kar.ContigIds().Shuffle(rnd);
-        int contigId = seq.First();
+        List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
 
         switch (cnEventP.Type)
         {
             // Whole chromosome events
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
-                return new ContigEventData(cnEventP, contigId);
+                return new ContigEventData(cnEventP, seq[0].id);
             
             case CNEventType.WholeGenomeDoubling:
                 return new BaseEventData(cnEventP);
@@ -96,35 +94,34 @@ public static class Sampling
             // Tail events
             case CNEventType.TailDeletion:
             case CNEventType.BreakageFusionBridge:
-                return new TailEventData(rnd, kar, cnEventP, contigId);
+                return new TailEventData(rnd, cnEventP, seq[0].id, seq[0].len);
 
             // Internal events
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-                return new InternalEventData(rnd, kar, cnEventP, contigId);
+                return new InternalEventData(rnd, cnEventP, seq[0].id, seq[0].len);
             
             case CNEventType.Translocation:
-                int secondId = seq.Skip(1).First();
-                return new PairEventData(rnd, kar, cnEventP, contigId, secondId);
+                return new PairEventData(rnd, cnEventP, seq[0].id, seq[0].len, seq[1].id, seq[0].len);
             
             case CNEventType.Chromothripsis:
-                return new ChromothripsisEventData(rnd, kar, cnEventP, contigId);
+                return new ChromothripsisEventData(rnd, cnEventP, seq[0].id, seq[0].len);
 
             case CNEventType.Chromoplexy:
-                return new ChromoplexyEventData(rnd, kar, cnEventP, seq);
+                return new ChromoplexyEventData(rnd, cnEventP, seq);
 
             case CNEventType.Pyrgo:
-                return new PyrgoEventData(rnd, kar, cnEventP, contigId);
+                return new PyrgoEventData(rnd, cnEventP, seq[0].id, seq[0].len);
 
             case CNEventType.Rigma:
-                return new RigmaEventData(rnd, kar, cnEventP, contigId);
+                return new RigmaEventData(rnd, cnEventP, seq[0].id, seq[0].len);
             
             case CNEventType.TIChain:
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
-                return new TemplatedEventData(rnd, kar, cnEventP, seq);
+                return new TemplatedEventData(rnd, cnEventP, seq);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);

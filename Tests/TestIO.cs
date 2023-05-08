@@ -5,11 +5,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Linq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Tests;
 
@@ -149,5 +151,13 @@ public class TestIO
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventP(CNEventType.Rigma, 1.0, ceParams));
         var clone = new Clone(1, -1, "test", 0, kar, 1);
         files.WriteClones(new List<Clone> {clone});
+    }
+
+    [Test]
+    public void TestComp()
+    {
+        string testJson = "{ \"myval\": 0.0 }";
+        var testObj = JsonConvert.DeserializeObject<Dictionary<string, double>>(testJson);
+        Assert.False(testObj["myval"] > 0);
     }
 }

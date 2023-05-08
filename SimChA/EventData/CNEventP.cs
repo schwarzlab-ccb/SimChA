@@ -5,7 +5,7 @@ using SimChA.EventData;
 namespace SimChA.DataTypes;
 
 [Serializable]
-public record CNEventP(CNEventType Type, double Prob, Dictionary<string, double>? Params = null)
+public record CNEventP(CNEventType Type, double Prob = 1, Dictionary<string, double>? Params = null)
 {
     public double Get(string name, double defaultValue)
     {

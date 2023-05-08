@@ -31,8 +31,8 @@ public class TestKaryotype
     {
         _kar = new Karyotype(false);
         _rnd = new Random(0);
-        _del = new CNEventP(CNEventType.ChromDeletion, 1f);
-        _dup = new CNEventP(CNEventType.ChromDuplication, 1f);
+        _del = new CNEventP(CNEventType.ChromDeletion);
+        _dup = new CNEventP(CNEventType.ChromDuplication);
     }
 
     // Test for each AberrationEnum value
@@ -156,7 +156,7 @@ public class TestKaryotype
         Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
         Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
         Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Translocation, 1.0)); });
-        // Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
         Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
         Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Pyrgo, 1.0)); });
         Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Rigma, 1.0)); });
@@ -183,9 +183,9 @@ public class TestKaryotype
         {
             new() { TEST_FRAC * 1, TEST_FRAC * 2 },
             new() { TEST_FRAC * 3, TEST_FRAC * 4, TEST_FRAC * 5 },
-            new() { TEST_FRAC * 6, TEST_FRAC * 7 },
+            new(),
         };
-        var sequence = new List<int> { 0, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+        var sequence = new List<int> { 0, 7, 6, 5, 4, 3, 2, 1 };
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
