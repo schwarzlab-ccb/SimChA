@@ -163,12 +163,20 @@ public class Simulator
     {
         foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
         {
+            // Skip
             Console.WriteLine($"\nTarget Fitness: {fitnessMap[child.Name]}");
             // Initialize all the relevant quantities
             double oldFitness = node.Karyotype.FitnessVal;
             int parentMutations = GetMutations(node, clones);
             child.Karyotype = node.CopyKaryotype();
-
+            
+            // Skip children with no mutational distance
+            if (child.DistToParent == 0)
+            {
+                counter++;
+                MCSampleCNEventsRec(child, clones, fitnessMap, events, ref counter);
+                continue;
+            }
             // Parameters needed for the MH algorithm
             float alterEventStart = 0.5f;
             float alterEventLength = 0.5f;
