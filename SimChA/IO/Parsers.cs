@@ -83,7 +83,7 @@ public static class Parsers
         return validated;
     }
 
-    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
+    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GeneRange> missingRanges, bool sexXX)
     {
         regionsA = RegionOps.StitchRegions(regionsA);
         var contigA = new Contig(regionsA);
@@ -93,7 +93,7 @@ public static class Parsers
         var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, c => false);
         regionsA.ForEach(r => chrPresent[r.ChrNo] = true);
         regionsB.ForEach(r => chrPresent[r.ChrNo] = true);
-        var missingChrs = chrPresent.Where(pair => !pair.Value).Select(pair => new GenRange(0, HGRef.GetChromLen(pair.Key), pair.Key));
+        var missingChrs = chrPresent.Where(pair => !pair.Value).Select(pair => new GeneRange(0, HGRef.GetChromLen(pair.Key), pair.Key));
         var totalMissing = missingChrs.Concat(missingRanges).ToList();
         return new Karyotype(new List<Contig> {contigA, contigB}, totalMissing, sexXX);
     }
@@ -101,7 +101,7 @@ public static class Parsers
     public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
-        var missingRanges = new List<GenRange>();
+        var missingRanges = new List<GeneRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
         bool sexXX = true;
@@ -149,7 +149,7 @@ public static class Parsers
                 // Range skipped
                 if (lastPos != start)
                 {
-                    missingRanges.Add(new GenRange(lastPos, start, lastChr));
+                    missingRanges.Add(new GeneRange(lastPos, start, lastChr));
                 }
             }
             else
@@ -157,12 +157,12 @@ public static class Parsers
                 // Till the end of a chromosome
                 if (lastPos != HGRef.GetChromLen(lastChr))
                 {
-                    missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
+                    missingRanges.Add(new GeneRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
                 }
                 // Start of a chromosome
                 if (start != 0)
                 {
-                    missingRanges.Add(new GenRange(0, start, chrNo));
+                    missingRanges.Add(new GeneRange(0, start, chrNo));
                 }
             }
             lastChr = chrNo;
@@ -199,7 +199,7 @@ public static class Parsers
             double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
             var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[0]);
             // Convert to zero-based [start, end) index 
-            var region = new GenRange(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrNum);
+            var region = new GeneRange(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrNum);
             var gene = new Gene(name, region, fitness);
             geneList[chrNum].Add(gene);
         }
