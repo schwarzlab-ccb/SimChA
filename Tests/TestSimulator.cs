@@ -17,7 +17,7 @@ public class TestSimulator
     private List<CNEventP> _eventPs;
     private FitnessParams _fitness;
     private Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-    private Dictionary<string, double> _fitnessDict;
+    private Dictionary<int, double> _fitnessDict;
     private int _seed;
     private bool _sexXX;
     private Clone _clone;
@@ -39,7 +39,7 @@ public class TestSimulator
             {GeneListType.Oncogene, new Dictionary<ChrNo, List<Gene>>()}
         };
         _sim = new Simulator(_rnd, _fitness, _mcParams, _geneLists);
-        _fitnessDict = new Dictionary<string, double> { {"0", 1.0} };
+        _fitnessDict = new Dictionary<int, double> { {0, 1.0} };
         var kar = new Karyotype(_sexXX);
         _clone = new Clone(0, -1, "0", 0, kar, 1);
     }

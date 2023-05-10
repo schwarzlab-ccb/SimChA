@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.VisualBasic;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
@@ -211,7 +212,6 @@ public static class Parsers
                     var child = CreateClone(clones.Count, parentId, match.NextMatch(),
                         match.NextMatch().NextMatch(), isFemale, branchLength, clones[parentId].TotalMutations);
                     clones.Add(child);
-                    clones[parentId].ChildrenIDs.Add(clones.Count - 1);
                     break;
             }
         }
@@ -232,19 +232,12 @@ public static class Parsers
         bool branchLength,
         int parentMutations)
     {
-        string nameClone = nameMatch.Groups["nodeName"].Value != ""
-            ? nameMatch.Value
-            : branchLengthMatch.Groups["nodeName"].Value != ""
-                ? branchLengthMatch.Value
-                : $"{id}";
+ 
         int mutCount = branchLengthMatch.Groups["branchLength"].Value != ""
-            ?
-            (int) Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0, 1)))
-            : branchLength
-                ? 0
-                : 1;
+            ? (int) Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0, 1)))
+            : branchLength ? 0 : 1;
         int totalMut = parentMutations + mutCount;
-        var clone = new Clone(id, parentId, nameClone, mutCount, new Karyotype(isFemale), totalMut);
+        var clone = new Clone(id, parentId,  mutCount, new Karyotype(isFemale), totalMut);
         return clone;
     }
 
@@ -265,16 +258,23 @@ public static class Parsers
         return branchLength;
     }
 
-    public static Dictionary<string, double> ParseFitness(string file)
+    public static Dictionary<int, double> ParseClones(StreamReader cloneStream)
     {
-        var fitnessDict = new Dictionary<string, double>();
-        var textLines = File.ReadAllLines(file);
-        foreach(var line in textLines)
+        string? firstLine = cloneStream.ReadLine();
+        if (firstLine == null) throw new Exception("Clone file is empty.");
+        var header = firstLine.Split(",").Select(s => s.Trim()).ToList();
+        int idIndex = header.IndexOf("ID");
+        if (idIndex == -1) throw new Exception("Clone file does not contain ID column.");
+        int fitnessIndex = header.IndexOf("Fitness");
+        if (fitnessIndex == -1) throw new Exception("Clone file does not contain Fitness column.");
+        var cloneFitness = new Dictionary<int, double>();
+        while (cloneStream.ReadLine() is { } line)
         {
-            var fitness = Double.Parse(line.Split("Fitness: ")[1], System.Globalization.CultureInfo.InvariantCulture);
-            var id = line.Split("ID:")[1].Split(',')[0];
-            fitnessDict.Add(id, fitness);
+            var lineSplit = line.Split(",").Select(s => s.Trim()).ToList();
+            int id = int.Parse(lineSplit[idIndex]);
+            double fitness = double.Parse(lineSplit[fitnessIndex], CultureInfo.InvariantCulture.NumberFormat);
+            cloneFitness.Add(id, fitness);
         }
-        return fitnessDict;
+        return cloneFitness;
     }
 }

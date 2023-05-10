@@ -4,7 +4,6 @@ namespace SimChA.EventData;
 
 public record CNEvent(
     int CloneId,  
-    int NrOfMutation,
     CNEventType EventType,
     string Description = "",
     double DeltaFitness = 0, 

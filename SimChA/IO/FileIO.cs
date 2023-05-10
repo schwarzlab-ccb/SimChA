@@ -10,13 +10,10 @@ namespace SimChA.IO;
 
 public class FileIO
 {
-    private const string DOT_FILENAME = "parent_graph.dot";
     private const string NEWICK_FILENAME = "parent_graph.new";
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string SUBCLONES_FILENAME = "clones.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
-    private const string BAF_FILENAME = "baf.out";
-    private const string LOGR_FILENAME = "logr.out";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
@@ -88,7 +85,8 @@ public class FileIO
             foreach (var clone in sample.Clones)
             {
                 var copynumbers = CopyNumbers.CalcCopyNumbers(clone.Karyotype, sample.SexXX);
-                copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, clone.Name, false) + "\n");
+                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, name, false) + "\n");
             }
             outputFile.Write(copyNumbersString.ToString());
         }
@@ -117,8 +115,7 @@ public class FileIO
                                     $"{cnEvent.EventType}\t" +
                                     $"{cnEvent.Description}\t" +
                                     $"{Math.Round((decimal)cnEvent.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
-                                    $"{Math.Round((decimal)cnEvent.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
-                                    $"{cnEvent.NrOfMutation.ToString()}\n");
+                                    $"{Math.Round((decimal)cnEvent.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t");
         }
         outputFile.Write(abberationString.ToString());
     }
@@ -150,7 +147,25 @@ public class FileIO
             }
         }
     }
-    
+
+    public static Dictionary<int, double> ReadFitnessMap(string filePath)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var cloneFile = new StreamReader(fileFullPath);
+            return Parsers.ParseClones(cloneFile);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
     public static SimParams ReadSimParams(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);
@@ -235,17 +250,5 @@ public class FileIO
         {
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
-    }
-
-    public static Dictionary<string, double>ReadFitnessValues(string newickFile)
-    {
-        var fitnessDict = new Dictionary<string, double>();
-        string fileFullPath = Path.GetDirectoryName(Path.GetFullPath(newickFile));
-        if (!File.Exists(Path.Combine(fileFullPath, FITNESS_INPUT_FILE)))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        fitnessDict = Parsers.ParseFitness(Path.Combine(fileFullPath, FITNESS_INPUT_FILE));
-        return fitnessDict;
     }
 }

@@ -51,7 +51,7 @@ public static class Converters
             double dist = Sampling.SampleDist(rnd, distribution);
             var mutCount = (int)Math.Round(meanDist * dist);
             bool sexXX = rnd.CoinFlip();
-            var clone = new Clone(0, -1, $"{0}-{mutCount}", mutCount, new Karyotype(sexXX), mutCount);
+            var clone = new Clone(0, -1, mutCount, new Karyotype(sexXX), mutCount);
             var events = PropagateSigs(selectedSigs, mixture);
             var sample = new Sample($"Sample{i + 1}", sexXX, new List<Clone> { clone }, events);
             samples.Add(sample);

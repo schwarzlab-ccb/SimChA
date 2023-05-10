@@ -38,7 +38,6 @@ files.WriteSimParams(simParams);
 
 // Obtain clones
 var newickContent = "";
-var fitnessDict = new Dictionary<string, double>();
 List<Sample> samples;
 List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
@@ -57,7 +56,7 @@ else
         newickContent = FileIO.ReadNewick(options.Value.NewickFile);
         var clones = Parsers.ParseNewick(newickContent, simParams.SexXX);
         var eventPs = Converters.PropagateSigs(sigs);
-        var newickSample = new Sample("Newick", simParams.SexXX, clones, eventPs);
+        var newickSample = new Sample("clone_tree", simParams.SexXX, clones, eventPs);
         samples = new List<Sample> { newickSample };
     }
     else
@@ -67,7 +66,7 @@ else
     foreach (var sample in samples)
     {
         // Monte Carlo sampling of copy-number altering events
-        if (options.Value.MCMC_ON)
+        if (options.Value.UseMCMC)
         {
             if (simParams.MCParams == null)
             {
@@ -75,6 +74,7 @@ else
             }
             else
             {
+                var fitnessDict = FileIO.ReadFitnessMap(options.Value.TargetFit);
                 Console.WriteLine("Sampling possible events to produce this clone");
                 cnEvents = simulator.MCSampleEvents(sample, fitnessDict);
             }

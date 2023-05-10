@@ -8,8 +8,9 @@ public class Simulator
 {
     private readonly Random _rnd;
     private readonly FitnessParams _fitness;
-    private readonly MCParams _mcParams;
+    private readonly MCParams? _mcParams;
     private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
+    private int _counter;
 
     public Simulator(
         Random rnd,
@@ -22,11 +23,7 @@ public class Simulator
         _mcParams = mcParams;
         _geneLists = geneLists;
     }
-
-    // calculate the number of nodes in the tree given by clones from the rootClone
-    private static int GetTreeNodeCount(Clone root, List<Clone> clones)
-        => 1 + root.ChildrenIDs.Select(id => GetTreeNodeCount(clones[id], clones)).Sum();
-
+    
     public List<CNEvent> SampleEvents(Sample sample)
     {
         if (sample.EventPs == null || !sample.EventPs.Any())
@@ -34,41 +31,33 @@ public class Simulator
             throw new Exception("No events to sample from.");
         }
         var events = new List<CNEvent>();
-        int counter = 1;
-        ApplyCNEventsRec(sample.EventPs, sample.Clones.First(), sample.Clones, events, ref counter);
+        var (root, childLoopUp) = Clone.CreateLookUp(sample.Clones);
+        _counter = 0;
+        ApplyCNEventsRec(sample.EventPs, root, childLoopUp, events);
         return events;
     }
 
-    private void ApplyCNEventsRec(List<CNEventP> eventsPs, Clone node, List<Clone> clones, List<CNEvent> eventSeq, ref int counter)
+    private void ApplyCNEventsRec(List<CNEventP> eventsPs, Clone node, Dictionary<int, List<Clone>> clones, List<CNEvent> eventSeq)
     {
-        foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
+        foreach (var child in clones[node.CloneId])
         {
             child.Karyotype = node.CopyKaryotype();
             double oldFitness = node.Karyotype.FitnessVal;
-            int parentMutations = GetMutations(node, clones);
             for (var mutNo = 0; mutNo < child.DistToParent; mutNo++)
             {
-                Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
+                Console.Write($"\rClone {_counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
                 var eventP =Sampling.PickRndElem(_rnd, eventsPs);
                 var eventData = Sampling.GenerateCNEventData(_rnd, child.Karyotype, eventP);
                 eventData.ApplyEvent(child.Karyotype);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
-                int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventData.ToString(), dFit, newFitness);
+                var abberation = new CNEvent(child.CloneId, eventP.Type, eventData.ToString(), dFit, newFitness);
                 eventSeq.Add(abberation);
                 oldFitness = newFitness;
             }
-            counter++;
-            ApplyCNEventsRec(eventsPs, child, clones, eventSeq, ref counter);
+            _counter++;
+            ApplyCNEventsRec(eventsPs, child, clones, eventSeq);
         }
-    }
-
-    private static int GetMutations(Clone clone, IReadOnlyList<Clone> clones)
-    {
-        int mutCount = clone.ParentId != -1 ? GetMutations(clones[clone.ParentId], clones) : 0;
-        mutCount += clone.DistToParent;
-        return mutCount;
     }
     
     public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
@@ -76,22 +65,22 @@ public class Simulator
         var samples = new List<Sample>();
         foreach (var profile in profiles)
         {
-            var clone = new Clone(0, -1, "0", 0, profile.Value, 0);
+            var clone = new Clone(0, -1, 0, profile.Value, 0);
             var sample = new Sample(profile.Key, profile.Value.SexXX, new List<Clone>{ clone });
             samples.Add(sample);
         }
         return samples;
     }
 
-    public List<CNEvent> MCSampleEvents(Sample sample, Dictionary<string, double> fitnessMap)
+    public List<CNEvent> MCSampleEvents(Sample sample, Dictionary<int, double> fitnessMap)
     {        
         if (sample.EventPs == null || !sample.EventPs.Any())
         {
             throw new Exception("No events to sample from.");
         }
         List<CNEvent> events = new();
-        var counter = 1;
-        MCSampleCNEventsRec(sample.EventPs, sample.Clones.First(), sample.Clones, fitnessMap, events, ref counter);
+        var (root, childLoopUp) = Clone.CreateLookUp(sample.Clones);
+        MCSampleCNEventsRec(sample.EventPs, root, childLoopUp, fitnessMap, events);
         return events;
     }
 
@@ -103,11 +92,11 @@ public class Simulator
 
     // The conditional (unnormalized) probability of this set of events occuring, 
     // given the individual events and the signature
-    public double Potential(Clone node, Dictionary<string, double> fitnessMap,
+    public double Potential(Clone node, Dictionary<int, double> fitnessMap,
         List<BaseEventData> events, ref bool thresholdAccept)
     {
         double eventPotentialTotal = 1.0;
-        double targetFitness = fitnessMap[node.Name];
+        double targetFitness = fitnessMap[node.CloneId];
 
         // Create a dummy karyotype for the events to act on
         var karyotype = node.CopyKaryotype();
@@ -132,10 +121,10 @@ public class Simulator
         return fitnessPotential * eventPotentialTotal;
     }
     
-    private void MCSampleCNEventsRec(List<CNEventP> eventsPs, Clone node, List<Clone> clones, Dictionary<string, double> fitnessMap,
-        List<CNEvent> events, ref int counter)
+    private void MCSampleCNEventsRec(List<CNEventP> eventsPs, Clone node, Dictionary<int, List<Clone>> clones, 
+        Dictionary<int, double> fitnessMap, List<CNEvent> events)
     {
-        foreach (var child in node.ChildrenIDs.Select(cloneId => clones[cloneId]))
+        foreach (var child in clones[node.CloneId])
         {
             // Skip any clones that don't have any mutational distance from their
             // parent
@@ -144,7 +133,6 @@ public class Simulator
 
             // Initialize all the relevant quantities
             double oldFitness = node.Karyotype.FitnessVal;
-            int parentMutations = GetMutations(node, clones);
 
             // Parameters needed for the MH algorithm
             float alterEventStart = 0.5f;
@@ -203,19 +191,16 @@ public class Simulator
             child.Karyotype = node.CopyKaryotype();
             for (int mutNo = 0; mutNo < currentEventProps.Count; mutNo++)
             {
-                Console.Write($"\rClone {counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
+                Console.Write($"\rClone {_counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.DistToParent}.");
                 var eventData = currentEventProps[mutNo];
                 eventData.ApplyEvent(child.Karyotype);
                 double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
-                int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEvent(child.CloneId, mutationCount, eventData.EventType, 
-                    eventData.ToString(), dFit, newFitness);
+                var abberation = new CNEvent(child.CloneId, eventData.EventType, eventData.ToString(), dFit, newFitness);
                 events.Add(abberation);
             }
-
-            counter++;
-            MCSampleCNEventsRec(eventsPs, child, clones, fitnessMap, events, ref counter);
+            _counter++;
+            MCSampleCNEventsRec(eventsPs, child, clones, fitnessMap, events);
         }
     }
 }

@@ -21,7 +21,7 @@ public class TestIO
     [Test]
     public void TestContig()
     {
-        var clone = new Clone(-1, 0, "test", 1, new Karyotype(false), 1);
+        var clone = new Clone(-1, 0, 1, new Karyotype(false), 1);
         Assert.DoesNotThrow(() => clone.ToString());
     }
     
@@ -106,7 +106,6 @@ public class TestIO
             {
                 Console.WriteLine($"String {i}: " +
                                   $"ID={clone.CloneId}, " +
-                                  $"Name={clone.Name}, " +
                                   $"ParentID={clone.ParentId}, " +
                                   $"Mutations={clone.DistToParent}, " +
                                   $"ChildrenCount={clone.ChildrenIDs.Count}");
@@ -149,7 +148,7 @@ public class TestIO
         var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventP(CNEventType.Rigma, 1.0, ceParams));
-        var clone = new Clone(1, -1, "test", 0, kar, 1);
+        var clone = new Clone(1, -1, 0, kar, 1);
         files.WriteClones(new List<Sample> { new Sample("test",  false, new List<Clone> { clone })});
     }
 
