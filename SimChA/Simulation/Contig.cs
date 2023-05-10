@@ -138,6 +138,6 @@ public class Contig
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);
     
-    public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
+    public IEnumerable<Gene> GetPresentGenes(GeneListType geneListType)
+        => _regions.Where(r => r.Forward).SelectMany(r => r.GeneLists[geneListType]).ToList();
 }

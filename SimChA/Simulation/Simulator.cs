@@ -50,7 +50,7 @@ public class Simulator
                 Console.Write($"\rClone {counter}/{clones.Count-1}. Event {mutNo+1}/{child.DistToParent}.");
                 var eventP = Sampling.PickRandomEventP(_rnd, cnEventParams);
                 string eventString = child.Karyotype.ApplyCNEvent(_rnd, eventP);
-                double newFitness = child.Karyotype.UpdateFitness(_geneLists, _fitness);
+                double newFitness = child.Karyotype.UpdateFitness();
                 int mutationCount = parentMutations + 1 + mutNo;
                 double dFit = newFitness - oldFitness;
                 var abberation = new CNEvent(child.CloneId, mutationCount, eventP.Type, eventString, dFit, newFitness);

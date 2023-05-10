@@ -29,10 +29,11 @@ else
     simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null);
 }
 
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX, simParams.Assembly);
+Fitness.SetStartingParams(geneLists, simParams.Fitness);
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
 // Obtain clones

@@ -1,5 +1,5 @@
 ﻿using SimChA.DataTypes;
-using SimChA.Misc;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.Computation;
@@ -33,20 +33,36 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
-                var newRegion = region with {End = region.End + start - seekPos - region.Length};
+                var newRegion = region with 
+                {
+                    End = region.End + start - seekPos - region.Length,
+                    GeneLists = Fitness.GetGeneList(region.Start, region.End + start - seekPos - region.Length, region.ChrNo)
+                };
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region, end inside the region
             {
-                var newRegion = region with {Start = region.Start - seekPos + end};
+                var newRegion = region with 
+                {
+                    Start = region.Start - seekPos + end,
+                    GeneLists = Fitness.GetGeneList(region.Start - seekPos + end, region.End, region.ChrNo)                    
+                };
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var firstRegion = region with {End = region.End + start - seekPos - region.Length};
+                var firstRegion = region with 
+                {
+                    End = region.End + start - seekPos - region.Length,
+                    GeneLists = Fitness.GetGeneList(region.Start, region.End + start - seekPos - region.Length, region.ChrNo)
+                };
                 AddIfNotEmpty(newRegions, firstRegion);
 
-                var secondRegion = region with {Start = region.Start - seekPos + end};
+                var secondRegion = region with 
+                {
+                    Start = region.Start - seekPos + end,
+                    GeneLists = Fitness.GetGeneList(region.Start - seekPos + end, region.End, region.ChrNo)
+                };
                 AddIfNotEmpty(newRegions, secondRegion);
             }
 
@@ -75,17 +91,30 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // end outside of region
             {
-                var newRegion = region with { Start = region.Start + start - seekPos};
+                var newRegion = region with 
+                { 
+                    Start = region.Start + start - seekPos,
+                    GeneLists = Fitness.GetGeneList(region.Start + start - seekPos, region.End, region.ChrNo)
+                };
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region
             {
-                var newRegion = region with {End = region.Start + (end - seekPos)};
+                var newRegion = region with 
+                {
+                    End = region.Start + (end - seekPos),
+                    GeneLists = Fitness.GetGeneList(region.Start, region.Start + (end - seekPos), region.ChrNo)
+                };
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var newRegion = region with {Start = region.Start + start - seekPos, End = region.Start + end -  seekPos}; 
+                var newRegion = region with 
+                {
+                    Start = region.Start + start - seekPos,
+                    End = region.Start + end -  seekPos,
+                    GeneLists = Fitness.GetGeneList(region.Start + start - seekPos, region.Start + end - seekPos, region.ChrNo)
+                }; 
                 AddIfNotEmpty(newRegions, newRegion);
             }
 
@@ -112,9 +141,17 @@ public static class RegionOps
             }
             else // split inside the region
             {
-                var firstPart = region with { End = region.Start + pos - seekPos };
+                var firstPart = region with 
+                { 
+                    End = region.Start + pos - seekPos,
+                    GeneLists = Fitness.GetGeneList(region.Start, region.Start + pos - seekPos, region.ChrNo)
+                };
                 AddIfNotEmpty(beforeRegions, firstPart);
-                var secondPart = region with { Start = firstPart.End};
+                var secondPart = region with 
+                { 
+                    Start = firstPart.End,
+                    GeneLists = Fitness.GetGeneList(firstPart.End, region.End, region.ChrNo)
+                };
                 AddIfNotEmpty(afterRegions, secondPart);
             }
 
@@ -124,7 +161,7 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
 
-    public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
+    public static List<T> StitchRegions<T>(List<T> regions) where T : GeneRange
     {
         var newRegions = new List<T>();
         var merged = new bool[regions.Count];
@@ -143,7 +180,11 @@ public static class RegionOps
                 {
                     continue;
                 }
-                newRegion = newRegion with {End = regions[j].End};
+                newRegion = newRegion with 
+                {
+                    End = regions[j].End,
+                    GeneLists = Fitness.GetGeneList(newRegion.Start, regions[j].End, newRegion.ChrNo)
+                };
                 merged[j] = true;
             }
             newRegions.Add(newRegion);
@@ -169,7 +210,11 @@ public static class RegionOps
                 && regions[j].Start == newRegion.End 
                 && regions[j].Forward == newRegion.Forward)
             {
-                newRegion = newRegion with {End = regions[j].End};
+                newRegion = newRegion with 
+                {
+                    End = regions[j].End,
+                    GeneLists = Fitness.GetGeneList(newRegion.Start, regions[j].End, newRegion.ChrNo)
+                };
                 merged[j] = true;
             }
             newRegions.Add(newRegion);

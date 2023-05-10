@@ -73,12 +73,12 @@ public class Karyotype
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
 
-    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+    public List<Gene> GetPresentGenes(GeneListType geneListType)
+        => _contigs.SelectMany(c => c.GetPresentGenes(geneListType)).ToList();
     
-    public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
-        => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
-    
+    public double UpdateFitness()
+        => FitnessVal = Fitness.Calculate(this);
+
     public string ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
