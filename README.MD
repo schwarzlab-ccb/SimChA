@@ -62,8 +62,9 @@ Use `dotnet run -- [options]` to specify any of the following:
 ```
   -O, --output    (Default: ./out) The path to the output files.
   -C, --config    (Default: ./default_params.json) A json file with configuration of the experiment.
-  -N --newick path     A path to a newick file with the phylogenetic tree.
+  -T --tree path     A path to a newick with a phylogenetic tree. The file must contain columns "ID", "ParentID", and "Distance". For MCMC, also "Fitness" must be included.
   -R --repeats n   Will run the simulation and generate n independent samples.
+  -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
   -P --profile path   A path to a file with copy number profiles.
   --data (Default: ./data) The path for the tsv-files with the essential-, tsg- and og-genes with scores. The files should be named: essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.
 ```
@@ -123,7 +124,7 @@ A single chromosome is selected, then an either end thereof, lastly a length of 
 
 ##### Params:
 * `Prob: float`,
-* `Mean: float`.
+* `Size: long`.
 
 ### Internal Deletion
 
@@ -131,7 +132,7 @@ A single chromosome is selected, then a length of the segmend. This segment is t
 
 ##### Params:
 * `Prob: float`,
-* `Mean: float`.
+* `Size: long`.
 
 ### Internal Duplication
 A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
@@ -140,21 +141,21 @@ A single chromosome is selected, then a length of the segmend. This segment is t
 
 ##### Params:
 * `Prob: float`,
-* `Mean: float`.
+* `Size: long`.
 
 ### Internal Inversion
 A single chromosome is selected, then a length of the segmend. This segment is then cut and pasted to the original position in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
 
 ##### Params:
 * `Prob: float`,
-* `Mean: float`.
+* `Size: long`.
 
 ### Inverted Duplication
 A single chromosome is selected, then a length of the segmend. This segment is then copied and pasted at the end of the segment in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
 
 ##### Params:
 * `Prob: float`,
-* `Mean: float`.
+* `Size: long`.
 
 ### Translocation
 Two chromosomes are selected and on each of those a single uniformly distributed position. 
@@ -175,7 +176,7 @@ A chromosome and its tail is selected (see above). The tail is then removed, the
 
 ##### Params:
 * `Prob: float`,
-* `Mean: float`.
+* `Size: long`.
 
 ### WholeGenomeDoubling
 
