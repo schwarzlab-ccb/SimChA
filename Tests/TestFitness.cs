@@ -3,10 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -103,5 +105,29 @@ public class TestFitness
         Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, fit), EPSILON);
 
         // TODO: Test the linear combination
+    }
+
+    [Test]
+    public void TestOnDataMale()
+    {
+        const bool sexXX = false;
+        const string dataPath = "./../../../../data";
+        var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, GenomeAssembly.hg19);
+        var karyotype = new Karyotype(sexXX);
+        var fit = new FitnessParams(1, 1, 1);
+        var fitness = Fitness.Calculate(karyotype, geneLists, fit);
+        Assert.AreEqual(1.0, fitness, EPSILON);
+    }
+
+    [Test]
+    public void TestOnDataFemale()
+    {
+        const bool sexXX = true;
+        const string dataPath = "./../../../../data";
+        var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, GenomeAssembly.hg19);
+        var karyotype = new Karyotype(sexXX);
+        var fit = new FitnessParams(1, 1, 1);
+        var fitness = Fitness.Calculate(karyotype, geneLists, fit);
+        Assert.AreEqual(1.0, fitness, EPSILON);
     }
 }

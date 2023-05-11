@@ -3,11 +3,11 @@
   "SexXX": true,
   "EventCount": 100,
   "Distribution": "Exponential",
-  "Assembly": "hg38",
+  "Assembly": "hg19",
   "Fitness": {
-    "Stress": 1,
-    "TsgOg": 1,
-    "Essentiality": 1
+    "Stress": 0.1,
+    "TsgOg": 0.01,
+    "Essentiality": 0.01
   },
   "Signatures": [
     {

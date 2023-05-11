@@ -57,9 +57,8 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-
-        var copyNumbersString = new StringBuilder();
-        copyNumbersString.Append("sample_id\tchr\tstart\tend\tcn_a\tcn_b\n");
+        
+        outputFile.WriteLine("sample_id\tchr\tstart\tend\tcn_a\tcn_b");
 
         foreach (var sample in samples)
         {
@@ -67,9 +66,8 @@ public class FileIO
             {
                 var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
-                copyNumbersString.Append(CopyNumbers.ToTSV(cns, name, false) + "\n");
+                outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false) + "\n");
             }
-            outputFile.Write(copyNumbersString.ToString());
         }
     }
 
@@ -174,7 +172,7 @@ public class FileIO
     
     public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
         string folder,
-        bool isFemale,
+        bool sexXX,
         GenomeAssembly assembly)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
@@ -195,7 +193,7 @@ public class FileIO
             try
             {
                 var geneFile = new StreamReader(fileFullPath);
-                geneLists[key] = Parsers.ParseGeneList(geneFile, isFemale);
+                geneLists[key] = Parsers.ParseGeneList(geneFile, sexXX);
             }
             catch (Exception e)
             {
