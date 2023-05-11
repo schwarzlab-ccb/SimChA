@@ -59,7 +59,7 @@ public class FileIO
         using var outputFile = new StreamWriter(outPath);
 
         var copyNumbersString = new StringBuilder();
-        copyNumbersString.Append("sample_id\tclone_id\tchr\tstart\tend\tcn_a\tcn_b\n");
+        copyNumbersString.Append("sample_id\tchr\tstart\tend\tcn_a\tcn_b\n");
 
         foreach (var sample in samples)
         {
@@ -125,14 +125,14 @@ public class FileIO
         var myT = typeof(CloneStat);
         var fileds = myT.GetProperties();
         var fieldNames = fileds.Select(f => f.Name).ToList();
-        file.WriteLine("sample_id\t" + string.Join("\t", fieldNames));
+        file.WriteLine("sample_id\t" + string.Join("\t", fieldNames)); // TODO: Do this explicitly
         foreach (var sample in sampleStats)
         {
             foreach (var clone in sample.Value)
             {
                 // Get all the field values of the record sample
                 var values = fileds.Select(f => $"{f.GetValue(clone):f4}");
-                file.WriteLine(sample.Key + "\t" + string.Join("\t", values));
+                file.WriteLine(sample.Key + "\t" + string.Join("\t", values)); // TODO: Do this explicitly
             }
         }
     }

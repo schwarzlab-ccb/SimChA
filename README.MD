@@ -20,6 +20,14 @@ The program has been tested on:
 * Ubuntu 20
 * MacOS X 10 
 
+### Gene Data
+
+The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so in order for SimChA to work, you will need to download Git LFS (https://git-lfs.com/) and once you have install Git LFS, inside the repo, run:
+```
+git lfs pull
+```
+
+
 ### Simulation
 
 The simulation code is written in **C# 8**. **.NET 6.1** is requred. We recommend installation using *Conda*:

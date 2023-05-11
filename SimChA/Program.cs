@@ -35,7 +35,6 @@ files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
-// Obtain clones
 List<Sample> samples;
 if (options.Value.CNProfiles != "")
 {
@@ -92,10 +91,7 @@ try
     files.WriteSamples(samples);
     files.WriteCopyNumbers(samples);
     files.WriteFitness(stats);
-    if (samples.Any(s => s.Kars.Any()))
-    {
-        files.WriteKaryotypes(samples);
-    }
+    files.WriteKaryotypes(samples);
     if (samples.Any(s => s.EventDescs.Any()))
     {
         files.WriteEvents(samples);

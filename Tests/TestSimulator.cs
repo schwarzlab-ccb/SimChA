@@ -50,35 +50,9 @@ public class TestSimulator
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
         var sim = new Simulator(_rnd, _fitness, listGenes);
-        double potential = sim.Potential(_mcParams, _kar, 1, events, ref threshold);
-        Assert.AreEqual(potential,1.0,EPSILON);
+        double potential = sim.Potential(_mcParams, _kar, 1, events).potential;
+        Assert.AreEqual(potential,0.0,EPSILON);
     }
-    
-    // [Test]
-    // public void TestInitEventPs()
-    // {
-    //     // Test 0 generation
-    //     int nMutations = 0;
-    //     var emptyEventPs = _sim.InitEventPs(_clone, nMutations).ToList();
-    //     Assert.AreEqual(emptyEventPs.Count, nMutations);
-    //     
-    //     // Test that it generates the correct number of mutations needed
-    //     nMutations = 5;
-    //     var cnEventPars = _sim.InitEventPs(_clone, nMutations).ToList();
-    //     Assert.AreEqual(cnEventPars.Count, nMutations);
-    //     
-    //     // Test that it will never sample 0 prob events
-    //     var events = new List<CNEventPars> {new(CNEventType.ChromDuplication, 1), new(CNEventType.ChromDeletion, 0)};
-    //     var sigs = new List<Signature> { new("test", 1, events)};
-    //     _sim = new Simulator(_rnd, _fitness, sigs, _mcParams, _geneLists);
-    //     nMutations = 5;
-    //     cnEventPars = _sim.InitEventPs(_clone, nMutations).ToList();
-    //     foreach (var e in cnEventPars)
-    //     {
-    //         Assert.AreEqual(e.Type, CNEventType.ChromDuplication);
-    //     }
-    //     Assert.AreEqual(cnEventPars.Count, nMutations);
-    // }
 
     [Test]
     public void TestInitEvents()
@@ -86,7 +60,7 @@ public class TestSimulator
         // Test that it will never sample 0 prob signatures
         // Init a new Simulator instance
         var sim = new Simulator(_rnd, _fitness, _geneLists);
-        int nMutations = 5;
+        const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)
         {
