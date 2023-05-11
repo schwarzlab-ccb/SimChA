@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -48,7 +49,7 @@ public class TestSampling
         {
             var rnd = new Random();
             var probs = new List<double> { 0.1, 0.2, 0.0, -1.0, 0.3, 0.4 };
-            int index = Sampling.PickRndIndex(rnd, probs);
+            int index = Extensions.PickRndIndex(rnd, probs);
             Assert.GreaterOrEqual(index, 0);
             Assert.Less(index, probs.Count);
             Assert.AreNotEqual(index, 2);

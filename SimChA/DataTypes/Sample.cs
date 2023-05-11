@@ -13,6 +13,7 @@ public class Sample
     public List<CNEventPars> EventPars { get;  }
     public Dictionary<int, Karyotype> Kars { get; }
     public Dictionary<int, List<CNEventDesc>> EventDescs { get; }
+    public Dictionary<int, CloneStat> Stats { get; }
 
     public Sample(string sampleId, bool sexXX, List<CloneIn> clones,  List<CNEventPars> eventPars)
     {
@@ -22,9 +23,10 @@ public class Sample
         EventPars = eventPars;
         Kars = new Dictionary<int, Karyotype>();
         EventDescs = new Dictionary<int, List<CNEventDesc>>();
+        Stats = new Dictionary<int, CloneStat>();
     }
     
-    public static string Header() => "sample_id\tsex_xx\tclone_count\tmixture";
-    private string MixtureString() => EventPars.Any() ? string.Join(";", EventPars.Select(e => e.Prob)) : "-" ;
-    public string ToTSV() => $"{SampleId}\t{SexXX}\t{Clones.Count}\t{MixtureString()}";
+    public static string Header() => "sample_id\tsex\tclone_count\tmixture";
+    private string MixtureString() => EventPars.Any() ? string.Join(";", EventPars.Select(e => $"{e.Type}:{e.Prob:f4}")) : "-";
+    public string ToTSV() => $"{SampleId}\t{HGRef.Sex(SexXX)}\t{Clones.Count}\t{MixtureString()}";
 }

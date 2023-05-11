@@ -1,4 +1,6 @@
-﻿namespace SimChA.Computation;
+﻿using SimChA.DataTypes;
+
+namespace SimChA.Computation;
 
 public static class Extensions
 {
@@ -31,4 +33,33 @@ public static class Extensions
             action(item);
         }
     }
+    public static int PickRndIndex(this Random rnd, List<double> elems) 
+    {
+        double val = rnd.NextDouble();
+        for (int i = 0; i < elems.Count; i++)
+        {
+            if (val < elems[i])
+            {
+                return i;
+            }
+            val -= elems[i];
+        }
+        return elems.Count - 1;
+    }
+    public static int PickRndIndex<T>(this Random rnd, List<T> elems) where T : IHasProb
+    {
+        double val = rnd.NextDouble();
+        for (int i = 0; i < elems.Count; i++)
+        {
+            if (val < elems[i].Prob)
+            {
+                return i;
+            }
+            val -= elems[i].Prob;
+        }
+        return elems.Count - 1;
+    }
+    
+    public static T PickRndElem<T>(this Random rnd, List<T> elems) where T : IHasProb
+        => elems[rnd.PickRndIndex(elems)];
 }

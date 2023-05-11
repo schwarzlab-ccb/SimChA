@@ -43,38 +43,7 @@ public static class Sampling
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
-   
-    
-    public static int PickRndIndex(Random rnd, List<double> elems) 
-    {
-        double val = rnd.NextDouble();
-        for (int i = 0; i < elems.Count; i++)
-        {
-            if (val < elems[i])
-            {
-                return i;
-            }
-            val -= elems[i];
-        }
-        return elems.Count - 1;
-    }
-    
-    public static int PickRndIndex<T>(Random rnd, List<T> elems) where T : IHasProb
-    {
-        double val = rnd.NextDouble();
-        for (int i = 0; i < elems.Count; i++)
-        {
-            if (val < elems[i].Prob)
-            {
-                return i;
-            }
-            val -= elems[i].Prob;
-        }
-        return elems.Count - 1;
-    }
-    
-    public static T PickRndElem<T>(Random rnd, List<T> elems) where T : IHasProb
-        => elems[PickRndIndex(rnd, elems)];
+
 
     public static double SampleDist(Random rnd, DataTypes.Distribution dist)
     {

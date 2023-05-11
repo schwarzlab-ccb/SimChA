@@ -47,7 +47,7 @@ public class Simulator
         MCSampleCNEventsRec(sample, root, childLoopUp, mcParams, 1);
     }
 
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, Dictionary<int, List<CloneIn>> clones, int eventCount)
+    private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, List<CloneIn>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
         {
@@ -59,7 +59,7 @@ public class Simulator
             for (int mutNo = 0; mutNo < child.Distance; mutNo++)
             {
                 Console.Write($"\rClone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
-                var eventP = Sampling.PickRndElem(_rnd, sample.EventPars);
+                var eventP = _rnd.PickRndElem(sample.EventPars);
                 var eventData = Sampling.GenerateCNEventData(_rnd, childKar, eventP);
                 eventData.ApplyEvent(childKar);
                 double newFitness = childKar.UpdateFitness(_geneLists, _fitness);
@@ -83,7 +83,7 @@ public class Simulator
 
     public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
     {
-        var eventPs = Enumerable.Range(0, nMutations).Select(_ => Sampling.PickRndElem(_rnd, cnEventPs));
+        var eventPs = Enumerable.Range(0, nMutations).Select(_ => _rnd.PickRndElem(cnEventPs));
         return eventPs.Select(e => Sampling.GenerateCNEventData(_rnd, kar, e)).ToList();
     }
 
@@ -116,7 +116,6 @@ public class Simulator
     {
         foreach (var child in clones[node.CloneId])
         {
-            Console.WriteLine($"\nTarget Fitness: {child.FitnessTarget}");
             var childKar = new Karyotype(sample.Kars[node.CloneId]);
             sample.Kars[child.CloneId] = childKar;
             var childEvs = new List<CNEventDesc>();
@@ -141,7 +140,7 @@ public class Simulator
                     if (_rnd.NextDouble() < mcParams.SwapEventP)
                     {
                         // Get the new signature and the corresponding event
-                        var cnEventP = Sampling.PickRndElem(_rnd, sample.EventPars);
+                        var cnEventP = _rnd.PickRndElem(sample.EventPars);
                         proposedEventProps[index] = Sampling.GenerateCNEventData(_rnd, childKar, cnEventP);
                     }
                     // Otherwise we modify some quantity of the event, but keep the event itself the same

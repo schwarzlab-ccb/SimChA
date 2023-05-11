@@ -38,6 +38,7 @@ watch.Start();
 List<Sample> samples;
 if (options.Value.CNProfiles != "")
 {
+    Console.WriteLine("Reading profiles:");
     var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
     samples = Simulator.SamplesFromProfiles(profiles);
 }
@@ -74,23 +75,28 @@ else
             simulator.SampleEvents(sample);
         }
     }
-    Console.WriteLine("");
 }
+Console.WriteLine("");
 
 // Fitness data
-Console.WriteLine("Computing sample stats:");
-
-List<CloneStat> GetSampleStats(Sample s)
-    => s.Clones.Select(clone => CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness, s.Kars)).ToList();
-var stats = samples.ToDictionary(
-    s => { Console.WriteLine("\rSample: " + s.SampleId); return s.SampleId; }, 
-    GetSampleStats);
+Console.WriteLine("Computing clone stats:");
+int counter = 1;
+int total = samples.Sum(s => s.Clones.Count);
+foreach (var sample in samples)
+{
+    foreach (var clone in sample.Clones)
+    {
+        Console.Write($"\rClone {counter++}/{total}.");
+        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness, sample.Kars);
+    }
+}
+Console.WriteLine("");
 
 try
 {
     files.WriteSamples(samples);
     files.WriteCopyNumbers(samples);
-    files.WriteFitness(stats);
+    files.WriteFitness(samples);
     files.WriteKaryotypes(samples);
     if (samples.Any(s => s.EventDescs.Any()))
     {

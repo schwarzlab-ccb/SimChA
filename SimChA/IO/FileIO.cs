@@ -87,12 +87,13 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), KARYOTYPES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("sample_id\tclone_id\tkaryotype");
+        outputFile.WriteLine("sample_id\tkaryotype");
         foreach (var sample in samples)
         {
             foreach (var kar in sample.Kars)
             {
-                outputFile.WriteLine($"{sample.SampleId}\t{kar.Key}\t{kar.Value}");
+                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{kar.Key}" : $"{sample.SampleId}";
+                outputFile.WriteLine($"{sampleName}\t{kar.Value}");
             }
         }
     }
@@ -103,36 +104,34 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("sample_id\tclone_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness");
+        outputFile.WriteLine("sample_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness");
         foreach (var sample in samples)
         {
             foreach (var clone in sample.EventDescs)
             {
                 foreach (var cnEvent in clone.Value)
-                {
-                    outputFile.WriteLine($"{sample.SampleId}\t{clone.Key}\t{cnEvent.EventType}\t{cnEvent.Depth}\t" +
-                                         $"{cnEvent.Description}\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
+                {   
+                    string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
+                    outputFile.WriteLine($"{sampleName}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
+                                         $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
                 }
             }
         }
     }
 
-    public void WriteFitness(Dictionary<string, List<CloneStat>> sampleStats)
+    public void WriteFitness(IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLE_FITNESS_FILE);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        var myT = typeof(CloneStat);
-        var fileds = myT.GetProperties();
-        var fieldNames = fileds.Select(f => f.Name).ToList();
-        file.WriteLine("sample_id\t" + string.Join("\t", fieldNames)); // TODO: Do this explicitly
-        foreach (var sample in sampleStats)
+        file.WriteLine("sample_id\tfitness\tstress\ttsg\tog\tess");
+        foreach (var sample in samples)
         {
-            foreach (var clone in sample.Value)
+            foreach (var stats in sample.Stats)
             {
-                // Get all the field values of the record sample
-                var values = fileds.Select(f => $"{f.GetValue(clone):f4}");
-                file.WriteLine(sample.Key + "\t" + string.Join("\t", values)); // TODO: Do this explicitly
+                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{stats.Key}" : $"{sample.SampleId}";
+                var clone = stats.Value;
+                file.WriteLine($"{sampleName}\t{clone.Fitness}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
             }
         }
     }
@@ -172,24 +171,7 @@ public class FileIO
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
-
-    public static string ReadNewick(string newickFile)
-    {
-        string fileFullPath = Path.GetFullPath(newickFile);
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        try
-        {
-            return File.ReadAllText(fileFullPath);
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
+    
     public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
         string folder,
         bool isFemale,
