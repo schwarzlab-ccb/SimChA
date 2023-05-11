@@ -1,11 +1,11 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using SimChA.EventData;
+using SimChA.DataTypes;
 
-namespace SimChA.DataTypes;
+namespace SimChA.EventData;
 
 [Serializable]
-public record CNEventP(CNEventType Type, double Prob = 1, Dictionary<string, double>? Params = null) : IHasProb
+public record CNEventPars(CNEventType Type, double Prob = 1, Dictionary<string, double>? Params = null) : IHasProb
 {
     public double Get(string name, double defaultValue)
     {

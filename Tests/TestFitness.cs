@@ -79,7 +79,7 @@ public class TestFitness
         // Seed 14 to get chr1 delete
         var rnd = new Random(14);
         var karyotype = new Karyotype(true);
-        var deletion = new CNEventP(CNEventType.ChromDeletion, 1);
+        var deletion = new CNEventPars(CNEventType.ChromDeletion, 1);
         var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, _ => new List<Gene>());
         dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
         Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 2));

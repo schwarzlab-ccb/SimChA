@@ -22,7 +22,7 @@ public class TestEventData
     [Test]
     public void TestContigEventData()
     {
-        var eventP = new CNEventP(CNEventType.ChromDeletion);
+        var eventP = new CNEventPars(CNEventType.ChromDeletion);
         var eventData = new ContigEventData(eventP, 1);
         Assert.AreEqual("contig:1", eventData.ToString());
     }
@@ -30,7 +30,7 @@ public class TestEventData
     [Test]
     public void TestBaseEventData()
     {
-        var eventP = new CNEventP(CNEventType.WholeGenomeDoubling);
+        var eventP = new CNEventPars(CNEventType.WholeGenomeDoubling);
         var eventData = new BaseEventData(eventP);
         Assert.AreEqual("", eventData.ToString());
     }
@@ -39,7 +39,7 @@ public class TestEventData
     public void TestInternalEventData()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventP(CNEventType.InternalDuplication);
+        var eventP = new CNEventPars(CNEventType.InternalDuplication);
         var eventData = new InternalEventData(_rnd, eventP, 0, len);
         Assert.GreaterOrEqual(eventData.Start, 0);
         Assert.LessOrEqual(eventData.Start, len);
@@ -51,7 +51,7 @@ public class TestEventData
     public void TestTailEventData()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventP(CNEventType.TailDeletion);
+        var eventP = new CNEventPars(CNEventType.TailDeletion);
         var eventData = new InternalEventData(_rnd, eventP, 0, len);
         Assert.GreaterOrEqual(eventData.Start, 0);
         Assert.LessOrEqual(eventData.Start, len);
@@ -65,7 +65,7 @@ public class TestEventData
         const long lenA = 1_000_000;
         const long lenB = 10_000_000;
         var transP = new Dictionary<string, double> { ["Prob"] = 1.0 };
-        var eventP = new CNEventP(CNEventType.Translocation, 1, transP);
+        var eventP = new CNEventPars(CNEventType.Translocation, 1, transP);
         var eventData = new PairEventData(_rnd, eventP, 0, lenA, 1, lenB);
         Assert.GreaterOrEqual(eventData.PosA, 0);
         Assert.LessOrEqual(eventData.PosA, lenA);
@@ -78,7 +78,7 @@ public class TestEventData
     public void TestPyrgo()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventP(CNEventType.Pyrgo);
+        var eventP = new CNEventPars(CNEventType.Pyrgo);
         var eventData = new PyrgoEventData(_rnd, eventP, 0, len);
         foreach (var frag in eventData.FragmentsList)
         {
@@ -91,7 +91,7 @@ public class TestEventData
     public void TestRigma()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventP(CNEventType.Rigma);
+        var eventP = new CNEventPars(CNEventType.Rigma);
         var eventData = new RigmaEventData(_rnd, eventP, 0, len);
         Assert.GreaterOrEqual(eventData.Start, 0);
         foreach (long stop in eventData.StopsList)
@@ -103,7 +103,7 @@ public class TestEventData
     [Test]
     public void TestTemplatedEvent()
     {
-        var eventP = new CNEventP(CNEventType.TIBridge);
+        var eventP = new CNEventPars(CNEventType.TIBridge);
         var frags = new List<(int, long)>
         {
             (0, 100_000),
@@ -122,7 +122,7 @@ public class TestEventData
     [Test]
     public void TestChromoplexy()
     {
-        var eventP = new CNEventP(CNEventType.Chromoplexy);
+        var eventP = new CNEventPars(CNEventType.Chromoplexy);
         var frags = new List<(int, long)>
         {
             (0, 1_000_000),
@@ -140,7 +140,7 @@ public class TestEventData
     public void TestChromothripsis()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventP(CNEventType.Chromothripsis);
+        var eventP = new CNEventPars(CNEventType.Chromothripsis);
         var eventData = new ChromothripsisEventData(_rnd, eventP, 0, len);
         foreach (var stop in eventData.StopsList)
         {

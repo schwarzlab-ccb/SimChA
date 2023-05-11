@@ -7,10 +7,9 @@ namespace SimChA.IO;
 
 public static class Validators
 {
-    
-    public static void ValidateEvent(CNEventP cnEventP)
+    private static void ValidateEvent(CNEventPars cnEventPars)
     {
-        switch (cnEventP.Type)
+        switch (cnEventPars.Type)
         {
             case CNEventType.Translocation:
             case CNEventType.ChromDeletion:
@@ -32,14 +31,13 @@ public static class Validators
             case CNEventType.Tyfonas:
                 break;
             default:
-                throw new ArgumentOutOfRangeException($"Unknown event type {cnEventP.Type}");
+                throw new ArgumentOutOfRangeException($"Unknown event type {cnEventPars.Type}");
         }
     }
     
     // Removes signatures with probability <=0 and validates the rest
     public static List<Signature> ValidateSignatures(List<Signature>? signatures)
     {
-        var valSigs = new List<Signature>();
         if (signatures is null || signatures.Count == 0)
         {
             throw new Exception("No signatures were provided.");

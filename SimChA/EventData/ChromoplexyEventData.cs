@@ -14,10 +14,10 @@ public record ChromoplexyEventData : BaseEventData
     public List<long> Breakpoints { get; } // Breakpoints for the whole event - shards are first joined then split again
     
     // TODO: Validate
-    public ChromoplexyEventData(Random rnd, CNEventP eventP, List<(int id, long len)> seq) : base(eventP)
+    public ChromoplexyEventData(Random rnd, CNEventPars cnEventPars, List<(int id, long len)> seq) : base(cnEventPars)
     {
         int contigCount = Math.Min(seq.Count, Sampling.GetChromoplexySiteCount(rnd));
-        double size = eventP.Get("Size", 10_000_000L);
+        double size = cnEventPars.Get("Size", 10_000_000L);
         ContigIds = new List<int>();
         Stops = new List<List<long>>(); 
         var totalLen = 0L;

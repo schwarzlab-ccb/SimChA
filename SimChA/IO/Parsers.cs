@@ -1,10 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using Microsoft.VisualBasic;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.EventData;
 using SimChA.Simulation;
 
 namespace SimChA.IO;
@@ -160,120 +157,42 @@ public static class Parsers
         }
         return geneList;
     }
-
-    public static List<Clone> ParseNewick(string newickString, bool isFemale)
+    
+    public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness)
     {
-        List<Clone> clones = new();
-        if (newickString == "")
-        {
-            throw new Exception("Newick file is empty.");
-        }
-        const string regexPattern = @"(?<closeChildren>[(])|" +
-                                    @"(?<openChildren>[)])|" +
-                                    @"(?<branchLength>:+[0-9a-zA-Z-_.]+)|" +
-                                    @"(?<nodeName>[0-9a-zA-Z-_.]+)|" +
-                                    @"(?<nextNode>[,])|" +
-                                    @"(?<root>[;])";
+        const string ID_Key = "ID";
+        const string ParentID_Key = "ParentID";
+        const string Distance_Key = "Distance";
+        const string Fitness_Key = "Fitness";
         
-        //Reverse order of newick file to start with root
-        const RegexOptions regexOptions = RegexOptions.RightToLeft | RegexOptions.IgnorePatternWhitespace;
-
-        var matches = Regex.Matches(newickString, regexPattern, regexOptions);
-        if (!matches.Any() || matches[0].Value != ";")
-        {
-            throw new Exception("Newick file is not in the right format");
-        }
-
-        bool branchLength = CheckBranchLength(matches);
-        //Iterate through Regex-Matches
-        var parentIds = new List<int> {-1};
-        foreach (Match match in matches)
-        {
-            switch (match.Value)
-            {
-                case ";":
-                    //create root node
-                    var root = CreateClone(clones.Count,  parentIds.Last(), match.NextMatch(),
-                        match.NextMatch().NextMatch(), isFemale, branchLength, 0);
-                    clones.Add(root);
-                    parentIds.Add(clones[^1].CloneId);
-                    break;
-                case "(":
-                    //remove parent from parentList and add childrenID to parent
-                    parentIds.RemoveAt(parentIds.Count - 1);
-                    break;
-                case ")":
-                    // Add parent to parentIds and then create a child
-                    parentIds.Add(clones[^1].CloneId);
-                    goto case ",";
-                case ",":
-                    //create new child
-                    int parentId = parentIds.Last();
-                    var child = CreateClone(clones.Count, parentId, match.NextMatch(),
-                        match.NextMatch().NextMatch(), isFemale, branchLength, clones[parentId].TotalMutations);
-                    clones.Add(child);
-                    break;
-            }
-        }
-        if (!clones.Any())
-        {
-            throw new Exception("No clones found in newick file. Might not be the right format.");
-        }
-        return clones;
-    }
-
-    //create clone from newick Match
-    private static Clone CreateClone(
-        int id, 
-        int parentId, 
-        Match branchLengthMatch, 
-        Match nameMatch, 
-        bool isFemale,
-        bool branchLength,
-        int parentMutations)
-    {
- 
-        int mutCount = branchLengthMatch.Groups["branchLength"].Value != ""
-            ? (int) Math.Ceiling(float.Parse(branchLengthMatch.Value.Remove(0, 1)))
-            : branchLength ? 0 : 1;
-        int totalMut = parentMutations + mutCount;
-        var clone = new Clone(id, parentId,  mutCount, new Karyotype(isFemale), totalMut);
-        return clone;
-    }
-
-    //check for branch-length in newick file
-    private static bool CheckBranchLength(MatchCollection matches)
-    {
-        var branchLength = false;
-        foreach (Match match in matches)
-        {
-            if (match.Groups["branchLength"].Value != "")
-            {
-                branchLength = true;
-                break;
-            }
-        }
-
-        Console.Write(branchLength ? "" : "No branch-lengths were found, using 1 as branch-length.");
-        return branchLength;
-    }
-
-    public static Dictionary<int, double> ParseClones(StreamReader cloneStream)
-    {
         string? firstLine = cloneStream.ReadLine();
-        if (firstLine == null) throw new Exception("Clone file is empty.");
+        if (firstLine == null) throw new Exception("CloneIn file is empty.");
         var header = firstLine.Split(",").Select(s => s.Trim()).ToList();
-        int idIndex = header.IndexOf("ID");
-        if (idIndex == -1) throw new Exception("Clone file does not contain ID column.");
-        int fitnessIndex = header.IndexOf("Fitness");
-        if (fitnessIndex == -1) throw new Exception("Clone file does not contain Fitness column.");
-        var cloneFitness = new Dictionary<int, double>();
+        var columns = new Dictionary<string, int> {{ID_Key, -1}, {ParentID_Key, -1},  {Distance_Key, -1}};
+        if (parseFitness)
+        {
+            columns.Add(Fitness_Key, -1);
+        }
+        
+        foreach (var column in columns)
+        {
+            int idx = header.IndexOf(column.Key);
+            if (idx == -1) throw new Exception($"CloneIn file does not contain {column.Key} column.");
+            columns[column.Key] = idx;
+        }
+
+        var cloneFitness = new List<CloneIn>();
         while (cloneStream.ReadLine() is { } line)
         {
             var lineSplit = line.Split(",").Select(s => s.Trim()).ToList();
-            int id = int.Parse(lineSplit[idIndex]);
-            double fitness = double.Parse(lineSplit[fitnessIndex], CultureInfo.InvariantCulture.NumberFormat);
-            cloneFitness.Add(id, fitness);
+            int id = int.Parse(lineSplit[columns[ID_Key]]);
+            int parentId = int.Parse(lineSplit[columns[ParentID_Key]]);
+            int distance = int.Parse(lineSplit[columns[Distance_Key]]);
+            double fitness = parseFitness
+                ? double.Parse(lineSplit[columns[Fitness_Key]], CultureInfo.InvariantCulture.NumberFormat)
+                : 0.0;
+            var clone = new CloneIn(id, parentId, distance, fitness);
+            cloneFitness.Add(clone);
         }
         return cloneFitness;
     }

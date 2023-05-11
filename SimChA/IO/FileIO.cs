@@ -54,14 +54,14 @@ public class FileIO
             outputFile.WriteLine(sample.ToString());
         }
     }
-    
+
     public void WriteClones(IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
 
-        outputFile.WriteLine("sample_id\t" + Clone.Header());
+        outputFile.WriteLine("sample_id\t" + CloneIn.Header());
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
@@ -70,7 +70,7 @@ public class FileIO
             }
         }
     }
-    
+
     public void WriteCopyNumbers(IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
@@ -84,7 +84,7 @@ public class FileIO
         {
             foreach (var clone in sample.Clones)
             {
-                var copynumbers = CopyNumbers.CalcCopyNumbers(clone.Karyotype, sample.SexXX);
+                var copynumbers = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, name, false) + "\n");
             }
@@ -100,34 +100,29 @@ public class FileIO
         string jsonString = JsonSerializer.Serialize(simParams, options);
         file.WriteLine(jsonString);
     }
-    
-    public void WriteEvents(List<CNEvent> cnEvents)
+
+    public void WriteEvents(IEnumerable<Sample> samples)
     {
         //TODO: Format output, talk with Tom about readable ideas
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         StringBuilder abberationString = new();
-        abberationString.Append("id\tevent_type\tevent_string\tdelta_fitness\ttotal_Fitness\tmutations\n");
-        foreach (var cnEvent in cnEvents)
+        abberationString.Append("sample\tid\tevent_type\tevent_string\tdelta_fitness\ttotal_Fitness\tmutations\n");
+        foreach (var sample in samples)
         {
-            abberationString.Append($"{cnEvent.CloneId}\t" +
-                                    $"{cnEvent.EventType}\t" +
-                                    $"{cnEvent.Description}\t" +
-                                    $"{Math.Round((decimal)cnEvent.DeltaFitness, 8).ToString(CultureInfo.InvariantCulture)}\t" +
-                                    $"{Math.Round((decimal)cnEvent.TotalFitness, 8).ToString(CultureInfo.InvariantCulture)}\t");
+            foreach (var cnEvent in sample.EventDescs)
+            {
+                abberationString.Append($"{cnEvent.CloneId}\t" +
+                                        $"{cnEvent.EventType}\t" +
+                                        $"{cnEvent.Description}\t" +
+                                        $"{Math.Round((decimal)cnEvent.DeltaFitness, 8)}\t" +
+                                        $"{Math.Round((decimal)cnEvent.TotalFitness, 8)}\t");
+            }
         }
         outputFile.Write(abberationString.ToString());
     }
-    
-    public void WriteNewick(string newick)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), NEWICK_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var file = new StreamWriter(outPath);
-        file.Write(newick);
-    }
-    
+
     public void WriteFitness(Dictionary<string, List<CloneStat>> sampleStats)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLE_FITNESS_FILE);
@@ -148,7 +143,7 @@ public class FileIO
         }
     }
 
-    public static Dictionary<int, double> ReadFitnessMap(string filePath)
+    public static List<CloneIn> ReadClones(string filePath, bool parseFitness)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
@@ -158,7 +153,7 @@ public class FileIO
         try
         {
             var cloneFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClones(cloneFile);
+            return Parsers.ParseClones(cloneFile, parseFitness);
         }
         catch (Exception e)
         {
@@ -200,18 +195,18 @@ public class FileIO
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
-    
+
     public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
-        string folder, 
-        bool isFemale, 
+        string folder,
+        bool isFemale,
         GenomeAssembly assembly)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
         {
-            {GeneListType.TumorSuppressor, TSGS_TSV},
-            {GeneListType.Oncogene, OGS_TSV},
-            {GeneListType.Essentiality, ESSENTIALS_TSV}
+            { GeneListType.TumorSuppressor, TSGS_TSV },
+            { GeneListType.Oncogene, OGS_TSV },
+            { GeneListType.Essentiality, ESSENTIALS_TSV }
         };
         foreach ((var key, string filename) in fileMap)
         {
@@ -225,7 +220,7 @@ public class FileIO
             {
                 var geneFile = new StreamReader(fileFullPath);
                 geneLists[key] = Parsers.ParseGeneList(geneFile, isFemale);
-            }        
+            }
             catch (Exception e)
             {
                 throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
@@ -233,7 +228,7 @@ public class FileIO
         }
         return geneLists;
     }
-    
+
     public static Dictionary<string, Karyotype> ReadProfiles(string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);

@@ -86,54 +86,54 @@ public static class Sampling
         };
     }
     
-    public static BaseEventData GenerateCNEventData(Random rnd, Karyotype kar, CNEventP cnEventP)
+    public static BaseEventData GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
 
-        switch (cnEventP.Type)
+        switch (cnEventPars.Type)
         {
             // Whole chromosome events
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
-                return new ContigEventData(cnEventP, seq[0].id);
+                return new ContigEventData(cnEventPars, seq[0].id);
             
             case CNEventType.WholeGenomeDoubling:
-                return new BaseEventData(cnEventP);
+                return new BaseEventData(cnEventPars);
             
             // Tail events
             case CNEventType.TailDeletion:
             case CNEventType.BreakageFusionBridge:
-                return new TailEventData(rnd, cnEventP, seq[0].id, seq[0].len);
+                return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             // Internal events
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-                return new InternalEventData(rnd, cnEventP, seq[0].id, seq[0].len);
+                return new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
             
             case CNEventType.Translocation:
-                return new PairEventData(rnd, cnEventP, seq[0].id, seq[0].len, seq[1].id, seq[0].len);
+                return new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len);
             
             case CNEventType.Chromothripsis:
-                return new ChromothripsisEventData(rnd, cnEventP, seq[0].id, seq[0].len);
+                return new ChromothripsisEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             case CNEventType.Chromoplexy:
-                return new ChromoplexyEventData(rnd, cnEventP, seq);
+                return new ChromoplexyEventData(rnd, cnEventPars, seq);
 
             case CNEventType.Pyrgo:
-                return new PyrgoEventData(rnd, cnEventP, seq[0].id, seq[0].len);
+                return new PyrgoEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             case CNEventType.Rigma:
-                return new RigmaEventData(rnd, cnEventP, seq[0].id, seq[0].len);
+                return new RigmaEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
             
             case CNEventType.TIChain:
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
-                return new TemplatedEventData(rnd, cnEventP, seq);
+                return new TemplatedEventData(rnd, cnEventPars, seq);
 
             default:
-                throw new ArgumentOutOfRangeException(nameof(cnEventP.Type), cnEventP.Type, null);
+                throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
         }
     }
 }

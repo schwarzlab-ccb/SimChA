@@ -11,11 +11,11 @@ public record RigmaEventData : BaseEventData
     public long Start { get; }
     public List<long> StopsList { get; }
     
-    public RigmaEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP)
+    public RigmaEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars)
     {
         ContigId = contigId;
-        long rigmaLen = eventP.Get("Size", 1_000_000L);
-        double rigmaMean = eventP.Get("Mean", 0.1);
+        long rigmaLen = cnEventPars.Get("Size", 1_000_000L);
+        double rigmaMean = cnEventPars.Get("Mean", 0.1);
         Start= Sampling.GetInternalPos(rnd, contigLen - rigmaLen);
         int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
         StopsList = Enumerable.Range(0, rigmaCount).Select(i => Sampling.GetExpSeg(rnd, contigLen, rigmaMean)).ToList();

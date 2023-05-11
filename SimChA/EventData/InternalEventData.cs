@@ -9,9 +9,9 @@ public record InternalEventData : ContigEventData
     public long End { get; }
 
     // Constructor used for internal events
-    public InternalEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP, contigId)
+    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
-        long internalSize = eventP.Get("Size", 100_000);
+        long internalSize = CNEventPars.Get("Size", 100_000);
         long segLen = Sampling.GetExpSeg(rnd, contigLen, internalSize);
         Start = Sampling.GetInternalPos(rnd, contigLen - segLen);
         End = Start + segLen;

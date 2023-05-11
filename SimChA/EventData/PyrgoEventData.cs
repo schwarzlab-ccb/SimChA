@@ -11,11 +11,11 @@ public record PyrgoEventData : BaseEventData
     public int ContigId { get; }
     public List<(long start, long length)> FragmentsList { get; }
     
-    public PyrgoEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP)
+    public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars)
     {
         ContigId = contigId;
-        long pyrgoLen = eventP.Get("Size", 1_000_000L);
-        double pyrgoMean = eventP.Get("Mean", 0.1);
+        long pyrgoLen = cnEventPars.Get("Size", 1_000_000L);
+        double pyrgoMean = cnEventPars.Get("Mean", 0.1);
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, pyrgoLen);
         long pyrgoStart = Sampling.GetInternalPos(rnd, contigLen - pyrgoFrag);
         

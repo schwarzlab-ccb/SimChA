@@ -2,7 +2,7 @@
 
 namespace SimChA.EventData;
 
-public record CNEvent(
+public record CNEventDesc(
     int CloneId,  
     CNEventType EventType,
     string Description = "",

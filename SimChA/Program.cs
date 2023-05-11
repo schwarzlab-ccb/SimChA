@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using CommandLine;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;
 
+Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 var watch = new Stopwatch();
 watch.Start();
 
@@ -37,14 +38,11 @@ var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX,
 files.WriteSimParams(simParams);
 
 // Obtain clones
-var newickContent = "";
 List<Sample> samples;
-List<CNEvent> cnEvents = new();
 if (options.Value.CNProfiles != "")
 {
     var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
     samples = Simulator.SamplesFromProfiles(profiles);
-    cnEvents = new List<CNEvent>();
 }
 else
 {
@@ -53,44 +51,30 @@ else
     var simulator = new Simulator(rnd, simParams.Fitness, simParams.MCParams, geneLists);
     if (options.Value.NewickFile != "")
     {
-        newickContent = FileIO.ReadNewick(options.Value.NewickFile);
-        var clones = Parsers.ParseNewick(newickContent, simParams.SexXX);
+        var inClones = FileIO.ReadClones(options.Value.NewickFile, options.Value.UseMCMC);
         var eventPs = Converters.PropagateSigs(sigs);
-        var newickSample = new Sample("clone_tree", simParams.SexXX, clones, eventPs);
-        samples = new List<Sample> { newickSample };
+        var treeSample = new Sample(options.Value.NewickFile, simParams.SexXX, inClones, eventPs);
+        samples = new List<Sample> { treeSample };
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs);   
+        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs);
     }
     foreach (var sample in samples)
     {
         // Monte Carlo sampling of copy-number altering events
-        if (options.Value.UseMCMC)
+        if (options.Value.UseMCMC && simParams.MCParams == null)
         {
-            if (simParams.MCParams == null)
-            {
-                Console.WriteLine("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
-            }
-            else
-            {
-                var fitnessDict = FileIO.ReadFitnessMap(options.Value.TargetFit);
-                Console.WriteLine("Sampling possible events to produce this clone");
-                cnEvents = simulator.MCSampleEvents(sample, fitnessDict);
-            }
+            throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
         }
-        // Otherwise we choose to stochastically sample from the signatures
-        else
-        {
-            cnEvents = simulator.SampleEvents(sample);
-        }
+        simulator.SampleEvents(sample, options.Value.UseMCMC);
     }
 }
 
 // Fitness data
 Console.WriteLine("Computing fitness.");
 var sampleStats = new Dictionary<string, List<CloneStat>>();
-var counter = 0;
+int counter = 0;
 int cloneCount = samples.Sum(s => s.Clones.Count);
 foreach (var sample in samples)
 {
@@ -98,7 +82,7 @@ foreach (var sample in samples)
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\r{++counter}/{cloneCount} clones processed.");
-        var cloneStats = CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness);
+        var cloneStats = CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness, sample.Kars);
         cloneStatsList.Add(cloneStats);
     }
     sampleStats[sample.SampleId] = cloneStatsList;
@@ -112,13 +96,9 @@ try
     files.WriteCopyNumbers(samples);
     files.WriteFitness(sampleStats);
     // Check if cnEvents was assigned
-    if (cnEvents.Any())
+    if (samples.Any(s => s.EventDescs.Any()))
     {
-        files.WriteEvents(cnEvents);
-    }
-    if (newickContent != "")
-    {
-        files.WriteNewick(newickContent);
+        files.WriteEvents(samples);
     }
 }
 catch (Exception e)

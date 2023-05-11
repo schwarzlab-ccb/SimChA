@@ -50,7 +50,7 @@ public class TestCopyNumbers
     {
         // WGD
         karyotype = new Karyotype(referenceFemale);
-        TestKaryotype.ApplyRandomEvent(_rnd, karyotype, new CNEventP(CNEventType.WholeGenomeDoubling, 1));
+        TestKaryotype.ApplyRandomEvent(_rnd, karyotype, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
         copyNumbers = CopyNumbers.CalcCopyNumbers(karyotype, true).ToList();
         ploidy = CopyNumbers.CalcPloidy(copyNumbers, true);
         Assert.AreEqual(4, ploidy);
@@ -59,9 +59,9 @@ public class TestCopyNumbers
         karyotype = new Karyotype(referenceFemale);
         for (int i = 0; i < 100; i++)
         {
-            TestKaryotype.ApplyRandomEvent(_rnd, karyotype, new CNEventP(CNEventType.Translocation, 1));
+            TestKaryotype.ApplyRandomEvent(_rnd, karyotype, new CNEventPars(CNEventType.Translocation, 1));
             var invParams = new Dictionary<string, double> { {"Mean", 0.01} };
-            TestKaryotype.ApplyRandomEvent(_rnd, karyotype, new CNEventP(CNEventType.InternalInversion, 1, invParams));
+            TestKaryotype.ApplyRandomEvent(_rnd, karyotype, new CNEventPars(CNEventType.InternalInversion, 1, invParams));
         }
         copyNumbers = CopyNumbers.CalcCopyNumbers(karyotype, true).ToList();
         ploidy = CopyNumbers.CalcPloidy(copyNumbers, true);

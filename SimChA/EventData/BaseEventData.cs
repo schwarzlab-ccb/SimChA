@@ -5,9 +5,9 @@ using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
-public record BaseEventData(CNEventP EventP)
+public record BaseEventData(CNEventPars CNEventPars)
 {
-    public CNEventType EventType => EventP.Type;
+    public CNEventType EventType => CNEventPars.Type;
     
     public virtual void ApplyEvent(Karyotype kar)
     {

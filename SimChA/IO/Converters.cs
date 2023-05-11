@@ -1,6 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
 using SimChA.DataTypes;
+using SimChA.EventData;
 using SimChA.Misc;
 using SimChA.Simulation;
 
@@ -10,9 +11,9 @@ public static class Converters
 {
     // This will make events conditional on the probability of the signature
     // If probs are not null, they are used instead of the signature probs and have to have the same length
-    public static List<CNEventP> PropagateSigs(List<Signature> signatures, List<double>? probs = null)
+    public static List<CNEventPars> PropagateSigs(List<Signature> signatures, List<double>? probs = null)
     {
-        var events = new List<CNEventP>();
+        var events = new List<CNEventPars>();
         for (var i = 0; i < signatures.Count; i++)
         {
             if (probs != null)
@@ -50,10 +51,10 @@ public static class Converters
         {
             double dist = Sampling.SampleDist(rnd, distribution);
             var mutCount = (int)Math.Round(meanDist * dist);
-            bool sexXX = rnd.CoinFlip();
-            var clone = new Clone(0, -1, mutCount, new Karyotype(sexXX), mutCount);
+            var clone = new CloneIn(0, -1, mutCount, 1); // TODO: Specify fitness target
             var events = PropagateSigs(selectedSigs, mixture);
-            var sample = new Sample($"Sample{i + 1}", sexXX, new List<Clone> { clone }, events);
+            bool sexXX = rnd.CoinFlip();
+            var sample = new Sample($"Sample{i + 1}", sexXX, new List<CloneIn> { clone }, events);
             samples.Add(sample);
         }
         return samples;

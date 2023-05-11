@@ -9,10 +9,10 @@ public record TailEventData : ContigEventData
     public long DelFraction { get; }
     public bool Direction { get; }
     
-    // Constructor used for Tail EventPs
-    public TailEventData(Random rnd, CNEventP eventP, int contigId, long contigLen) : base(eventP, contigId)
+    // Constructor used for Tail CNEventPars
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
-        long tailSize = eventP.Get("Size", 1_000_000);
+        long tailSize = CNEventPars.Get("Size", 1_000_000);
         DelFraction = Sampling.GetExpSeg(rnd, contigLen, tailSize);
         Direction = rnd.CoinFlip();
     }

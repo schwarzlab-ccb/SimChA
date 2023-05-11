@@ -15,13 +15,13 @@ public record PairEventData : BaseEventData
     public readonly bool Inverted;
     
     // Constructor used for Translocation
-    public PairEventData(Random rnd, CNEventP eventP, int contigA, long lenA, int contigB, long lenB) : base(eventP)
+    public PairEventData(Random rnd, CNEventPars cnEventPars, int contigA, long lenA, int contigB, long lenB) : base(cnEventPars)
     {
         ContigIdA = contigA;
         PosA = Sampling.GetInternalPos(rnd, lenA);
         ContigIdB = contigB;
         PosB = Sampling.GetInternalPos(rnd, lenB);
-        double invProb = eventP.Get("InvProb", 0.0);
+        double invProb = cnEventPars.Get("InvProb", 0.0);
         Inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
     }
     

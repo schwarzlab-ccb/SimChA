@@ -5,7 +5,7 @@ using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
-public record ContigEventData(CNEventP eventP, int ContigId) : BaseEventData(eventP)
+public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEventData(CNEventPars)
 {
     public override void ApplyEvent(Karyotype kar)
     {

@@ -14,24 +14,20 @@ public class TestSimulator
     private Random _rnd;
     private MCParams _mcParams;
     private Simulator _sim;
-    private List<CNEventP> _eventPs;
+    private List<CNEventPars> _eventPs;
     private FitnessParams _fitness;
     private Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-    private Dictionary<int, double> _fitnessDict;
-    private int _seed;
-    private bool _sexXX;
-    private Clone _clone;
+    private CloneIn _clone;
+    private Karyotype _kar;
     private const double EPSILON = 0.0000000001;
     
     [SetUp]
     public void Setup()
     {
-        _seed = 0;
-        _rnd = new Random(_seed);
+        _rnd = new Random(0);
         _fitness = new FitnessParams(1, 1, 1);
-        _eventPs = new List<CNEventP> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
+        _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
-        _sexXX = true;
         _geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>
         {
             {GeneListType.Essentiality, new Dictionary<ChrNo, List<Gene>>()},
@@ -39,9 +35,8 @@ public class TestSimulator
             {GeneListType.Oncogene, new Dictionary<ChrNo, List<Gene>>()}
         };
         _sim = new Simulator(_rnd, _fitness, _mcParams, _geneLists);
-        _fitnessDict = new Dictionary<int, double> { {0, 1.0} };
-        var kar = new Karyotype(_sexXX);
-        _clone = new Clone(0, -1, "0", 0, kar, 1);
+        _kar = new Karyotype(true);
+        _clone = new CloneIn(0, -1, 0, 1);
     }
     
     // Taken the MakeGene method from TestFitness
@@ -59,7 +54,7 @@ public class TestSimulator
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
         _sim = new Simulator(_rnd, _fitness, _mcParams, listGenes);
-        double potential = _sim.Potential(_clone, _fitnessDict, events, ref threshold);
+        double potential = _sim.Potential(_kar, 1, events, ref threshold);
         Assert.AreEqual(potential,1.0,EPSILON);
     }
     
@@ -73,20 +68,20 @@ public class TestSimulator
     //     
     //     // Test that it generates the correct number of mutations needed
     //     nMutations = 5;
-    //     var eventPs = _sim.InitEventPs(_clone, nMutations).ToList();
-    //     Assert.AreEqual(eventPs.Count, nMutations);
+    //     var cnEventPars = _sim.InitEventPs(_clone, nMutations).ToList();
+    //     Assert.AreEqual(cnEventPars.Count, nMutations);
     //     
     //     // Test that it will never sample 0 prob events
-    //     var events = new List<CNEventP> {new(CNEventType.ChromDuplication, 1), new(CNEventType.ChromDeletion, 0)};
+    //     var events = new List<CNEventPars> {new(CNEventType.ChromDuplication, 1), new(CNEventType.ChromDeletion, 0)};
     //     var sigs = new List<Signature> { new("test", 1, events)};
     //     _sim = new Simulator(_rnd, _fitness, sigs, _mcParams, _geneLists);
     //     nMutations = 5;
-    //     eventPs = _sim.InitEventPs(_clone, nMutations).ToList();
-    //     foreach (var e in eventPs)
+    //     cnEventPars = _sim.InitEventPs(_clone, nMutations).ToList();
+    //     foreach (var e in cnEventPars)
     //     {
     //         Assert.AreEqual(e.Type, CNEventType.ChromDuplication);
     //     }
-    //     Assert.AreEqual(eventPs.Count, nMutations);
+    //     Assert.AreEqual(cnEventPars.Count, nMutations);
     // }
 
     [Test]
@@ -96,7 +91,7 @@ public class TestSimulator
         // Init a new Simulator instance
         _sim = new Simulator(_rnd, _fitness,  _mcParams, _geneLists);
         int nMutations = 5;
-        var eventData = _sim.InitEvents(_clone.Karyotype, nMutations, _eventPs);
+        var eventData = _sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)
         {
             Assert.True(data.EventType is CNEventType.ChromDeletion or CNEventType.ChromDuplication);

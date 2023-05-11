@@ -14,14 +14,14 @@ public class TestKaryotype
 {
     private Karyotype _kar;
     private Random _rnd;
-    private CNEventP _del;
-    private CNEventP _dup;
+    private CNEventPars _del;
+    private CNEventPars _dup;
     
     private int TEST_FRAC = 1000;
     
-    public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventP cnEventP)
+    public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
-        var eventData = Sampling.GenerateCNEventData(rnd, kar, cnEventP);
+        var eventData = Sampling.GenerateCNEventData(rnd, kar, cnEventPars);
         eventData.ApplyEvent(kar);
     }
     
@@ -30,8 +30,8 @@ public class TestKaryotype
     {
         _kar = new Karyotype(false);
         _rnd = new Random(0);
-        _del = new CNEventP(CNEventType.ChromDeletion);
-        _dup = new CNEventP(CNEventType.ChromDuplication);
+        _del = new CNEventPars(CNEventType.ChromDeletion);
+        _dup = new CNEventPars(CNEventType.ChromDuplication);
     }
 
     // Test for each AberrationEnum value
@@ -146,22 +146,22 @@ public class TestKaryotype
     public void TestApplyCNEvent()
     {
         var pars = new Dictionary<string, double> { ["Size"] = 1_000_000 };
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.ChromDeletion, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.ChromDuplication, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.InternalDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.InternalDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.InternalInversion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.InvertedDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.BreakageFusionBridge, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.TailDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Translocation, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Chromoplexy, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Chromothripsis, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Pyrgo, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.Rigma, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.TIChain, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.TIBridge, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventP(CNEventType.TICycle, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.ChromDeletion, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.ChromDuplication, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalDuplication, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InvertedDuplication, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.BreakageFusionBridge, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TailDeletion, 1.0, pars)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Translocation, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Chromoplexy, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Chromothripsis, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Pyrgo, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Rigma, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TIChain, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TIBridge, 1.0)); });
+        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TICycle, 1.0)); });
     }
     
     [Test]
