@@ -31,14 +31,14 @@ public static class Parsers
         return res;
     }
 
-    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, List<GenRange> missingRanges, bool sexXX)
+    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, IEnumerable<GenRange> missingRanges, bool sexXX)
     {
         regionsA = RegionOps.StitchRegions(regionsA);
         var contigA = new Contig(regionsA);
         regionsB = RegionOps.StitchRegions(regionsB);
         var contigB = new Contig(regionsB);
         // Add full missing chromosomes
-        var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, c => false);
+        var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, _ => false);
         regionsA.ForEach(r => chrPresent[r.ChrNo] = true);
         regionsB.ForEach(r => chrPresent[r.ChrNo] = true);
         var missingChrs = chrPresent.Where(pair => !pair.Value).Select(pair => new GenRange(0, HGRef.GetChromLen(pair.Key), pair.Key));
@@ -53,16 +53,14 @@ public static class Parsers
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
         bool sexXX = true;
-        var lastSample = "";
-        string sample = "";
+        string lastSample = "";
         var lastChr = ChrNo.chr1;
-        var lastPos = 0L;
+        long lastPos = 0L;
         cnaFile.ReadLine(); // Skip header
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
-            sample = lineSplit[0];
-
+            string sample = lineSplit[0];
             // Set the new sample
             if (sample != lastSample)
             {
@@ -136,7 +134,7 @@ public static class Parsers
     {
         // Pre-initialization
         var noEnum = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToList();
-        var geneList = noEnum.ToDictionary(c => c, c => new List<Gene>());
+        var geneList = noEnum.ToDictionary(c => c, _ => new List<Gene>());
         while (geneFile.ReadLine() is { } line)
         {
             if (line == "") continue;
@@ -160,18 +158,18 @@ public static class Parsers
     
     public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness)
     {
-        const string ID_Key = "ID";
-        const string ParentID_Key = "ParentID";
-        const string Distance_Key = "Distance";
-        const string Fitness_Key = "Fitness";
+        const string idKey = "ID";
+        const string parentIDKey = "ParentID";
+        const string distanceKey = "Distance";
+        const string fitnessKey = "Fitness";
         
         string? firstLine = cloneStream.ReadLine();
         if (firstLine == null) throw new Exception("CloneIn file is empty.");
         var header = firstLine.Split(",").Select(s => s.Trim()).ToList();
-        var columns = new Dictionary<string, int> {{ID_Key, -1}, {ParentID_Key, -1},  {Distance_Key, -1}};
+        var columns = new Dictionary<string, int> {{idKey, -1}, {parentIDKey, -1},  {distanceKey, -1}};
         if (parseFitness)
         {
-            columns.Add(Fitness_Key, -1);
+            columns.Add(fitnessKey, -1);
         }
         
         foreach (var column in columns)
@@ -185,11 +183,11 @@ public static class Parsers
         while (cloneStream.ReadLine() is { } line)
         {
             var lineSplit = line.Split(",").Select(s => s.Trim()).ToList();
-            int id = int.Parse(lineSplit[columns[ID_Key]]);
-            int parentId = int.Parse(lineSplit[columns[ParentID_Key]]);
-            int distance = int.Parse(lineSplit[columns[Distance_Key]]);
+            int id = int.Parse(lineSplit[columns[idKey]]);
+            int parentId = int.Parse(lineSplit[columns[parentIDKey]]);
+            int distance = int.Parse(lineSplit[columns[distanceKey]]);
             double fitness = parseFitness
-                ? double.Parse(lineSplit[columns[Fitness_Key]], CultureInfo.InvariantCulture.NumberFormat)
+                ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
                 : 0.0;
             var clone = new CloneIn(id, parentId, distance, fitness);
             cloneFitness.Add(clone);

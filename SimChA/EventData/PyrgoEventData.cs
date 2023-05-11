@@ -1,17 +1,14 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using Extreme.Mathematics;
-using SimChA.DataTypes;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
-public record PyrgoEventData : BaseEventData
+public record PyrgoEventData : ContigEventData
 {
-    public int ContigId { get; }
     public List<(long start, long length)> FragmentsList { get; }
     
-    public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars)
+    public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
     {
         ContigId = contigId;
         long pyrgoLen = cnEventPars.Get("Size", 1_000_000L);
@@ -19,7 +16,7 @@ public record PyrgoEventData : BaseEventData
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, pyrgoLen);
         long pyrgoStart = Sampling.GetInternalPos(rnd, contigLen - pyrgoFrag);
         
-        var meanSize = (long)(pyrgoFrag * pyrgoMean);
+        long meanSize = (long)(pyrgoFrag * pyrgoMean);
         int fracCount = Sampling.GetFragCount(rnd, pyrgoMean);
         FragmentsList = new List<(long, long)>();
         for (int i = 0; i < fracCount; i++)

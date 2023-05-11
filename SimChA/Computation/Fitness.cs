@@ -48,6 +48,6 @@ public static class Fitness
         var allSearched = searched.SelectMany(p => p.Value);
         var covered = allSearched.Where(g
             => !karyotype.IsMissing(g.Range) && (karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY));
-        return covered.Select(g => (g, counts.ContainsKey(g) ? counts[g] : 0));
+        return covered.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
     }
 }

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using SimChA.DataTypes;
 using SimChA.EventData;
 
 namespace Tests;
@@ -109,7 +108,7 @@ public class TestEventData
             (0, 100_000),
             (1, 1_000_000),
             (2, 2_000_000),
-            (3, 3_000_000),
+            (3, 3_000_000)
         };
         var eventData = new TemplatedEventData(_rnd, eventP, frags);
         foreach (var frag in eventData.Frags)
@@ -128,7 +127,7 @@ public class TestEventData
             (0, 1_000_000),
             (1, 10_000_000),
             (2, 20_000_000),
-            (3, 30_000_000),
+            (3, 30_000_000)
         };
         var eventData = new ChromoplexyEventData(_rnd, eventP, frags);
         Assert.AreEqual(eventData.Stops.Sum(s => s.Count + 1), eventData.Sequence.Count);
@@ -142,7 +141,7 @@ public class TestEventData
         const long len = 1_000_000;
         var eventP = new CNEventPars(CNEventType.Chromothripsis);
         var eventData = new ChromothripsisEventData(_rnd, eventP, 0, len);
-        foreach (var stop in eventData.StopsList)
+        foreach (long stop in eventData.StopsList)
         {
             Assert.Greater(stop, 0);
             Assert.Less(stop, len);

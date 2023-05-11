@@ -158,14 +158,14 @@ public class Karyotype
     
     public void ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence, List<long> breakpoints)
     {
-        var subcontigs = 
+        var subContigs = 
             Enumerable.Range(0, contigIDs.Count)
                 .Select(i => _contigs[contigIDs[i]].Scatter(stops[i]))
                 .SelectMany(x => x)
                 .ToList();
-        var ordered = Contig.Concat(sequence.Select(i => subcontigs[i]));
+        var ordered = Contig.Concat(sequence.Select(i => subContigs[i]));
         var newContigs = ordered.Scatter(breakpoints).ToList();
-        for (var i = 0; i < contigIDs.Count; i++)
+        for (int i = 0; i < contigIDs.Count; i++)
         {
             _contigs[contigIDs[i]] = newContigs[i];
         }
@@ -222,7 +222,7 @@ public class Karyotype
     public void ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
     {
         var contig = _contigs[contigID];
-        var lastWasDeletion = false;
+        bool lastWasDeletion = false;
         foreach (long len in rigmaLens)
         {
             if (lastWasDeletion)

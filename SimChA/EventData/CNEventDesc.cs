@@ -3,8 +3,8 @@
 namespace SimChA.EventData;
 
 public record CNEventDesc(
-    int CloneId,  
     CNEventType EventType,
+    int Depth,
     string Description = "",
     double DeltaFitness = 0, 
     double TotalFitness = 0);

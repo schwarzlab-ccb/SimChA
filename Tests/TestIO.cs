@@ -77,24 +77,23 @@ public class TestIO
     [Test]
     public void TestWriteClones()
     {
-        var projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
+        string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
         var kar = new Karyotype(false);
         var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, ceParams));
         var clone = new CloneIn(1, -1, 0, 1);
-        files.WriteClones(new List<Sample> { new Sample("test",  false, new List<CloneIn> { clone }, new List<CNEventPars>())});
     }
 
     [Test]
     public void TestReadClones()
     {
-        string clonesStr = "ID,ParentID,Distance,Alive,Necrotic,Lost,Drivers,Passengers,Fitness,CCF\n" +
-                           "0,0,0,116515,0,584410,1,0,1.2,0.9755\n" +
-                           "1,0,1,149897,0,339690,2,0,1.44,0.8619\n" +
-                           "5,1,1,310270,0,426497,3,0,1.728,0.3025\n" +
-                           "6,1,1,423957,0,583948,3,0,1.728,0.4133";
+        const string clonesStr = "ID,ParentID,Distance,Alive,Necrotic,Lost,Drivers,Passengers,Fitness,CCF\n" +
+                                 "0,0,0,116515,0,584410,1,0,1.2,0.9755\n" +
+                                 "1,0,1,149897,0,339690,2,0,1.44,0.8619\n" +
+                                 "5,1,1,310270,0,426497,3,0,1.728,0.3025\n" +
+                                 "6,1,1,423957,0,583948,3,0,1.728,0.4133";
         var clones = Parsers.ParseClones(new StringReader(clonesStr), true);
         Assert.AreEqual(4, clones.Count);
         Assert.AreEqual(0, clones[0].CloneId);

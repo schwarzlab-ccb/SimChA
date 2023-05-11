@@ -1,4 +1,4 @@
-﻿namespace SimChA.Misc;
+﻿namespace SimChA.Computation;
 
 public static class Extensions
 {

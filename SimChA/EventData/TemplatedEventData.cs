@@ -1,8 +1,8 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
 using Extreme.Statistics.Distributions;
+using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -11,14 +11,14 @@ public record TemplatedEventData : BaseEventData
 {
     public List<(int id, long start, long len, bool dir)> Frags { get; } = new();
     
-    public TemplatedEventData(Random rnd, CNEventPars cnEventPars, List<(int id, long len)> seq) : base(cnEventPars)
+    public TemplatedEventData(Random rnd, CNEventPars cnEventPars, IReadOnlyList<(int id, long len)> seq) : base(cnEventPars)
     {
         long size = cnEventPars.Get("Size", 1_000_000L);
         double fragMean = cnEventPars.Get("Frag", 10.0);
         int contigCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
                           + (cnEventPars.Type != CNEventType.TIBridge ? 1 : 2);
         
-        for (var i = 0; i < Math.Min(contigCount, seq.Count); i++)
+        for (int i = 0; i < Math.Min(contigCount, seq.Count); i++)
         {
             int id = seq[i].id;
             long contigLen = seq[i].len;

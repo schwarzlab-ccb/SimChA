@@ -10,8 +10,8 @@ public class CmdOptions
     [Option('C', "config", Required = false, Default = "./default_params.json", HelpText = "A json file with configuration of the experiment.")]
     public string ConfigFile { get; set; }
 
-    [Option('T', "tree", Required = false, Default = "", HelpText = "Newick file that describes the tree to be built.")]
-    public string NewickFile { get; set; }
+    [Option('T', "tree", Required = false, Default = "", HelpText = "A clone file that describes the tree to be built.")]
+    public string CloneTreeFile { get; set; }
     
     [Option('R', "repeats", Required = false, Default = 1, HelpText = "Number of repeats to generate if the distance parameter is used.")]
     public int Repeats { get; set; }

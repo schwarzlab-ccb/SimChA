@@ -4,5 +4,5 @@ public enum GeneListType
 {   
     TumorSuppressor,
     Oncogene,
-    Essentiality,
+    Essentiality
 }

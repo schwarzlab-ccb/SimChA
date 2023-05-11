@@ -1,7 +1,7 @@
 ﻿using Extreme.Statistics.Distributions;
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
-using SimChA.Misc;
 
 namespace SimChA.Simulation;
 
@@ -48,7 +48,7 @@ public static class Sampling
     public static int PickRndIndex(Random rnd, List<double> elems) 
     {
         double val = rnd.NextDouble();
-        for (var i = 0; i < elems.Count; i++)
+        for (int i = 0; i < elems.Count; i++)
         {
             if (val < elems[i])
             {
@@ -62,7 +62,7 @@ public static class Sampling
     public static int PickRndIndex<T>(Random rnd, List<T> elems) where T : IHasProb
     {
         double val = rnd.NextDouble();
-        for (var i = 0; i < elems.Count; i++)
+        for (int i = 0; i < elems.Count; i++)
         {
             if (val < elems[i].Prob)
             {

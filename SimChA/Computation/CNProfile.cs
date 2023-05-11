@@ -5,7 +5,7 @@ using SimChA.Simulation;
 
 namespace SimChA.Computation;
 
-public class CNProfile
+public abstract class CNProfile
 {
     public static CloneStat GetCloneStats(CloneIn clone, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams, Dictionary<int, Karyotype> karMap)
     {

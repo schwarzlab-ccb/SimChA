@@ -1,5 +1,4 @@
-using SimChA.DataTypes;
-using SimChA.Misc;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;

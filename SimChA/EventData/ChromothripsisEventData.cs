@@ -1,18 +1,16 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using SimChA.DataTypes;
-using SimChA.Misc;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
 
-public record ChromothripsisEventData : BaseEventData
+public record ChromothripsisEventData : ContigEventData
 {
-    public int ContigId { get; }
     public List<long> StopsList { get; }
     public List<int> SelectionList { get; }
     
-    public ChromothripsisEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars)
+    public ChromothripsisEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
     {
         ContigId = contigId;
         double chromothripsisLen = cnEventPars.Get("Size", 100_000_000L);

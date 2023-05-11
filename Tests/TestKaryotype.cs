@@ -182,7 +182,7 @@ public class TestKaryotype
         {
             new() { TEST_FRAC * 1, TEST_FRAC * 2 },
             new() { TEST_FRAC * 3, TEST_FRAC * 4, TEST_FRAC * 5 },
-            new(),
+            new()
         };
         var sequence = new List<int> { 0, 7, 6, 5, 4, 3, 2, 1 };
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };

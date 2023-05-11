@@ -13,11 +13,9 @@ public class TestSimulator
 {
     private Random _rnd;
     private MCParams _mcParams;
-    private Simulator _sim;
     private List<CNEventPars> _eventPs;
     private FitnessParams _fitness;
     private Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-    private CloneIn _clone;
     private Karyotype _kar;
     private const double EPSILON = 0.0000000001;
     
@@ -34,9 +32,7 @@ public class TestSimulator
             {GeneListType.TumorSuppressor, new Dictionary<ChrNo, List<Gene>>()},
             {GeneListType.Oncogene, new Dictionary<ChrNo, List<Gene>>()}
         };
-        _sim = new Simulator(_rnd, _fitness, _mcParams, _geneLists);
         _kar = new Karyotype(true);
-        _clone = new CloneIn(0, -1, 0, 1);
     }
     
     // Taken the MakeGene method from TestFitness
@@ -53,8 +49,8 @@ public class TestSimulator
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        _sim = new Simulator(_rnd, _fitness, _mcParams, listGenes);
-        double potential = _sim.Potential(_kar, 1, events, ref threshold);
+        var sim = new Simulator(_rnd, _fitness, listGenes);
+        double potential = sim.Potential(_mcParams, _kar, 1, events, ref threshold);
         Assert.AreEqual(potential,1.0,EPSILON);
     }
     
@@ -89,9 +85,9 @@ public class TestSimulator
     {
         // Test that it will never sample 0 prob signatures
         // Init a new Simulator instance
-        _sim = new Simulator(_rnd, _fitness,  _mcParams, _geneLists);
+        var sim = new Simulator(_rnd, _fitness, _geneLists);
         int nMutations = 5;
-        var eventData = _sim.InitEvents(_kar, nMutations, _eventPs);
+        var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)
         {
             Assert.True(data.EventType is CNEventType.ChromDeletion or CNEventType.ChromDuplication);

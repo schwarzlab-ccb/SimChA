@@ -74,7 +74,7 @@ public class TestRegions
             _cRegion with { Start = 0, End = 1 },
             _cRegion with { Start = 1, End = 2 },
             _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 },
+            _cRegion with { Start = 3, End = 4 }
         };
         var res = new List<Region>
         {
@@ -108,7 +108,7 @@ public class TestRegions
             _cRegion with { Start = 0, End = 1 },
             _cRegion with { Start = 1, End = 2 },
             _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 },
+            _cRegion with { Start = 3, End = 4 }
         };
         var res = new List<Region>
         {
@@ -138,7 +138,7 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 2 },
+            _cRegion with { Start = 0, End = 2 }
         };
         var (before, after) = RegionOps.SplitRegions(regions, 1);
         Assert.AreEqual(1, Contig.Length(after));

@@ -1,8 +1,8 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
-using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.IO;
@@ -14,7 +14,7 @@ public static class Converters
     public static List<CNEventPars> PropagateSigs(List<Signature> signatures, List<double>? probs = null)
     {
         var events = new List<CNEventPars>();
-        for (var i = 0; i < signatures.Count; i++)
+        for (int i = 0; i < signatures.Count; i++)
         {
             if (probs != null)
             {
@@ -47,14 +47,14 @@ public static class Converters
         var selectedSigs = sigs.Where(s => s.Prob > 0).ToList();
         double[] sigProbs = sigs.Select(s => s.Prob).ToArray();
         var mixture = Sampling.CreateRandomMixture(rnd, sigProbs);
-        for (var i = 0; i < repeats; i++)
+        for (int i = 0; i < repeats; i++)
         {
             double dist = Sampling.SampleDist(rnd, distribution);
-            var mutCount = (int)Math.Round(meanDist * dist);
+            int mutCount = (int) Math.Round(meanDist * dist);
             var clone = new CloneIn(0, -1, mutCount, 1); // TODO: Specify fitness target
             var events = PropagateSigs(selectedSigs, mixture);
             bool sexXX = rnd.CoinFlip();
-            var sample = new Sample($"Sample{i + 1}", sexXX, new List<CloneIn> { clone }, events);
+            var sample = new Sample($"sample_{i + 1}", sexXX, new List<CloneIn> { clone }, events);
             samples.Add(sample);
         }
         return samples;

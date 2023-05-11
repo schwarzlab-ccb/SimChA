@@ -100,8 +100,8 @@ public static class HGRef
             var haplotypeTwoM = CreateHaplotype(false, false, assembly);
             var xyGenome = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
             var xxGenome = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
-            var xyGenomeLen = xyGenome.Sum(r => r.Length);
-            var xxGenomeLen = xxGenome.Sum(r => r.Length);
+            long xyGenomeLen = xyGenome.Sum(r => r.Length);
+            long xxGenomeLen = xxGenome.Sum(r => r.Length);
             Refs[assembly] = new GenomeReference(xyGenome, xyGenomeLen, xxGenome, xxGenomeLen);
         }
     }

@@ -1,4 +1,3 @@
-using SimChA.DataTypes;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;

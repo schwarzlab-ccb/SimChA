@@ -1,7 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using SimChA.DataTypes;
-using SimChA.Misc;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -13,15 +12,14 @@ public record ChromoplexyEventData : BaseEventData
     public List<int> Sequence { get; } // Sequence of shards (given by the number of pieces in each contig)
     public List<long> Breakpoints { get; } // Breakpoints for the whole event - shards are first joined then split again
     
-    // TODO: Validate
-    public ChromoplexyEventData(Random rnd, CNEventPars cnEventPars, List<(int id, long len)> seq) : base(cnEventPars)
+    public ChromoplexyEventData(Random rnd, CNEventPars cnEventPars, IReadOnlyList<(int id, long len)> seq) : base(cnEventPars)
     {
         int contigCount = Math.Min(seq.Count, Sampling.GetChromoplexySiteCount(rnd));
         double size = cnEventPars.Get("Size", 10_000_000L);
         ContigIds = new List<int>();
         Stops = new List<List<long>>(); 
-        var totalLen = 0L;
-        var totalFrags = 0;
+        long totalLen = 0L;
+        int totalFrags = 0;
         for (int i = 0; i <contigCount; i++)
         {
             ContigIds.Add(seq[i].id);

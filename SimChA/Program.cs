@@ -7,9 +7,6 @@ using SimChA.IO;
 using SimChA.Simulation;
 
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-var watch = new Stopwatch();
-watch.Start();
-
 var options = Parser.Default.ParseArguments<CmdOptions>(args);
 options.WithNotParsed(o =>
 {
@@ -28,15 +25,16 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness, null, null);
+    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
 }
-
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
 var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
+var watch = new Stopwatch();
+watch.Start();
 // Obtain clones
 List<Sample> samples;
 if (options.Value.CNProfiles != "")
@@ -47,13 +45,14 @@ if (options.Value.CNProfiles != "")
 else
 {
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
-    Console.WriteLine("Computing mutations.");
-    var simulator = new Simulator(rnd, simParams.Fitness, simParams.MCParams, geneLists);
-    if (options.Value.NewickFile != "")
+    Console.WriteLine("Computing mutations:");
+    var simulator = new Simulator(rnd, simParams.Fitness, geneLists);
+    if (options.Value.CloneTreeFile != "")
     {
-        var inClones = FileIO.ReadClones(options.Value.NewickFile, options.Value.UseMCMC);
+        var inClones = FileIO.ReadClones(options.Value.CloneTreeFile, options.Value.UseMCMC);
         var eventPs = Converters.PropagateSigs(sigs);
-        var treeSample = new Sample(options.Value.NewickFile, simParams.SexXX, inClones, eventPs);
+        string sampleName = Path.GetFileNameWithoutExtension(options.Value.CloneTreeFile);
+        var treeSample = new Sample(sampleName, simParams.SexXX, inClones, eventPs);
         samples = new List<Sample> { treeSample };
     }
     else
@@ -63,39 +62,40 @@ else
     foreach (var sample in samples)
     {
         // Monte Carlo sampling of copy-number altering events
-        if (options.Value.UseMCMC && simParams.MCParams == null)
+        if (options.Value.UseMCMC)
         {
-            throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
+            if (simParams.MCParams == null)
+            {
+                throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
+            }
+            simulator.SampleEvents(sample, simParams.MCParams);
         }
-        simulator.SampleEvents(sample, options.Value.UseMCMC);
+        else
+        {
+            simulator.SampleEvents(sample);
+        }
     }
+    Console.WriteLine("");
 }
 
 // Fitness data
-Console.WriteLine("Computing fitness.");
-var sampleStats = new Dictionary<string, List<CloneStat>>();
-int counter = 0;
-int cloneCount = samples.Sum(s => s.Clones.Count);
-foreach (var sample in samples)
-{
-    var cloneStatsList = new List<CloneStat>();
-    foreach (var clone in sample.Clones)
-    {
-        Console.Write($"\r{++counter}/{cloneCount} clones processed.");
-        var cloneStats = CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness, sample.Kars);
-        cloneStatsList.Add(cloneStats);
-    }
-    sampleStats[sample.SampleId] = cloneStatsList;
-}
+Console.WriteLine("Computing sample stats:");
 
-Console.WriteLine();
+List<CloneStat> GetSampleStats(Sample s)
+    => s.Clones.Select(clone => CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness, s.Kars)).ToList();
+var stats = samples.ToDictionary(
+    s => { Console.WriteLine("\rSample: " + s.SampleId); return s.SampleId; }, 
+    GetSampleStats);
+
 try
 {
     files.WriteSamples(samples);
-    files.WriteClones(samples);
     files.WriteCopyNumbers(samples);
-    files.WriteFitness(sampleStats);
-    // Check if cnEvents was assigned
+    files.WriteFitness(stats);
+    if (samples.Any(s => s.Kars.Any()))
+    {
+        files.WriteKaryotypes(samples);
+    }
     if (samples.Any(s => s.EventDescs.Any()))
     {
         files.WriteEvents(samples);

@@ -1,5 +1,4 @@
 ﻿using SimChA.DataTypes;
-using SimChA.Misc;
 using SimChA.Simulation;
 
 namespace SimChA.Computation;
@@ -127,7 +126,7 @@ public static class RegionOps
     public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
     {
         var newRegions = new List<T>();
-        var merged = new bool[regions.Count];
+        bool[] merged = new bool[regions.Count];
         for (int i = 0; i < regions.Count; i++)
         {
             if (merged[i])
@@ -154,7 +153,7 @@ public static class RegionOps
     public static List<Region> GlueNeighbours(List<Region> regions)
     {
         var newRegions = new List<Region>();
-        var merged = new bool[regions.Count];
+        bool[] merged = new bool[regions.Count];
         for (int i = 0; i < regions.Count; i++)
         {
             if (merged[i])

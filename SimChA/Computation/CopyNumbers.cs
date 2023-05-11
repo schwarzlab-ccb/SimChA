@@ -15,7 +15,7 @@ public static class CopyNumbers
     }
 
     // Calculate the segmentation of a chromosome based on the regions of the karyotype mapping to that chromosome
-    private static IEnumerable<CopyNumber> CalcChrCopyNumbers(List<Region> curRegs, ChrID id)
+    private static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, ChrID id)
     {
         var result = new List<CopyNumber>();
 
@@ -38,21 +38,15 @@ public static class CopyNumbers
         return result;
     }
 
-    public static double CalcPloidy(List<CopyNumber> copyNumbers, bool isFemale)
+    public static double CalcPloidy(IEnumerable<CopyNumber> copyNumbers, bool isFemale)
     {
         long totalLength = HGRef.GetGenomeLen(isFemale) / 2;
-        double ploidy = copyNumbers
-            .Select(c => (float)c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength)
-            .Sum();
-        return ploidy;
+        return copyNumbers.Select(c => (float)c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
     }
 
     private static string Header(bool withSample, bool isFirst)
         => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\n" : "";
-
-    public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, bool isFirst)
-        => Header(false, isFirst) + string.Join("\n", copyNumbers.Select(cn => cn.ToTSV()));
-
+    
     public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId, bool isFirst)
         => Header(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 }

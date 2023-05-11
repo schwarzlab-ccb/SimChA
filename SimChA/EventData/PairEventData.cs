@@ -1,7 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using SimChA.DataTypes;
-using SimChA.Misc;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;

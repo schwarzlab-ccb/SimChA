@@ -9,5 +9,5 @@ public record SimParams(
     Distribution Distribution,
     GenomeAssembly Assembly,
     FitnessParams Fitness,
-    List<Signature>? Signatures,
-    MCParams? MCParams);
+    List<Signature>? Signatures = null,
+    MCParams? MCParams = null);

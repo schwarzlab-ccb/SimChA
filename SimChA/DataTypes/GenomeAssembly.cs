@@ -6,5 +6,5 @@ namespace SimChA.DataTypes;
 public enum GenomeAssembly
 {
     hg19,
-    hg38,
+    hg38
 }

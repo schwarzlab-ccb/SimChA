@@ -3,24 +3,21 @@ using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.EventData;
 using SimChA.Simulation;
 
 namespace SimChA.IO;
 
 public class FileIO
 {
-    private const string NEWICK_FILENAME = "parent_graph.new";
     private const string SAMPLES_FILENAME = "samples.tsv";
-    private const string SUBCLONES_FILENAME = "clones.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
+    private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
+    private const string SAMPLE_FITNESS_FILE = "fitness.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
     private const string OGS_TSV = "OGs.tsv";
     private const string TSGS_TSV = "TSGs.tsv";
-    private const string SAMPLE_FITNESS_FILE = "sample_fitness.tsv";
-    private const string FITNESS_INPUT_FILE = "subclones.out";
     private string Timestamp { get; }
     private string OutFolder { get; }
 
@@ -51,26 +48,10 @@ public class FileIO
         outputFile.WriteLine(Sample.Header());
         foreach (var sample in samples)
         {
-            outputFile.WriteLine(sample.ToString());
+            outputFile.WriteLine(sample.ToTSV());
         }
     }
-
-    public void WriteClones(IEnumerable<Sample> samples)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SUBCLONES_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
-
-        outputFile.WriteLine("sample_id\t" + CloneIn.Header());
-        foreach (var sample in samples)
-        {
-            foreach (var clone in sample.Clones)
-            {
-                outputFile.WriteLine($"{sample.SampleId}\t{clone}");
-            }
-        }
-    }
-
+    
     public void WriteCopyNumbers(IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
@@ -84,9 +65,9 @@ public class FileIO
         {
             foreach (var clone in sample.Clones)
             {
-                var copynumbers = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
+                var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
-                copyNumbersString.Append(CopyNumbers.ToTSV(copynumbers, name, false) + "\n");
+                copyNumbersString.Append(CopyNumbers.ToTSV(cns, name, false) + "\n");
             }
             outputFile.Write(copyNumbersString.ToString());
         }
@@ -101,26 +82,39 @@ public class FileIO
         file.WriteLine(jsonString);
     }
 
+    public void WriteKaryotypes(List<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), KARYOTYPES_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        outputFile.WriteLine("sample_id\tclone_id\tkaryotype");
+        foreach (var sample in samples)
+        {
+            foreach (var kar in sample.Kars)
+            {
+                outputFile.WriteLine($"{sample.SampleId}\t{kar.Key}\t{kar.Value}");
+            }
+        }
+    }
+
     public void WriteEvents(IEnumerable<Sample> samples)
     {
-        //TODO: Format output, talk with Tom about readable ideas
+        // TODO: Format output, talk with Tom about readable ideas
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        StringBuilder abberationString = new();
-        abberationString.Append("sample\tid\tevent_type\tevent_string\tdelta_fitness\ttotal_Fitness\tmutations\n");
+        outputFile.WriteLine("sample_id\tclone_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness");
         foreach (var sample in samples)
         {
-            foreach (var cnEvent in sample.EventDescs)
+            foreach (var clone in sample.EventDescs)
             {
-                abberationString.Append($"{cnEvent.CloneId}\t" +
-                                        $"{cnEvent.EventType}\t" +
-                                        $"{cnEvent.Description}\t" +
-                                        $"{Math.Round((decimal)cnEvent.DeltaFitness, 8)}\t" +
-                                        $"{Math.Round((decimal)cnEvent.TotalFitness, 8)}\t");
+                foreach (var cnEvent in clone.Value)
+                {
+                    outputFile.WriteLine($"{sample.SampleId}\t{clone.Key}\t{cnEvent.EventType}\t{cnEvent.Depth}\t" +
+                                         $"{cnEvent.Description}\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
+                }
             }
         }
-        outputFile.Write(abberationString.ToString());
     }
 
     public void WriteFitness(Dictionary<string, List<CloneStat>> sampleStats)
