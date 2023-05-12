@@ -108,26 +108,13 @@ public class TestFitness
     }
 
     [Test]
-    public void TestOnDataMale()
+    public void TestReferenceFitness([Values] bool sexXX, [Values] GenomeAssembly genomeAssembly)
     {
-        const bool sexXX = false;
         const string dataPath = "./../../../../data";
-        var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, GenomeAssembly.hg19);
+        var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, genomeAssembly);
         var karyotype = new Karyotype(sexXX);
-        var fit = new FitnessParams(1, 1, 1);
-        var fitness = Fitness.Calculate(karyotype, geneLists, fit);
-        Assert.AreEqual(1.0, fitness, EPSILON);
-    }
-
-    [Test]
-    public void TestOnDataFemale()
-    {
-        const bool sexXX = true;
-        const string dataPath = "./../../../../data";
-        var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, GenomeAssembly.hg19);
-        var karyotype = new Karyotype(sexXX);
-        var fit = new FitnessParams(1, 1, 1);
-        var fitness = Fitness.Calculate(karyotype, geneLists, fit);
+        var fParams = new FitnessParams(1, 1, 1);
+        double fitness = Fitness.Calculate(karyotype, geneLists, fParams);
         Assert.AreEqual(1.0, fitness, EPSILON);
     }
 }
