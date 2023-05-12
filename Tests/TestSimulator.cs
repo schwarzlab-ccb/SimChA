@@ -57,8 +57,6 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        // Test that it will never sample 0 prob signatures
-        // Init a new Simulator instance
         var sim = new Simulator(_rnd, _fitness, _geneLists);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
