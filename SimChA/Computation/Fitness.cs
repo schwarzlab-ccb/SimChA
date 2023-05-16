@@ -35,12 +35,17 @@ public static class Fitness
     public static double StressTerm(long baseCount, bool isFemale)
         => 1 - baseCount / (double) HGRef.GetGenomeLen(isFemale);
 
+    public static int baselineCount(Gene gene, bool sexXX)
+    {
+        if (gene.Range.ChrNo == ChrNo.chrY)
+            return (sexXX) ? 0 : 1;
+        else if (gene.Range.ChrNo == ChrNo.chrX)
+            return (sexXX) ? 2 : 1;
+        else return 2;
+    }
+
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
-        => geneCNs.Sum(g =>
-        (g.CN - (g.gene.Range.ChrNo == ChrNo.chrY && sexXX ? 0 : 
-            g.gene.Range.ChrNo == ChrNo.chrY && !sexXX ? 1 : 
-            g.gene.Range.ChrNo == ChrNo.chrX && !sexXX ? 1 : 2)) * 
-            g.gene.DeltaFitness);
+        => geneCNs.Sum(g => (g.CN - baselineCount(g.gene, sexXX)) * g.gene.DeltaFitness);
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
