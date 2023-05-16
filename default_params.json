@@ -57,7 +57,7 @@
         },
         {
           "Type": "Chromoplexy",
-          "Prob": 0
+          "Prob": 1
         },
         {
           "Type": "Chromothripsis",
@@ -65,7 +65,7 @@
         },
         {
           "Type": "Pyrgo",
-          "Prob": 1
+          "Prob": 2
         },
         {
           "Type": "Rigma",
@@ -73,15 +73,15 @@
         },
         {
           "Type": "TIChain",
-          "Prob": 0
+          "Prob": 2
         },
         {
           "Type": "TICycle",
-          "Prob": 0
+          "Prob": 2
         },
         {
           "Type": "TIBridge",
-          "Prob": 0
+          "Prob": 2
         }
       ]
     }

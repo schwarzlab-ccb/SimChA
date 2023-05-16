@@ -66,7 +66,7 @@ public class FileIO
             {
                 var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
-                outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false) + "\n");
+                outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
     }
