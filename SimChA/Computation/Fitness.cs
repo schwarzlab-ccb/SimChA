@@ -37,11 +37,13 @@ public static class Fitness
 
     public static int baselineCount(Gene gene, bool sexXX)
     {
-        if (gene.Range.ChrNo == ChrNo.chrY)
-            return (sexXX) ? 0 : 1;
+        // Autosomes return first
+        if (gene.Range.ChrNo != ChrNo.chrX && gene.Range.ChrNo != ChrNo.chrY)
+            return 2;
         else if (gene.Range.ChrNo == ChrNo.chrX)
             return (sexXX) ? 2 : 1;
-        else return 2;
+        else
+            return (sexXX) ? 0 : 1;
     }
 
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
