@@ -84,6 +84,7 @@ foreach (var clone in clones)
 Console.WriteLine();
 try
 {
+<<<<<<< Updated upstream
     files.WriteClones(clones);
     files.WriteCopyNumbers(clones, simParams.SexXX);
     files.WriteSampleFitness(results);
@@ -96,6 +97,12 @@ try
     {
         files.WriteNewick(newick);
     }
+=======
+    files.WriteClones(selectClones);
+    files.WriteCopyNumbers(selectClones);
+    files.WriteParentTree(lcaTree);
+    files.WriteSimParams(simParams);
+>>>>>>> Stashed changes
 }
 catch (Exception e)
 {

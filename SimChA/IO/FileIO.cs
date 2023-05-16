@@ -151,7 +151,11 @@ public class FileIO
         string fileFullPath = Path.GetFullPath(newickFile);
         if (!File.Exists(fileFullPath))
         {
+<<<<<<< Updated upstream
             throw new Exception($"File {fileFullPath} does not exist");
+=======
+            throw new Exception($"Newick file {fileFullPath} does not exist");
+>>>>>>> Stashed changes
         }
         try
         {
