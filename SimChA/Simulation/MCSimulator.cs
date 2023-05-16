@@ -5,8 +5,7 @@ using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
-// TODO: Split into two classes (one for random sampling, one for applying MCMC).
-class MCSimulator : Simulator
+public class MCSimulator : Simulator
 {
     private MCParams _mcParams;
     public MCSimulator(Random rnd,

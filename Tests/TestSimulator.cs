@@ -43,7 +43,6 @@ public class TestSimulator
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        bool threshold = false;
         var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t,
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
