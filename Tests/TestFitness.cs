@@ -42,23 +42,35 @@ public class TestFitness
     [Test]
     public void TestTsgOgTerm()
     {
-        Assert.AreEqual(0, Fitness.TsgOgTerm(new List<(Gene, int)>()));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(new List<(Gene, int)>(), true));
         
         var testNoEffect = new List<(Gene, int)> {(MakeGene(ChrNo.chr1, 0), 0)};
-        Assert.AreEqual(0, Fitness.TsgOgTerm(testNoEffect));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(testNoEffect, true));
 
         var testMissing = new List<(Gene, int)> { (MakeGene(ChrNo.chr1, 0.1), 1)};
-        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(testMissing));
+        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(testMissing, true));
 
         var testMissingTwice = new List<(Gene, int)> {(MakeGene(ChrNo.chr1, 0.1), 0)};
-        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(testMissingTwice));
+        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(testMissingTwice, true));
 
         var testList = new List<(Gene, int)> {
             (MakeGene(ChrNo.chr1, 0.1), 1), 
             (MakeGene(ChrNo.chr1, 0.2), 0), 
             (MakeGene(ChrNo.chr1, 0.3), 2)
         };
-        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(testList));
+        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(testList, true));
+
+        testList = new List<(Gene, int)>{
+            (MakeGene(ChrNo.chrX, 0.1), 2)
+        };
+        Assert.AreEqual(0, Fitness.TsgOgTerm(testList, true));
+        Assert.AreEqual(0.1, Fitness.TsgOgTerm(testList, false));
+        testList = new List<(Gene, int)>{
+            (MakeGene(ChrNo.chrX, 0.2), 2),
+            (MakeGene(ChrNo.chrY, 0.1), 2)
+        };
+        Assert.AreEqual(0.2, Fitness.TsgOgTerm(testList, true));
+        Assert.AreEqual(0.2 + 0.1, Fitness.TsgOgTerm(testList, false));
     }
     
     [Test]
@@ -112,6 +124,7 @@ public class TestFitness
     {
         const string dataPath = "./../../../../data";
         var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, genomeAssembly);
+        HGRef.Assembly = genomeAssembly;
         var karyotype = new Karyotype(sexXX);
         var fParams = new FitnessParams(1, 1, 1);
         double fitness = Fitness.Calculate(karyotype, geneLists, fParams);

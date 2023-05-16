@@ -17,7 +17,7 @@ public static class Fitness
         var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
         return 1 
                + fParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
-               + fParams.TsgOg * (TsgOgTerm(ogCNs) - TsgOgTerm(tsgCNs)) 
+               + fParams.TsgOg * (TsgOgTerm(ogCNs, karyotype.SexXX) - TsgOgTerm(tsgCNs, karyotype.SexXX)) 
                + fParams.Essentiality * EssTerm(essCNs);
     }
 
@@ -35,8 +35,12 @@ public static class Fitness
     public static double StressTerm(long baseCount, bool isFemale)
         => 1 - baseCount / (double) HGRef.GetGenomeLen(isFemale);
 
-    public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs)
-        => geneCNs.Sum(g => (g.CN - 2) * g.gene.DeltaFitness);
+    public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
+        => geneCNs.Sum(g =>
+        (g.CN - (g.gene.Range.ChrNo == ChrNo.chrY && sexXX ? 0 : 
+            g.gene.Range.ChrNo == ChrNo.chrY && !sexXX ? 1 : 
+            g.gene.Range.ChrNo == ChrNo.chrX && !sexXX ? 1 : 2)) * 
+            g.gene.DeltaFitness);
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
