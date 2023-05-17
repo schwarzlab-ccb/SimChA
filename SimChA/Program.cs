@@ -57,7 +57,7 @@ else
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs);
+        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.SexXX);
     }
     foreach (var sample in samples)
     {
@@ -86,8 +86,8 @@ foreach (var sample in samples)
 {
     foreach (var clone in sample.Clones)
     {
-        Console.Write($"\rClone {counter++}/{total}.");
-        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(clone, geneLists, simParams.Fitness, sample.Kars);
+        Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
+        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, geneLists, simParams.Fitness, sample.Kars);
     }
 }
 Console.WriteLine("");
@@ -96,7 +96,7 @@ try
 {
     files.WriteSamples(samples);
     files.WriteCopyNumbers(samples);
-    files.WriteFitness(samples);
+    files.WriteClones(samples);
     files.WriteKaryotypes(samples);
     if (samples.Any(s => s.EventDescs.Any()))
     {

@@ -28,6 +28,7 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         _kar = new Karyotype(false);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion);

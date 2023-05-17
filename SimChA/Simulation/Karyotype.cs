@@ -57,8 +57,8 @@ public class Karyotype
     public double CalcPloidy()
         => 2.0 * GenomeLen() / HGRef.GetGenomeLen(SexXX);
     
-    public double CalcMissing()
-        => 1 - (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
+    public double CalcCoverage()
+        => (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
     
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));

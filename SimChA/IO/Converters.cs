@@ -41,7 +41,7 @@ public static class Converters
         return events;    
     }
     
-    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, List<Signature> sigs)
+    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, List<Signature> sigs, bool sexXX)
     {
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Prob > 0).ToList();
@@ -53,7 +53,6 @@ public static class Converters
             int mutCount = (int) Math.Round(meanDist * dist);
             var clone = new CloneIn(0, -1, mutCount, 1); // TODO: Specify fitness target
             var events = PropagateSigs(selectedSigs, mixture);
-            bool sexXX = rnd.CoinFlip();
             var sample = new Sample($"sample_{i + 1}", sexXX, new List<CloneIn> { clone }, events);
             samples.Add(sample);
         }

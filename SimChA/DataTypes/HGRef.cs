@@ -67,10 +67,23 @@ public static class HGRef
         {ChrNo.chrY, 57_227_415}
     };
 
+    private static GenomeAssembly _assembly;
+
     private static Dictionary<ChrNo, int> GetChrs(GenomeAssembly assembly) 
         => assembly == GenomeAssembly.hg19 ? HG19Chrs : HG38Chrs;
-    
-    public static GenomeAssembly Assembly { get; set; }
+
+    public static GenomeAssembly Assembly
+    {
+        get
+        {
+            if (_assembly == GenomeAssembly.none)
+            {
+                throw new Exception("Genome assembly not set.");
+            }
+            return _assembly;
+        }
+        set => _assembly = value;
+    }
 
     private static Dictionary<GenomeAssembly, GenomeReference> Refs { get; }
 

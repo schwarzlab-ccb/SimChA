@@ -136,11 +136,11 @@ public class TestEventData
     }
 
     [Test]
-    public void TestChromothripsis()
+    public void TestChromothripsis([Values] IntEdgeCases seed)
     {
-        const long len = 1_000_000;
+        const long len = 100_000_000;
         var eventP = new CNEventPars(CNEventType.Chromothripsis);
-        var eventData = new ChromothripsisEventData(_rnd, eventP, 0, len);
+        var eventData = new ChromothripsisEventData(new Random((int) seed), eventP, 0, len);
         foreach (long stop in eventData.StopsList)
         {
             Assert.Greater(stop, 0);

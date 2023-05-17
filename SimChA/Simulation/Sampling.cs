@@ -50,7 +50,7 @@ public static class Sampling
         return dist switch
         {
             DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, 1),
-            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, 1),
+            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, .5),
             _ => 1
         };
     }

@@ -16,6 +16,7 @@ public class TestContig
     [SetUp]
     public void Setup()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         _contig1 = new Contig(HGRef.GetRegion(ChrNo.chr1));
         _contigX = new Contig(HGRef.GetRegion(ChrNo.chrX, false));
     }

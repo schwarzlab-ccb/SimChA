@@ -13,7 +13,7 @@ public class FileIO
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
-    private const string SAMPLE_FITNESS_FILE = "fitness.tsv";
+    private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
     private const string OGS_TSV = "OGs.tsv";
@@ -117,19 +117,19 @@ public class FileIO
         }
     }
 
-    public void WriteFitness(IEnumerable<Sample> samples)
+    public void WriteClones(IEnumerable<Sample> samples)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLE_FITNESS_FILE);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        file.WriteLine("sample_id\tfitness\tstress\ttsg\tog\tess");
+        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\tstress\ttsg\tog\tess");
         foreach (var sample in samples)
         {
             foreach (var stats in sample.Stats)
             {
                 string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{stats.Key}" : $"{sample.SampleId}";
                 var clone = stats.Value;
-                file.WriteLine($"{sampleName}\t{clone.Fitness}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
+                file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
             }
         }
     }

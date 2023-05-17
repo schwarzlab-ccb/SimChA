@@ -58,7 +58,7 @@ public class Simulator
             double oldFitness = childKar.FitnessVal;
             for (int mutNo = 0; mutNo < child.Distance; mutNo++)
             {
-                Console.Write($"\rClone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
+                Console.Write($"\rSample {sample.SampleId}. Clone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
                 var eventP = _rnd.PickRndElem(sample.EventPars);
                 var eventData = Sampling.GenerateCNEventData(_rnd, childKar, eventP);
                 eventData.ApplyEvent(childKar);
@@ -169,7 +169,7 @@ public class Simulator
                 // Finalize the mutated karyotype by applying the best-fit set of events
                 for (int mutNo = 0; mutNo < currentEventProps.Count; mutNo++)
                 {
-                    Console.Write($"\rClone {_counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.Distance}.");
+                    Console.Write($"\rSample {sample.SampleId}. Clone {_counter}/{clones.Count - 1}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
                     var eventData = currentEventProps[mutNo];
                     eventData.ApplyEvent(childKar);
                     double newFitness = childKar.UpdateFitness(_geneLists, _fitness);

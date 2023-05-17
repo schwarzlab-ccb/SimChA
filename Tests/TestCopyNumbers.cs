@@ -25,17 +25,16 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        // karyotype = new Karyotype(false);
+        HGRef.Assembly = GenomeAssembly.hg19;
         referenceMale = new Karyotype(false);
         referenceFemale = new Karyotype(true);
         _rnd = new Random(0);
-
-        // TODO: modify karyotype
     }
 
     [Test]
     public void TestCalcPloidyReference()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         var copyNumbersReferenceFemale = CopyNumbers.CalcCopyNumbers(referenceFemale, true).ToList();
         double ploidyReferenceFemale = CopyNumbers.CalcPloidy(copyNumbersReferenceFemale, true);
         Assert.AreEqual(2, ploidyReferenceFemale);

@@ -2,4 +2,4 @@
 
 namespace SimChA.DataTypes;
 
-public record CloneStat(int Id, double Fitness, double Stress, double Tsg, double Og, double Ess);
+public record CloneStat(string sample, int Id, double Ploidy, double Coverage, double Fitness, double Stress, double Tsg, double Og, double Ess);

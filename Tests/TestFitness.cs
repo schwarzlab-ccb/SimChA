@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using CommandLine;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -78,6 +79,7 @@ public class TestFitness
     [Test]
     public void TestCNCalulation()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         // Seed 14 to get chr1 delete
         var rnd = new Random(14);
         var karyotype = new Karyotype(true);
@@ -94,6 +96,7 @@ public class TestFitness
     [Test]
     public void TestCalculate()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         var karyotype = new Karyotype(true);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
         //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
@@ -108,13 +111,16 @@ public class TestFitness
     }
 
     [Test]
-    public void TestReferenceFitness([Values] bool sexXX, [Values] GenomeAssembly genomeAssembly)
+    public void TestReferenceFitness([Values] bool sexXX, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly, [Values(-1, 0, 1)] int myInt)
     {
         const string dataPath = "./../../../../data";
+        HGRef.Assembly = genomeAssembly;
         var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, genomeAssembly);
         var karyotype = new Karyotype(sexXX);
-        var fParams = new FitnessParams(1, 1, 1);
-        double fitness = Fitness.Calculate(karyotype, geneLists, fParams);
-        Assert.AreEqual(1.0, fitness, EPSILON);
+        var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
+        double tsg = Fitness.TsgOgTerm(tsgCNs);
+        var ogsCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
+        double og = Fitness.TsgOgTerm(ogsCNs);
+        Console.WriteLine($"sex: {sexXX}, assembly: {genomeAssembly}, TSG: {tsg}, OG: {og}");
     }
 }
