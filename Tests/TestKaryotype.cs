@@ -144,25 +144,20 @@ public class TestKaryotype
     }
     
     [Test]
-    public void TestApplyCNEvent()
+    public void TestApplyCNEvent([Values] CNEventType eventType)
     {
         var pars = new Dictionary<string, double> { ["Size"] = 1_000_000 };
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.ChromDeletion, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.ChromDuplication, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InvertedDuplication, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.BreakageFusionBridge, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TailDeletion, 1.0, pars)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Translocation, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Chromoplexy, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Chromothripsis, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Pyrgo, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Rigma, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TIChain, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TIBridge, 1.0)); });
-        Assert.DoesNotThrow(() => { ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.TICycle, 1.0)); });
+        var eventP = new CNEventPars(eventType, 1, pars);
+        Assert.DoesNotThrow(() => ApplyRandomEvent(_rnd, _kar, eventP));
+    }
+
+    [Test]
+    public void TestRandomEvent([Values] CNEventType eventType, [Values] IntEdgeCases seed)
+    {
+        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000 };
+        var eventP = new CNEventPars(eventType, 1, pars);
+        var eventData = Sampling.GenerateCNEventData(new Random((int) seed), _kar, eventP);
+        Assert.DoesNotThrow(() => eventData.ApplyEvent(_kar));
     }
     
     [Test]
