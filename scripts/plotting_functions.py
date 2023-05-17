@@ -38,7 +38,7 @@ CHROM_SIZES = [247249719, 242951149, 199501827, 191273063, 180857866, 170899992,
 #                    for i in range(len(CHROM_SIZE))}
 
 
-def load_data(filename):
+def load_data(filename, add_y_chrom_to_XX_samples=True):
     '''Load the data from a file'''
     data = pd.read_csv(filename, sep='\t')
     assert np.all(data.columns == ['sample_id', 'chr', 'start', 'end',
@@ -46,6 +46,17 @@ def load_data(filename):
     data['chr'] = format_chromosomes_int(data['chr'])
     data = data.set_index(['sample_id', 'chr', 'start', 'end'])
     data = data.sort_index()
+
+    # add y chromosome to all samples that don't have it
+    if add_y_chrom_to_XX_samples and 24 in data.eval('chr').unique():
+        y_chrom_length = data.loc[(slice(None), 24), :].eval('end-start').max()
+        XX_samples = np.setdiff1d(data.index.get_level_values('sample_id').unique(),
+                        data.groupby(['chr', 'sample_id'], observed=False).count().loc[24].index)
+        data = pd.concat([data,
+                          pd.DataFrame([(sample, 24, 0, y_chrom_length, 0, 0) for sample in XX_samples],
+                                        columns=['sample_id', 'chr', 'start', 'end', 'cn_a', 'cn_b'])
+                                        .set_index(['sample_id', 'chr', 'start', 'end'])
+                        ]).sort_index()
 
     assert data.index.is_unique, 'Index is not unique'
     assert len(data.columns) == 2, 'Data has more than two columns'
