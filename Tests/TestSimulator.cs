@@ -43,22 +43,19 @@ public class TestSimulator
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        bool threshold = false;
         var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t,
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        var sim = new Simulator(_rnd, _fitness, listGenes);
-        double potential = sim.Potential(_mcParams, _kar, 1, events).potential;
+        var sim = new MCSimulator(_rnd, _fitness, listGenes,_mcParams);
+        double potential = sim.Potential(_kar, 1, events).potential;
         Assert.AreEqual(potential,0.0,EPSILON);
     }
 
     [Test]
     public void TestInitEvents()
     {
-        // Test that it will never sample 0 prob signatures
-        // Init a new Simulator instance
         var sim = new Simulator(_rnd, _fitness, _geneLists);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);

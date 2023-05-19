@@ -5,13 +5,12 @@ using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
-// TODO: Split into two classes (one for random sampling, one for applying MCMC).
 public class Simulator
 {
-    private readonly Random _rnd;
-    private readonly FitnessParams _fitness;
-    private readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-    private int _counter;
+    public readonly Random _rnd;
+    public readonly FitnessParams _fitness;
+    public readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
+    public int _counter;
 
     public Simulator(
         Random rnd,
@@ -23,7 +22,7 @@ public class Simulator
         _geneLists = geneLists;
     }
 
-    public void SampleEvents(Sample sample)
+    public virtual void SampleEvents(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {
@@ -34,19 +33,6 @@ public class Simulator
         sample.Kars[root.CloneId] = new Karyotype(sample.SexXX);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
-
-    public void SampleEvents(Sample sample, MCParams mcParams)
-    {
-        if (sample.EventPars == null || !sample.EventPars.Any())
-        {
-            throw new Exception("No events to sample from.");
-        }
-        _counter = 1;
-        var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(sample.SexXX);
-        MCSampleCNEventsRec(sample, root, childLoopUp, mcParams, 1);
-    }
-
     private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, List<CloneIn>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
