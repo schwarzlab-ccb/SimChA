@@ -92,8 +92,8 @@ def plot_CNs(data, sample, join_haps = False, dpi=200):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot haplotype specific Copy Numbers for a sample")
-    parser.add_argument("--input", default="./out/clones.tsv", help="Input file path")
-    parser.add_argument("--sample", default="1", help="Sample ID")
+    parser.add_argument("--input", default="./out/karyotypes.tsv", help="The file with the karyotype data.")
+    parser.add_argument("--sample", default="sample_1", help="Sample ID")
     parser.add_argument("--output", default="./out/karyotype.png", help="Output file path")
     parser.add_argument("--joint", action="store_true", help="Plot both haplotypes jointly (default: False))")
     args = parser.parse_args()

@@ -7,14 +7,17 @@ namespace SimChA.Simulation;
 
 public class MCSimulator : Simulator
 {
+    protected readonly FitnessParams _fitness;
     private MCParams _mcParams;
+    
     public MCSimulator(Random rnd,
         FitnessParams fitnessParams, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
-        MCParams mCParams) : base(rnd, fitnessParams, geneLists)
+        MCParams mCParams) : base(rnd, geneLists)
     {
+        _fitness = fitnessParams;
         _mcParams = mCParams;
-
     }
+    
     public override void SampleEvents(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
@@ -67,6 +70,31 @@ public class MCSimulator : Simulator
         }
         return proposedEvents;
     }
+    
+    // The conditional probability of this set of events occuring, 
+    // given the individual events and the signature
+    public (double potential, bool accept) Potential(MCParams mcParams, Karyotype kar, double targetFit, List<BaseEventData> events)
+    {
+        double eventPotentialTotal = 0.0;
+
+        // Probability of picking each event and their corresponding signature
+        foreach (var eventData in events)
+        {
+            eventData.ApplyEvent(kar);
+            eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
+        }
+
+        double newFitness = kar.UpdateFitness(_geneLists, _fitness);
+        double dFit = newFitness - targetFit;
+        bool thresholdAccept = Math.Abs(dFit / targetFit) < mcParams.ThresholdFit;
+
+        // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
+        double fitnessPotential = Math.Exp(-mcParams.ThetaFitness * Math.Abs(dFit));
+        double potential = eventPotentialTotal + Math.Log(fitnessPotential);
+
+        return (potential, thresholdAccept);
+    }
+    
     private List<BaseEventData> GetBestEvents(Sample sample, Karyotype kar, int nEvents, double targetFitness){
         // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, sample.EventPars);

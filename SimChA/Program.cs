@@ -46,7 +46,7 @@ else
 {
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
-    var simulator = new Simulator(rnd, simParams.Fitness, geneLists);
+    var simulator = new Simulator(rnd, geneLists);
     if (options.Value.CloneTreeFile != "")
     {
         var inClones = FileIO.ReadClones(options.Value.CloneTreeFile, options.Value.UseMCMC);

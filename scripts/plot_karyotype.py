@@ -98,9 +98,8 @@ def get_data(input_file, sample_name):
         raise SystemExit
     clones = pd.read_csv(input_file, sep='\t')
 
-    # set clones["ID"] to string
-    clones["ID"] = clones["ID"].astype(str)    
-    clones.set_index("ID", inplace=True)    
+    clones["sample_id"] = clones["sample_id"].astype(str)    
+    clones.set_index("sample_id", inplace=True)    
 
     # clones row where ID is sample_name
     sample = clones.loc[sample_name]
@@ -108,7 +107,7 @@ def get_data(input_file, sample_name):
         print(f"Sample {sample_name} not found")
         return
     
-    return parse_karyotype(sample["Karyotype"])
+    return parse_karyotype(sample["karyotype"])
 
 
 def plot_karyotype(data, sample_name, dpi=150):
@@ -155,8 +154,8 @@ def plot_karyotype(data, sample_name, dpi=150):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
-    parser.add_argument("--input", default="./out/clones.tsv", help="Input file path")
-    parser.add_argument("--sample", default="1", help="Sample ID")
+    parser.add_argument("--input", default="./out/karyotypes.tsv", help="The file with the karyotype data.")
+    parser.add_argument("--sample", default="sample_1", help="Sample ID")
     parser.add_argument("--output", default="./out/karyotype.png", help="Output file path")
     args = parser.parse_args()
 

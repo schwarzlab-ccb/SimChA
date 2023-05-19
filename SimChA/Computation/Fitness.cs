@@ -42,7 +42,7 @@ public static class Fitness
             ChrNo.chrX => sexXX ? 2 : 1,
             _ => 2
         };
-
+    
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
         => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * g.gene.DeltaFitness);
 

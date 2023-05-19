@@ -56,7 +56,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _fitness, _geneLists);
+        var sim = new Simulator(_rnd, _geneLists);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)
