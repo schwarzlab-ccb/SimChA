@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using SimChA.DataTypes;
 
 namespace SimChA.IO;
 
@@ -25,4 +26,23 @@ public class CmdOptions
     [Option('M', "mcmc", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
     public bool UseMCMC {get; set;}
 
+    public ExecMode ExecMode
+    {
+        get
+        {
+            if (CloneTreeFile != "")
+            {
+                return ExecMode.Tree;
+            }
+            if (Repeats > 1)
+            {
+                return ExecMode.Repeats;
+            }
+            if (CNProfiles != "")
+            {
+                return ExecMode.Profiles;
+            }
+            return ExecMode.None;
+        }
+    }
 }
