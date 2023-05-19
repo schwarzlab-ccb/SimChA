@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using CommandLine;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -131,9 +129,9 @@ public class TestFitness
         HGRef.Assembly = genomeAssembly;
         var karyotype = new Karyotype(sexXX);
         var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
-        double tsg = Fitness.TsgOgTerm(tsgCNs);
+        double tsg = Fitness.TsgOgTerm(tsgCNs, sexXX);
         var ogsCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        double og = Fitness.TsgOgTerm(ogsCNs);
+        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);
         Console.WriteLine($"sex: {sexXX}, assembly: {genomeAssembly}, TSG: {tsg}, OG: {og}");
     }
 }
