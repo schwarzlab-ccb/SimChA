@@ -130,7 +130,7 @@ public static class Parsers
         return result;
     }
 
-    public static Dictionary<ChrNo, List<Gene>> ParseGeneList(TextReader geneFile, bool isFemale)
+    public static Dictionary<ChrNo, List<Gene>> ParseGeneList(TextReader geneFile)
     {
         // Pre-initialization
         var noEnum = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToList();
@@ -139,8 +139,6 @@ public static class Parsers
         {
             if (line == "") continue;
             string[] genString = line.Split('\t');
-            //Don't include Y chromosome in genes list if clone is female
-            if (isFemale && (ChrNo) Enum.Parse(typeof(ChrNo), genString[2]) == ChrNo.chrY) continue;
             string name = genString[3];
             double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
             var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[0]);

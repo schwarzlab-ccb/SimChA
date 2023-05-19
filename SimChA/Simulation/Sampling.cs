@@ -1,5 +1,6 @@
 ﻿using Extreme.Statistics.Distributions;
 using SimChA.Computation;
+using SimChA.DataTypes;
 using SimChA.EventData;
 
 namespace SimChA.Simulation;
@@ -33,12 +34,31 @@ public static class Sampling
             _ => 2
         };
 
-    public static List<long> GetStopsForShards(Random rnd, long contigLen, int shardCount) 
-        => Enumerable.Range(0, shardCount - 1)
-            .Select(_ => GetInternalPos(rnd, contigLen))
-            .Distinct()
-            .OrderBy(i => i)
-            .ToList();
+    public static List<long> GetStopsForShards(Random rnd, long contigLen, int shardCount)
+    {
+        var stops = new List<long>();
+        if (shardCount <= 1)
+        {
+            return stops;
+        }
+        if (stops.Count > contigLen)
+        {
+            throw new ArgumentException($"Too many shards ({shardCount}) for contig length {contigLen}");
+        }
+        for (int i = 1; i < shardCount; i++)
+        {
+            long newStop = GetInternalPos(rnd, contigLen);
+            if (stops.Any(s => s == newStop))
+            {
+                i--;
+            }
+            else
+            {
+                stops.Add(newStop);
+            }
+        }
+        return stops;
+    }
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
@@ -52,6 +72,15 @@ public static class Sampling
             _ => 1
         };
     }
+
+    public static bool GetBinarySex(Random rnd, SexEnum sexEnum)
+        => sexEnum switch
+        {
+            SexEnum.Both => rnd.CoinFlip(),
+            SexEnum.Female => true,
+            SexEnum.Male => false,
+            _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
+        };
     
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {

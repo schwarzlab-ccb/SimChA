@@ -125,7 +125,7 @@ public class TestFitness
     {
         const string dataPath = "./../../../../data";
         HGRef.Assembly = genomeAssembly;
-        var geneLists = FileIO.ReadGeneLists(dataPath, sexXX, genomeAssembly);
+        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
         HGRef.Assembly = genomeAssembly;
         var karyotype = new Karyotype(sexXX);
         var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);

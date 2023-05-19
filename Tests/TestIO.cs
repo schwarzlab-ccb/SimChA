@@ -28,7 +28,7 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        var simParams = new SimParams(0, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fit, null, null);
+        var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fit, null, null);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);
@@ -64,13 +64,13 @@ public class TestIO
         
         var gene1 = new Gene("TSG1", new GenRange(0, 50, ChrNo.chr1), 0.001);
         tsgList[ChrNo.chr1].Add(gene1);
-        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), true);
+        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG));
         Assert.AreEqual(tsgList, listFromString);
         
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
         var gene2 = new Gene("TSG2", new GenRange(99, 5000, ChrNo.chr2), 0.01);
         tsgList[ChrNo.chr2].Add(gene2);
-        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), true);
+        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG));
         Assert.AreEqual(tsgList, listFromString);
     }
 

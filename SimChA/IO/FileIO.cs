@@ -58,7 +58,7 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         
-        outputFile.WriteLine("sample_id\tchr\tstart\tend\tcn_a\tcn_b");
+        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
 
         foreach (var sample in samples)
         {
@@ -172,7 +172,6 @@ public class FileIO
     
     public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
         string folder,
-        bool sexXX,
         GenomeAssembly assembly)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
@@ -193,7 +192,7 @@ public class FileIO
             try
             {
                 var geneFile = new StreamReader(fileFullPath);
-                geneLists[key] = Parsers.ParseGeneList(geneFile, sexXX);
+                geneLists[key] = Parsers.ParseGeneList(geneFile);
             }
             catch (Exception e)
             {

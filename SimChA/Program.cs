@@ -25,12 +25,12 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
+    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
 }
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.Value.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX, HGRef.Assembly);
+var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
@@ -52,12 +52,12 @@ else
         var inClones = FileIO.ReadClones(options.Value.CloneTreeFile, options.Value.UseMCMC);
         var eventPs = Converters.PropagateSigs(sigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.Value.CloneTreeFile);
-        var treeSample = new Sample(sampleName, simParams.SexXX, inClones, eventPs);
+        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, eventPs);
         samples = new List<Sample> { treeSample };
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.SexXX);
+        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.Sex);
     }
     foreach (var sample in samples)
     {
