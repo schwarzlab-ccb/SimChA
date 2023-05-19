@@ -1,6 +1,5 @@
 ﻿using Extreme.Statistics.Distributions;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.EventData;
 
 namespace SimChA.Simulation;
@@ -43,8 +42,7 @@ public static class Sampling
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
-
-
+    
     public static double SampleDist(Random rnd, DataTypes.Distribution dist)
     {
         return dist switch
@@ -55,10 +53,12 @@ public static class Sampling
         };
     }
     
-    public static BaseEventData GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
+    public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
-
+        if (!seq.Any())
+            return null;
+        
         switch (cnEventPars.Type)
         {
             // Whole chromosome events

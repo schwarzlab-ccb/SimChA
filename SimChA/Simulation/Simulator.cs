@@ -61,6 +61,8 @@ public class Simulator
                 Console.Write($"\rSample {sample.SampleId}. Clone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
                 var eventP = _rnd.PickRndElem(sample.EventPars);
                 var eventData = Sampling.GenerateCNEventData(_rnd, childKar, eventP);
+                if (eventData == null)
+                    return;
                 eventData.ApplyEvent(childKar);
                 double newFitness = childKar.UpdateFitness(_geneLists, _fitness);
                 double dFit = newFitness - oldFitness;
