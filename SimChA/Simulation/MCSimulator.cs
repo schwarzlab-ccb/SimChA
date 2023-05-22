@@ -139,7 +139,7 @@ public class MCSimulator : Simulator
                 // Finalize the mutated karyotype by applying the best-fit set of events
                 for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
                 {
-                    Console.Write($"\rClone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
+                    Console.Write($"\rSample {sample.SampleId}. Clone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
                     var eventData = bestEvents[mutNo];
                     eventData.ApplyEvent(childKar);
                     double newFitness = childKar.UpdateFitness(_geneLists, _fitness);

@@ -51,7 +51,8 @@ public static class Converters
         {
             double dist = Sampling.SampleDist(rnd, distribution);
             int mutCount = (int) Math.Round(meanDist * dist);
-            var clone = new CloneIn(0, -1, mutCount, 1); // TODO: Specify fitness target
+            double fitnessTarget = Sampling.SampleDist(rnd, Distribution.Exponential) * 0.8 + 1;
+            var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
             var events = PropagateSigs(selectedSigs, mixture);
             var sample = new Sample($"sample_{i + 1}", Sampling.GetBinarySex(rnd, sex), new List<CloneIn> { clone }, events);
             samples.Add(sample);
