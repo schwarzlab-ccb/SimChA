@@ -3,8 +3,8 @@
 namespace SimChA.DataTypes;
 
 // A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
-// TODO: The direction should not be part of the region, should be part of the chromosome
-public record Region(long Start, long End, ChrID ChrID, bool Forward = true) : GenRange(Start, End, ChrID.ChrNo)
+public record Region(long Start, long End, ChrID ChrID, 
+    Dictionary<long, Nucleotide> SNVDict = null, bool Forward = true) : GenRange(Start, End, ChrID.ChrNo)
 {
     public static string DirToStr(bool dir) => dir ? ">" : "<";
 

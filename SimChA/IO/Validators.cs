@@ -28,6 +28,7 @@ public static class Validators
             case CNEventType.TICycle:
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
+            case CNEventType.SNV:
                 break;
             default:
                 throw new ArgumentOutOfRangeException($"Unknown event type {cnEventPars.Type}");

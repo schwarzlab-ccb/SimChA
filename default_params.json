@@ -82,6 +82,10 @@
         {
           "Type": "TIBridge",
           "Prob": 2
+        },
+        {
+          "Type": "SNV",
+          "Prob": 0
         }
       ]
     }
@@ -92,5 +96,6 @@
     "ThetaFitness": 20.0,
     "SwapEventP" : 1.0,
     "ThresholdFit" : 0.01
-  }
+  },
+  "InfiniteSitesApproximation": false
 }

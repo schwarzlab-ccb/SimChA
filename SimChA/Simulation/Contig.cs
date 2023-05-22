@@ -140,4 +140,9 @@ public class Contig
     
     public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
+
+    public void SNV(long location, Nucleotide nucleotide)
+    {
+        _regions = RegionOps.PointMutateRegion(_regions, location, nucleotide);
+    }
 }

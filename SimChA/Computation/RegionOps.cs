@@ -122,6 +122,33 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
+    public static List<Region> PointMutateRegion(List<Region> regions, long pos, Nucleotide nucleotide)
+    {
+        long seekPos = 0;
+        long internalLocation = 0;
+        var newRegions = new List<Region>();
+        for (int i = 0; i < regions.Count; i++)
+        {
+            var region = regions[i];
+            if (pos > seekPos + region.Length) // region before location
+            {
+                AddIfNotEmpty(newRegions, region);
+            }
+            else if (pos <= seekPos) // region after location
+            {
+                AddIfNotEmpty(newRegions, region);
+            }
+            else // The region we've been looking for
+            {
+                var newSNVDict = region.SNVDict;
+                newSNVDict[pos - seekPos] = nucleotide;
+                var newRegion = region with { SNVDict = newSNVDict };
+                AddIfNotEmpty(newRegions, newRegion);
+            }
+            seekPos += region.Length;
+        }
+        return newRegions;
+    }
 
     public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
     {

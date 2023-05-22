@@ -236,4 +236,9 @@ public class Karyotype
             lastWasDeletion = !lastWasDeletion;
         }
     }
+    public void ApplySNV(int contigID, long location, Nucleotide nucleotide)
+    {
+        var contig = _contigs[contigID];
+        contig.SNV(location, nucleotide);
+    }
 }

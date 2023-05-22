@@ -1,6 +1,7 @@
 ﻿using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.EventData;
+using SimChA.DataTypes;
 
 namespace SimChA.Simulation;
 
@@ -52,7 +53,11 @@ public static class Sampling
             _ => 1
         };
     }
-    
+    public static Nucleotide RandomNucleotide(Random rnd)
+    {
+        var values = Enum.GetValues(typeof(Nucleotide));
+        return (Nucleotide) values.GetValue(rnd.Next(values.Length));
+    }
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
@@ -100,6 +105,9 @@ public static class Sampling
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
                 return new TemplatedEventData(rnd, cnEventPars, seq);
+            
+            case CNEventType.SNV:
+                return new SNVData(rnd, cnEventPars,seq[0].id, seq[0].len, RandomNucleotide(rnd));
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
