@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using Extreme.Statistics.Distributions;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -13,10 +14,10 @@ public record RigmaEventData : ContigEventData
     {
         ContigId = contigId;
         long rigmaLen = cnEventPars.Get("Size", 1_000_000L);
-        double rigmaMean = cnEventPars.Get("Mean", 0.1);
-        Start= Sampling.GetInternalPos(rnd, contigLen - rigmaLen);
-        int rigmaCount = Sampling.GetFragCount(rnd, rigmaMean);
-        StopsList = Enumerable.Range(0, rigmaCount).Select(_ => Sampling.GetExpSeg(rnd, contigLen, rigmaMean)).ToList();
+        double fragMean = cnEventPars.Get("Frag", 10.0);
+        int fracCount = GeometricDistribution.Sample(rnd, 1 / fragMean) + 1;
+        Start = Sampling.GetInternalPos(rnd, contigLen - rigmaLen);
+        StopsList = Enumerable.Range(0, fracCount).Select(_ => Sampling.GetExpSeg(rnd, contigLen, fragMean / rigmaLen)).ToList();
     }
     
     public override void ApplyEvent(Karyotype kar)

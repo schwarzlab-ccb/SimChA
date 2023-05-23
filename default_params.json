@@ -1,13 +1,13 @@
 {
   "Seed": 0,
-  "SexXX": true,
-  "EventCount": 100,
+  "Sex": "Both",
+  "EventCount": 75,
   "Distribution": "Exponential",
   "Assembly": "hg19",
   "Fitness": {
-    "Stress": 0.1,
+    "Stress": 1,
     "TsgOg": 0.01,
-    "Essentiality": 0.01
+    "Essentiality": 0.1
   },
   "Signatures": [
     {
@@ -17,39 +17,60 @@
       "Events": [
         {
           "Type": "ChromDeletion",
-          "Prob": 1
+          "Prob": 2
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 1
+          "Prob": 2
         },
         {
           "Type": "InternalDuplication",
-          "Prob": 10
+          "Prob": 10,
+          "Pars": {
+            "Size": 20000000
+          }
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 20
+          "Prob": 20,
+          "Pars": {
+            "Size": 20000000
+          }
         },
         {
           "Type": "InternalInversion",
-          "Prob": 10
+          "Prob": 10,
+          "Pars": {
+            "Size": 20000000
+          }
         },
         {
           "Type": "InvertedDuplication",
-          "Prob": 10
+          "Prob": 10,
+          "Pars": {
+            "Size": 20000000
+          }
         },
         {
           "Type": "BreakageFusionBridge",
-          "Prob": 5
+          "Prob": 4,
+          "Pars": {
+            "Size": 100000000
+          }
         },
         {
           "Type": "TailDeletion",
-          "Prob": 5
+          "Prob": 4,
+          "Pars": {
+            "Size": 100000000
+          }
         },
         {
           "Type": "Translocation",
-          "Prob": 5
+          "Prob": 4,
+          "Pars": {
+            "Size": 100000000
+          }
         },
         {
           "Type": "WholeGenomeDoubling",
@@ -57,40 +78,67 @@
         },
         {
           "Type": "Chromoplexy",
-          "Prob": 1
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000,
+            "Frag": 5
+          }
         },
         {
           "Type": "Chromothripsis",
-          "Prob": 1
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000
+          }
         },
         {
           "Type": "Pyrgo",
-          "Prob": 2
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000,
+            "Frag": 5
+          }
         },
         {
           "Type": "Rigma",
-          "Prob": 2
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000,
+            "Frag": 5
+          }
         },
         {
           "Type": "TIChain",
-          "Prob": 2
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000,
+            "Frag": 5
+          }
         },
         {
           "Type": "TICycle",
-          "Prob": 2
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000,
+            "Frag": 5
+          }
         },
         {
           "Type": "TIBridge",
-          "Prob": 2
+          "Prob": 1,
+          "Pars": {
+            "Size": 100000000,
+            "Frag": 5
+          }
         }
       ]
     }
   ],
   "MCParams": {
-    "NumSamplesMin" : 100,
+    "NumSamplesMin": 100,
     "NumSamplesTotal": 2000,
     "ThetaFitness": 20.0,
-    "SwapEventP" : 1.0,
-    "ThresholdFit" : 0.01
+    "SwapEventP": 1.0,
+    "ThresholdFit": 0.01
   }
 }

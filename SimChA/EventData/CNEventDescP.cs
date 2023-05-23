@@ -5,32 +5,32 @@ using SimChA.DataTypes;
 namespace SimChA.EventData;
 
 [Serializable]
-public record CNEventPars(CNEventType Type, double Prob = 1, Dictionary<string, double>? Params = null) : IHasProb
+public record CNEventPars(CNEventType Type, double Prob = 1, Dictionary<string, double>? Pars = null) : IHasProb
 {
     public double Get(string name, double defaultValue)
     {
-        if (Params is null || !Params.ContainsKey(name))
+        if (Pars is null || !Pars.ContainsKey(name))
         {
             return defaultValue;
         }
-        return Params[name];
+        return Pars[name];
     }
     
     public int Get(string name, int defaultValue)
     {
-        if (Params is null || !Params.ContainsKey(name))
+        if (Pars is null || !Pars.ContainsKey(name))
         {
             return defaultValue;
         }
-        return (int) Math.Round(Params[name]);
+        return (int) Math.Round(Pars[name]);
     }
 
     public long Get(string name, long defaultValue)
     {
-        if (Params is null || !Params.ContainsKey(name))
+        if (Pars is null || !Pars.ContainsKey(name))
         {
             return defaultValue;
         }
-        return (long) Math.Round(Params[name]);
+        return (long) Math.Round(Pars[name]);
     }
 }
