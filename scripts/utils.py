@@ -54,12 +54,14 @@ def load_dataset(dataset_path):
         "karyotypes" : pd.read_csv(join(dataset_path, "karyotypes.tsv"), index_col=0, sep="\t"),
         "samples" : pd.read_csv(join(dataset_path, "samples.tsv"), index_col=0, sep="\t"),
     }
-    loaded_data["major"] = get_CNs_by_sample(loaded_data["CNs"], True)
-    loaded_data["minor"] = get_CNs_by_sample(loaded_data["CNs"], False) 
-    loaded_data["hap_a"] = get_hap_by_sample(loaded_data["CNs"], "cn_a")
-    loaded_data["hap_b"] = get_hap_by_sample(loaded_data["CNs"], "cn_b")
     config_file = join(dataset_path, "sim_params.json")
     # import json into a dict
     with open(config_file) as f:
         loaded_data["config"] = json.load(f)
     return loaded_data
+
+def calc_CNs(dataset):
+    dataset["major"] = get_CNs_by_sample(dataset["CNs"], True)
+    dataset["minor"] = get_CNs_by_sample(dataset["CNs"], False) 
+    dataset["hap_a"] = get_hap_by_sample(dataset["CNs"], "cn_a")
+    dataset["hap_b"] = get_hap_by_sample(dataset["CNs"], "cn_b")
