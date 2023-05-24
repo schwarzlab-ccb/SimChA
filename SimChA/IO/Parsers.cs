@@ -78,50 +78,57 @@ public static class Parsers
                 sexXX = true;
             }
 
-            // Parse the line
-            var chrNo = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
-            if (chrNo == ChrNo.chrY)
+            try
             {
-                sexXX = false;
-            }
-            int start = int.Parse(lineSplit[2]) - 1;
-            int end = int.Parse(lineSplit[3]);
-            int cnA = int.Parse(lineSplit[4]);
-            int cnB = int.Parse(lineSplit[5]);
-            
-            // Check for missing ranges
-            if (chrNo == lastChr)
-            {
-                // Range skipped
-                if (lastPos != start)
+                // Parse the line
+                var chrNo = (ChrNo)Enum.Parse(typeof(ChrNo), lineSplit[1]);
+                if (chrNo == ChrNo.chrY)
                 {
-                    missingRanges.Add(new GenRange(lastPos, start, lastChr));
+                    sexXX = false;
+                }
+                int start = int.Parse(lineSplit[2]) - 1;
+                int end = int.Parse(lineSplit[3]);
+                int cnA = int.Parse(lineSplit[4]);
+                int cnB = int.Parse(lineSplit[5]);
+
+                // Check for missing ranges
+                if (chrNo == lastChr)
+                {
+                    // Range skipped
+                    if (lastPos != start)
+                    {
+                        missingRanges.Add(new GenRange(lastPos, start, lastChr));
+                    }
+                }
+                else
+                {
+                    // Till the end of a chromosome
+                    if (lastPos != HGRef.GetChromLen(lastChr))
+                    {
+                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
+                    }
+                    // Start of a chromosome
+                    if (start != 0)
+                    {
+                        missingRanges.Add(new GenRange(0, start, chrNo));
+                    }
+                }
+                lastChr = chrNo;
+                lastPos = end;
+
+                // Add the new regions
+                for (int i = 0; i < cnA; i++)
+                {
+                    regionsA.Add(new Region(start, end, new ChrID(chrNo, true)));
+                }
+                for (int i = 0; i < cnB; i++)
+                {
+                    regionsB.Add(new Region(start, end, new ChrID(chrNo, false)));
                 }
             }
-            else
+            catch (Exception e)
             {
-                // Till the end of a chromosome
-                if (lastPos != HGRef.GetChromLen(lastChr))
-                {
-                    missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
-                }
-                // Start of a chromosome
-                if (start != 0)
-                {
-                    missingRanges.Add(new GenRange(0, start, chrNo));
-                }
-            }
-            lastChr = chrNo;
-            lastPos = end;
-            
-            // Add the new regions
-            for (int i = 0; i < cnA; i++)
-            {
-                regionsA.Add(new Region(start, end, new ChrID(chrNo, true)));
-            }
-            for (int i = 0; i < cnB; i++)
-            {
-                regionsB.Add(new Region(start, end, new ChrID(chrNo, false)));
+                throw new Exception($"Could not parse the CNA profile:\n{line}\n{e.Message}");
             }
         }
         
