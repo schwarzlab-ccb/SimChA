@@ -17,6 +17,26 @@ public class TestFitness
     
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
         => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
+    
+    private Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> dict = 
+        new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
+
+    [SetUp]
+    public void Setup()
+    {   
+        dict = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(g => g, _ => 
+            Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, _ => new List<Gene>()));
+        dict[GeneListType.TumorSuppressor][ChrNo.chr2].Add(MakeGene(ChrNo.chr2, 0.01));
+        dict[GeneListType.Oncogene][ChrNo.chr4].Add(MakeGene(ChrNo.chr4, 0.01));
+        dict[GeneListType.Essentiality][ChrNo.chr3].Add(MakeGene(ChrNo.chr3, 0.01));
+        dict[GeneListType.TumorSuppressor][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
+        dict[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.02));
+        dict[GeneListType.Essentiality][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.03));
+        var fparam = new FitnessParams(0.1, 0.1, 0.1);
+        Fitness.SetStartingParams(dict, fparam);
+
+        //Fitness.SetStartingParams()
+    }
 
     [Test]
     public void TestEssTerm()
@@ -79,13 +99,17 @@ public class TestFitness
         var rnd = new Random(14);
         var karyotype = new Karyotype(true);
         var deletion = new CNEventP(CNEventType.ChromDeletion, 1);
-        var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, _ => new List<Gene>());
-        dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
-        Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 2));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.Essentiality, karyotype).FirstOrDefault(), (dict[GeneListType.Essentiality][ChrNo.chr1].FirstOrDefault(), 2));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.TumorSuppressor, karyotype).FirstOrDefault(), (dict[GeneListType.TumorSuppressor][ChrNo.chr1].FirstOrDefault(), 2));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.Oncogene, karyotype).FirstOrDefault(), (dict[GeneListType.Oncogene][ChrNo.chr1].FirstOrDefault(), 2));
         karyotype.ApplyCNEvent(rnd, deletion);
-        Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.Essentiality, karyotype).FirstOrDefault(), (dict[GeneListType.Essentiality][ChrNo.chr1].FirstOrDefault(), 1));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.TumorSuppressor, karyotype).FirstOrDefault(), (dict[GeneListType.TumorSuppressor][ChrNo.chr1].FirstOrDefault(), 1));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.Oncogene, karyotype).FirstOrDefault(), (dict[GeneListType.Oncogene][ChrNo.chr1].FirstOrDefault(), 1));
         karyotype.ApplyCNEvent(rnd, deletion);
-        Assert.AreEqual(Fitness.CalcCNs(dict, karyotype).FirstOrDefault(), (dict[ChrNo.chr1].FirstOrDefault(), 1));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.Essentiality, karyotype).FirstOrDefault(), (dict[GeneListType.Essentiality][ChrNo.chr1].FirstOrDefault(), 1));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.TumorSuppressor, karyotype).FirstOrDefault(), (dict[GeneListType.TumorSuppressor][ChrNo.chr1].FirstOrDefault(), 1));
+        Assert.AreEqual(Fitness.CalcCNs(GeneListType.Oncogene, karyotype).FirstOrDefault(), (dict[GeneListType.Oncogene][ChrNo.chr1].FirstOrDefault(), 1));
     }
 
     [Test]
@@ -99,7 +123,7 @@ public class TestFitness
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, fit), EPSILON);
+        Assert.AreEqual(1, Fitness.Calculate(karyotype), EPSILON);
 
         // TODO: Test the linear combination
     }
