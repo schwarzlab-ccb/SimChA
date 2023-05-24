@@ -22,7 +22,7 @@ public static class Converters
                 {
                     throw new ArgumentException("probs must have the same length as signatures");
                 }
-                if (Math.Abs(probs.Sum() - 1) > double.Epsilon * probs.Count)
+                if (Math.Abs(probs.Sum() - 1) > 1e-9)
                 {
                     throw new ArgumentException("probs must sum to 1");
                 }

@@ -7,16 +7,16 @@ namespace SimChA.Simulation;
 
 public class Simulator
 {
-    protected readonly Random _rnd;
-    protected readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
-    protected int _counter;
+    protected readonly Random Rnd;
+    protected readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
+    protected int Counter;
 
     public Simulator(
         Random rnd,
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
     {
-        _rnd = rnd;
-        _geneLists = geneLists;
+        Rnd = rnd;
+        GeneLists = geneLists;
     }
 
     public virtual void SampleEvents(Sample sample)
@@ -25,7 +25,7 @@ public class Simulator
         {
             throw new Exception("No events to sample from.");
         }
-        _counter = 1;
+        Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(sample.SexXX);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
@@ -41,16 +41,16 @@ public class Simulator
             sample.EventDescs[child.CloneId] = childEvs;
             for (int mutNo = 0; mutNo < child.Distance; mutNo++)
             {
-                Console.Write($"\rSample {sample.SampleId}. Clone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
-                var eventP = _rnd.PickRndElem(sample.EventPars);
-                var eventData = Sampling.GenerateCNEventData(_rnd, childKar, eventP);
+                Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
+                var eventP = Rnd.PickRndElem(sample.EventPars);
+                var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
                 if (eventData == null)
                     return;
                 eventData.ApplyEvent(childKar);
                 var abberation = new CNEventDesc(eventP.Type, eventCount + mutNo, eventData.ToString());
                 childEvs.Add(abberation);
             }
-            _counter++;
+            Counter++;
             if (child.CloneId != node.CloneId)
             {
                 ApplyCNEventsRec(sample, child, clones, eventCount + child.Distance);
@@ -66,7 +66,17 @@ public class Simulator
 
     public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
     {
-        var eventPs = Enumerable.Range(0, nMutations).Select(_ => _rnd.PickRndElem(cnEventPs));
-        return eventPs.Select(e => Sampling.GenerateCNEventData(_rnd, kar, e)).ToList();
+        var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
+        return eventPs.Select(
+            e =>
+            {
+                var newEventD = Sampling.GenerateCNEventData(Rnd, kar, e);
+                if (newEventD == null)
+                {
+                    throw new Exception("Failed to initialize event data.");
+                }
+                return newEventD;
+            }
+        ).ToList();
     }
 }
