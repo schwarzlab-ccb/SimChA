@@ -22,7 +22,7 @@ public static class Converters
                 {
                     throw new ArgumentException("probs must have the same length as signatures");
                 }
-                if (Math.Abs(probs.Sum() - 1) > double.Epsilon * probs.Count)
+                if (Math.Abs(probs.Sum() - 1) > 1e-9)
                 {
                     throw new ArgumentException("probs must sum to 1");
                 }
@@ -41,7 +41,7 @@ public static class Converters
         return events;    
     }
     
-    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, List<Signature> sigs, bool sexXX)
+    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, List<Signature> sigs, SexEnum sex)
     {
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Prob > 0).ToList();
@@ -51,9 +51,10 @@ public static class Converters
         {
             double dist = Sampling.SampleDist(rnd, distribution);
             int mutCount = (int) Math.Round(meanDist * dist);
-            var clone = new CloneIn(0, -1, mutCount, 1); // TODO: Specify fitness target
+            double fitnessTarget = Sampling.SampleDist(rnd, Distribution.Exponential) * 0.8 + 1;
+            var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
             var events = PropagateSigs(selectedSigs, mixture);
-            var sample = new Sample($"sample_{i + 1}", sexXX, new List<CloneIn> { clone }, events);
+            var sample = new Sample($"sample_{i + 1}", Sampling.GetBinarySex(rnd, sex), new List<CloneIn> { clone }, events);
             samples.Add(sample);
         }
         return samples;

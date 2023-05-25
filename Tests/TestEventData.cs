@@ -124,7 +124,7 @@ public class TestEventData
         var eventP = new CNEventPars(CNEventType.Chromoplexy);
         var frags = new List<(int, long)>
         {
-            (0, 1_000_000),
+            (0, 5_000_000),
             (1, 10_000_000),
             (2, 20_000_000),
             (3, 30_000_000)

@@ -11,25 +11,35 @@ public static class Validators
     {
         switch (cnEventPars.Type)
         {
-            case CNEventType.Translocation:
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
-            case CNEventType.BreakageFusionBridge:
             case CNEventType.WholeGenomeDoubling:
+                break;
+                
+            case CNEventType.Translocation:
+            case CNEventType.BreakageFusionBridge:
             case CNEventType.TailDeletion:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalDuplication:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
             case CNEventType.Chromothripsis:
+                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
+                break;
+
             case CNEventType.Chromoplexy:
             case CNEventType.TIChain:
             case CNEventType.TIBridge:
             case CNEventType.TICycle:
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
-            case CNEventType.SNV:
+                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
+                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Frag")) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Frag parameter. E.g. \"Pars\": {{\"Frag\": 10}}");
                 break;
+            
             default:
                 throw new ArgumentOutOfRangeException($"Unknown event type {cnEventPars.Type}");
         }

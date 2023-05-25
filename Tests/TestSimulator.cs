@@ -22,6 +22,7 @@ public class TestSimulator
     [SetUp]
     public void Setup()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         _rnd = new Random(0);
         _fitness = new FitnessParams(1, 1, 1);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};

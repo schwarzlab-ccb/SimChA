@@ -2,7 +2,9 @@ import re
 
 import numpy as np
 import pandas as pd
+import json
 
+from os.path import join
 
 def format_chromosomes_int(chroms):
     return chroms.astype(str).str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
@@ -32,3 +34,34 @@ def format_chromosomes(ds):
         newchr = pd.Categorical(ds, categories=ds.unique())
 
     return newchr
+
+def get_min_maj_CNs(data, is_major):
+    cols = data[['cn_a', 'cn_b']]
+    return cols.max(axis=1) if is_major else cols.min(axis=1)
+
+# calculate the average CN for each sample
+def get_CNs_by_sample(data, is_major):
+    CNs = data.groupby(['sample_id']).apply(get_min_maj_CNs, is_major)
+    return CNs.groupby(['sample_id']).mean()
+
+def get_hap_by_sample(data, hap):
+   return data.groupby(['sample_id'])[hap].mean()
+
+def load_dataset(dataset_path):
+    loaded_data = {        
+        "CNs" : pd.read_csv(join(dataset_path, "copynumbers.tsv"), index_col=0, sep="\t"),
+        "clones" : pd.read_csv(join(dataset_path, "clones.tsv"), index_col=0, sep="\t"),
+        "karyotypes" : pd.read_csv(join(dataset_path, "karyotypes.tsv"), index_col=0, sep="\t"),
+        "samples" : pd.read_csv(join(dataset_path, "samples.tsv"), index_col=0, sep="\t"),
+    }
+    config_file = join(dataset_path, "sim_params.json")
+    # import json into a dict
+    with open(config_file) as f:
+        loaded_data["config"] = json.load(f)
+    return loaded_data
+
+def calc_CNs(dataset):
+    dataset["major"] = get_CNs_by_sample(dataset["CNs"], True)
+    dataset["minor"] = get_CNs_by_sample(dataset["CNs"], False) 
+    dataset["hap_a"] = get_hap_by_sample(dataset["CNs"], "cn_a")
+    dataset["hap_b"] = get_hap_by_sample(dataset["CNs"], "cn_b")

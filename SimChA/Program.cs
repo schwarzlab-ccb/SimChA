@@ -7,16 +7,18 @@ using SimChA.IO;
 using SimChA.Simulation;
 
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-var options = Parser.Default.ParseArguments<CmdOptions>(args);
-options.WithNotParsed(o =>
+var cmdOptions = Parser.Default.ParseArguments<CmdOptions>(args);
+cmdOptions.WithNotParsed(o =>
 {
     Console.WriteLine("Exiting");
     o.ToList().ForEach(Console.WriteLine); // Write out errors
     Environment.Exit(1);
 });
+var options = cmdOptions.Value;
+var execMode = options.ExecMode;
 
 SimParams simParams;
-string configFile = options.Value.ConfigFile;
+string configFile = options.ConfigFile;
 if (configFile != "")
 {
     simParams = FileIO.ReadSimParams(configFile);
@@ -25,21 +27,21 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, true, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
+    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
 }
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
-var files = new FileIO(options.Value.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.Value.GenesFolder, simParams.SexXX, HGRef.Assembly);
+var files = new FileIO(options.OutputPath);
+var geneLists = FileIO.ReadGeneLists(options.GenesFolder, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
-if (options.Value.CNProfiles != "")
+if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
-    var profiles = FileIO.ReadProfiles(options.Value.CNProfiles);
+    var profiles = FileIO.ReadProfiles(options.CNProfiles);
     samples = Simulator.SamplesFromProfiles(profiles);
 }
 else
@@ -47,22 +49,22 @@ else
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
     var simulator = new Simulator(rnd, geneLists);
-    if (options.Value.CloneTreeFile != "")
+    if (execMode == ExecMode.Tree)
     {
-        var inClones = FileIO.ReadClones(options.Value.CloneTreeFile, options.Value.UseMCMC);
+        var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
         var eventPs = Converters.PropagateSigs(sigs);
-        string sampleName = Path.GetFileNameWithoutExtension(options.Value.CloneTreeFile);
-        var treeSample = new Sample(sampleName, simParams.SexXX, inClones, eventPs);
+        string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
+        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, eventPs);
         samples = new List<Sample> { treeSample };
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Value.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.SexXX);
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.Sex);
     }
     foreach (var sample in samples)
     {
         // Monte Carlo sampling of copy-number altering events
-        if (options.Value.UseMCMC)
+        if (options.UseMCMC)
         {
             if (simParams.MCParams == null)
             {
@@ -96,7 +98,10 @@ Console.WriteLine("");
 try
 {
     files.WriteSamples(samples);
-    files.WriteCopyNumbers(samples);
+    if (execMode != ExecMode.Profiles)
+    {
+        files.WriteCopyNumbers(samples);
+    }
     files.WriteClones(samples);
     files.WriteKaryotypes(samples);
     if (samples.Any(s => s.EventDescs.Any()))

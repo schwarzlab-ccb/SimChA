@@ -7,15 +7,18 @@ namespace SimChA.Simulation;
 
 public class MCSimulator : Simulator
 {
-    protected readonly FitnessParams _fitness;
-    private MCParams _mcParams;
+    private FitnessParams Fitness { get; }
+    private MCParams McParams { get; }
     
-    public MCSimulator(Random rnd,
-        FitnessParams fitnessParams, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
-        MCParams mCParams) : base(rnd, geneLists)
+    public MCSimulator(
+        Random rnd,
+        FitnessParams fitnessParams, 
+        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
+        MCParams mCParams) 
+        : base(rnd, geneLists)
     {
-        _fitness = fitnessParams;
-        _mcParams = mCParams;
+        Fitness = fitnessParams;
+        McParams = mCParams;
     }
     
     public override void SampleEvents(Sample sample)
@@ -24,12 +27,12 @@ public class MCSimulator : Simulator
         {
             throw new Exception("No events to sample from.");
         }
-        _counter = 1;
+        Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(sample.SexXX);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
-    // The conditional probability of this set of events occuring
+    
     public (double potential, bool accept) Potential(Karyotype kar, double targetFit, List<BaseEventData> events)
     {
         double eventPotentialTotal = 0.0;
@@ -40,11 +43,11 @@ public class MCSimulator : Simulator
             eventData.ApplyEvent(kar);
             eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
         }
-        double dFit = kar.UpdateFitness(_geneLists, _fitness) - targetFit;
+        double dFit = kar.UpdateFitness(GeneLists, Fitness) - targetFit;
         // Variable to immediately quit the MC Sampling if we've reached enough accuracy
-        bool accept = Math.Abs(dFit / targetFit) < _mcParams.ThresholdFit;
+        bool accept = Math.Abs(dFit / targetFit) < McParams.ThresholdFit;
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
-        double fitnessPotential = -_mcParams.ThetaFitness * Math.Abs(dFit);
+        double fitnessPotential = -McParams.ThetaFitness * Math.Abs(dFit);
 
         double potential = eventPotentialTotal + fitnessPotential;
 
@@ -54,23 +57,22 @@ public class MCSimulator : Simulator
     {
         var proposedEvents = oldEvents.ToList();
         // Select a random CNEventPars to modify
-        int index = _rnd.Next(proposedEvents.Count);
-        // Choose whether to swap the event entirely
-        if (_rnd.NextDouble() < _mcParams.SwapEventP)
+        int index = Rnd.Next(proposedEvents.Count);
+        var cnEventP = Rnd.NextDouble() < McParams.SwapEventP 
+            ? Rnd.PickRndElem(sample.EventPars) 
+            : proposedEvents[index].CNEventPars;
+        var newData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
+        if (newData != null)
         {
-            // Get the new signature and the corresponding event
-            var cnEventP = _rnd.PickRndElem(sample.EventPars);
-            proposedEvents[index] = Sampling.GenerateCNEventData(_rnd, kar, cnEventP);
+            proposedEvents[index] = newData;
         }
-        // Otherwise we modify some quantity of the event, but keep the event itself the same
         else
         {
-            // Keep the event type the same, but redo the parameters:
-            var cnEventP = proposedEvents[index].CNEventPars;
-            proposedEvents[index] = Sampling.GenerateCNEventData(_rnd, kar, cnEventP);
+            Console.WriteLine("Failed to generate new event data.");
         }
         return proposedEvents;
     }
+    
     private List<BaseEventData> GetBestEvents(Sample sample, Karyotype kar, int nEvents, double targetFitness){
         // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, sample.EventPars);
@@ -78,19 +80,19 @@ public class MCSimulator : Simulator
 
         // Now we perform the Metropolis-Hastings algorithm
         // and sample a set of events that give the closest agreement with fitness given by SMITH
-        for (int i = 0; i < _mcParams.NumSamplesTotal; i++)
+        for (int i = 0; i < McParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
             // Calculate the new fitness of the proposed set of events on the clone
             (double proposalPotential, bool thresholdAccept) = Potential(new Karyotype(kar), targetFitness, proposedEvents);
             double acceptProb = proposalPotential - currentPotential;
-            if (acceptProb >= Math.Log(_rnd.NextDouble()))
+            if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
                 // Break out of the sampling if we have reached the threshold
                 // and have reached the minimum number of samples required
-                if (thresholdAccept && i > _mcParams.NumSamplesMin)
+                if (thresholdAccept && i > McParams.NumSamplesMin)
                     break;
             }
         }
@@ -115,16 +117,16 @@ public class MCSimulator : Simulator
                 // Finalize the mutated karyotype by applying the best-fit set of events
                 for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
                 {
-                    Console.Write($"\rClone {_counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
+                    Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
                     var eventData = bestEvents[mutNo];
                     eventData.ApplyEvent(childKar);
-                    double newFitness = childKar.UpdateFitness(_geneLists, _fitness);
+                    double newFitness = childKar.UpdateFitness(GeneLists, Fitness);
                     double dFit = newFitness - oldFitness;
                     var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit,
                         newFitness);
                     childEvs.Add(abberation);
                 }
-                _counter++;
+                Counter++;
                 if (child.CloneId != node.CloneId)
                 {
                     ApplyCNEventsRec(sample, child, clones, eventCount + child.Distance);

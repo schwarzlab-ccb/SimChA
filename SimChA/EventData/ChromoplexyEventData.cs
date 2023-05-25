@@ -15,21 +15,24 @@ public record ChromoplexyEventData : BaseEventData
     public ChromoplexyEventData(Random rnd, CNEventPars cnEventPars, IReadOnlyList<(int id, long len)> seq) : base(cnEventPars)
     {
         int contigCount = Math.Min(seq.Count, Sampling.GetChromoplexySiteCount(rnd));
-        double size = cnEventPars.Get("Size", 10_000_000L);
+        double size = cnEventPars.Get("Size", 1_000_000L);
         ContigIds = new List<int>();
         Stops = new List<List<long>>(); 
         long totalLen = 0L;
         int totalFrags = 0;
-        for (int i = 0; i <contigCount; i++)
+        for (int i = 0; i < contigCount; i++)
         {
-            ContigIds.Add(seq[i].id);
-            totalLen += seq[i].len;
-            int partsCount = Sampling.GetFragCount(rnd, seq[i].len / size);
-            totalFrags += partsCount;
-            Stops.Add(Sampling.GetStopsForShards(rnd, seq[i].len, partsCount));
+            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd, seq[i].len / size),  seq[i].len - 2);
+            if (partsCount > 1)
+            {
+                totalLen += seq[i].len;
+                totalFrags += partsCount;
+                ContigIds.Add(seq[i].id);
+                Stops.Add(Sampling.GetStopsForShards(rnd, seq[i].len, partsCount));
+            }
         }
         Sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount);
+        Breakpoints = totalLen > contigCount + 2 ? Sampling.GetStopsForShards(rnd, totalLen, contigCount) : new();
     }
 
     public override void ApplyEvent(Karyotype kar)

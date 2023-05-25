@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using Extreme.Statistics.Distributions;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -12,16 +13,16 @@ public record PyrgoEventData : ContigEventData
     {
         ContigId = contigId;
         long pyrgoLen = cnEventPars.Get("Size", 1_000_000L);
-        double pyrgoMean = cnEventPars.Get("Mean", 0.1);
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, pyrgoLen);
         long pyrgoStart = Sampling.GetInternalPos(rnd, contigLen - pyrgoFrag);
         
-        long meanSize = (long)(pyrgoFrag * pyrgoMean);
-        int fracCount = Sampling.GetFragCount(rnd, pyrgoMean);
+        double fragMean = cnEventPars.Get("Frag", 10.0);
+        int fracCount = GeometricDistribution.Sample(rnd, 1 / fragMean) + 1;
+        
         FragmentsList = new List<(long, long)>();
         for (int i = 0; i < fracCount; i++)
         {
-            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, meanSize);
+            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, pyrgoLen / fragMean);
             long fracStart = Sampling.GetInternalPos(rnd, pyrgoFrag - fracLen);
             FragmentsList.Add((pyrgoStart + fracStart, fracLen));
         }
