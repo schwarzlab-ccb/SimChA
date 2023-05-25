@@ -40,7 +40,7 @@ public static class Fitness
     {
         if(GeneLists == null)
             return null;
-        Dictionary<GeneListType, List<Gene>> geneList = new Dictionary<GeneListType, List<Gene>>();
+        var geneList = new Dictionary<GeneListType, List<Gene>>();
         foreach(var gl in GeneLists.Keys)
         {
             geneList[gl] = GeneLists[gl][chrNo].FindAll(g => g.Range.IsInside(start, end, chrNo));

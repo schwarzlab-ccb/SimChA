@@ -116,8 +116,6 @@ public class TestFitness
     public void TestCalculate()
     {
         var karyotype = new Karyotype(true);
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
         var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t,
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
@@ -126,5 +124,20 @@ public class TestFitness
         Assert.AreEqual(1, Fitness.Calculate(karyotype), EPSILON);
 
         // TODO: Test the linear combination
+    }
+
+    [Test]
+    public void TestGetGeneList()
+    {
+        var karyotype = new Karyotype(true);
+        var geneList = new Dictionary<GeneListType, List<Gene>>();
+        geneList.Add(GeneListType.TumorSuppressor, new List<Gene>(dict[GeneListType.TumorSuppressor][ChrNo.chr1]));
+        geneList.Add(GeneListType.Oncogene, new List<Gene>(dict[GeneListType.Oncogene][ChrNo.chr1]));
+        geneList.Add(GeneListType.Essentiality, new List<Gene>(dict[GeneListType.Essentiality][ChrNo.chr1]));
+        Assert.AreEqual(Fitness.GetGeneList(0, 1000, ChrNo.chr1), geneList);
+        geneList[GeneListType.TumorSuppressor] = new List<Gene>();
+        geneList[GeneListType.Oncogene] = new List<Gene>();
+        geneList[GeneListType.Essentiality] = new List<Gene>(dict[GeneListType.Essentiality][ChrNo.chr3]);
+        Assert.AreEqual(Fitness.GetGeneList(0, 1000, ChrNo.chr3), geneList); 
     }
 }
