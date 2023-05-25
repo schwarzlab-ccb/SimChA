@@ -161,7 +161,7 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
 
-    public static List<T> StitchRegions<T>(List<T> regions) where T : GeneRange
+    public static List<T> StitchRegions<T>(List<T> regions) where T : GeneRegionList
     {
         var newRegions = new List<T>();
         var merged = new bool[regions.Count];

@@ -1,6 +1,6 @@
 ﻿namespace SimChA.DataTypes;
 
-public record GeneRange(long Start, long End, ChrNo ChrNo) : GeneRegionList(Start, End, ChrNo)
+public record GeneRange(long Start, long End, ChrNo ChrNo)
 {
     public long Length => End - Start;
     
