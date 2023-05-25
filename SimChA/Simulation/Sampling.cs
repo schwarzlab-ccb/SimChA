@@ -138,7 +138,7 @@ public static class Sampling
                 return new TemplatedEventData(rnd, cnEventPars, seq);
             
             case CNEventType.SNV:
-                return new SNVData(rnd, cnEventPars,seq[0].id, seq[0].len, RandomNucleotide(rnd));
+                return new SNVData(rnd, cnEventPars, seq[0].id, seq[0].len, RandomNucleotide(rnd));
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
