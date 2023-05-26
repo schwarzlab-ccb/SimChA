@@ -21,18 +21,18 @@ public class TestRegions
     [Test]
     public void TestOverlap()
     {
-        var testRange = new GenRange(1000, 2000, ChrNo.chr1);
-        Assert.IsTrue(testRange.Overlaps(new GenRange(500, 1500, ChrNo.chr1)));
-        Assert.IsFalse(testRange.Overlaps(new GenRange(500, 1500, ChrNo.chr2)));
+        var testRange = new GeneRange(1000, 2000, ChrNo.chr1);
+        Assert.IsTrue(testRange.Overlaps(new GeneRange(500, 1500, ChrNo.chr1)));
+        Assert.IsFalse(testRange.Overlaps(new GeneRange(500, 1500, ChrNo.chr2)));
         
-        Assert.IsTrue(testRange.Overlaps(new GenRange(0, 1001, ChrNo.chr1)));
-        Assert.IsFalse(testRange.Overlaps(new GenRange(0, 1000, ChrNo.chr1)));
+        Assert.IsTrue(testRange.Overlaps(new GeneRange(0, 1001, ChrNo.chr1)));
+        Assert.IsFalse(testRange.Overlaps(new GeneRange(0, 1000, ChrNo.chr1)));
 
-        Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, ChrNo.chr1)));
-        Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, ChrNo.chr1)));
+        Assert.IsTrue(testRange.Overlaps(new GeneRange(1999, 3000, ChrNo.chr1)));
+        Assert.IsFalse(testRange.Overlaps(new GeneRange(2000, 3000, ChrNo.chr1)));
 
-        var gene = new Gene("OR4F5", new GenRange(69090, 70008, ChrNo.chr1), 0.142321064);
-        var range = new GenRange(0, 249250621, ChrNo.chr1);
+        var gene = new Gene("OR4F5", new GeneRange(69090, 70008, ChrNo.chr1), 0.142321064);
+        var range = new GeneRange(0, 249250621, ChrNo.chr1);
         Assert.IsTrue(range.Overlaps(gene.Range));
     }
 

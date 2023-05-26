@@ -14,11 +14,11 @@ public abstract class CNProfile
         double ploidy = kar.CalcPloidy();
         double coverage = kar.CalcCoverage();
         
-        var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], kar);
-        var ogCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], kar);
-        var essCNs = Fitness.CalcCNs(geneLists[GeneListType.Essentiality], kar);
+        var tsgCNs = Fitness.CalcCNs(GeneListType.TumorSuppressor, kar);
+        var ogCNs = Fitness.CalcCNs(GeneListType.Oncogene, kar);
+        var essCNs = Fitness.CalcCNs(GeneListType.Essentiality, kar);
         
-        double fitness = Fitness.Calculate(kar, geneLists, fParams);
+        double fitness = Fitness.Calculate(kar);
         double stress = Fitness.StressTerm(kar.GenomeLen(), kar.SexXX);
         double tsg = -Fitness.TsgOgTerm(tsgCNs, kar.SexXX);
         double og = Fitness.TsgOgTerm(ogCNs, kar.SexXX);

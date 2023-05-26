@@ -29,10 +29,12 @@ else
     var fitness = new FitnessParams(1, 1, 1);
     simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
 }
+
+var geneLists = FileIO.ReadGeneLists(options.GenesFolder, simParams.Assembly);
+Fitness.SetStartingParams(geneLists, simParams.Fitness);
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.GenesFolder, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();

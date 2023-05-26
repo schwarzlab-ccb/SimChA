@@ -7,18 +7,24 @@ namespace SimChA.Computation;
 
 public static class Fitness
 {
-    public static double Calculate(
-        Karyotype karyotype,
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
-        FitnessParams fParams)
+    private static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
+    private static FitnessParams FParams;
+
+    public static double Calculate(Karyotype karyotype)
     {
-        var tsgCNs = CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
-        var ogCNs = CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
+        var tsgCNs = CalcCNs(GeneListType.TumorSuppressor, karyotype);
+        var ogCNs = CalcCNs(GeneListType.Oncogene, karyotype);
+        var essCNs = CalcCNs(GeneListType.Essentiality, karyotype);
         return 1 
-               + fParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
-               + fParams.TsgOg * (TsgOgTerm(ogCNs, karyotype.SexXX) - TsgOgTerm(tsgCNs, karyotype.SexXX)) 
-               + fParams.Essentiality * EssTerm(essCNs);
+               + FParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
+               + FParams.TsgOg * (TsgOgTerm(ogCNs,karyotype.SexXX) - TsgOgTerm(tsgCNs,karyotype.SexXX)) 
+               + FParams.Essentiality * EssTerm(essCNs);
+    }
+
+    public static void SetStartingParams(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
+    {
+        GeneLists = geneLists;
+        FParams = fParams;
     }
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
@@ -28,6 +34,18 @@ public static class Fitness
         {
             Console.WriteLine($"\tCN: {cn}; {gene}" );
         }
+    }
+
+    public static Dictionary<GeneListType, List<Gene>> GetGeneList(long start, long end, ChrNo chrNo)
+    {
+        if(GeneLists == null)
+            return null;
+        var geneList = new Dictionary<GeneListType, List<Gene>>();
+        foreach(var gl in GeneLists.Keys)
+        {
+            geneList[gl] = GeneLists[gl][chrNo].FindAll(g => g.Range.IsInside(start, end, chrNo));
+        }
+        return geneList;
     }
 
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
@@ -49,11 +67,11 @@ public static class Fitness
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
 
-    public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<ChrNo, List<Gene>> searched, Karyotype karyotype)
+    public static IEnumerable<(Gene, int)> CalcCNs(GeneListType geneListType, Karyotype karyotype)
     {
-        var present = karyotype.GetPresentGenes(searched);
+        var present = karyotype.GetPresentGenes(geneListType);
         var counts = present.GroupBy(g => g).ToDictionary(g =>g.Key, g => g.Count());
-        var allSearched = searched.SelectMany(p => p.Value);
+        var allSearched = GeneLists[geneListType].SelectMany(p => p.Value);
         var covered = allSearched.Where(g
             => !karyotype.IsMissing(g.Range) && (karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY));
         return covered.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
