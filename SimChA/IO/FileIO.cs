@@ -11,6 +11,7 @@ public class FileIO
 {
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
+    private const string CONSISTENT_CNS_FILENAME = "consistent_CNs.tsv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CLONES_FILENAME = "clones.tsv";
@@ -49,6 +50,27 @@ public class FileIO
         foreach (var sample in samples)
         {
             outputFile.WriteLine(sample.ToTSV());
+        }
+    }
+    
+    public void WriteConsistentCNs(IList<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CONSISTENT_CNS_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        
+        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
+
+        var segs = CopyNumbers.GetSegPoints(samples.SelectMany(s => s.Kars.Values));
+        
+        foreach (var sample in samples)
+        {
+            foreach (var clone in sample.Clones)
+            {
+                var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], segs, sample.SexXX);
+                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
+            }
         }
     }
     

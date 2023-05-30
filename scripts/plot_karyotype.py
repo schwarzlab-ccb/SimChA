@@ -1,37 +1,13 @@
+#!/usr/bin/env python3
+
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import re
 import matplotlib.patches as mpatches
+from utils import chromosome_colors
 
-chromosome_colors = {
-    'chr1': 'red',
-    'chr2': 'mediumblue',
-    'chr3': 'forestgreen',
-    'chr4': 'darkorange',
-    'chr5': 'dodgerblue',
-    'chr6': 'olivedrab',
-    'chr7': 'purple',
-    'chr8': 'gray',
-    'chr9': 'gold',
-    'chr10': 'salmon',
-    'chr11': 'turquoise',
-    'chr12': 'darkviolet',
-    'chr13': 'green',
-    'chr14': 'indianred',
-    'chr15': 'steelblue',
-    'chr16': 'sienna',
-    'chr17': 'royalblue',
-    'chr18': 'darkgoldenrod',
-    'chr19': 'mediumvioletred',
-    'chr20': 'teal',
-    'chr21': 'peru',
-    'chr22': 'navy',
-    'chrX': 'chocolate',
-    'chrY': 'darkslateblue'
-}
-   
 def get_test_data():
     # Four datasets with length (float) and direction (bool)
     return [[

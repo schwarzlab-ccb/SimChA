@@ -101,6 +101,7 @@ try
     if (execMode != ExecMode.Profiles)
     {
         files.WriteCopyNumbers(samples);
+        files.WriteConsistentCNs(samples);
     }
     files.WriteClones(samples);
     files.WriteKaryotypes(samples);

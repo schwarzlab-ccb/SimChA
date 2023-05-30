@@ -6,6 +6,33 @@ import json
 
 from os.path import join
 
+chromosome_colors = {
+    'chr1': 'red',
+    'chr2': 'mediumblue',
+    'chr3': 'forestgreen',
+    'chr4': 'darkorange',
+    'chr5': 'dodgerblue',
+    'chr6': 'olivedrab',
+    'chr7': 'purple',
+    'chr8': 'gray',
+    'chr9': 'gold',
+    'chr10': 'salmon',
+    'chr11': 'turquoise',
+    'chr12': 'darkviolet',
+    'chr13': 'green',
+    'chr14': 'indianred',
+    'chr15': 'steelblue',
+    'chr16': 'sienna',
+    'chr17': 'royalblue',
+    'chr18': 'darkgoldenrod',
+    'chr19': 'mediumvioletred',
+    'chr20': 'teal',
+    'chr21': 'peru',
+    'chr22': 'navy',
+    'chrX': 'chocolate',
+    'chrY': 'darkslateblue'
+}
+
 def format_chromosomes_int(chroms):
     return chroms.astype(str).str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
 

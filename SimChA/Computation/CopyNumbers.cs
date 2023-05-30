@@ -6,9 +6,12 @@ namespace SimChA.Computation;
 public static class CopyNumbers
 {
     public static IEnumerable<CopyNumber> CalcCopyNumbers(Karyotype karyotype, bool isFemale) 
-        => HGRef
-            .ChrIDsForSex(isFemale)
+        => HGRef.ChrIDsForSex(isFemale)
             .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c), c));
+    
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(Karyotype karyotype, IDictionary<ChrNo, List<long>> segs, bool isFemale) 
+        => HGRef.ChrIDsForSex(isFemale)
+            .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), segs[c], c));
 
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IEnumerable<Region> curRegs, ChrNo chrNo)
     {
