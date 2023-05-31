@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.patches as mpatches
 import pandas as pd
+import math
 import sys
 sys.path.append('../scripts')
 from utils import chromosome_colors
@@ -16,24 +17,30 @@ def plot_hap(ax, chr_data, chr, hap):
     for index, row in chr_data.iterrows():
         start = row["start"] / 1000000
         end = row["end"] / 1000000
+        height = .2
+        width = end - start
         if hap == "a":
-            height = .25
-            y_pos = row["cn_a"] 
+            y_pos = row["cn_a"] - .1  
+            hatch = "///"
+            alpha = 0.5
         elif hap == "b":
-            height = .25
-            y_pos = row["cn_b"]  - .25
+            y_pos = row["cn_b"] - .1  
+            hatch = "\\\\\\"            
+            alpha = 0.5
         else:
-            height = .5
-            y_pos = row["cn_a"] + row["cn_b"] - .25            
-        ax.add_patch(mpatches.Rectangle((start, y_pos), end - start, height, fc=chromosome_colors[chr], edgecolor="black"))
-            
+            y_pos = row["cn_both"] - .1        
+            hatch = None            
+            alpha = 1
+        fc = chromosome_colors[chr]
+        rect = mpatches.Rectangle((start, y_pos), width, height, fc=fc, alpha=alpha, hatch=hatch)   
+        ax.add_patch(rect)           
 
 def plot_chr(ax, data, chr, start = 0, end = 0, join_haps = False):
     ax.set_ylabel(f"CN {chr}")
     chr_data = data.loc[data["chrom"] == chr]
     haps = ["both"] if join_haps else ["a", "b"]
     max_end = chr_data.iloc[-1]["end"] if len(chr_data) > 0 else 1
-    max_cna = (chr_data["cn_both"].max() if join_haps else chr_data[["cn_a", "cn_b"]].max().max()) if len(chr_data) > 0 else 0
+    max_cna = int(math.ceil(chr_data["cn_both"].max() if join_haps else chr_data[["cn_a", "cn_b"]].max().max())) if len(chr_data) > 0 else 0
     end = max_end / 1000000 if end == 0 else end
     ax.set_xlim(start, end)
     ax.set_ylim(-0.5,  max_cna + .5)
