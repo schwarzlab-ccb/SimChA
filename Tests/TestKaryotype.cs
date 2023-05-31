@@ -28,9 +28,13 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
-        _kar = new Karyotype(false);
         _rnd = new Random(0);
+        HGRef.Assembly = GenomeAssembly.hg19;
+        var geneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
+            gl => gl, gl => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(
+            c => c, c => new List<Gene> {MakeGene(c)}));
+        Fitness.SetStartingParams(geneLists, new FitnessParams(0.1, 0.1, 0.1));
+        _kar = new Karyotype(false);
         _del = new CNEventPars(CNEventType.ChromDeletion);
         _dup = new CNEventPars(CNEventType.ChromDuplication);
     }
@@ -203,15 +207,18 @@ public class TestKaryotype
     [Test]
     public void TestGetPresentGenes()
     {
-        var chrNums = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>();
-        var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> {MakeGene(c)});
-        var tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
+        var tsgOgsPresent = _kar.GetPresentGenes(GeneListType.TumorSuppressor);
+        tsgOgsPresent.AddRange(_kar.GetPresentGenes(GeneListType.Oncogene));
+        tsgOgsPresent.AddRange(_kar.GetPresentGenes(GeneListType.Essentiality));
+        //Contigs times 3 because one gene per GeneListType for each Contig
+        Assert.AreEqual(_kar.CountContigs() * 3, tsgOgsPresent.Count);
         
         // Removes a gene and a contig at the same time
         ApplyRandomEvent(_rnd, _kar, _del);
-        tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
+        tsgOgsPresent = _kar.GetPresentGenes(GeneListType.TumorSuppressor);
+        tsgOgsPresent.AddRange(_kar.GetPresentGenes(GeneListType.Oncogene));
+        tsgOgsPresent.AddRange(_kar.GetPresentGenes(GeneListType.Essentiality));
+        Assert.AreEqual(_kar.CountContigs() * 3, tsgOgsPresent.Count);
     }
     
     [Test]

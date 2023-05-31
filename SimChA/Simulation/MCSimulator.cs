@@ -43,7 +43,7 @@ public class MCSimulator : Simulator
             eventData.ApplyEvent(kar);
             eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
         }
-        double dFit = kar.UpdateFitness(GeneLists, Fitness) - targetFit;
+        double dFit = kar.UpdateFitness() - targetFit;
         // Variable to immediately quit the MC Sampling if we've reached enough accuracy
         bool accept = Math.Abs(dFit / targetFit) < McParams.ThresholdFit;
         // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
@@ -120,7 +120,7 @@ public class MCSimulator : Simulator
                     Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
                     var eventData = bestEvents[mutNo];
                     eventData.ApplyEvent(childKar);
-                    double newFitness = childKar.UpdateFitness(GeneLists, Fitness);
+                    double newFitness = childKar.UpdateFitness();
                     double dFit = newFitness - oldFitness;
                     var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit,
                         newFitness);

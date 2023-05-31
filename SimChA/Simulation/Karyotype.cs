@@ -22,12 +22,12 @@ public class Karyotype
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
 
     private readonly List<Contig> _contigs;
-    private readonly List<GenRange> _missingRanges;
+    private readonly List<GeneRange> _missingRanges;
     
     public Karyotype(bool sexXX)
     {
         _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
-        _missingRanges = new List<GenRange>();
+        _missingRanges = new List<GeneRange>();
         SexXX = sexXX;
     }
     
@@ -38,7 +38,7 @@ public class Karyotype
         SexXX = other.SexXX;
     }
     
-    public Karyotype(List<Contig> contigs, List<GenRange> missingRanges, bool sexXX)
+    public Karyotype(List<Contig> contigs, List<GeneRange> missingRanges, bool sexXX)
     {
         _contigs = contigs;
         _missingRanges = missingRanges;
@@ -48,7 +48,7 @@ public class Karyotype
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
-    public bool IsMissing(GenRange other)
+    public bool IsMissing(GeneRange other)
         => _missingRanges.Any(range => range.Overlaps(other));
 
     public long MissingLen()
@@ -72,12 +72,12 @@ public class Karyotype
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
 
-    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+    public List<Gene> GetPresentGenes(GeneListType geneListType)
+        => _contigs.SelectMany(c => c.GetPresentGenes(geneListType)).ToList();
     
-    public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
-        => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
-    
+    public double UpdateFitness()
+        => FitnessVal = Fitness.Calculate(this);
+
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
