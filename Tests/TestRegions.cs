@@ -15,6 +15,7 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
+        HGRef.Assembly = GenomeAssembly.hg38;
         _cRegion = HGRef.GetGenotype(true)[0];
     }
 
