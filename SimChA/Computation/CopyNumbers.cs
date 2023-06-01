@@ -16,8 +16,8 @@ public static class CopyNumbers
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IEnumerable<Region> curRegs, IList<GenRange> missing, ChrNo chrNo)
     {
         var regionList = curRegs.ToList();
-        var starts = regionList.Select(r => r.Start).Append(0);
-        var ends = regionList.Select(r => r.End).Append(HGRef.GetChromLen(chrNo));
+        var starts = regionList.Select(r => r.Start).Append(0).Concat(missing.Select(r => r.Start));
+        var ends = regionList.Select(r => r.End).Append(HGRef.GetChromLen(chrNo)).Concat(missing.Select(r => r.End));
         var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
         return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo);;
     }

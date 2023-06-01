@@ -51,6 +51,14 @@ public class Karyotype
 
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
+
+    public void GlueNeighbours()
+    {
+        foreach (var contig in _contigs)
+        {
+            contig.GlueNeighbours();
+        }
+    }
     
     public long MissingLen()
         => _missingRanges.Sum(r => r.Value.Sum(range => range.Length));
