@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 
@@ -72,7 +71,7 @@ public static class Parsers
                         regionsB.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, false)));
                     }
                     bool sexXX = !present[ChrNo.chrY];
-                    result[lastSample] = new(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
+                    result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
                 }
                 // Reset
                 regionsA.Clear();

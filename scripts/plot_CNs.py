@@ -67,15 +67,16 @@ def plot_CNs(data, sample, join_haps = False, dpi=200):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot haplotype specific Copy Numbers for a sample")
-    parser.add_argument("--input", default="./out/copynumbers.tsv", help="The file with copynumbers.")
-    parser.add_argument("--sample", default="sample_1", help="Sample ID")
-    parser.add_argument("--output", default="./out/copy_numbers.png", help="Output file path")
-    parser.add_argument("--joint", action="store_true", help="Plot both haplotypes jointly (default: False))")
+    parser.add_argument("-I", "--input", default="./out/copynumbers.tsv", help="The file with copynumbers.")
+    parser.add_argument("-S", "--sample", default="", help="Sample ID")
+    parser.add_argument("-O", "--output", default="./out/copy_numbers.png", help="Output file path")
+    parser.add_argument("-J", "--joint", action="store_true", help="Plot both haplotypes jointly (default: False))")
     args = parser.parse_args()
 
     df = pd.read_csv(args.input, sep="\t", index_col=0)
-    sample_data = df.loc[[args.sample]]
-    plot_CNs(sample_data, args.sample, join_haps = args.joint, dpi=200)
+    sample_name = args.sample if args.sample != "" else df.index[0]
+    sample_data = df.loc[[sample_name]]
+    plot_CNs(sample_data, sample_name, join_haps = args.joint, dpi=200)
     # save using tight layout
     plt.tight_layout()
     plt.savefig(args.output, dpi=200)

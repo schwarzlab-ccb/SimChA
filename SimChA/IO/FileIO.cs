@@ -233,7 +233,12 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            return Parsers.ParseCNAProfile(cnaFile);
+            var profiles = Parsers.ParseCNAProfile(cnaFile);
+            foreach (var pro in profiles)
+            {
+                pro.Value.GlueNeighbours();
+            }
+            return profiles;
         }
         catch (Exception e)
         {

@@ -77,13 +77,15 @@ def get_data(input_file, sample_name):
     clones["sample_id"] = clones["sample_id"].astype(str)    
     clones.set_index("sample_id", inplace=True)    
 
+    sample_name = sample_name if sample_name != "" else clones.index[0]
+
     # clones row where ID is sample_name
     sample = clones.loc[sample_name]
     if (sample.empty):
         print(f"Sample {sample_name} not found")
-        return
+        raise SystemExit
     
-    return parse_karyotype(sample["karyotype"])
+    return sample_name, parse_karyotype(sample["karyotype"])
 
 
 def plot_karyotype(data, sample_name, dpi=150):
@@ -92,7 +94,7 @@ def plot_karyotype(data, sample_name, dpi=150):
     fig, ax = plt.subplots()
     # set figure to full hd, tight layout
     fig.set_size_inches(1920 / dpi, 1080 / dpi)
-    fig.tight_layout(pad=1.3, rect=[0.02, 0, .94, 1])    
+    fig.tight_layout(pad=1.3, rect=(0.02, 0.0, 0.94, 0.1))    
 
     # Set the y-axis labels
     ax.set_yticks([i for i in range(sample_count)])
@@ -130,11 +132,11 @@ def plot_karyotype(data, sample_name, dpi=150):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
-    parser.add_argument("--input", default="./out/karyotypes.tsv", help="The file with the karyotype data.")
-    parser.add_argument("--sample", default="sample_1", help="Sample ID")
-    parser.add_argument("--output", default="./out/karyotype.png", help="Output file path")
+    parser.add_argument("-I", "--input", default="./out/karyotypes.tsv", help="The file with the karyotype data.")
+    parser.add_argument("-S", "--sample", default="sample_1", help="Sample ID")
+    parser.add_argument("-O", "--output", default="./out/karyotype.png", help="Output file path")
     args = parser.parse_args()
 
-    data = get_data(args.input, args.sample)
-    plot_karyotype(data, args.sample, dpi=150)
+    sample_name, data = get_data(args.input, args.sample)
+    plot_karyotype(data, sample_name, dpi=150)
     plt.savefig(args.output, dpi=150)

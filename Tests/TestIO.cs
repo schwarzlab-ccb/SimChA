@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Linq;
 using NUnit.Framework;
+using SimChA.Computation;
 using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;
