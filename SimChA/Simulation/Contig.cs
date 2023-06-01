@@ -29,6 +29,10 @@ public class Contig
 
     public bool Any() 
         => Length() > 0;
+    public List<Region> GetRegions()
+    {
+        return _regions;
+    }
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -145,4 +149,9 @@ public class Contig
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, nucleotide);
     }
+    public void InsertAndBreak(long location)
+    {
+        //_regions = RegionOps.
+    }
+
 }

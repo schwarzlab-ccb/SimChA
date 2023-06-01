@@ -139,6 +139,8 @@ public static class Sampling
             
             case CNEventType.SNV:
                 return new SNVData(rnd, cnEventPars, seq[0].id, seq[0].len, RandomNucleotide(rnd));
+            case CNEventType.PointDeletion:
+                return new PointIndelData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
