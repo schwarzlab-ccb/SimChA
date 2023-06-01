@@ -90,7 +90,7 @@ public class TestCopyNumbers
         var karXX = new Karyotype(true);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         var segs = CopyNumbers.GetSegPoints(ChrNo.chr1, new List<Karyotype> {karXX});
-        var cns = CopyNumbers.CalcChrCopyNumbers(karXX.FindRegionsOfChr(ChrNo.chr1).ToList(), segs, ChrNo.chr1);
+        var cns = CopyNumbers.CalcChrCopyNumbers(karXX.FindRegionsOfChr(ChrNo.chr1).ToList(), karXX.GetMissingOfChr(ChrNo.chr1), segs, ChrNo.chr1);
         Console.WriteLine(string.Join(", ", cns));
     }
 }

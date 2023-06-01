@@ -46,6 +46,8 @@ public static class Parsers
         return new Karyotype(new List<Contig> {contigA, contigB}, totalMissing, sexXX);
     }
     
+    // Expected format is that there is a header and the columns contain:
+    // SampleID, Chr, Start, End, CN hap1, CN hap2
     public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
@@ -130,6 +132,13 @@ public static class Parsers
             {
                 throw new Exception($"Could not parse the CNA profile:\n{line}\n{e.Message}");
             }
+        }
+
+        // Consider missing to be haplotypes by default
+        foreach (var range in missingRanges)
+        {
+            regionsA.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, true)));
+            regionsB.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, false)));
         }
         
         // Add the last sample
