@@ -11,4 +11,5 @@ public record Region(long Start, long End, ChrID ChrID,
     private string DirString => DirToStr(Forward);
     
     public override string ToString() => $"{ChrID}{DirString}[{Start}:{End})";
+    public Dictionary<long, Nucleotide> GetSNVs() => SNVDict;
 }
