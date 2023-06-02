@@ -7,8 +7,6 @@ public record PointMutationData : ContigEventData
 {
     public long Location { get; }
     public Nucleotide MutatedNucleotide {get;}
-
-    // Constructor used for point insertions and deletions
     public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
         Location = Sampling.GetInternalPos(rnd, contigLen);
