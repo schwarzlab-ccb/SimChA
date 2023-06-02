@@ -149,9 +149,9 @@ public class Contig
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, nucleotide);
     }
-    public void InsertAndBreak(long location)
+    public void InsertNucleotide(long location, Nucleotide nucleotide)
     {
-        //_regions = RegionOps.
+        _regions = RegionOps.BreakAndInsert(_regions, location, nucleotide);
     }
 
 }

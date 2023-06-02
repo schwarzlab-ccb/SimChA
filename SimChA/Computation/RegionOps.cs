@@ -144,7 +144,7 @@ public static class RegionOps
                 {
                     newSNVDict = region.SNVDict;
                 }
-                newSNVDict[pos - seekPos] = nucleotide;
+                newSNVDict[region.Start + pos - seekPos] = nucleotide;
                 var newRegion = region with { SNVDict = newSNVDict };
                 AddIfNotEmpty(newRegions, newRegion);
             }
@@ -152,7 +152,6 @@ public static class RegionOps
         }        
         return newRegions;
     }
-
     public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
     {
         var newRegions = new List<T>();
@@ -242,4 +241,25 @@ public static class RegionOps
     
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
+
+    public static Region AppendNucleotide(Region region, Nucleotide nucleotide)
+    {
+        Dictionary<long, Nucleotide> newSNVDict = new();
+        if (region.SNVDict != null)
+        {
+            newSNVDict = region.SNVDict;
+        }
+        var newEnd = region.End + 1;
+        newSNVDict[region.End] = nucleotide;
+        var newRegion = region with {End = newEnd, SNVDict = newSNVDict};
+        return newRegion;
+    }
+    public static List<Region> BreakAndInsert(List<Region> regions, long location, Nucleotide nucleotide)
+    {
+        var (first, second) = RegionOps.SplitRegions(regions, location);
+        // Append a nucleotide to the last region of first
+        var lastRegion = first[first.Count-1];
+        first[first.Count-1] = RegionOps.AppendNucleotide(lastRegion, nucleotide);
+        return RegionOps.ConcatRegions(first, second);
+    }
 }

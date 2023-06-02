@@ -46,7 +46,7 @@ public class MCSimulator : Simulator
         double dFit = kar.UpdateFitness(GeneLists, Fitness) - targetFit;
         // Variable to immediately quit the MC Sampling if we've reached enough accuracy
         bool accept = Math.Abs(dFit / targetFit) < McParams.ThresholdFit;
-        // Fitness potential is an exponential - exp[-theta * |fit - mean_fit|]
+
         double fitnessPotential = -McParams.ThetaFitness * Math.Abs(dFit);
 
         double potential = eventPotentialTotal + fitnessPotential;
@@ -78,8 +78,6 @@ public class MCSimulator : Simulator
         var currentEvents = InitEvents(kar, nEvents, sample.EventPars);
         double currentPotential = Potential(new Karyotype(kar), targetFitness, currentEvents).potential;
 
-        // Now we perform the Metropolis-Hastings algorithm
-        // and sample a set of events that give the closest agreement with fitness given by SMITH
         for (int i = 0; i < McParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
@@ -111,10 +109,9 @@ public class MCSimulator : Simulator
             if (child.Distance > 0)
             {
                 double oldFitness = childKar.FitnessVal;
-                // Perform the MC Sampling to generate a set of events
+                
                 var bestEvents = GetBestEvents(sample, childKar, child.Distance,child.FitnessTarget);
 
-                // Finalize the mutated karyotype by applying the best-fit set of events
                 for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
                 {
                     Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");

@@ -244,10 +244,10 @@ public class Karyotype
         var contig = _contigs[contigID];
         contig.SNV(location, nucleotide);
     }
-    public void ApplyPointInsertion(int contigID, long location)
+    public void ApplyPointInsertion(int contigID, long location, Nucleotide nucleotide)
     {
         var contig = _contigs[contigID];
-        contig.InsertAndBreak(location);
+        contig.InsertNucleotide(location, nucleotide);
     }
     public void ApplyPointDeletion(int contigID, long location)
     {
