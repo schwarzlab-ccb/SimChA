@@ -3,35 +3,37 @@ using SimChA.DataTypes;
 
 namespace SimChA.EventData;
 
-public record PointIndelData : ContigEventData
+public record PointMutationData : ContigEventData
 {
     public long Location { get; }
-    public Nucleotide InsertedNucleotide {get;}
+    public Nucleotide MutatedNucleotide {get;}
 
     // Constructor used for point insertions and deletions
-    public PointIndelData(Random rnd, CNEventPars CNEventPars, int contigId, long location) : base(CNEventPars, contigId)
+    public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
-        Location = location;
-        InsertedNucleotide = 
-            (EventType == CNEventType.PointInsertion) ? Sampling.SampleNucleotide(rnd) : Nucleotide.A ;
+        Location = Sampling.GetInternalPos(rnd, contigLen);
+        MutatedNucleotide = Sampling.SampleNucleotide(rnd);
     }
 
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.PointInsertion)
+        if (EventType == CNEventType.SNV)
         {
-            kar.ApplyPointInsertion(ContigId, Location, InsertedNucleotide);
+            kar.ApplySNV(ContigId, Location, MutatedNucleotide);
+        }
+        else if (EventType == CNEventType.PointInsertion)
+        {
+            kar.ApplyPointInsertion(ContigId, Location, MutatedNucleotide);
         }
         else if (EventType == CNEventType.PointDeletion)
         {
             kar.ApplyPointDeletion(ContigId, Location);
         }
     }
-
     public override string ToString()
         => EventType switch
         {
-            CNEventType.PointInsertion => $"contig:{ContigId};location:{Location};inserted:{InsertedNucleotide}",
+            CNEventType.PointInsertion or CNEventType.SNV => $"contig:{ContigId};location:{Location};inserted:{MutatedNucleotide}",
             CNEventType.PointDeletion  => $"contig:{ContigId};location:{Location}",
             _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, null)
         };

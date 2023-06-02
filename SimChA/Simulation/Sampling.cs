@@ -138,10 +138,9 @@ public static class Sampling
                 return new TemplatedEventData(rnd, cnEventPars, seq);
             
             case CNEventType.SNV:
-                return new SNVData(rnd, cnEventPars, seq[0].id, seq[0].len, SampleNucleotide(rnd));
             case CNEventType.PointInsertion:
             case CNEventType.PointDeletion:
-                return new PointIndelData(rnd, cnEventPars, seq[0].id, seq[0].len);
+                return new PointMutationData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
