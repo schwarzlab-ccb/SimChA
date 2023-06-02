@@ -88,7 +88,19 @@ public static class Sampling
         var values = Enum.GetValues(typeof(Nucleotide));
         return (Nucleotide) values.GetValue(rnd.Next(values.Length));
     }
-    
+    public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
+    {
+        long totalLength = kar.ContigIds().Sum(i => kar.ContigLen(i));
+        long count = 0;
+        List<double> pCumulative = kar.ContigIds().Select(i => 
+            {
+                count += kar.ContigLen(i);
+                return count/(1.0*totalLength);
+            }).ToList();
+        var u = rnd.NextDouble();
+        var selected = kar.ContigIds().SkipWhile(i => pCumulative[i] < u).First();
+        return (selected, kar.ContigLen(selected));
+    }
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
@@ -140,7 +152,8 @@ public static class Sampling
             case CNEventType.SNV:
             case CNEventType.PointInsertion:
             case CNEventType.PointDeletion:
-                return new PointMutationData(rnd, cnEventPars, seq[0].id, seq[0].len);
+                var pointSeq = SampleContigsByLength(rnd, kar);
+                return new PointMutationData(rnd, cnEventPars, pointSeq.id, pointSeq.len);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
