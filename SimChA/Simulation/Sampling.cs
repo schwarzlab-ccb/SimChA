@@ -91,14 +91,8 @@ public static class Sampling
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
     {
         long totalLength = kar.ContigIds().Sum(i => kar.ContigLen(i));
-        long count = 0;
-        List<double> pCumulative = kar.ContigIds().Select(i => 
-            {
-                count += kar.ContigLen(i);
-                return count/(1.0*totalLength);
-            }).ToList();
-        var u = rnd.NextDouble();
-        var selected = kar.ContigIds().SkipWhile(i => pCumulative[i] < u).First();
+        var pArray = kar.ContigIds().Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
+        var selected = rnd.PickRndIndex(pArray);
         return (selected, kar.ContigLen(selected));
     }
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
