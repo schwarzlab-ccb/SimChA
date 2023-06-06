@@ -274,4 +274,10 @@ public class TestKaryotype
         Assert.AreEqual(46, _kar.CountContigs());
         Assert.AreEqual(contigLen + TEST_FRAC * 4, _kar.ContigLen(0));
     }
+
+    [Test]
+    public void TestFilterMissing()
+    {
+
+    }
 }

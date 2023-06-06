@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Linq;
 using NUnit.Framework;
+using SimChA.Computation;
 using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;
@@ -101,5 +102,25 @@ public class TestIO
         Assert.AreEqual(1, clones[2].Distance);
         Assert.AreEqual(1.728, clones[3].FitnessTarget, double.Epsilon * 10);
         
+    }
+
+    [Test]
+    public void TestParseCNAProfiles()
+    {
+        HGRef.Assembly = GenomeAssembly.hg19;
+        const string Profiles = @"sample_id	chrom	start	end	cn_a	cn_b
+1	chr1	1	249250621	1	1
+1	chr2	13133	2429856	0	0
+1	chr3	62226	171636043	2	3
+2	chrX	2	6	1	0
+2	chrY	3	4	0	1";
+        var profiles = Parsers.ParseCNAProfile(new StringReader(Profiles));
+        Assert.AreEqual(2, profiles.Count);
+        Assert.AreEqual(2, profiles["1"].CountContigs());
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr1).Count()); // 2 existing
+        Assert.AreEqual(4, profiles["1"].FindRegionsOfChr(ChrNo.chr2).Count()); // 4 missing (split by null regions)
+        Assert.AreEqual(9, profiles["1"].FindRegionsOfChr(ChrNo.chr3).Count()); // 5 existing + 4 missing
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr4).Count()); // 2 missing
+        Assert.AreEqual(false, profiles["2"].SexXX);
     }
 }

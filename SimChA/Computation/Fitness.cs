@@ -54,8 +54,7 @@ public static class Fitness
         var present = karyotype.GetPresentGenes(searched);
         var counts = present.GroupBy(g => g).ToDictionary(g =>g.Key, g => g.Count());
         var allSearched = searched.SelectMany(p => p.Value);
-        var covered = allSearched.Where(g
-            => !karyotype.IsMissing(g.Range) && (karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY));
+        var covered = allSearched.Where(g => karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY);
         return covered.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
     }
 }

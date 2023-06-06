@@ -79,7 +79,6 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        
         outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
 
         foreach (var sample in samples)
@@ -234,7 +233,12 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            return Parsers.ParseCNAProfile(cnaFile);
+            var profiles = Parsers.ParseCNAProfile(cnaFile);
+            foreach (var pro in profiles)
+            {
+                pro.Value.GlueNeighbours();
+            }
+            return profiles;
         }
         catch (Exception e)
         {

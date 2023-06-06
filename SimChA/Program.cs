@@ -59,7 +59,8 @@ else
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.Sex);
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs,
+            simParams.Sex);
     }
     foreach (var sample in samples)
     {
@@ -98,9 +99,9 @@ Console.WriteLine("");
 try
 {
     files.WriteSamples(samples);
-    if (execMode != ExecMode.Profiles)
+    files.WriteCopyNumbers(samples);
+    if (options.CalcConsistentCNs)
     {
-        files.WriteCopyNumbers(samples);
         files.WriteConsistentCNs(samples);
     }
     files.WriteClones(samples);
