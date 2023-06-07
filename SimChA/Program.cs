@@ -53,9 +53,9 @@ else
     if (execMode == ExecMode.Tree)
     {
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
-        var eventPs = Converters.PropagateSigs(sigs);
+        var (cnEventPs, mixture) = Converters.PropagateSigs(sigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, eventPs);
+        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
         samples = new List<Sample> {treeSample};
     }
     else
