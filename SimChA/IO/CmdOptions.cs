@@ -26,7 +26,7 @@ public class CmdOptions
     [Option('M', "mcmc", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
     public bool UseMCMC {get; set;}
     
-    [Option('c', Required = false, Default = false, HelpText = "Calculate consistent copy numbers.")]
+    [Option('S', Required = false, Default = false, HelpText = "Calculate consistent copy number segmentation.")]
     public bool CalcConsistentCNs { get; set; }
 
     public ExecMode ExecMode
