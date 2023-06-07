@@ -46,13 +46,13 @@ public static class Converters
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Prob > 0).ToList();
         double[] sigProbs = sigs.Select(s => s.Prob).ToArray();
-        var mixture = Sampling.CreateRandomMixture(rnd, sigProbs);
         for (int i = 0; i < repeats; i++)
         {
             double dist = Sampling.SampleDist(rnd, distribution);
             int mutCount = (int) Math.Round(meanDist * dist);
             double fitnessTarget = Sampling.SampleDist(rnd, Distribution.Exponential) * 0.8 + 1;
             var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
+            var mixture = Sampling.CreateRandomMixture(rnd, sigProbs);
             var events = PropagateSigs(selectedSigs, mixture);
             var sample = new Sample($"sample_{i + 1}", Sampling.GetBinarySex(rnd, sex), new List<CloneIn> { clone }, events);
             samples.Add(sample);

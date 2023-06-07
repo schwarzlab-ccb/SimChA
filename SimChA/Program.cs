@@ -29,6 +29,7 @@ else
     var fitness = new FitnessParams(1, 1, 1);
     simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
 }
+
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
@@ -55,13 +56,14 @@ else
         var eventPs = Converters.PropagateSigs(sigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
         var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, eventPs);
-        samples = new List<Sample> { treeSample };
+        samples = new List<Sample> {treeSample};
     }
     else
     {
         samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs,
             simParams.Sex);
     }
+
     foreach (var sample in samples)
     {
         // Monte Carlo sampling of copy-number altering events
@@ -71,6 +73,7 @@ else
             {
                 throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
             }
+
             simulator = new MCSimulator(rnd, simParams.Fitness, geneLists, simParams.MCParams);
             simulator.SampleEvents(sample);
         }
@@ -80,6 +83,7 @@ else
         }
     }
 }
+
 Console.WriteLine("");
 
 // Fitness data
@@ -94,6 +98,7 @@ foreach (var sample in samples)
         sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, geneLists, simParams.Fitness, sample.Kars);
     }
 }
+
 Console.WriteLine("");
 
 try
