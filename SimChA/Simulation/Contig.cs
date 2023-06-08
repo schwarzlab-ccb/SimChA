@@ -145,7 +145,7 @@ public class Contig
         {
             var chrNo = region.ChrID.ChrNo;
             var geneList = geneLists[chrNo];
-            if (geneList.Count > 0)
+            if (region.Forward && geneList.Count > 0)
             {
                 long meanDist = HGRef.GetChromLen(chrNo) / geneList.Count;
                 int startPos = (int)(region.Start / meanDist);
