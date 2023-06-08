@@ -13,7 +13,7 @@ public record ChromothripsisEventData : ContigEventData
     public ChromothripsisEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
     {
         ContigId = contigId;
-        double chromothripsisLen = cnEventPars.Get("Size", 10_000_000L);
+        double chromothripsisLen = cnEventPars.GetLong("Size");
         int shardCount = Math.Max(1, chromothripsisLen > contigLen ? Sampling.GetFragCount(rnd, contigLen / chromothripsisLen) : 1);
         StopsList = Sampling.GetStopsForShards(rnd, contigLen, shardCount);
         int shardsKept = rnd.Next(1, StopsList.Count + 1);

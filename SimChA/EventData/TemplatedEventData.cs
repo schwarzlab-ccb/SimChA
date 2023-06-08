@@ -13,8 +13,8 @@ public record TemplatedEventData : BaseEventData
     
     public TemplatedEventData(Random rnd, CNEventPars cnEventPars, IReadOnlyList<(int id, long len)> seq) : base(cnEventPars)
     {
-        long size = cnEventPars.Get("Size", 1_000_000L);
-        double fragMean = cnEventPars.Get("Frag", 10.0);
+        long size = cnEventPars.GetLong("Size");
+        double fragMean = cnEventPars.GetDouble("Frag");
         int contigCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
                           + (cnEventPars.Type != CNEventType.TIBridge ? 1 : 2);
         

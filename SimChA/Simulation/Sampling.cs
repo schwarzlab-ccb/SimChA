@@ -16,7 +16,7 @@ public static class Sampling
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen - 2));
 
-    // Get two positions within the contig (boundaries are excluded)
+    // GetDouble two positions within the contig (boundaries are excluded)
     public static long GetInternalPos(Random rnd, long contigLen)
         => rnd.NextInt64(1, Math.Max(1, contigLen - 1));
     

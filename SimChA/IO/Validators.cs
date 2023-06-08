@@ -16,7 +16,6 @@ public static class Validators
             case CNEventType.WholeGenomeDoubling:
                 break;
                 
-            case CNEventType.Translocation:
             case CNEventType.BreakageFusionBridge:
             case CNEventType.TailDeletion:
             case CNEventType.InternalDeletion:
@@ -28,6 +27,13 @@ public static class Validators
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
                 break;
 
+            case CNEventType.Translocation:
+                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
+                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a PIvn parameter. E.g. \"Pars\": {{\"PIvn\": 0.5}}");
+                break;
+            
             case CNEventType.Chromoplexy:
             case CNEventType.TIChain:
             case CNEventType.TIBridge:

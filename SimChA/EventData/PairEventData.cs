@@ -20,7 +20,7 @@ public record PairEventData : BaseEventData
         PosA = Sampling.GetInternalPos(rnd, lenA);
         ContigIdB = contigB;
         PosB = Sampling.GetInternalPos(rnd, lenB);
-        double invProb = cnEventPars.Get("InvProb", 0.0);
+        double invProb = cnEventPars.GetDouble("PInv");
         Inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
     }
     
