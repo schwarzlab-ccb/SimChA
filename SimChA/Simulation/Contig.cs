@@ -40,7 +40,7 @@ public class Contig
         => ToString(_regions);
 
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo)
-        => _regions.Where(r => r.ChrID.ChrNo == chrNo);
+        => _regions.Where(r => r.ChrNo == chrNo);
 
     public void Clear()
         => _regions.Clear();
@@ -143,7 +143,7 @@ public class Contig
         List<Gene> presentGenes = new();
         foreach (var region in _regions)
         {
-            var chrNo = region.ChrID.ChrNo;
+            var chrNo = region.ChrNo;
             var geneList = geneLists[chrNo];
             if (region.Forward && geneList.Count > 0)
             {

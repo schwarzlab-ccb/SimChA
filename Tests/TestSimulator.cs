@@ -38,7 +38,7 @@ public class TestSimulator
     
     // Taken the MakeGene method from TestFitness
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
-        => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
+        => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
     
     [Test]
     public void TestPotential()

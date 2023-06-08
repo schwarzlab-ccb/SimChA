@@ -18,7 +18,7 @@ public class TestFitness
     private const double EPSILON = 0.0000000001;
     
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
-        => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
+        => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
 
     [Test]
     public void TestEssTerm()

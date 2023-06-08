@@ -90,7 +90,7 @@ public class TestKaryotype
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
         var regions = _kar.FindRegionsOfChr(ChrNo.chr1).ToList();
-        Assert.AreEqual(3, regions.Count(r => r.ChrID.Parent));
+        Assert.AreEqual(3, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));
         Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).Start);
     }
@@ -102,7 +102,7 @@ public class TestKaryotype
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
         var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
-        Assert.AreEqual(3, gluedRegions.Count(r => r.ChrID.Parent));
+        Assert.AreEqual(3, gluedRegions.Count(r => r.Hap1));
         Assert.AreEqual(1, gluedRegions.Count(r => !r.Forward));
         Assert.AreEqual(TEST_FRAC, gluedRegions.First(r => !r.Forward).Start);
     }
@@ -198,7 +198,7 @@ public class TestKaryotype
     }
 
     private Gene MakeGene(ChrNo chrNo) 
-        => new("G" + chrNo, new Region(0, 50, new ChrID(chrNo, false)), _rnd.NextDouble());
+        => new("G" + chrNo, new Region(0, 50, chrNo, false), _rnd.NextDouble());
 
     [Test]
     public void TestGetPresentGenes()

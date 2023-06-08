@@ -31,8 +31,8 @@ public static class CopyNumbers
             // Skip segments that are completely missing
             if (missing.All(m => !seg.IsInside(m)))
             {
-                int cnh1 = curRegs.Count(r => r.ChrID.Parent && seg.IsInside(r));
-                int cnh2 = curRegs.Count(r => !r.ChrID.Parent && seg.IsInside(r));
+                int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInside(r));
+                int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInside(r));
                 var cn = new CopyNumber(seg, cnh1, cnh2);
                 result.Add(cn);
             }

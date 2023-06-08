@@ -67,8 +67,8 @@ public static class Parsers
                     // Consider missing to be haplotypes by default
                     foreach (var range in missingRanges)
                     {
-                        regionsA.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, true)));
-                        regionsB.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, false)));
+                        regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
+                        regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
                     bool sexXX = !present[ChrNo.chrY];
                     result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
@@ -123,11 +123,11 @@ public static class Parsers
                 // Add the new regions
                 for (int i = 0; i < cnA; i++)
                 {
-                    regionsA.Add(new Region(start, end, new ChrID(chrNo, true)));
+                    regionsA.Add(new Region(start, end, chrNo, true));
                 }
                 for (int i = 0; i < cnB; i++)
                 {
-                    regionsB.Add(new Region(start, end, new ChrID(chrNo, false)));
+                    regionsB.Add(new Region(start, end, chrNo, false));
                 }
             }
             catch (Exception e)
@@ -148,8 +148,8 @@ public static class Parsers
         // Consider missing to be haplotypes by default
         foreach (var range in missingRanges)
         {
-            regionsA.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, true)));
-            regionsB.Add(new Region(range.Start, range.End, new ChrID(range.ChrNo, false)));
+            regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
+            regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
         }
 
         // Add the last sample

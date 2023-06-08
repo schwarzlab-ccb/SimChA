@@ -100,7 +100,7 @@ public static class HGRef
         => Enum.GetValues<ChrNo>().Take(sexXX ? AUTOSOME_COUNT + 1 : AUTOSOME_COUNT + 2);
     
     public static Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) 
-        => new(0, GetChrs(Assembly)[chrNo], new ChrID(chrNo, isFirstHaplotype));
+        => new(0, GetChrs(Assembly)[chrNo], chrNo, isFirstHaplotype);
 
     static HGRef()
     {
@@ -120,7 +120,7 @@ public static class HGRef
     }
     
     private static Region GetRegion(ChrNo chrNo, GenomeAssembly genomeAssembly, bool isFirstHaplotype = true) 
-        => new(0, GetChrs(genomeAssembly)[chrNo], new ChrID(chrNo, isFirstHaplotype));
+        => new(0, GetChrs(genomeAssembly)[chrNo], chrNo, isFirstHaplotype);
 
     private static IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale, GenomeAssembly assembly)
     {
