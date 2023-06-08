@@ -15,13 +15,19 @@ public static class RegionOps
     }
 
     private static Region OffsetStart(Region region, long howMuch)
-        => region with {Start = region.Start + howMuch};
+        => region.Forward
+            ? region with { Start = region.Start + howMuch }
+            : region with { End = region.End - howMuch };
     
     private static Region OffsetEnd(Region region, long howMuch)
-        => region with {End = region.Start + howMuch};
+        => region.Forward 
+            ? region with {End = region.Start + howMuch}
+            : region with {Start = region.End - howMuch};
     
     private static Region OffsetBoth(Region region, long start, long end)
-        => region with {Start = region.Start + start, End = region.Start + end};
+        => region.Forward 
+            ? region with {Start = region.Start + start, End = region.Start + end}
+            : region with {Start = region.End - end, End = region.End - start };      
     
     public static List<Region> DeleteRange(List<Region> regions, long start, long end)
     {

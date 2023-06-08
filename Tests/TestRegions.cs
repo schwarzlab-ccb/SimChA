@@ -15,6 +15,7 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
+        HGRef.Assembly = GenomeAssembly.hg19;
         _cRegion = HGRef.GetGenotype(true)[0];
     }
 
@@ -124,13 +125,15 @@ public class TestRegions
         var regions = new List<Region> { _cRegion };
         
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
+        Assert.AreEqual(2000, before[0].Length);
         Assert.AreEqual(regions[0]  with { End = 2000}, before[0]);
         Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
 
         regions = RegionOps.InvertRegions(regions);
         (before, after) = RegionOps.SplitRegions(regions, 2000);
-        Assert.AreEqual(regions[0] with { End = 2000}, before[0]);
-        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
+        Assert.AreEqual(2000, before[0].Length);
+        Assert.AreEqual(regions[0] with { Start = _cRegion.Length - 2000}, before[0]);
+        Assert.AreEqual(regions[0] with { End = _cRegion.Length - 2000}, after[0]);
     }
     
     [Test]
