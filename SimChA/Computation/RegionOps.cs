@@ -3,6 +3,7 @@ using SimChA.Simulation;
 
 namespace SimChA.Computation;
 
+// TODO: Inverted regions currently not 
 public static class RegionOps
 {
     private static void AddIfNotEmpty(ICollection<Region> regions, Region region)
@@ -13,6 +14,15 @@ public static class RegionOps
         }
     }
 
+    private static Region OffsetStart(Region region, long howMuch)
+        => region with {Start = region.Start + howMuch};
+    
+    private static Region OffsetEnd(Region region, long howMuch)
+        => region with {End = region.Start + howMuch};
+    
+    private static Region OffsetBoth(Region region, long start, long end)
+        => region with {Start = region.Start + start, End = region.Start + end};
+    
     public static List<Region> DeleteRange(List<Region> regions, long start, long end)
     {
         var newRegions = new List<Region>();
@@ -32,20 +42,20 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
-                var newRegion = region with {End = region.End + start - seekPos - region.Length};
+                var newRegion = OffsetEnd(region, start - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region, end inside the region
             {
-                var newRegion = region with {Start = region.Start - seekPos + end};
+                var newRegion = OffsetStart(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var firstRegion = region with {End = region.End + start - seekPos - region.Length};
+                var firstRegion = OffsetEnd(region, start - seekPos);
                 AddIfNotEmpty(newRegions, firstRegion);
 
-                var secondRegion = region with {Start = region.Start - seekPos + end};
+                var secondRegion = OffsetStart(region, end - seekPos);
                 AddIfNotEmpty(newRegions, secondRegion);
             }
 
@@ -74,17 +84,17 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // end outside of region
             {
-                var newRegion = region with { Start = region.Start + start - seekPos};
+                var newRegion = OffsetStart(region, start - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region
             {
-                var newRegion = region with {End = region.Start + (end - seekPos)};
+                var newRegion = OffsetEnd(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var newRegion = region with {Start = region.Start + start - seekPos, End = region.Start + end -  seekPos}; 
+                var newRegion = OffsetBoth(region, start - seekPos, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
 
@@ -111,9 +121,9 @@ public static class RegionOps
             }
             else // split inside the region
             {
-                var firstPart = region with { End = region.Start + pos - seekPos };
+                var firstPart = OffsetEnd(region, pos - seekPos);
                 AddIfNotEmpty(beforeRegions, firstPart);
-                var secondPart = region with { Start = firstPart.End};
+                var secondPart = OffsetStart(region, pos - seekPos);
                 AddIfNotEmpty(afterRegions, secondPart);
             }
 
@@ -121,33 +131,6 @@ public static class RegionOps
         }
 
         return (beforeRegions, afterRegions);
-    }
-
-    public static List<T> StitchRegions<T>(List<T> regions) where T : GenRange
-    {
-        var newRegions = new List<T>();
-        bool[] merged = new bool[regions.Count];
-        for (int i = 0; i < regions.Count; i++)
-        {
-            if (merged[i])
-            {
-                continue;
-            }
-            var newRegion = regions[i];
-            for (int j = i + 1; j < regions.Count; j++)
-            {
-                if (merged[j] 
-                    || regions[j].ChrNo != newRegion.ChrNo 
-                    || regions[j].Start != newRegion.End)
-                {
-                    continue;
-                }
-                newRegion = newRegion with {End = regions[j].End};
-                merged[j] = true;
-            }
-            newRegions.Add(newRegion);
-        }
-        return newRegions;
     }
     
     public static List<Region> GlueNeighbours(List<Region> regions)
