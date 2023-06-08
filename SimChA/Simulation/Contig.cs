@@ -153,11 +153,11 @@ public class Contig
                 {
                     ++startPos;
                 }
-                while (startPos > 0 && geneList[startPos - 1].Range.Start > region.Start)
+                while (startPos > 0 && region.Start <= geneList[startPos - 1].Range.Start)
                 {
                     --startPos;
                 }
-                while (startPos < geneList.Count && geneList[startPos].Range.End < region.End)
+                while (startPos < geneList.Count && geneList[startPos].Range.End <= region.End)
                 {
                     presentGenes.Add(geneList[startPos]);
                     ++startPos;
