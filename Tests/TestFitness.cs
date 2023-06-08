@@ -136,6 +136,40 @@ public class TestFitness
         Assert.AreEqual(0, og, EPSILON);
     }
 
+
+    [Test]
+    public void TestGetPresentGenes([Values] ChrNo chrNo, [Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        const string dataPath = "./../../../../data";
+        HGRef.Assembly = genomeAssembly;
+        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
+        var selectList = geneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        var contigs = HGRef.GetGenotype(false).Select(region => new Contig(region)).ToList();
+        int chrToCont = chrNo != ChrNo.chrY ? (int)chrNo : 45;
+        int contigCount = contigs[chrToCont].GetPresentGenes(selectList).Count();
+        int chrCount = selectList[chrNo].Count;
+        Assert.AreEqual(chrCount, contigCount);
+    }
+
+    [Test]
+    public void CmpGetPresentGenes([Values] ChrNo chrNo, [Values] bool useTSG,
+        [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        const string dataPath = "./../../../../data";
+        HGRef.Assembly = genomeAssembly;
+        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
+        var selectList = geneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        var contigs = HGRef.GetGenotype(false).Select(region => new Contig(region)).ToList();
+        int chrToCont = chrNo != ChrNo.chrY ? (int)chrNo : 45;
+        var Present = contigs[chrToCont].GetPresentGenes(selectList);
+        var PresentOld = contigs[chrToCont].GetPresentGenesOld(selectList).ToList();
+        Assert.AreEqual(Present.Count, PresentOld.Count);
+        foreach (var pair in Present.Zip(PresentOld))
+        {
+            Assert.AreEqual(pair.First, pair.Second);
+        }
+    }
+
     [Test]
     public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
     {

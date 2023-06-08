@@ -85,7 +85,7 @@ public class Karyotype
         => fiveToThree ? (0, position) : (position, contig.Length());
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+        => _contigs.SelectMany(c => c.GetPresentGenesOld(geneLists)).ToList();
     
     public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
         => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
