@@ -135,4 +135,22 @@ public class TestFitness
         double og = Fitness.TsgOgTerm(ogsCNs, sexXX);;
         Assert.AreEqual(0, og, EPSILON);
     }
+
+    [Test]
+    public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        const string dataPath = "./../../../../data";
+        HGRef.Assembly = genomeAssembly;
+        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
+        var selectList = geneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        double sumHap1 = selectList.Where(pair => pair.Key != ChrNo.chrY).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
+        ChrNo missingChr = sexXX ? ChrNo.chrY : ChrNo.chrX;
+        double sumHap2 = selectList.Where(pair => pair.Key != missingChr).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
+        double total = sumHap1 + sumHap2;
+        var karyotype = new Karyotype(sexXX);
+        karyotype.ApplyWGD();
+        var cnList = Fitness.CalcCNs(selectList, karyotype);
+        double sum = Fitness.TsgOgTerm(cnList, sexXX);
+        Assert.AreEqual(total, sum, EPSILON);
+    }
 }
