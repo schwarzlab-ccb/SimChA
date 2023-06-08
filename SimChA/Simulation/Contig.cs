@@ -141,26 +141,20 @@ public class Contig
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
-        foreach (var region in _regions)
+        foreach ((long start, long end, var chrNo, var _, bool forward) in _regions)
         {
-            var chrNo = region.ChrNo;
             var geneList = geneLists[chrNo];
-            if (region.Forward && geneList.Count > 0)
+            if (forward && geneList.Count > 0)
             {
-                long meanDist = HGRef.GetChromLen(chrNo) / geneList.Count;
-                int startPos = (int)(region.Start / meanDist);
-                while (startPos < geneList.Count && region.Start > geneList[startPos].Range.Start)
+                int geneIndex = 0;
+                while (geneIndex < geneList.Count && start > geneList[geneIndex].Range.Start)
                 {
-                    ++startPos;
+                    geneIndex++;
                 }
-                while (startPos > 0 && region.Start <= geneList[startPos - 1].Range.Start)
+                while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= end)
                 {
-                    --startPos;
-                }
-                while (startPos < geneList.Count && geneList[startPos].Range.End <= region.End)
-                {
-                    presentGenes.Add(geneList[startPos]);
-                    ++startPos;
+                    presentGenes.Add(geneList[geneIndex]);
+                    geneIndex++;
                 }
             }
         }

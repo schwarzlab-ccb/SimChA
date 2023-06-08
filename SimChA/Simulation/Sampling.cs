@@ -41,21 +41,10 @@ public static class Sampling
         {
             return stops;
         }
-        if (stops.Count > contigLen)
-        {
-            throw new ArgumentException($"Too many shards ({shardCount}) for contig length {contigLen}");
-        }
         for (int i = 1; i < shardCount; i++)
         {
             long newStop = GetInternalPos(rnd, contigLen);
-            if (stops.Any(s => s == newStop))
-            {
-                i--;
-            }
-            else
-            {
-                stops.Add(newStop);
-            }
+            stops.Add(newStop);
         }
         return stops;
     }

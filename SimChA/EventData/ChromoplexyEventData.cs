@@ -32,7 +32,7 @@ public record ChromoplexyEventData : BaseEventData
             }
         }
         Sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-        Breakpoints = totalLen > contigCount + 2 ? Sampling.GetStopsForShards(rnd, totalLen, contigCount) : new();
+        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount);
     }
 
     public override void ApplyEvent(Karyotype kar)
