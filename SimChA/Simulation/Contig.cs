@@ -166,8 +166,4 @@ public class Contig
         }
         return presentGenes;
     }
-    
-    
-    public IEnumerable<Gene> GetPresentGenesOld(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _regions.SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => r.Forward && g.Range.IsInside(r)));
 }
