@@ -130,8 +130,9 @@ public class TestFitness
         var karyotype = new Karyotype(sexXX);
         var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
         double tsg = Fitness.TsgOgTerm(tsgCNs, sexXX);
+        Assert.AreEqual(0, tsg, EPSILON);
         var ogsCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);
-        Console.WriteLine($"sex: {sexXX}, assembly: {genomeAssembly}, TSG: {tsg}, OG: {og}");
+        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);;
+        Assert.AreEqual(0, og, EPSILON);
     }
 }
