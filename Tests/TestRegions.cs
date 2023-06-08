@@ -66,6 +66,19 @@ public class TestRegions
         Console.WriteLine(Contig.ToString(regions));
         Assert.AreEqual(0, Contig.Length(regions));
     }
+    
+    [Test]
+    public void TestDeleteInverted()
+    {
+        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var newRegions = RegionOps.DeleteRange(regions, 1000, 2000);
+        Assert.AreEqual(1000, newRegions[0].Length);
+        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].Length);
+        Assert.AreEqual(_cRegion.Length - 1000, newRegions[0].Start);
+        Assert.AreEqual(_cRegion.Length, newRegions[0].End);
+        Assert.AreEqual(0, newRegions[1].Start);
+        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].End);
+    }
 
     [Test]
     public void TestDeletionUnitLength()
@@ -118,7 +131,19 @@ public class TestRegions
         };
         Assert.AreEqual(res, RegionOps.CopyRange(regions, 1, 3));
     }
-    
+
+    [Test]
+    public void TestCopyInverted()
+    {
+        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        // Start and end within a region
+        var regCopy = RegionOps.CopyRange(regions, 1000, 2000);
+        Assert.AreEqual(1, regions.Count);
+        Assert.AreEqual(1000, regCopy[0].Length);
+        Assert.AreEqual(_cRegion.Length - 2000, regCopy[0].Start);
+        Assert.AreEqual(_cRegion.Length - 1000, regCopy[0].End);
+    }
+
     [Test]
     public void TestSplit()
     {
