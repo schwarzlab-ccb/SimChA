@@ -11,23 +11,23 @@ public class Contig
 
     public Contig()
         => _regions = new List<Region>();
-    
-    public Contig(Region initialRegion) 
+
+    public Contig(Region initialRegion)
         => _regions = new List<Region> { initialRegion };
 
     public Contig(IEnumerable<Region> regions)
         => _regions = regions.Where(r => r.Length > 0).ToList();
 
-    public Contig(Contig other) 
+    public Contig(Contig other)
         => _regions = new List<Region>(other._regions);
-    
-    public static Contig Concat(IEnumerable<Contig> contigs) 
+
+    public static Contig Concat(IEnumerable<Contig> contigs)
         => new(contigs.SelectMany(c => c._regions));
 
-    public long Length() 
+    public long Length()
         => Length(_regions);
 
-    public bool Any() 
+    public bool Any()
         => Length() > 0;
 
     public static long Length(IEnumerable<Region> regions)
@@ -38,7 +38,7 @@ public class Contig
 
     public override string ToString()
         => ToString(_regions);
-    
+
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo)
         => _regions.Where(r => r.ChrID.ChrNo == chrNo);
 
@@ -125,10 +125,10 @@ public class Contig
         else
         {
             var (first, second) = RegionOps.SplitRegions(_regions, location);
-            _regions = RegionOps.ConcatRegions(new[] {first, other._regions, second});
+            _regions = RegionOps.ConcatRegions(new[] { first, other._regions, second });
         }
     }
-    
+
     public void AppendContig(Contig other)
     {
         _regions = RegionOps.ConcatRegions(_regions, other._regions);
@@ -137,7 +137,33 @@ public class Contig
 
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);
-    
-    public IEnumerable<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
-        => _regions.Where(r => r.Forward).SelectMany(r => geneLists[r.ChrID.ChrNo].FindAll(g => g.Range.IsInside(r)));
+
+    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
+    {
+        List<Gene> presentGenes = new();
+        foreach (var region in _regions)
+        {
+            var chrNo = region.ChrID.ChrNo;
+            var geneList = geneLists[chrNo];
+            if (region.Forward && geneList.Count > 0)
+            {
+                long meanDist = HGRef.GetChromLen(chrNo) / geneList.Count;
+                int startPos = (int)(region.Start / meanDist);
+                while (startPos < geneList.Count && region.Start > geneList[startPos].Range.Start)
+                {
+                    ++startPos;
+                }
+                while (startPos > 0 && region.Start <= geneList[startPos - 1].Range.Start)
+                {
+                    --startPos;
+                }
+                while (startPos < geneList.Count && geneList[startPos].Range.End <= region.End)
+                {
+                    presentGenes.Add(geneList[startPos]);
+                    ++startPos;
+                }
+            }
+        }
+        return presentGenes;
+    }
 }

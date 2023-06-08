@@ -30,6 +30,9 @@ public static class Fitness
         }
     }
 
+    public static double Sigmoid(double x)
+        => 1 / (1 + Math.Exp(-((x * 1.5 - 1) * 10)));
+
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
     public static double StressTerm(long baseCount, bool isFemale)
@@ -42,12 +45,9 @@ public static class Fitness
             ChrNo.chrX => sexXX ? 2 : 1,
             _ => 2
         };
-
-    private static double Sigmoid(double x)
-        => 1 / (1 + Math.Exp(-((x * 1.5 - 1) * 10)));
     
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
-        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * Sigmoid(g.gene.DeltaFitness));
+        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * g.gene.DeltaFitness);
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
@@ -57,7 +57,6 @@ public static class Fitness
         var present = karyotype.GetPresentGenes(searched);
         var counts = present.GroupBy(g => g).ToDictionary(g =>g.Key, g => g.Count());
         var allSearched = searched.SelectMany(p => p.Value);
-        var covered = allSearched.Where(g => karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY);
-        return covered.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
+        return allSearched.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
     }
 }

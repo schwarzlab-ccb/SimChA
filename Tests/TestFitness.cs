@@ -130,8 +130,45 @@ public class TestFitness
         var karyotype = new Karyotype(sexXX);
         var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
         double tsg = Fitness.TsgOgTerm(tsgCNs, sexXX);
+        Assert.AreEqual(0, tsg, EPSILON);
         var ogsCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);
-        Console.WriteLine($"sex: {sexXX}, assembly: {genomeAssembly}, TSG: {tsg}, OG: {og}");
+        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);;
+        Assert.AreEqual(0, og, EPSILON);
+    }
+
+
+    [Test]
+    public void TestGetPresentGenes([Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        const string dataPath = "./../../../../data";
+        HGRef.Assembly = genomeAssembly;
+        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
+        var selectList = geneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        var contigs = HGRef.GetGenotype(false).Select(region => new Contig(region)).ToList();
+        foreach (ChrNo chrNo in Enum.GetValues(typeof(ChrNo)))
+        {
+            int chrToCont = chrNo != ChrNo.chrY ? (int)chrNo : 45;
+            int contigCount = contigs[chrToCont].GetPresentGenes(selectList).Count();
+            int chrCount = selectList[chrNo].Count;
+            Assert.AreEqual(chrCount, contigCount);
+        }
+    }
+    
+    [Test]
+    public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        const string dataPath = "./../../../../data";
+        HGRef.Assembly = genomeAssembly;
+        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
+        var selectList = geneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        double sumHap1 = selectList.Where(pair => pair.Key != ChrNo.chrY).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
+        ChrNo missingChr = sexXX ? ChrNo.chrY : ChrNo.chrX;
+        double sumHap2 = selectList.Where(pair => pair.Key != missingChr).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
+        double total = sumHap1 + sumHap2;
+        var karyotype = new Karyotype(sexXX);
+        karyotype.ApplyWGD();
+        var cnList = Fitness.CalcCNs(selectList, karyotype);
+        double sum = Fitness.TsgOgTerm(cnList, sexXX);
+        Assert.AreEqual(total, sum, EPSILON);
     }
 }
