@@ -33,6 +33,9 @@ public static class Fitness
     public static double Sigmoid(double x)
         => 1 / (1 + Math.Exp(-((x * 1.5 - 1) * 10)));
 
+    public static double Exponential(double x)
+        => Math.Pow(x, 9) * 5;
+
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
     public static double StressTerm(long baseCount, bool isFemale)
@@ -47,7 +50,7 @@ public static class Fitness
         };
     
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
-        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * g.gene.DeltaFitness);
+        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * Exponential(g.gene.DeltaFitness));
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
