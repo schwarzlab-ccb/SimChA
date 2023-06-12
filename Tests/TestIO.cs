@@ -79,6 +79,7 @@ public class TestIO
     {
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
+        HGRef.Assembly = GenomeAssembly.hg19;
         var kar = new Karyotype(false);
         var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
         var rnd = new Random(48);

@@ -29,11 +29,11 @@ public class TestKaryotype
     public void Setup()
     {
         _rnd = new Random(0);
-        HGRef.Assembly = GenomeAssembly.hg19;
         var geneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             gl => gl, gl => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(
             c => c, c => new List<Gene> {MakeGene(c)}));
         Fitness.SetStartingParams(geneLists, new FitnessParams(0.1, 0.1, 0.1));
+        HGRef.Assembly = GenomeAssembly.hg19;
         _kar = new Karyotype(false);
         _del = new CNEventPars(CNEventType.ChromDeletion);
         _dup = new CNEventPars(CNEventType.ChromDuplication);

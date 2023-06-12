@@ -73,12 +73,8 @@ else
                 throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
             }
             simulator = new MCSimulator(rnd, simParams.Fitness, geneLists, simParams.MCParams);
-            simulator.SampleEvents(sample);
         }
-        else
-        {
-            simulator.SampleEvents(sample);
-        }
+        simulator.SampleEvents(sample);
     }
 }
 Console.WriteLine("");
