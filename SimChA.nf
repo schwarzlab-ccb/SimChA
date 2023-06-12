@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-
 simcha_path = workflow.launchDir + "/SimChA"
 
 params.simcha_params_file = "default_params.json"
@@ -9,14 +8,22 @@ params.assembly = ["hg19", "hg38"]
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+def currentDateTime = LocalDateTime.now()
+def formatter = DateTimeFormatter.ofPattern("yy_MM_dd_HH_mm_ss")
+def timestamp = currentDateTime.format(formatter)
 
 process SimChA {
+    publishDir "${workflow.launchDir}/results/${timestamp}/${assembly}", mode: 'copy'
+
     input:
         val config
         val assembly
 
     output:
-        path("config.json")
+        path("*")
 
     script:
         def new_config = config
@@ -25,7 +32,7 @@ process SimChA {
         """
         pwd
         echo '${config_json}' > config.json
-        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data
+        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data -O "."
         """
 }
 
