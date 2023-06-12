@@ -15,10 +15,20 @@ def currentDateTime = LocalDateTime.now()
 def formatter = DateTimeFormatter.ofPattern("yy_MM_dd_HH_mm_ss")
 def timestamp = currentDateTime.format(formatter)
 
+process Build {
+    script:
+        """
+        dotnet build ${simcha_path}
+        """
+    output:
+        stdout
+}
+
 process SimChA {
     publishDir "${workflow.launchDir}/results/${timestamp}/${assembly}", mode: 'copy'
 
     input:
+        val build_out
         val config
         val assembly
 
@@ -37,7 +47,8 @@ process SimChA {
 }
 
 workflow {
+    def build_out = Build()
     params_file = file('default_params.json')
     def config = new JsonSlurper().parseText(params_file.text)
-    SimChA(config, Channel.from(params.assembly))
+    SimChA(build_out, config, Channel.from(params.assembly))
 }
