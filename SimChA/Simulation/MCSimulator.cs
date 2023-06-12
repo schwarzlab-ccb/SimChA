@@ -7,17 +7,14 @@ namespace SimChA.Simulation;
 
 public class MCSimulator : Simulator
 {
-    private FitnessParams Fitness { get; }
     private MCParams McParams { get; }
     
     public MCSimulator(
         Random rnd,
-        FitnessParams fitnessParams, 
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
         MCParams mCParams) 
         : base(rnd, geneLists)
     {
-        Fitness = fitnessParams;
         McParams = mCParams;
     }
     

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
+using SimChA.Computation;
 
 namespace Tests;
 
@@ -22,36 +23,28 @@ public class TestSimulator
     [SetUp]
     public void Setup()
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
         _rnd = new Random(0);
-        _fitness = new FitnessParams(1, 1, 1);
-        _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
+        _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .5), new(CNEventType.ChromDeletion, .5)};
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
-        _geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>
-        {
-            {GeneListType.Essentiality, new Dictionary<ChrNo, List<Gene>>()},
-            {GeneListType.TumorSuppressor, new Dictionary<ChrNo, List<Gene>>()},
-            {GeneListType.Oncogene, new Dictionary<ChrNo, List<Gene>>()}
-        };
-        _kar = new Karyotype(true);
+        _geneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
+            gl => gl, gl => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(
+            c => c, c => new List<Gene> {MakeGene(c)}));
+        Fitness.SetStartingParams(_geneLists, new FitnessParams(0.1, 0.1, 0.1));
+        HGRef.Assembly = GenomeAssembly.hg19;
+        _kar = new Karyotype(false);
     }
     
     // Taken the MakeGene method from TestFitness
-    private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
-        => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
+    private Gene MakeGene(ChrNo chrNo)
+        => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)),  0.0);
     
     [Test]
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
-            t => t,
-            _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        var sim = new MCSimulator(_rnd, _fitness, listGenes,_mcParams);
+        var sim = new MCSimulator(_rnd, _geneLists, _mcParams);
         double potential = sim.Potential(_kar, 1, events).potential;
-        Assert.AreEqual(potential,0.0,EPSILON);
+        Assert.AreEqual(0.0, potential,EPSILON);
     }
 
     [Test]
