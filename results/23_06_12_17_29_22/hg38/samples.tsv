@@ -1,2 +1,0 @@
-sample_id	sex	ploidy	coverage	clone_count	mixture
-sample_1	XY	1	ChromDeletion:0.0274;ChromDuplication:0.0274;InternalDuplication:0.1368;InternalDeletion:0.2736;InternalInversion:0.1368;InvertedDuplication:0.1368;BreakageFusionBridge:0.0547;TailDeletion:0.0547;Translocation:0.0547;WholeGenomeDoubling:0.0014;Chromoplexy:0.0137;Chromothripsis:0.0137;Pyrgo:0.0137;Rigma:0.0137;TIChain:0.0137;TICycle:0.0137;TIBridge:0.0137
