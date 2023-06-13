@@ -144,8 +144,6 @@ public static class Sampling
                 return new TemplatedEventData(rnd, cnEventPars, seq);
             
             case CNEventType.SNV:
-            case CNEventType.PointInsertion:
-            case CNEventType.PointDeletion:
                 var pointSeq = SampleContigsByLength(rnd, kar);
                 return new PointMutationData(rnd, cnEventPars, pointSeq.id, pointSeq.len);
 

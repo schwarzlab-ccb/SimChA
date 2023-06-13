@@ -292,38 +292,4 @@ public class TestKaryotype
         Assert.AreEqual(loc, (SNVDict.Keys.ToList())[0]);
         Assert.AreEqual(nucleotide, SNVDict[loc]);
     }
-    
-    [Test]
-    public void TestPointDeletion()
-    {
-        long loc = 100;
-        int contigID = 0;
-        _kar.ApplyPointDeletion(contigID, loc);
-        Assert.AreEqual(46, _kar.CountContigs());
-
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(2, regions.Count);
-        Assert.AreEqual(loc, regions[0].End);
-        Assert.AreEqual(loc+1, regions[1].Start);
-    }
-
-    [Test]
-    public void TestPointInsertion()
-    {
-        long loc = 100;
-        int contigID = 0;
-        Nucleotide nucleotide = Nucleotide.C;
-        _kar.ApplyPointInsertion(contigID, loc, nucleotide);
-        Assert.AreEqual(46, _kar.CountContigs());
-
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(2, regions.Count);
-        Assert.AreEqual(loc+1, regions[0].End);
-        Assert.AreEqual(loc, regions[1].Start);
-        
-        var SNVDict = regions[0].GetSNVs();
-        Assert.AreEqual(1, SNVDict.Keys.ToList().Count);
-        Assert.AreEqual(loc, (SNVDict.Keys.ToList())[0]);
-        Assert.AreEqual(nucleotide, SNVDict[loc]);
-    }
 }
