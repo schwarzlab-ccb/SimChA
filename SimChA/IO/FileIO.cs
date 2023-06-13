@@ -32,13 +32,6 @@ public class FileIO
         {
             Directory.CreateDirectory(OutFolder);
         }
-        else
-        {
-            foreach (string file in Directory.EnumerateFiles(OutFolder))
-            {
-                File.Delete(file);
-            }
-        }
     }
 
     public void WriteSamples(IEnumerable<Sample> samples)

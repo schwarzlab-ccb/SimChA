@@ -2,8 +2,7 @@
 nextflow.enable.dsl=2
 
 simcha_path = workflow.launchDir + "/SimChA"
-
-params.simcha_params_file = "default_params.json"
+params.simcha_params_file =  "default_params.json"
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -42,9 +41,8 @@ process SimChA {
         }   
         def config_json = JsonOutput.toJson(new_config)
         """
-        pwd
         echo '${config_json}' > config.json
-        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data -O "." -R 10
+        dotnet run --no-build --project ${simcha_path} -- -C ${workflow.launchDir}/${params.simcha_params_file} --data ${workflow.launchDir}/data -R 10 -O "."
         """
 }
 
