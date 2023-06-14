@@ -83,10 +83,13 @@ public static class Sampling
             _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
         };
 
-    public static Nucleotide SampleNucleotide(Random rnd)
+    // Samples any nucleotide other than the old one
+    public static Nucleotide SampleNucleotide(Random rnd, Nucleotide oldNucleotide)
     {
-        var values = Enum.GetValues(typeof(Nucleotide));
-        return (Nucleotide) values.GetValue(rnd.Next(values.Length));
+        var iOld = (int)oldNucleotide;
+        var possibleNucleotides = ((IEnumerable<int>) Enum.GetValues(typeof(Nucleotide))).Where(i => i!= iOld).ToList();
+        var iNew = possibleNucleotides.GetRndElem(rnd);
+        return (Nucleotide) iNew;
     }
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
     {

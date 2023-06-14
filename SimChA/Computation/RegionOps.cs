@@ -122,7 +122,7 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
-    public static List<Region> PointMutateRegion(List<Region> regions, long pos, Nucleotide nucleotide)
+    public static List<Region> PointMutateRegion(List<Region> regions, long pos, SNV snvData)
     {
         long seekPos = 0;
         var newRegions = new List<Region>();
@@ -139,12 +139,12 @@ public static class RegionOps
             }
             else // The region we've been looking for
             {
-                Dictionary<long, Nucleotide> newSNVDict = new();
+                Dictionary<long, SNV> newSNVDict = new();
                 if (region.SNVDict != null)
                 {
                     newSNVDict = region.SNVDict;
                 }
-                newSNVDict[region.Start + pos - seekPos] = nucleotide;
+                newSNVDict[region.Start + pos - seekPos] = snvData;
                 var newRegion = region with { SNVDict = newSNVDict };
                 AddIfNotEmpty(newRegions, newRegion);
             }
@@ -241,25 +241,4 @@ public static class RegionOps
     
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
-
-    public static Region AppendNucleotide(Region region, Nucleotide nucleotide)
-    {
-        Dictionary<long, Nucleotide> newSNVDict = new();
-        if (region.SNVDict != null)
-        {
-            newSNVDict = region.SNVDict;
-        }
-        var newEnd = region.End + 1;
-        newSNVDict[region.End] = nucleotide;
-        var newRegion = region with {End = newEnd, SNVDict = newSNVDict};
-        return newRegion;
-    }
-    public static List<Region> BreakAndInsert(List<Region> regions, long location, Nucleotide nucleotide)
-    {
-        var (first, second) = RegionOps.SplitRegions(regions, location);
-        // Append a nucleotide to the last region of first
-        var lastRegion = first[first.Count-1];
-        first[first.Count-1] = RegionOps.AppendNucleotide(lastRegion, nucleotide);
-        return RegionOps.ConcatRegions(first, second);
-    }
 }
