@@ -67,7 +67,7 @@ Use `dotnet run -- [options]` to specify any of the following:
   -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
   -P --profile path   A path to a file with copy number profiles.
   --data (Default: ./data) The path for the tsv-files with the essential-, tsg- and og-genes with scores. The files should be named: essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.
-  -S  Calculate consistent copy numbers segmentation.
+  -s  Calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.
 ```
 
 ## Parameters
