@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -60,7 +59,8 @@ public class FileIO
         {
             foreach (var clone in sample.Clones)
             {
-                var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], segs, sample.SexXX);
+                var kar = sample.Kars[clone.CloneId];
+                var cns = CopyNumbers.CalcCopyNumbers(kar, segs, sample.SexXX, true);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
