@@ -152,6 +152,24 @@ public class FileIO
         }
     }
 
+    public static List<GenContents> ReadFasta(string filePath)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var fastaFile = new StreamReader(fileFullPath);
+            return Parsers.ParseFasta(fastaFile).ToList();
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
     public static SimParams ReadSimParams(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);

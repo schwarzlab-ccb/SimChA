@@ -3,6 +3,7 @@ using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
+using System.Text;
 
 namespace SimChA.IO;
 
@@ -192,4 +193,40 @@ public static class Parsers
         }
         return cloneFitness;
     }
+    
+    public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
+    {
+        GenContents genContents = null;
+        var idDict = HGFastaIDs.HG38IDs;
+        while (fastaStream.ReadLine() is { } line)
+        {
+            if (line.StartsWith(";"))
+            {
+                continue;
+            }
+            if (line.StartsWith(">"))
+            {
+                if (genContents != null)
+                {
+                    yield return genContents;
+                }
+                ChrNo chrNo = ChrNo.chr1;
+                var sub = line.Substring(1, 10);
+                if (!idDict.TryGetValue(line.Substring(1, 10), out chrNo))
+                {
+                    continue;
+                }
+                Console.WriteLine(chrNo);
+                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder()};
+            }
+            else if (genContents != null)
+            {
+                genContents.Sequence.Append(line);
+            }
+
+        }
+        yield return genContents;
+    }
+    public static List<GenContents> ParseFastaFile(StreamReader fastaStream)
+        => ParseFasta(fastaStream).ToList();
 }
