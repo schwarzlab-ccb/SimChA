@@ -241,4 +241,20 @@ public static class RegionOps
     
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
+
+    public static Region FindRegion(List<Region> regions, long location)
+    {
+        long seekPos = 0;
+        var region = regions[0];
+        for (int i = 0; i < regions.Count; i++)
+        {
+            region = regions[i];
+            if (location > seekPos && location < seekPos + region.Length)
+            {
+                return region;
+            }
+            seekPos += region.Length;
+        }
+        throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
+    }
 }

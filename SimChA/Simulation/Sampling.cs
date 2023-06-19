@@ -93,10 +93,12 @@ public static class Sampling
     }
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
     {
-        long totalLength = kar.ContigIds().Sum(i => kar.ContigLen(i));
-        var pArray = kar.ContigIds().Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
-        var selected = rnd.PickRndIndex(pArray);
-        return (selected, kar.ContigLen(selected));
+        // Karyotype stores 0-length contigs for contig-ID-preservation, so we need to filter them out
+        var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0);
+        long totalLength = contigIds.Sum(i => kar.ContigLen(i));
+        var pArray = contigIds.Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
+        var idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
+        return (idSelected, kar.ContigLen(idSelected));
     }
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {

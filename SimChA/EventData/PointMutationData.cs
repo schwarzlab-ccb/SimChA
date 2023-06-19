@@ -17,21 +17,27 @@ public record PointMutationData : ContigEventData
 
     public void SetOldNucleotide(Karyotype kar)
     {
-        OldNucleotide = Nucleotide.A;
+        var region = kar.GetContig(ContigId).FindRegion(Location);
+        var dummySNV = new SNV(Nucleotide.A, Nucleotide.C);
+        if (region.SNVDict == null || !region.SNVDict.TryGetValue(Location, out dummySNV))
+        {
+            OldNucleotide = Nucleotide.A;
+        }
+        else
+        {
+            OldNucleotide = dummySNV.NewNucleotide;
+        }
     }
-    public SNV CreateSNV()
+
+    public SNV CreateSNV(Karyotype kar)
     {
-        // TODO: look this position up from the assembly, then later, how do I see it from the
-        // previous alterations
+        SetOldNucleotide(kar);
         NewNucleotide = Sampling.SampleNucleotide(Rnd, OldNucleotide);
         return new SNV(OldNucleotide, NewNucleotide);
     }
-
-    // ApplyEvent for SNVs has to be a little more involved because there's no way of setting the 
     public override void ApplyEvent(Karyotype kar)
     {
-        SetOldNucleotide(kar);
-        var SNV = CreateSNV();
+        var SNV = CreateSNV(kar);
         kar.ApplySNV(ContigId, Location, SNV);
     }
 

@@ -280,8 +280,11 @@ public class TestKaryotype
     {
         long loc = 100;
         int contigID = 0;
-        Nucleotide nucleotide = Nucleotide.A;
-        _kar.ApplySNV(contigID, loc, nucleotide);
+        var oldNucleotide = Nucleotide.A;
+        var newNucleotide = Nucleotide.C;
+        SNV snv = new SNV(oldNucleotide,newNucleotide);
+
+        _kar.ApplySNV(contigID, loc, snv);
         Assert.AreEqual(46, _kar.CountContigs());
         
         var regions = _kar.GetContig(contigID).GetRegions();
@@ -290,6 +293,24 @@ public class TestKaryotype
         var SNVDict = regions[0].GetSNVs();
         Assert.AreEqual(1, SNVDict.Keys.ToList().Count);
         Assert.AreEqual(loc, (SNVDict.Keys.ToList())[0]);
-        Assert.AreEqual(nucleotide, SNVDict[loc]);
+        Assert.AreEqual(newNucleotide, SNVDict[loc].NewNucleotide);
+        Assert.AreEqual(oldNucleotide, SNVDict[loc].OldNucleotide);
+
+        // Try a repeated SNV
+        newNucleotide = Nucleotide.G;
+        oldNucleotide = SNVDict[loc].NewNucleotide;
+        snv = new SNV(oldNucleotide, newNucleotide);
+        _kar.ApplySNV(contigID, loc, snv);
+
+        Assert.AreEqual(46, _kar.CountContigs());
+        
+        regions = _kar.GetContig(contigID).GetRegions();
+        Assert.AreEqual(1, regions.Count);
+
+        SNVDict = regions[0].GetSNVs();
+        Assert.AreEqual(1, SNVDict.Keys.ToList().Count);
+        Assert.AreEqual(loc, (SNVDict.Keys.ToList())[0]);
+        Assert.AreEqual(newNucleotide, SNVDict[loc].NewNucleotide);
+        Assert.AreEqual(oldNucleotide, SNVDict[loc].OldNucleotide);
     }
 }
