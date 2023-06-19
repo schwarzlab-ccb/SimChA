@@ -93,7 +93,7 @@ public static class HGRef
     public static long GetGenomeLen(bool sexXX)
         => sexXX ? Refs[Assembly].XXGenomeLen : Refs[Assembly].XYGenomeLen;
 
-    public static long GetChromLen(ChrNo chrNo)
+    public static long GetChrLen(ChrNo chrNo)
         => GetChrs(Assembly)[chrNo];
     
     public static IEnumerable<ChrNo> ChrIDsForSex(bool sexXX)

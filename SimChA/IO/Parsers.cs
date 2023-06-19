@@ -56,14 +56,14 @@ public static class Parsers
                 if (regionsA.Any() || regionsB.Any())
                 {
                     // Till the end of a chromosome
-                    if (lastPos != HGRef.GetChromLen(lastChr))
+                    if (lastPos != HGRef.GetChrLen(lastChr))
                     {
-                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
+                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChrLen(lastChr), lastChr));
                     }
                     missingRanges.AddRange(
                         present
                             .Where(pair => !pair.Value)
-                            .Select(c => new GenRange(0, HGRef.GetChromLen(c.Key), c.Key)));
+                            .Select(c => new GenRange(0, HGRef.GetChrLen(c.Key), c.Key)));
                     // Consider missing to be haplotypes by default
                     foreach (var range in missingRanges)
                     {
@@ -107,9 +107,9 @@ public static class Parsers
                 else
                 {
                     // Till the end of a chromosome
-                    if (lastPos != HGRef.GetChromLen(lastChr))
+                    if (lastPos != HGRef.GetChrLen(lastChr))
                     {
-                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
+                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChrLen(lastChr), lastChr));
                     }
                     // Start of a chromosome
                     if (start != 0)
@@ -137,14 +137,14 @@ public static class Parsers
         }
 
         // Till the end of a chromosome
-        if (lastPos != HGRef.GetChromLen(lastChr))
+        if (lastPos != HGRef.GetChrLen(lastChr))
         {
-            missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
+            missingRanges.Add(new GenRange(lastPos, HGRef.GetChrLen(lastChr), lastChr));
         }
         missingRanges.AddRange(
             present
                 .Where(pair => !pair.Value)
-                .Select(c => new GenRange(0, HGRef.GetChromLen(c.Key), c.Key)));
+                .Select(c => new GenRange(0, HGRef.GetChrLen(c.Key), c.Key)));
         // Consider missing to be haplotypes by default
         foreach (var range in missingRanges)
         {

@@ -68,7 +68,7 @@ public class TestCopyNumbers
         foreach (var seg in segs)
         {
             Assert.AreEqual(0, seg.Value.First());
-            Assert.AreEqual(HGRef.GetChromLen(seg.Key), seg.Value.Last());
+            Assert.AreEqual(HGRef.GetChrLen(seg.Key), seg.Value.Last());
         }   
     }
     
@@ -80,7 +80,7 @@ public class TestCopyNumbers
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         karXY.ApplyInternalDeletion(0, 2000, 3000);
         var segs = CopyNumbers.GetSegPoints(ChrNo.chr1, new List<Karyotype> {karXX, karXY});
-        var expected = new List<long> {0, 1000, 2000, 3000, HGRef.GetChromLen(ChrNo.chr1)};
+        var expected = new List<long> {0, 1000, 2000, 3000, HGRef.GetChrLen(ChrNo.chr1)};
         Assert.AreEqual(expected, segs);
     }
     

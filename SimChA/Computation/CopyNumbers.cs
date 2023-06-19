@@ -17,7 +17,7 @@ public static class CopyNumbers
     {
         var regionList = curRegs.ToList();
         var starts = regionList.Select(r => r.Start).Append(0).Concat(missing.Select(r => r.Start));
-        var ends = regionList.Select(r => r.End).Append(HGRef.GetChromLen(chrNo)).Concat(missing.Select(r => r.End));
+        var ends = regionList.Select(r => r.End).Append(HGRef.GetChrLen(chrNo)).Concat(missing.Select(r => r.End));
         var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
         return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo, keepMissing);
     }
@@ -59,7 +59,7 @@ public static class CopyNumbers
 
     public static List<long> GetSegPoints(ChrNo chrNo, IEnumerable<Karyotype> kars)
     {
-        var segList = new HashSet<long> {0, HGRef.GetChromLen(chrNo)};
+        var segList = new HashSet<long> {0, HGRef.GetChrLen(chrNo)};
         foreach (var kar in kars)
         {
             var segPoints = kar.FindRegionsOfChr(chrNo).SelectMany(r => new[] {r.Start, r.End});
