@@ -1,5 +1,14 @@
+# Nextflow-specific files and directories
+nextflow
+.nextflow.log.*
+.nextflow/
+work/
+.history/
+.cache/
+
 # Output files (anywhere)
 out*/
+results*
 
 # Compiled python
 *.so
