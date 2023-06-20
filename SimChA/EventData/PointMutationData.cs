@@ -9,6 +9,7 @@ public record PointMutationData : ContigEventData
     public Nucleotide OldNucleotide {get; set;}
     public Nucleotide NewNucleotide {get; set;}
     Random Rnd {get;}
+    public SNV SNV;
     private Dictionary<char, Nucleotide> nucleotideDict = 
         new Dictionary<char, Nucleotide>() 
         {
@@ -43,7 +44,7 @@ public record PointMutationData : ContigEventData
             }
             else
             {
-                OldNucleotide = Sampling.SampleNucleotide(Rnd, nucleotideDict[nuc]);
+                OldNucleotide = nucleotideDict[nuc];
             }
         }
         else
@@ -60,7 +61,7 @@ public record PointMutationData : ContigEventData
     }
     public override void ApplyEvent(Karyotype kar)
     {
-        var SNV = CreateSNV(kar);
+        SNV = CreateSNV(kar);
         kar.ApplySNV(ContigId, Location, SNV);
     }
 

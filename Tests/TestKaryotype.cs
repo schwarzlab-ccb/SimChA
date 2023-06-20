@@ -6,6 +6,7 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
+using System.Text;
 
 namespace Tests;
 
@@ -312,5 +313,41 @@ public class TestKaryotype
         Assert.AreEqual(loc, (SNVDict.Keys.ToList())[0]);
         Assert.AreEqual(newNucleotide, SNVDict[loc].NewNucleotide);
         Assert.AreEqual(oldNucleotide, SNVDict[loc].OldNucleotide);
+    }
+    [Test]
+    public void TestSNVInCompositeContig()
+    {
+        long lenA = 10;
+        long lenB = 10;
+        Region regionA = new Region(0, lenA, new ChrID(ChrNo.chr1, true));
+        Region regionB = new Region(0, lenB, new ChrID(ChrNo.chr2, true));
+        Contig contig  = new Contig(new List<Region>(){regionA, regionB});
+        GenContents seqA = new GenContents{ChrNo = ChrNo.chr1, Sequence = new StringBuilder(String.Concat(Enumerable.Repeat("T", (int)lenA)))};
+        GenContents seqB = new GenContents{ChrNo = ChrNo.chr2, Sequence = new StringBuilder(String.Concat(Enumerable.Repeat("G", (int)lenB)))};
+        _kar = new Karyotype(new List<Contig>{contig}, null, false);
+        _kar.SetGenContents(new List<GenContents>(){seqA, seqB});
+
+        var eventPars = new CNEventPars(CNEventType.SNV);
+        PointMutationData data = new PointMutationData(_rnd, eventPars, 0, contig.Length());
+        long loc = data.Location;
+        Nucleotide expectedOldNucleotide;
+        long expectedInternalLocation;
+        if (loc >= lenA)
+        {
+            expectedOldNucleotide = Nucleotide.G;
+            expectedInternalLocation = loc - lenA;
+        }
+        else
+        {
+            expectedOldNucleotide = Nucleotide.T;
+            expectedInternalLocation = loc;
+        }
+        data.ApplyEvent(_kar);
+        var snv = data.SNV;
+        Assert.AreEqual(expectedOldNucleotide, snv.OldNucleotide);
+
+        (Region region, long internalLocation) = _kar.GetContig(0).FindRegion(loc);
+        Assert.AreEqual(expectedInternalLocation, internalLocation);
+
     }
 }
