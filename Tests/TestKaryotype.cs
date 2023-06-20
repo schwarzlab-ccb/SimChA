@@ -146,7 +146,7 @@ public class TestKaryotype
     [Test]
     public void TestApplyCNEvent([Values] CNEventType eventType)
     {
-        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000 };
+        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10  };
         var eventP = new CNEventPars(eventType, 1, pars);
         Assert.DoesNotThrow(() => ApplyRandomEvent(_rnd, _kar, eventP));
     }
@@ -154,7 +154,7 @@ public class TestKaryotype
     [Test]
     public void TestRandomEvent([Values] CNEventType eventType, [Values] IntEdgeCases seed)
     {
-        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000 };
+        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
         var eventP = new CNEventPars(eventType, 1, pars);
         var eventData = Sampling.GenerateCNEventData(new Random((int) seed), _kar, eventP);
         Assert.DoesNotThrow(() => eventData.ApplyEvent(_kar));

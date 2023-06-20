@@ -38,10 +38,10 @@ public class GenRef
         var haplotypeTwoF = CreateHaplotype(false, true);
         var haplotypeOneM = CreateHaplotype(true, false);
         var haplotypeTwoM = CreateHaplotype(false, false);
-        var XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
-        var XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
-        long XYGenomeLen = XYGenome.Sum(r => r.Length);
-        long XXGenomeLen = XXGenome.Sum(r => r.Length);
+        XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
+        XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
+        XYGenomeLen = XYGenome.Sum(r => r.Length);
+        XXGenomeLen = XXGenome.Sum(r => r.Length);
     }
     
     private Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) 
@@ -49,7 +49,7 @@ public class GenRef
     
     private IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
     {
-        var nonGender = Enum.GetValues<ChrNo>().Take(22);
+        var nonGender = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
         var sexChr = isFirstHaplotype | isFemale ? ChrNo.chrX : ChrNo.chrY;
         var all = nonGender.Concat(new[] { sexChr });
         return all.Select(num => GetRegion(num, isFirstHaplotype));

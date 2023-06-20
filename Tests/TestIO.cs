@@ -81,9 +81,9 @@ public class TestIO
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
         var kar = new Karyotype(false);
-        var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
+        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
         var rnd = new Random(48);
-        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, ceParams));
+        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, pars));
         var clone = new CloneIn(1, -1, 0, 1);
     }
 
@@ -122,5 +122,18 @@ public class TestIO
         Assert.AreEqual(9, profiles["1"].FindRegionsOfChr(ChrNo.chr3).Count()); // 5 existing + 4 missing
         Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr4).Count()); // 2 missing
         Assert.AreEqual(false, profiles["2"].SexXX);
+    }
+
+    [Test]
+    public void TestParseReference()
+    {
+        const string Reference = @"chr1	249250621
+chr2	243199373
+chr3	198022430
+chrX	155270560
+chrY	59373566";
+        var genRef = Parsers.ParseReference("test", Reference.Split('\n'));
+        Assert.AreEqual(3, genRef.AutosomeCount);
+        Assert.AreEqual(8, genRef.ChrCount);
     }
 }

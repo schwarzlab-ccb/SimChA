@@ -23,15 +23,9 @@ public static class Validators
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
             case CNEventType.Chromothripsis:
-                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
-                break;
-
             case CNEventType.Translocation:
                 if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
-                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a PIvn parameter. E.g. \"Pars\": {{\"PIvn\": 0.5}}");
                 break;
             
             case CNEventType.Chromoplexy:

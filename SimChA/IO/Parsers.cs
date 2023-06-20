@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections;
+using System.Globalization;
 using System.Text.Json;
 using SimChA.DataTypes;
 using SimChA.Simulation;
@@ -219,5 +220,42 @@ public static class Parsers
             cloneFitness.Add(clone);
         }
         return cloneFitness;
+    }
+
+    public static GenRef ParseReference(string name, IList<string> lines)
+    {
+        Dictionary<ChrNo, int> chrLengths = new();
+        Dictionary<ChrNo, SexEnum> chrSex = new();
+        for (var index = 0; index < lines.Count; index++)
+        {
+            string line = lines[index];
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            var chrNo = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[0]);
+            int length = int.Parse(lineSplit[1]);
+            chrLengths.Add(chrNo, length);
+            var sexEnum = GetSexEnum(lines, lineSplit, index);
+            chrSex.Add(chrNo, sexEnum);
+        }
+
+        var result = new GenRef(name, chrLengths, chrSex);
+        return result;
+    }
+
+    private static SexEnum GetSexEnum(IList<string> lines, IReadOnlyList<string> lineSplit, int index)
+    {
+        if (lineSplit.Count > 2)
+        {
+            string sexString = lineSplit[2];
+            return Enum.Parse<SexEnum>(sexString);
+        }
+        if (index == lines.Count - 1)
+        {
+            return SexEnum.Male;
+        }
+        if (index == lines.Count - 2)
+        {
+            return SexEnum.Female;
+        }
+        return SexEnum.Both;
     }
 }

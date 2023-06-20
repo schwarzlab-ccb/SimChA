@@ -51,7 +51,7 @@ public class TestCopyNumbers
         for (int i = 0; i < 100; i++)
         {
             TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.Translocation, 1));
-            var invParams = new Dictionary<string, double> { {"Mean", 0.01} };
+            var invParams = new Dictionary<string, double> { {"Size", 1_000_000 } };
             TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.InternalInversion, 1, invParams));
         }
         var cns = CopyNumbers.CalcCopyNumbers(kar, sex).ToList();
