@@ -32,7 +32,7 @@ public record InternalEventData : ContigEventData
         }
         else if (EventType == CNEventType.InvertedDuplication)
         {
-            kar.ApplyInternalDuplication(ContigId, Start, End);
+            kar.ApplyInvertedDuplication(ContigId, Start, End);
         }
     }
 
