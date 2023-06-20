@@ -222,7 +222,7 @@ public static class Parsers
         return cloneFitness;
     }
 
-    public static GenRef ParseReference(string name, IList<string> lines)
+    public static GenRef ParseChromosomes(string name, IList<string> lines)
     {
         Dictionary<ChrNo, int> chrLengths = new();
         Dictionary<ChrNo, SexEnum> chrSex = new();

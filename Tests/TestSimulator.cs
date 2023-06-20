@@ -27,7 +27,7 @@ public class TestSimulator
         _fitness = new FitnessParams(1, 1, 1);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
-        _geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>
+        _geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene> > >
         {
             {GeneListType.Essentiality, new Dictionary<ChrNo, List<Gene>>()},
             {GeneListType.TumorSuppressor, new Dictionary<ChrNo, List<Gene>>()},

@@ -125,15 +125,29 @@ public class TestIO
     }
 
     [Test]
-    public void TestParseReference()
+    public void TestParseChromText()
     {
         const string Reference = @"chr1	249250621
 chr2	243199373
-chr3	198022430
-chrX	155270560
+chr3	198022430	Both
+chrX	155270560	0
 chrY	59373566";
-        var genRef = Parsers.ParseReference("test", Reference.Split('\n'));
+        var genRef = Parsers.ParseChromosomes("test", Reference.Split('\n'));
         Assert.AreEqual(3, genRef.AutosomeCount);
         Assert.AreEqual(8, genRef.ChrCount);
+        Assert.AreEqual(249250621, genRef.GetChromLen(ChrNo.chr1));
+        Assert.AreEqual(198022430, genRef.GetChromLen(ChrNo.chr3));
+        Assert.AreEqual(155270560, genRef.GetChromLen(ChrNo.chrX));
+        Assert.AreEqual(59373566, genRef.GetChromLen(ChrNo.chrY));
+    }
+
+    [Test]
+    public void TestParseChromFile()
+    {
+        const string dataPath = "./../../../../data/hg19";
+        var genRef = FileIO.ReadChromosomes(dataPath);
+        Assert.AreEqual("hg19", genRef.Name);
+        Assert.AreEqual(22, genRef.AutosomeCount);
+        Assert.AreEqual(46, genRef.ChrCount);
     }
 }

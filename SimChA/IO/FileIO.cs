@@ -8,16 +8,23 @@ namespace SimChA.IO;
 
 public class FileIO
 {
+    // data
+    private const string CHROMOSOMES_TSV = "chromosomes.tsv";
+    private const string ESSENTIALS_TSV = "essentials.tsv";
+    private const string OGS_TSV = "ogs.tsv";
+    private const string TSGS_TSV = "tsgs.tsv";
+    
+    // input
+    private const string SIM_PARAMS_FILENAME = "sim_params.json";
+    
+    // output
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
     private const string CONSISTENT_CNS_FILENAME = "consistent_CNs.tsv";
-    private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
-    private const string ESSENTIALS_TSV = "essentials.tsv";
-    private const string OGS_TSV = "OGs.tsv";
-    private const string TSGS_TSV = "TSGs.tsv";
+    
     private string Timestamp { get; }
     private string OutFolder { get; }
 
@@ -239,6 +246,25 @@ public class FileIO
                 pro.Value.GlueNeighbours();
             }
             return profiles;
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+    
+    public static GenRef ReadChromosomes(string folder)
+    {
+        string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
+        string assemblyName = Path.GetFileName(folder) ?? throw new Exception($"Failed to parse assembly name from {folder}");
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            string fileContent = File.ReadAllText(fileFullPath);
+            return Parsers.ParseChromosomes(assemblyName, fileContent.Split("\n"));
         }
         catch (Exception e)
         {
