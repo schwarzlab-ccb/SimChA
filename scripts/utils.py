@@ -95,10 +95,10 @@ def load_dataset(dataset_path):
     return loaded_data
 
 def calc_CNs(dataset):
-    dataset["major"] = get_CNs_by_sample(dataset["CNs"], True)
-    dataset["minor"] = get_CNs_by_sample(dataset["CNs"], False) 
-    dataset["hap_a"] = get_hap_by_sample(dataset["CNs"], "cn_a")
-    dataset["hap_b"] = get_hap_by_sample(dataset["CNs"], "cn_b")
+    cns = [get_CNs_by_sample(dataset, True), get_CNs_by_sample(dataset, False), get_hap_by_sample(dataset, "cn_a"), get_hap_by_sample(dataset, "cn_b")]
+    df =  pd.DataFrame(cns).T
+    df.columns = ["major", "minor", "hap_a", "hap_b"]
+    return df
 
 # https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh37
 hg19_chr_lengths = {
