@@ -11,7 +11,12 @@ public class Karyotype
     public double FitnessVal { get; private set; }
     
     public bool SexXX { get;  }
-    
+
+    public List<GenContents> GenContents = null;
+    public void SetGenContents(List<GenContents> gc)
+    {
+        GenContents = gc;
+    }
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
     

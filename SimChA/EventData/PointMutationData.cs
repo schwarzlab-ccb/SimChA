@@ -9,6 +9,14 @@ public record PointMutationData : ContigEventData
     public Nucleotide OldNucleotide {get; set;}
     public Nucleotide NewNucleotide {get; set;}
     Random Rnd {get;}
+    private Dictionary<char, Nucleotide> nucleotideDict = 
+        new Dictionary<char, Nucleotide>() 
+        {
+            {'A', Nucleotide.A},
+            {'C', Nucleotide.C},
+            {'G', Nucleotide.G},
+            {'T', Nucleotide.T}
+        };
     public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
         Location = Sampling.GetInternalPos(rnd, contigLen);
@@ -17,11 +25,21 @@ public record PointMutationData : ContigEventData
 
     public void SetOldNucleotide(Karyotype kar)
     {
-        var region = kar.GetContig(ContigId).FindRegion(Location);
-        var dummySNV = new SNV(Nucleotide.A, Nucleotide.C);
-        if (region.SNVDict == null || !region.SNVDict.TryGetValue(Location, out dummySNV))
+        (Region region, long internalLocation) = kar.GetContig(ContigId).FindRegion(Location);
+        var dummySNV = new SNV(Nucleotide.A, Nucleotide.A);
+        if (region.SNVDict == null || !region.SNVDict.TryGetValue(internalLocation, out dummySNV))
         {
-            OldNucleotide = Nucleotide.A;
+            int index = (int)region.ChrID.ChrNo;
+            var nuc = Char.ToUpper(kar.GenContents[index].Sequence[(int)internalLocation]);
+            // TODO: What do we do with the 'N' character?
+            if (nuc == 'N')
+            {
+                OldNucleotide = Sampling.SampleNucleotide(Rnd);
+            }
+            else
+            {
+                OldNucleotide = Sampling.SampleNucleotide(Rnd, nucleotideDict[nuc]);
+            }
         }
         else
         {

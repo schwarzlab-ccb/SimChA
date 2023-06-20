@@ -242,7 +242,8 @@ public static class RegionOps
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
 
-    public static Region FindRegion(List<Region> regions, long location)
+    public static (Region region, long internalLocation) FindRegion(
+        List<Region> regions, long location)
     {
         long seekPos = 0;
         var region = regions[0];
@@ -251,7 +252,7 @@ public static class RegionOps
             region = regions[i];
             if (location > seekPos && location < seekPos + region.Length)
             {
-                return region;
+                return (region, region.Start + location - seekPos);
             }
             seekPos += region.Length;
         }

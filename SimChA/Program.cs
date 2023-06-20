@@ -38,6 +38,7 @@ files.WriteSimParams(simParams);
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
+var genContents = FileIO.ReadFasta("data/hg38/GCA_000001405.15_GRCh38_genomic.fna").Where(gc => gc != null).ToList();
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
@@ -48,7 +49,7 @@ else
 {
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
-    var simulator = new Simulator(rnd, geneLists);
+    var simulator = new Simulator(rnd, geneLists, genContents);
     if (execMode == ExecMode.Tree)
     {
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);

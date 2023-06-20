@@ -149,7 +149,7 @@ public class Contig
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, snvData);
     }
-    public Region FindRegion(long location)
+    public (Region region, long internalLocation) FindRegion(long location)
     {   
         return RegionOps.FindRegion(_regions, location);
     }

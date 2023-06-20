@@ -10,13 +10,16 @@ public class Simulator
     protected readonly Random Rnd;
     protected readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
     protected int Counter;
+    protected List<GenContents>? GenContents;
 
     public Simulator(
         Random rnd,
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
+        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
+        List<GenContents>? genContents = null)
     {
         Rnd = rnd;
         GeneLists = geneLists;
+        GenContents = genContents;
     }
 
     public virtual void SampleEvents(Sample sample)
@@ -37,6 +40,7 @@ public class Simulator
         {
             var childKar = new Karyotype(sample.Kars[node.CloneId]);
             sample.Kars[child.CloneId] = childKar;
+            childKar.SetGenContents(GenContents);
             var childEvs = new List<CNEventDesc>();
             sample.EventDescs[child.CloneId] = childEvs;
             for (int mutNo = 0; mutNo < child.Distance; mutNo++)
