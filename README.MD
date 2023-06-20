@@ -77,7 +77,6 @@ Default parameters are found in the file: `default_params.json`. The exact param
 ### Common
 * `Seed: int` - The seed for the random number generator.
 * `SexXX: bool` - If true, uses the XX genome, otherwise the XY genome.
-* `Assembly: string` - The assembly to use. Currently hg19 and hg38 are supported.
 * `Fitness: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
 
 ### Repeats mode
