@@ -16,7 +16,7 @@ public static class Fitness
         var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
         return 1 
-               + fParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
+               + fParams.Stress * StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen()) 
                + fParams.TsgOg * (TsgOgTerm(ogCNs, karyotype.SexXX) - TsgOgTerm(tsgCNs, karyotype.SexXX)) 
                + fParams.Essentiality * EssTerm(essCNs);
     }
@@ -41,8 +41,8 @@ public static class Fitness
 
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
-    public static double StressTerm(long baseCount, bool isFemale)
-        => 1 - baseCount / (double) HGRef.GetGenomeLen(isFemale);
+    public static double StressTerm(long refBaseCount, long baseCount)
+        => 1 - baseCount / (double) refBaseCount;
 
     private static double ExpectedCN(ChrNo chrNo, bool sexXX)
         => chrNo switch

@@ -1,8 +1,11 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using SimChA.DataTypes;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -10,15 +13,16 @@ namespace Tests;
 [TestFixture]
 public class TestContig
 {
+    private GenRef _genRef;
     private Contig _contig1;
     private Contig _contigX;
     
     [SetUp]
     public void Setup()
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
-        _contig1 = new Contig(HGRef.GetRegion(ChrNo.chr1));
-        _contigX = new Contig(HGRef.GetRegion(ChrNo.chrX, false));
+        _genRef = Parsers.ParseChromosomes("Test", TestData.TEST_CHROMOSOMES);
+        _contig1 = new Contig(_genRef.GetGenotype(true).First());
+        _contigX = new Contig(_genRef.GetGenotype(true).Last());
     }
     
     [Test]

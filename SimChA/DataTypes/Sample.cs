@@ -15,8 +15,9 @@ public class Sample
     public Dictionary<int, Karyotype> Kars { get; }
     public Dictionary<int, List<CNEventDesc>> EventDescs { get; }
     public Dictionary<int, CloneStat> Stats { get; }
-    
     public Dictionary<string, double> Mixture { get; }
+    
+    public static string SexStr(bool sexXX) => sexXX ? "XX" : "XY";
 
     public Sample(string sampleId, bool sexXX, List<CloneIn> clones, List<CNEventPars> eventPars, Dictionary<string, double> mixture)
     {
@@ -33,7 +34,7 @@ public class Sample
     public static string Header() => "sample_id\tsex\tclone_count\tmixture";
     private string MixtureString() => EventPars.Any() ? string.Join(";", Mixture.Select(pair => $"{pair.Key}:{pair.Value:f4}")) : "-";
     public string ToTSV() => $"{SampleId}\t" +
-                             $"{HGRef.Sex(SexXX)}\t" +
+                             $"{SexStr(SexXX)}\t" +
                              $"{Clones.Count}\t" +
                              $"{MixtureString()}";
 }

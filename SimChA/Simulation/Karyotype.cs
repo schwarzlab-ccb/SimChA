@@ -24,9 +24,9 @@ public class Karyotype
     private readonly List<Contig> _contigs;
     private readonly Dictionary<ChrNo, List<GenRange>> _missingRanges;
     
-    public Karyotype(bool sexXX)
+    public Karyotype(GenRef genRef, bool sexXX)
     {
-        _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
         _missingRanges = Enum.GetValues<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         SexXX = sexXX;
     }
@@ -62,13 +62,7 @@ public class Karyotype
     
     public long MissingLen()
         => _missingRanges.Sum(r => r.Value.Sum(range => range.Length));
-    
-    public double CalcPloidy()
-        => 2.0 * GenomeLen() / HGRef.GetGenomeLen(SexXX);
-    
-    public double CalcCoverage()
-        => (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
-    
+
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
@@ -87,8 +81,8 @@ public class Karyotype
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
 
-    public double UpdateFitness(GenRef geneRef, FitnessParams fParams)
-        => FitnessVal = Fitness.Calculate(this, geneRef, fParams);
+    public double UpdateFitness(GenRef genRef, FitnessParams fParams)
+        => FitnessVal = Fitness.Calculate(this, genRef, fParams);
     
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {

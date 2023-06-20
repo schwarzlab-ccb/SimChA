@@ -35,7 +35,7 @@ public static class Parsers
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
     // however it works so don't refactor unless needed
-    public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
+    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
         var missingRanges = new List<GenRange>();
@@ -57,14 +57,14 @@ public static class Parsers
                 if (regionsA.Any() || regionsB.Any())
                 {
                     // Till the end of a chromosome
-                    if (lastPos != HGRef.GetChrLen(lastChr))
+                    if (lastPos != genRef.ChrLengths[lastChr])
                     {
-                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChrLen(lastChr), lastChr));
+                        missingRanges.Add(new GenRange(lastPos, genRef.ChrLengths[lastChr], lastChr));
                     }
                     missingRanges.AddRange(
                         present
                             .Where(pair => !pair.Value)
-                            .Select(c => new GenRange(0, HGRef.GetChrLen(c.Key), c.Key)));
+                            .Select(c => new GenRange(0, genRef.ChrLengths[c.Key], c.Key)));
                     // Consider missing to be haplotypes by default
                     foreach (var range in missingRanges)
                     {
@@ -108,9 +108,9 @@ public static class Parsers
                 else
                 {
                     // Till the end of a chromosome
-                    if (lastPos != HGRef.GetChrLen(lastChr))
+                    if (lastPos != genRef.ChrLengths[lastChr])
                     {
-                        missingRanges.Add(new GenRange(lastPos, HGRef.GetChrLen(lastChr), lastChr));
+                        missingRanges.Add(new GenRange(lastPos, genRef.ChrLengths[lastChr], lastChr));
                     }
                     // Start of a chromosome
                     if (start != 0)
@@ -138,14 +138,14 @@ public static class Parsers
         }
 
         // Till the end of a chromosome
-        if (lastPos != HGRef.GetChrLen(lastChr))
+        if (lastPos != genRef.ChrLengths[lastChr])
         {
-            missingRanges.Add(new GenRange(lastPos, HGRef.GetChrLen(lastChr), lastChr));
+            missingRanges.Add(new GenRange(lastPos, genRef.ChrLengths[lastChr], lastChr));
         }
         missingRanges.AddRange(
             present
                 .Where(pair => !pair.Value)
-                .Select(c => new GenRange(0, HGRef.GetChrLen(c.Key), c.Key)));
+                .Select(c => new GenRange(0, genRef.ChrLengths[lastChr], c.Key)));
         // Consider missing to be haplotypes by default
         foreach (var range in missingRanges)
         {
@@ -222,8 +222,9 @@ public static class Parsers
         return cloneFitness;
     }
 
-    public static GenRef ParseChromosomes(string name, IList<string> lines)
+    public static GenRef ParseChromosomes(string name, string text)
     {
+        IList<string> lines = text.Split("\n");
         Dictionary<ChrNo, int> chrLengths = new();
         Dictionary<ChrNo, SexEnum> chrSex = new();
         for (var index = 0; index < lines.Count; index++)

@@ -8,37 +8,40 @@ using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.Computation;
 using SimChA.EventData;
+using SimChA.IO;
 
 namespace Tests;
 
 [TestFixture]
 public class TestCopyNumbers
 {
+    private GenRef _genRef;
+    private Karyotype _kar;
     private Random _rnd;
     
     [SetUp]
     public void Setup()
     {
+        _genRef = Parsers.ParseChromosomes("Test", TestData.TEST_CHROMOSOMES);
         _rnd = new Random(0);
-        HGRef.Assembly = GenomeAssembly.hg19;
     }
 
     [Test]
     public void TestCalcPloidyReference([Values] bool sex)
     {
-        var kar = new Karyotype(sex);
-        var cnRef = CopyNumbers.CalcCopyNumbers(kar, sex).ToList();
-        double ploidyRef = CopyNumbers.CalcPloidy(cnRef, sex);
+        _kar = new Karyotype(_genRef, sex);
+        var cnRef = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
+        double ploidyRef = CopyNumbers.CalcPloidy(_genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
     }
 
     [Test]
     public void TestWGSPloid([Values] bool sex)
     {
-        var kar = new Karyotype(sex);
-        TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
-        var cns = CopyNumbers.CalcCopyNumbers(kar, sex).ToList();
-        var ploidy = CopyNumbers.CalcPloidy(cns, sex);
+        _kar = new Karyotype(_genRef, sex);
+        TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
+        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
+        double ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(4, ploidy);
         // TODO Gain / Loss specific number of chromosomes
     }
@@ -46,50 +49,50 @@ public class TestCopyNumbers
     [Test]
     public void TestNormalPloidy([Values] bool sex)
     {
-        var kar = new Karyotype(sex);
+        _kar = new Karyotype(_genRef, sex);
         // add a bunch of translocations and inversions and check that ploidy is still 2
         for (int i = 0; i < 100; i++)
         {
-            TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.Translocation, 1));
+            TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Translocation, 1));
             var invParams = new Dictionary<string, double> { {"Size", 1_000_000 } };
-            TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.InternalInversion, 1, invParams));
+            TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1, invParams));
         }
-        var cns = CopyNumbers.CalcCopyNumbers(kar, sex).ToList();
-        var ploidy = CopyNumbers.CalcPloidy(cns, sex);
+        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
+        var ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(2, ploidy);
     }
 
     [Test]
     public void TestDefaultSegPoints()
     {
-        var karXX = new Karyotype(true);
-        var karXY = new Karyotype(false);
-        var segs = CopyNumbers.GetSegPoints(new List<Karyotype> {karXX, karXY});
+        var karXX = new Karyotype(_genRef, true);
+        var karXY = new Karyotype(_genRef, false);
+        var segs = CopyNumbers.GetSegPoints(_genRef, new List<Karyotype> {karXX, karXY});
         foreach (var seg in segs)
         {
             Assert.AreEqual(0, seg.Value.First());
-            Assert.AreEqual(HGRef.GetChrLen(seg.Key), seg.Value.Last());
+            Assert.AreEqual(_genRef.ChrLengths[seg.Key], seg.Value.Last());
         }   
     }
     
     [Test]
     public void TestCutSegPoints()
     {
-        var karXX = new Karyotype(true);
-        var karXY = new Karyotype(false);
+        var karXX = new Karyotype(_genRef, true);
+        var karXY = new Karyotype(_genRef, false);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         karXY.ApplyInternalDeletion(0, 2000, 3000);
-        var segs = CopyNumbers.GetSegPoints(ChrNo.chr1, new List<Karyotype> {karXX, karXY});
-        var expected = new List<long> {0, 1000, 2000, 3000, HGRef.GetChrLen(ChrNo.chr1)};
+        var segs = CopyNumbers.GetSegPoints(_genRef, ChrNo.chr1, new List<Karyotype> {karXX, karXY});
+        var expected = new List<long> {0, 1000, 2000, 3000, _genRef.ChrLengths[ChrNo.chr1]};
         Assert.AreEqual(expected, segs);
     }
     
     [Test]
     public void TestCutCNs()
     {
-        var karXX = new Karyotype(true);
+        var karXX = new Karyotype(_genRef, true);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
-        var segs = CopyNumbers.GetSegPoints(ChrNo.chr1, new List<Karyotype> {karXX});
+        var segs = CopyNumbers.GetSegPoints(_genRef, ChrNo.chr1, new List<Karyotype> {karXX});
         var cns = CopyNumbers.CalcChrCopyNumbers(
             karXX.FindRegionsOfChr(ChrNo.chr1).ToList(), 
             karXX.GetMissingOfChr(ChrNo.chr1), 

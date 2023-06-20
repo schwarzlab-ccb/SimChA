@@ -59,7 +59,7 @@ public class FileIO
         }
     }
     
-    public void WriteConsistentCNs(IList<Sample> samples)
+    public void WriteConsistentCNs(GenRef genRef, IList<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CONSISTENT_CNS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -67,21 +67,21 @@ public class FileIO
         
         outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
 
-        var segs = CopyNumbers.GetSegPoints(samples.SelectMany(s => s.Kars.Values));
+        var segs = CopyNumbers.GetSegPoints(genRef , samples.SelectMany(s => s.Kars.Values).ToList());
         
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
                 var kar = sample.Kars[clone.CloneId];
-                var cns = CopyNumbers.CalcCopyNumbers(kar, segs, sample.SexXX, true);
+                var cns = CopyNumbers.CalcCopyNumbers(genRef, kar, segs, sample.SexXX, true);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
     }
     
-    public void WriteCopyNumbers(IEnumerable<Sample> samples)
+    public void WriteCopyNumbers(GenRef genRef, IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -92,7 +92,7 @@ public class FileIO
         {
             foreach (var clone in sample.Clones)
             {
-                var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
+                var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.SexXX);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
@@ -198,9 +198,7 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
-        string folder,
-        GenomeAssembly assembly)
+    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
@@ -211,7 +209,7 @@ public class FileIO
         };
         foreach ((var key, string filename) in fileMap)
         {
-            string filePath = Path.Combine(folder, assembly.ToString(), filename);
+            string filePath = Path.Combine(folder, filename);
             string fileFullPath = Path.GetFullPath(filePath);
             if (!File.Exists(fileFullPath))
             {
@@ -230,7 +228,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static Dictionary<string, Karyotype> ReadProfiles(string cnaProfile)
+    public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -240,7 +238,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var profiles = Parsers.ParseCNAProfile(cnaFile);
+            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile);
             foreach (var pro in profiles)
             {
                 pro.Value.GlueNeighbours();
@@ -264,7 +262,7 @@ public class FileIO
         try
         {
             string fileContent = File.ReadAllText(fileFullPath);
-            return Parsers.ParseChromosomes(assemblyName, fileContent.Split("\n"));
+            return Parsers.ParseChromosomes(assemblyName, fileContent);
         }
         catch (Exception e)
         {

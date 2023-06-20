@@ -27,14 +27,13 @@ else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
+    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, fitness);
 }
 
-HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
 var genRef = FileIO.ReadChromosomes(options.GenesFolder);
-genRef.GeneLists = FileIO.ReadGeneLists(options.GenesFolder, HGRef.Assembly);
+genRef.GeneLists = FileIO.ReadGeneLists(options.GenesFolder);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
@@ -43,7 +42,7 @@ List<Sample> samples;
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
-    var profiles = FileIO.ReadProfiles(options.CNProfiles);
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     samples = Simulator.SamplesFromProfiles(profiles);
 }
 else
@@ -105,10 +104,10 @@ Console.WriteLine("");
 try
 {
     files.WriteSamples(samples);
-    files.WriteCopyNumbers(samples);
+    files.WriteCopyNumbers(genRef, samples);
     if (options.CalcConsistentCNs)
     {
-        files.WriteConsistentCNs(samples);
+        files.WriteConsistentCNs(genRef, samples);
     }
     files.WriteClones(samples);
     files.WriteKaryotypes(samples);

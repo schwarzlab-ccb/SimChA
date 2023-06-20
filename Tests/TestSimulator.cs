@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.DataTypes;
 using SimChA.EventData;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -17,24 +18,17 @@ public class TestSimulator
     private FitnessParams _fitness;
     private GenRef _genRef;
     private Karyotype _kar;
-    private const double EPSILON = 0.0000000001;
+    private const double EPSILON = 0.0000000001;    
     
     [SetUp]
     public void Setup()
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
         _rnd = new Random(0);
         _fitness = new FitnessParams(1, 1, 1);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
-        _genRef = new GenRef("test", new Dictionary<ChrNo, int>(), new Dictionary<ChrNo, SexEnum>());
+        _genRef = Parsers.ParseChromosomes("test", TestData.TEST_CHROMOSOMES);
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
-        _genRef.GeneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene> > >
-        {
-            {GeneListType.Essentiality, new Dictionary<ChrNo, List<Gene>>()},
-            {GeneListType.TumorSuppressor, new Dictionary<ChrNo, List<Gene>>()},
-            {GeneListType.Oncogene, new Dictionary<ChrNo, List<Gene>>()}
-        };
-        _kar = new Karyotype(true);
+        _kar = new Karyotype(_genRef, true);
     }
     
     // Taken the MakeGene method from TestFitness

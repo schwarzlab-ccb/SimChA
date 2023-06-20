@@ -5,12 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Linq;
-using NUnit.Framework;
-using SimChA.Computation;
 using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
+using NUnit.Framework;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Tests;
@@ -18,6 +17,15 @@ namespace Tests;
 [TestFixture]
 public class TestIO
 {
+    private GenRef _genRef;
+    
+    [SetUp]
+    public void Setup()
+    {
+        _genRef = Parsers.ParseChromosomes("test", TestData.TEST_CHROMOSOMES);
+    }
+
+    
     [Test]
     public void TestContig()
     {
@@ -29,7 +37,7 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fit, null, null);
+        var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, fit, null, null);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);
@@ -52,8 +60,6 @@ public class TestIO
         Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events.First().Type);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Pars"": {""Mean"": 0.1}}]}]}");
         Assert.AreEqual(0.1, res.Signatures!.First().Events.First().Pars!["Mean"], 0.000001);
-        res = Parsers.ParseSimParams(@"{""Assembly"":""hg38""}");
-        Assert.AreEqual(GenomeAssembly.hg38, res.Assembly);
     }
 
     [Test]
@@ -80,7 +86,7 @@ public class TestIO
     {
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
-        var kar = new Karyotype(false);
+        var kar = new Karyotype( _genRef, false);
         var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, pars));
@@ -107,14 +113,13 @@ public class TestIO
     [Test]
     public void TestParseCNAProfiles()
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
         const string Profiles = @"sample_id	chrom	start	end	cn_a	cn_b
 1	chr1	1	249250621	1	1
 1	chr2	13133	2429856	0	0
 1	chr3	62226	171636043	2	3
 2	chrX	2	6	1	0
 2	chrY	3	4	0	1";
-        var profiles = Parsers.ParseCNAProfile(new StringReader(Profiles));
+        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(Profiles));
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
         Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr1).Count()); // 2 existing
@@ -127,12 +132,12 @@ public class TestIO
     [Test]
     public void TestParseChromText()
     {
-        const string Reference = @"chr1	249250621
+        const string testRef = @"chr1	249250621
 chr2	243199373
 chr3	198022430	Both
 chrX	155270560	0
 chrY	59373566";
-        var genRef = Parsers.ParseChromosomes("test", Reference.Split('\n'));
+        var genRef = Parsers.ParseChromosomes("testRef", testRef);
         Assert.AreEqual(3, genRef.AutosomeCount);
         Assert.AreEqual(8, genRef.ChrCount);
         Assert.AreEqual(249250621, genRef.GetChromLen(ChrNo.chr1));

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
+using SimChA.IO;
 using SimChA.Simulation;
 
 namespace Tests;
@@ -16,6 +17,8 @@ public class TestKaryotype
     private Random _rnd;
     private CNEventPars _del;
     private CNEventPars _dup;
+    private GenRef _genRef;
+    
     
     private int TEST_FRAC = 1000;
     
@@ -28,8 +31,8 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
-        _kar = new Karyotype(false);
+        _genRef = Parsers.ParseChromosomes("test", TestData.TEST_CHROMOSOMES);
+        _kar = new Karyotype(_genRef, false);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion);
         _dup = new CNEventPars(CNEventType.ChromDuplication);
@@ -184,13 +187,13 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(HGRef.GetGenomeLen(_kar.SexXX), _kar.GenomeLen());
+        Assert.AreEqual(_genRef.GetGenomeLen(_kar.SexXX), _kar.GenomeLen());
     }
     
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < HGRef.CHR_COUNT; i++)
+        for (int i = 0; i < _genRef.ChrCount; i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }
