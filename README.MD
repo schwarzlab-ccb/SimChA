@@ -66,7 +66,7 @@ Use `dotnet run -- [options]` to specify any of the following:
   -R --repeats n   Will run the simulation and generate n independent samples.
   -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
   -P --profile path   A path to a file with copy number profiles.
-  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.
+  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. 
   -s  Calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.
 ```
 
@@ -87,14 +87,40 @@ Default parameters are found in the file: `default_params.json`. The exact param
 ### Simulation mode
 
 
-## Fitness calculation
+## Input Data
+
+Data should be provided as a path to a folder using the `--data` parameter. The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectivelly. 
+
+### Chromosomes
+
+The chromosome contains the lengths and sex-specific information of individual chromosomes. By default there are two columns, one with the name of a chromosome, one with a number of basises.
+
+Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Both`.
+
+Example file:
+
+```
+chr1	248956422	Both
+...
+chrY	59373566	Male
+```
 
 ### TSG/OG/Eseentiality Score
 We use three data files, providing the TSG/OG/Essentiality score. Each file is a tab-separated file with the following columns:
 
-| Chromosome | Start Position | End Position | Gene | Score |
-|------------|----------------|--------------|------|-------|
-| chr1       | 1000           | 2000         | gene | 0.5   |
+* `Chromosome: string` - The name of the chromosome.
+* `Start: long` - The start position of the gene (inclusive).
+* `End: long` - The end position of the gene (inclusive).
+* `Gene: string` - The name of the gene.
+* `Score: float` - The score of the gene.
+
+Example file:
+```
+chr3	178865902	178957881	PIK3CA	1
+chr7	140419127	140624564	BRAF	0.991919559
+chr12	25357723	25403870	KRAS	0.990684897
+...
+```
 
 For each gene, the:
 
