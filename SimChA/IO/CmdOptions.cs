@@ -20,7 +20,7 @@ public class CmdOptions
     [Option('P', "cnprofiles", Required = false, Default = "", HelpText = "File with CNAs, will cause the program to write a scoring file.")]
     public string CNProfiles { get; set; }
 
-    [Option("data", Required = false, Default = "./data", HelpText = "Folder with three files for OGs, TSGs and essential genes in the format of essentials.tsv, ogs.tsv and tsgs.tsv")]
+    [Option('D', "data", Required = false, Default = "./data/hg19", HelpText = "Folder with three files for OGs, TSGs and essential genes in the format of chromosomes.tsv, essentials.tsv, ogs.tsv and tsgs.tsv")]
     public string GenesFolder { get; set;}
 
     [Option('M', "mcmc", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]

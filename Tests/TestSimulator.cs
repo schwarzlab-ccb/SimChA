@@ -15,7 +15,7 @@ public class TestSimulator
     private MCParams _mcParams;
     private List<CNEventPars> _eventPs;
     private FitnessParams _fitness;
-    private Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> _geneLists;
+    private GenRef _genRef;
     private Karyotype _kar;
     private const double EPSILON = 0.0000000001;
     
@@ -26,8 +26,9 @@ public class TestSimulator
         _rnd = new Random(0);
         _fitness = new FitnessParams(1, 1, 1);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
+        _genRef = new GenRef("test", new Dictionary<ChrNo, int>(), new Dictionary<ChrNo, SexEnum>());
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
-        _geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene> > >
+        _genRef.GeneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene> > >
         {
             {GeneListType.Essentiality, new Dictionary<ChrNo, List<Gene>>()},
             {GeneListType.TumorSuppressor, new Dictionary<ChrNo, List<Gene>>()},
@@ -44,12 +45,11 @@ public class TestSimulator
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
+        _genRef.GeneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t,
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        var sim = new MCSimulator(_rnd, _fitness, listGenes,_mcParams);
+        _genRef.GeneLists[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
+        var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams);
         double potential = sim.Potential(_kar, 1, events).potential;
         Assert.AreEqual(potential,0.0,EPSILON);
     }
@@ -57,7 +57,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _geneLists);
+        var sim = new Simulator(_rnd, _genRef);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)

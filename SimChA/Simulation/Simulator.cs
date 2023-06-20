@@ -8,15 +8,15 @@ namespace SimChA.Simulation;
 public class Simulator
 {
     protected readonly Random Rnd;
-    protected readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
+    protected readonly GenRef GenRef;
     protected int Counter;
 
     public Simulator(
         Random rnd,
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
+        GenRef genRef)
     {
         Rnd = rnd;
-        GeneLists = geneLists;
+        GenRef = genRef;
     }
 
     public virtual void SampleEvents(Sample sample)

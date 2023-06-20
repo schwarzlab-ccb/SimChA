@@ -33,7 +33,8 @@ else
 HGRef.Assembly = simParams.Assembly;
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.GenesFolder, HGRef.Assembly);
+var genRef = FileIO.ReadChromosomes(options.GenesFolder);
+genRef.GeneLists = FileIO.ReadGeneLists(options.GenesFolder, HGRef.Assembly);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
@@ -49,7 +50,7 @@ else
 {
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
-    var simulator = new Simulator(rnd, geneLists);
+    var simulator = new Simulator(rnd, genRef);
     if (execMode == ExecMode.Tree)
     {
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
@@ -74,7 +75,7 @@ else
                 throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
             }
 
-            simulator = new MCSimulator(rnd, simParams.Fitness, geneLists, simParams.MCParams);
+            simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
             simulator.SampleEvents(sample);
         }
         else
@@ -95,7 +96,7 @@ foreach (var sample in samples)
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, geneLists, simParams.Fitness, sample.Kars);
+        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
     }
 }
 

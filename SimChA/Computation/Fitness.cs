@@ -9,12 +9,12 @@ public static class Fitness
 {
     public static double Calculate(
         Karyotype karyotype,
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
+        GenRef genRef,
         FitnessParams fParams)
     {
-        var tsgCNs = CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
-        var ogCNs = CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
+        var tsgCNs = CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
+        var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
+        var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
         return 1 
                + fParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
                + fParams.TsgOg * (TsgOgTerm(ogCNs, karyotype.SexXX) - TsgOgTerm(tsgCNs, karyotype.SexXX)) 

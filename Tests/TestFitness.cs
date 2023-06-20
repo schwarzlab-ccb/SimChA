@@ -16,6 +16,15 @@ namespace Tests;
 public class TestFitness
 {
     private const double EPSILON = 0.0000000001;
+
+    private GenRef _genRef;
+    
+    [SetUp]
+    public void Setup()
+    {
+        const string dataPath = "./../../../../data/hg19";
+        _genRef = FileIO.ReadChromosomes(dataPath);
+    }
     
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
         => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
@@ -109,13 +118,11 @@ public class TestFitness
         HGRef.Assembly = GenomeAssembly.hg19;
         var karyotype = new Karyotype(true);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
-        var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
+        _genRef.GeneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
             t => t,
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, fit), EPSILON);
+        _genRef.GeneLists[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, _genRef, fit), EPSILON);
 
         // TODO: Test the linear combination
     }
