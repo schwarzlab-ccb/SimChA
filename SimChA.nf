@@ -51,7 +51,7 @@ process SimChA {
         def config_json = JsonOutput.toJson(new_config)
         """
         echo '${config_json}' > config.json
-        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data -R 1000 -O "."
+        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data/hg19 -R 1000 -O "."
         """
 }
 
