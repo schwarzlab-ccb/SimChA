@@ -27,10 +27,9 @@ public class GenRef
     public IEnumerable<ChrNo> ChrIDsForSex(bool sexXX)
         => Enum.GetValues<ChrNo>().Take(sexXX ? AutosomeCount + 1 : AutosomeCount + 2);
 
-    public Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists { get; set; } = new();
-    public bool HasGeneLists => GeneLists.Any();
+    public Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists { get; }
 
-    public GenRef(string name, Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex)
+    public GenRef(string name, Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneList)
     {
         Name = name;
         ChrLengths = chrLengths;
@@ -45,6 +44,7 @@ public class GenRef
         XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
+        GeneLists = geneList;
     }
     
     private Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) 

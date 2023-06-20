@@ -22,7 +22,7 @@ public class TestIO
     [SetUp]
     public void Setup()
     {
-        _genRef = Parsers.ParseChromosomes("test", TestData.TEST_CHROMOSOMES);
+        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
     }
 
     
@@ -128,31 +128,12 @@ public class TestIO
         Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr4).Count()); // 2 missing
         Assert.AreEqual(false, profiles["2"].SexXX);
     }
-
-    [Test]
-    public void TestParseChromText()
-    {
-        const string testRef = @"chr1	249250621
-chr2	243199373
-chr3	198022430	Both
-chrX	155270560	0
-chrY	59373566";
-        var genRef = Parsers.ParseChromosomes("testRef", testRef);
-        Assert.AreEqual(3, genRef.AutosomeCount);
-        Assert.AreEqual(8, genRef.ChrCount);
-        Assert.AreEqual(249250621, genRef.GetChromLen(ChrNo.chr1));
-        Assert.AreEqual(198022430, genRef.GetChromLen(ChrNo.chr3));
-        Assert.AreEqual(155270560, genRef.GetChromLen(ChrNo.chrX));
-        Assert.AreEqual(59373566, genRef.GetChromLen(ChrNo.chrY));
-    }
-
+    
     [Test]
     public void TestParseChromFile()
     {
-        const string dataPath = "./../../../../data/hg19";
-        var genRef = FileIO.ReadChromosomes(dataPath);
-        Assert.AreEqual("hg19", genRef.Name);
-        Assert.AreEqual(22, genRef.AutosomeCount);
-        Assert.AreEqual(46, genRef.ChrCount);
+        Assert.AreEqual("hg19", _genRef.Name);
+        Assert.AreEqual(22, _genRef.AutosomeCount);
+        Assert.AreEqual(46, _genRef.ChrCount);
     }
 }

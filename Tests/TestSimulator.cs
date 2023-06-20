@@ -26,7 +26,7 @@ public class TestSimulator
         _rnd = new Random(0);
         _fitness = new FitnessParams(1, 1, 1);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
-        _genRef = Parsers.ParseChromosomes("test", TestData.TEST_CHROMOSOMES);
+        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
         _kar = new Karyotype(_genRef, true);
     }
@@ -39,10 +39,6 @@ public class TestSimulator
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        _genRef.GeneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
-            t => t,
-            _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-        _genRef.GeneLists[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
         var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams);
         double potential = sim.Potential(_kar, 1, events).potential;
         Assert.AreEqual(potential,0.0,EPSILON);

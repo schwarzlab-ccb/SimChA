@@ -222,7 +222,7 @@ public static class Parsers
         return cloneFitness;
     }
 
-    public static GenRef ParseChromosomes(string name, string text)
+    public static (Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex) ParseChromosomes(string text)
     {
         IList<string> lines = text.Split("\n");
         Dictionary<ChrNo, int> chrLengths = new();
@@ -238,8 +238,7 @@ public static class Parsers
             chrSex.Add(chrNo, sexEnum);
         }
 
-        var result = new GenRef(name, chrLengths, chrSex);
-        return result;
+        return (chrLengths, chrSex);
     }
 
     private static SexEnum GetSexEnum(IList<string> lines, IReadOnlyList<string> lineSplit, int index)

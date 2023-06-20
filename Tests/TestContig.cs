@@ -20,7 +20,7 @@ public class TestContig
     [SetUp]
     public void Setup()
     {
-        _genRef = Parsers.ParseChromosomes("Test", TestData.TEST_CHROMOSOMES);
+        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _contig1 = new Contig(_genRef.GetGenotype(true).First());
         _contigX = new Contig(_genRef.GetGenotype(true).Last());
     }

@@ -244,7 +244,7 @@ public class FileIO
         }
     }
     
-    public static GenRef ReadChromosomes(string folder)
+    public static (Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex) ReadChromosomes(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
         string assemblyName = Path.GetFileName(folder) ?? throw new Exception($"Failed to parse assembly name from {folder}");
@@ -255,11 +255,19 @@ public class FileIO
         try
         {
             string fileContent = File.ReadAllText(fileFullPath);
-            return Parsers.ParseChromosomes(assemblyName, fileContent);
+            return Parsers.ParseChromosomes(fileContent);
         }
         catch (Exception e)
         {
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
+    }
+
+    public static GenRef GetGenRef(string dataFolder)
+    {
+        string refName = Path.GetFileName(dataFolder);
+        var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
+        var geneLists = FileIO.ReadGeneLists(dataFolder);
+        return new GenRef(refName, chrLengths, chrSex, geneLists);
     }
 }

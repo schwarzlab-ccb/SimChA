@@ -31,7 +31,7 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        _genRef = Parsers.ParseChromosomes("test", TestData.TEST_CHROMOSOMES);
+        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _kar = new Karyotype(_genRef, false);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion);

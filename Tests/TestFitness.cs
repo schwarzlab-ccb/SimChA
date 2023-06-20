@@ -22,15 +22,11 @@ public class TestFitness
     [SetUp]
     public void Setup()
     {
-        var hg19Path = "./../../../../data/hg19";
-        var hg38Path = "./../../../../data/hg38";
         _refs = new Dictionary<GenomeAssembly, GenRef>
         {
-            [GenomeAssembly.hg19] = FileIO.ReadChromosomes(hg19Path),
-            [GenomeAssembly.hg38] = FileIO.ReadChromosomes(hg38Path)
+            [GenomeAssembly.hg19] = FileIO.GetGenRef("./../../../../data/hg19"),
+            [GenomeAssembly.hg38] = FileIO.GetGenRef("./../../../../data/hg38")
         };
-        _refs[GenomeAssembly.hg19].GeneLists = FileIO.ReadGeneLists(hg19Path);
-        _refs[GenomeAssembly.hg38].GeneLists = FileIO.ReadGeneLists(hg38Path);
     }
     
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
@@ -126,12 +122,7 @@ public class TestFitness
         var genRef = _refs[genomeAssembly];
         var karyotype = new Karyotype(genRef, true);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        genRef.GeneLists = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
-            t => t,
-            _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-        genRef.GeneLists[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
-
         // TODO: Test the linear combination
     }
 

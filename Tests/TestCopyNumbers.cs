@@ -22,7 +22,7 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        _genRef = Parsers.ParseChromosomes("Test", TestData.TEST_CHROMOSOMES);
+        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _rnd = new Random(0);
     }
 

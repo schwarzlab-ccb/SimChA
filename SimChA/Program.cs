@@ -18,10 +18,9 @@ var options = cmdOptions.Value;
 var execMode = options.ExecMode;
 
 SimParams simParams;
-string configFile = options.ConfigFile;
-if (configFile != "")
+if (options.ConfigFile != "")
 {
-    simParams = FileIO.ReadSimParams(configFile);
+    simParams = FileIO.ReadSimParams(options.ConfigFile);
 }
 else
 {
@@ -32,8 +31,7 @@ else
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var genRef = FileIO.ReadChromosomes(options.GenesFolder);
-genRef.GeneLists = FileIO.ReadGeneLists(options.GenesFolder);
+var genRef = FileIO.GetGenRef(options.DataFolder);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
@@ -88,10 +86,10 @@ Console.WriteLine("");
 
 // Fitness data
 Console.WriteLine("Computing clone stats:");
-int counter = 1;
-int total = samples.Sum(s => s.Clones.Count);
 foreach (var sample in samples)
 {
+    int counter = 1;
+    int total = sample.Clones.Count;
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
