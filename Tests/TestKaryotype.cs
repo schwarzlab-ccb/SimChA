@@ -329,24 +329,16 @@ public class TestKaryotype
 
         var eventPars = new CNEventPars(CNEventType.SNV);
         PointMutationData data = new PointMutationData(_rnd, eventPars, 0, contig.Length());
-        long loc = data.Location;
-        Nucleotide expectedOldNucleotide;
-        long expectedInternalLocation;
-        if (loc >= lenA)
-        {
-            expectedOldNucleotide = Nucleotide.G;
-            expectedInternalLocation = loc - lenA;
-        }
-        else
-        {
-            expectedOldNucleotide = Nucleotide.T;
-            expectedInternalLocation = loc;
-        }
+        long loc = 12;
+        data.Location = loc;
         data.ApplyEvent(_kar);
         var snv = data.SNV;
+
+        Nucleotide expectedOldNucleotide = Nucleotide.G;
         Assert.AreEqual(expectedOldNucleotide, snv.OldNucleotide);
 
         (Region region, long internalLocation) = _kar.GetContig(0).FindRegion(loc);
+        long expectedInternalLocation = loc - lenA;
         Assert.AreEqual(expectedInternalLocation, internalLocation);
 
     }

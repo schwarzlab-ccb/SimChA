@@ -5,7 +5,7 @@ namespace SimChA.EventData;
 
 public record PointMutationData : ContigEventData
 {
-    public long Location { get; }
+    public long Location { get; set;}
     public Nucleotide OldNucleotide {get; set;}
     public Nucleotide NewNucleotide {get; set;}
     Random Rnd {get;}
