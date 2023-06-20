@@ -204,6 +204,7 @@ public static class Parsers
             {
                 continue;
             }
+
             if (line.StartsWith(">"))
             {
                 if (genContents != null)
@@ -214,10 +215,11 @@ public static class Parsers
                 var sub = line.Substring(1, 10);
                 if (!idDict.TryGetValue(line.Substring(1, 10), out chrNo))
                 {
+                    genContents = null;
                     continue;
                 }
                 Console.WriteLine(chrNo);
-                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder()};
+                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("", (int)HGRef.GetChromLen(chrNo))};
             }
             else if (genContents != null)
             {
