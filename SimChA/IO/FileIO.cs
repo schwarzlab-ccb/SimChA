@@ -281,11 +281,19 @@ public class FileIO
         }
     }
 
-    public static GenRef GetGenRef(string dataFolder)
+    public static GenRef<SNVRegion> GetGenRef(string dataFolder, string variantsFile)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
         var geneLists = FileIO.ReadGeneLists(dataFolder);
-        return new GenRef(refName, chrLengths, chrSex, geneLists);
+        return new GenRef<SNVRegion>(refName, chrLengths, chrSex, geneLists);
+    }
+
+    public static GenRef<Region> GetGenRef(string dataFolder)
+    {
+        string refName = Path.GetFileName(dataFolder);
+        var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
+        var geneLists = FileIO.ReadGeneLists(dataFolder);
+        return new GenRef<Region> (refName, chrLengths, chrSex, geneLists);
     }
 }

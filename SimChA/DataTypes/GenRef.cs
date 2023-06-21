@@ -9,7 +9,6 @@ public class GenRef
     public Dictionary<ChrNo, SexEnum> ChrSex { get; }
     public int AutosomeCount { get; }
     public int ChrCount { get; }
-    
     private Region[] XYGenome { get; }
     private Region[] XXGenome { get; }
     private long XYGenomeLen { get; }
@@ -46,10 +45,9 @@ public class GenRef
         XXGenomeLen = XXGenome.Sum(r => r.Length);
         GeneLists = geneList;
     }
-    
-    private Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) 
-        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype);
-    
+
+    private Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype);
+
     private IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
     {
         var nonGender = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);

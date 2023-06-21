@@ -100,10 +100,9 @@ foreach (var sample in samples)
     }
 }
 
-Console.WriteLine("");
-
 try
 {
+    Console.WriteLine("");
     files.WriteSamples(samples);
     files.WriteCopyNumbers(genRef, samples);
     if (options.CalcConsistentCNs)
