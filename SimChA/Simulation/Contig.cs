@@ -137,21 +137,17 @@ public class Contig
     {
         _regions = RegionOps.ConcatRegions(_regions, other._regions);
     }
-
-
+    
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);
     
-   
     public void SNV(long location, Nucleotide newNucleotide)
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
     }
     
-    public (Region region, long internalLocation) FindRegion(long location)
-    {   
-        return RegionOps.FindRegion(_regions, location);
-    }
+    public (Region region, long internalLocation) FindRegion(long location) 
+        => RegionOps.FindRegion(_regions, location);
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
     {
