@@ -156,7 +156,7 @@ public static class Parsers
         return geneList;
     }
     
-    public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness)
+    public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness, string sep)
     {
         const string idKey = "ID";
         const string parentIDKey = "ParentID";
@@ -165,7 +165,7 @@ public static class Parsers
         
         string? firstLine = cloneStream.ReadLine();
         if (firstLine == null) throw new Exception("CloneIn file is empty.");
-        var header = firstLine.Split(",").Select(s => s.Trim()).ToList();
+        var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
         var columns = new Dictionary<string, int> {{idKey, -1}, {parentIDKey, -1},  {distanceKey, -1}};
         if (parseFitness)
         {
@@ -182,7 +182,7 @@ public static class Parsers
         var cloneFitness = new List<CloneIn>();
         while (cloneStream.ReadLine() is { } line)
         {
-            var lineSplit = line.Split(",").Select(s => s.Trim()).ToList();
+            var lineSplit = line.Split(sep).Select(s => s.Trim()).ToList();
             int id = int.Parse(lineSplit[columns[idKey]]);
             int parentId = int.Parse(lineSplit[columns[parentIDKey]]);
             int distance = int.Parse(lineSplit[columns[distanceKey]]);

@@ -31,7 +31,8 @@ public static class CopyNumbers
             var seg = new Region(segmentBoundaries[i], segmentBoundaries[i + 1], id);
             int cnh1 = curRegs.Count(r => r.ChrID.Parent && seg.IsInside(r));
             int cnh2 = curRegs.Count(r => !r.ChrID.Parent && seg.IsInside(r));
-            var cn = new CopyNumber(seg, cnh1, cnh2);
+            int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
+            var cn = new CopyNumber(seg, cnh1, cnh2, nSNVs);
             result.Add(cn);
         }
 
@@ -45,7 +46,7 @@ public static class CopyNumbers
     }
 
     private static string Header(bool withSample, bool isFirst)
-        => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\n" : "";
+        => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\tn_snv\n" : "";
     
     public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId, bool isFirst)
         => Header(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));

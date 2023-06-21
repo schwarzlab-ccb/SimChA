@@ -11,6 +11,7 @@ public class FileIO
 {
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
+    private const string SNVCOPYNUMBERS_FILENAME = "snv_copynumbers.tsv";
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CLONES_FILENAME = "clones.tsv";
@@ -58,7 +59,7 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         
-        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
+        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\tn_snv");
 
         foreach (var sample in samples)
         {
@@ -70,7 +71,6 @@ public class FileIO
             }
         }
     }
-
     public void WriteSimParams(SimParams simParams)
     {
         string filePath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
@@ -137,6 +137,12 @@ public class FileIO
     public static List<CloneIn> ReadClones(string filePath, bool parseFitness)
     {
         string fileFullPath = Path.GetFullPath(filePath);
+        string fileFormat = filePath.Substring(filePath.Length - 3);
+        if (fileFormat != "tsv" || fileFormat != "csv")
+        {
+            throw new Exception($"File {filePath} should be a tsv or csv.");
+        }
+        string separator = (fileFormat == "tsv") ? "\t" : ",";
         if (!File.Exists(fileFullPath))
         {
             throw new Exception($"File {fileFullPath} does not exist");
@@ -144,7 +150,7 @@ public class FileIO
         try
         {
             var cloneFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClones(cloneFile, parseFitness);
+            return Parsers.ParseClones(cloneFile, parseFitness, separator);
         }
         catch (Exception e)
         {

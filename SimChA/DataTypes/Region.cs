@@ -10,4 +10,7 @@ public record Region(long Start, long End, ChrID ChrID, Dictionary<long, SNV>? S
     private string DirString => DirToStr(Forward);
     
     public override string ToString() => $"{ChrID}{DirString}[{Start}:{End})";
+
+    public int NumSNVsBetween(long start, long end)
+        => (SNVDict!=null) ? SNVDict.Keys.Count(loc => loc>= start && loc <= end) : 0 ;
 }
