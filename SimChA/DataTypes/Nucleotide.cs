@@ -5,5 +5,6 @@ public enum Nucleotide
     A,
     C,
     G,
-    T
+    T,
+    N
 }

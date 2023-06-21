@@ -83,17 +83,9 @@ public static class Sampling
             _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
         };
 
-    public static Nucleotide SampleNucleotide(Random rnd)
-    {
-        var possibleNucleotides = ((IEnumerable<int>) Enum.GetValues(typeof(Nucleotide))).ToList();
-        return (Nucleotide) possibleNucleotides.GetRndElem(rnd);
-    }
-    public static Nucleotide SampleNucleotide(Random rnd, Nucleotide oldNucleotide)
-    {
-        var iOld = (int)oldNucleotide;
-        var possibleNucleotides = ((IEnumerable<int>) Enum.GetValues(typeof(Nucleotide))).Where(i => i!= iOld).ToList();
-        return (Nucleotide) possibleNucleotides.GetRndElem(rnd);
-    }
+    public static Nucleotide SampleNucleotide(Random rnd) 
+        => (Nucleotide) rnd.Next(4);
+
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
     {
         // Karyotype stores 0-length contigs for contig-ID-preservation, so we need to filter them out
@@ -103,6 +95,7 @@ public static class Sampling
         var idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
         return (idSelected, kar.ContigLen(idSelected));
     }
+    
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();

@@ -10,7 +10,7 @@ public class Simulator
     protected readonly Random Rnd;
     protected readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
     protected int Counter;
-    protected List<GenContents>? GenContents;
+    protected readonly List<GenContents>? GenContents;
 
     public Simulator(
         Random rnd,

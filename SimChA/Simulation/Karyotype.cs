@@ -12,11 +12,13 @@ public class Karyotype
     
     public bool SexXX { get;  }
 
-    public List<GenContents> GenContents = null;
+    public List<GenContents>? GenContents;
+    
     public void SetGenContents(List<GenContents> gc)
     {
         GenContents = gc;
     }
+    
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
     

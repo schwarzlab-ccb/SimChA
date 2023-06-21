@@ -6,69 +6,40 @@ namespace SimChA.EventData;
 public record PointMutationData : ContigEventData
 {
     public long Location { get; set;}
-    public Nucleotide OldNucleotide {get; set;}
-    public Nucleotide NewNucleotide {get; set;}
-    Random Rnd {get;}
-    public SNV SNV;
-    private Dictionary<char, Nucleotide> nucleotideDict = 
-        new Dictionary<char, Nucleotide>() 
-        {
-            {'A', Nucleotide.A},
-            {'C', Nucleotide.C},
-            {'G', Nucleotide.G},
-            {'T', Nucleotide.T}
-        };
+    
+    public SNV SNV { get; private set; }
+    
     public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
         Location = Sampling.GetInternalPos(rnd, contigLen);
-        Rnd = rnd;
+        var newNucleotide = Sampling.SampleNucleotide(rnd);
+        SNV = new SNV(Nucleotide.N, newNucleotide);
     }
 
-    public void SetOldNucleotide(Karyotype kar)
+    private Nucleotide GetOldNucleotide(Karyotype kar)
     {
-        (Region region, long internalLocation) = kar.GetContig(ContigId).FindRegion(Location);
-        var dummySNV = new SNV(Nucleotide.A, Nucleotide.A);
-        // TODO: THIS IS WILDLY UNSAFE, but done for the tests to pass
-        if (kar.GenContents == null)
+        var oldNuc = Nucleotide.N;
+        if (kar.GenContents != null)
         {
-            OldNucleotide = Nucleotide.A;
+            (var region, long internalLocation) = kar.GetContig(ContigId).FindRegion(Location);
+            int index = (int) region.ChrID.ChrNo;
+            char nuc = char.ToUpper(kar.GenContents[index].Sequence[(int) internalLocation]);
+            oldNuc = Enum.Parse<Nucleotide>(nuc.ToString());
         }
-        else if (region.SNVDict == null || !region.SNVDict.TryGetValue(internalLocation, out dummySNV))
-        {
-            int index = (int)region.ChrID.ChrNo;
-            var nuc = Char.ToUpper(kar.GenContents[index].Sequence[(int)internalLocation]);
-            // TODO: What do we do with the 'N' character?
-            if (nuc == 'N')
-            {
-                OldNucleotide = Sampling.SampleNucleotide(Rnd);
-            }
-            else
-            {
-                OldNucleotide = nucleotideDict[nuc];
-            }
-        }
-        else
-        {
-            OldNucleotide = dummySNV.NewNucleotide;
-        }
+        return oldNuc;
     }
-
-    public SNV CreateSNV(Karyotype kar)
-    {
-        SetOldNucleotide(kar);
-        NewNucleotide = Sampling.SampleNucleotide(Rnd, OldNucleotide);
-        return new SNV(OldNucleotide, NewNucleotide);
-    }
+    
     public override void ApplyEvent(Karyotype kar)
     {
-        SNV = CreateSNV(kar);
+        var oldNuc = GetOldNucleotide(kar);
+        SNV = SNV with {OldNucleotide = oldNuc};
         kar.ApplySNV(ContigId, Location, SNV);
     }
 
     public override string ToString()
         => EventType switch
         {
-            CNEventType.SNV => $"contig:{ContigId};location:{Location};old:{OldNucleotide},new:{NewNucleotide}",
+            CNEventType.SNV => $"contig:{ContigId};location:{Location};old:{SNV.OldNucleotide},new:{SNV.NewNucleotide}",
             _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, null)
         };
         

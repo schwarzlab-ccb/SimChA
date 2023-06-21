@@ -126,9 +126,8 @@ public static class RegionOps
     {
         long seekPos = 0;
         var newRegions = new List<Region>();
-        for (int i = 0; i < regions.Count; i++)
+        foreach (var region in regions)
         {
-            var region = regions[i];
             if (pos > seekPos + region.Length) // region before location
             {
                 AddIfNotEmpty(newRegions, region);
@@ -139,11 +138,7 @@ public static class RegionOps
             }
             else // The region we've been looking for
             {
-                Dictionary<long, SNV> newSNVDict = new();
-                if (region.SNVDict != null)
-                {
-                    newSNVDict = region.SNVDict;
-                }
+                var newSNVDict = region.SNVDict ?? new Dictionary<long, SNV>();
                 newSNVDict[region.Start + pos - seekPos] = snvData;
                 var newRegion = region with { SNVDict = newSNVDict };
                 AddIfNotEmpty(newRegions, newRegion);
