@@ -72,7 +72,7 @@ public static class Sampling
             _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
         };
 
-    public static Nucleotide SampleNucleotide(Random rnd) 
+    public static Nucleotide SampleBase(Random rnd) 
         => (Nucleotide) rnd.Next(4);
 
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)

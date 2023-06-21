@@ -12,8 +12,6 @@ public class Karyotype
     
     public bool SexXX { get;  }
 
-    public List<GenContents> GenContents { get; set; }
-    
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
     
@@ -247,9 +245,9 @@ public class Karyotype
             lastWasDeletion = !lastWasDeletion;
         }
     }
-    public void ApplySNV(int contigID, long location, SNV snvData)
+    public void ApplySNV(int contigID, long location, Nucleotide newNucleotide)
     {
         var contig = _contigs[contigID];
-        contig.SNV(location, snvData);
+        contig.SNV(location, newNucleotide);
     }
 }

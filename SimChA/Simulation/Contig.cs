@@ -143,9 +143,9 @@ public class Contig
         => _regions = RegionOps.GlueNeighbours(_regions);
     
    
-    public void SNV(long location, SNV snvData)
+    public void SNV(long location, Nucleotide newNucleotide)
     {
-        _regions = RegionOps.PointMutateRegion(_regions, location, snvData);
+        _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
     }
     
     public (Region region, long internalLocation) FindRegion(long location)
@@ -156,7 +156,7 @@ public class Contig
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
-        foreach ((long start, long end, var chrNo, var _, bool forward) in _regions)
+        foreach ((long start, long end, var chrNo, var _, bool forward, var _) in _regions)
         {
             var geneList = geneLists[chrNo];
             if (forward && geneList.Count > 0)

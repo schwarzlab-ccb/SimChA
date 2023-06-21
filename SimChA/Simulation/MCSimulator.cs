@@ -13,9 +13,8 @@ public class MCSimulator : Simulator
     public MCSimulator(
         Random rnd,
         GenRef genRef,
-        List<GenContents> genContents,
         FitnessParams fitnessParams, 
-        MCParams mCParams) : base(rnd, genRef, genContents)
+        MCParams mCParams) : base(rnd, genRef)
     {
         Fitness = fitnessParams;
         McParams = mCParams;

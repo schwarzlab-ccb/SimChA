@@ -284,7 +284,8 @@ public static class Parsers
                     continue;
                 }
                 Console.WriteLine(chrNo);
-                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("", (int) HGRef.GetChromLen(chrNo))};
+                // TODO: optimize the string builder
+                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("")};
             }
             else if (genContents != null)
             {

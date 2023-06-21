@@ -14,9 +14,11 @@ public class GenRef
     private long XYGenomeLen { get; }
     private long XXGenomeLen { get; }
     
+    public List<GenContents>? GenContentsList { get; }
+
     public Region[] GetGenotype(bool sexXX)
         => sexXX ? XXGenome : XYGenome;
-
+    
     public long GetGenomeLen(bool sexXX)
         => sexXX ? XXGenomeLen : XYGenomeLen;
 
@@ -28,32 +30,36 @@ public class GenRef
 
     public Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists { get; }
 
-    public GenRef(string name, Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex, Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneList)
+    public GenRef(string name, Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex, 
+        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneList, List<GenContents>? genContentsList = null)
     {
         Name = name;
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         AutosomeCount = chrSex.Count(x => x.Value == SexEnum.Both);
         ChrCount = AutosomeCount * 2 + (chrSex.Count - AutosomeCount);
-        var haplotypeOneF = CreateHaplotype(true, true);
-        var haplotypeTwoF = CreateHaplotype(false, true);
-        var haplotypeOneM = CreateHaplotype(true, false);
-        var haplotypeTwoM = CreateHaplotype(false, false);
+        bool useSNV = genContentsList != null;
+        var haplotypeOneF = CreateHaplotype(true, true, useSNV);
+        var haplotypeTwoF = CreateHaplotype(false, true, useSNV);
+        var haplotypeOneM = CreateHaplotype(true, false, useSNV);
+        var haplotypeTwoM = CreateHaplotype(false, false, useSNV);
         XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
         XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
         GeneLists = geneList;
+        GenContentsList = genContentsList;
     }
 
-    private Region GetRegion(ChrNo chrNo, bool isFirstHaplotype = true) => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype);
+    private Region GetRegion(ChrNo chrNo, bool isFirstHaplotype, bool useSNV) => 
+        new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
 
-    private IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale)
+    private IEnumerable<Region> CreateHaplotype(bool isFirstHaplotype, bool isFemale, bool useSNV = false)
     {
         var nonGender = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
         var sexChr = ChrSex.Select(x => x.Key).Where(x =>
             isFirstHaplotype | isFemale ? ChrSex[x] == SexEnum.Female : ChrSex[x] == SexEnum.Male);
         var all = nonGender.Concat(sexChr);
-        return all.Select(num => GetRegion(num, isFirstHaplotype));
+        return all.Select(num => GetRegion(num, isFirstHaplotype, useSNV));
     }
 }

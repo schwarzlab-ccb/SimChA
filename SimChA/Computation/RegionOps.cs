@@ -138,7 +138,7 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
-    public static List<Region> PointMutateRegion(List<Region> regions, long pos, SNV snvData)
+    public static List<Region> PointMutateRegion(List<Region> regions, long pos, Nucleotide newNucleotide)
     {
         long seekPos = 0;
         var newRegions = new List<Region>();
@@ -154,8 +154,8 @@ public static class RegionOps
             }
             else // The region we've been looking for
             {
-                var newSNVDict = region.SNVDict ?? new Dictionary<long, SNV>();
-                newSNVDict[region.Start + pos - seekPos] = snvData;
+                var newSNVDict = region.SNVDict ?? new Dictionary<long, Nucleotide>();
+                newSNVDict[region.Start + pos - seekPos] = newNucleotide;
                 var newRegion = region with { SNVDict = newSNVDict };
                 AddIfNotEmpty(newRegions, newRegion);
             }
