@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Linq;
+using System.Text.RegularExpressions;
+using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;

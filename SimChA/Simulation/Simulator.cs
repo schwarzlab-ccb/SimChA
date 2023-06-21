@@ -10,13 +10,16 @@ public class Simulator
     protected readonly Random Rnd;
     protected readonly GenRef GenRef;
     protected int Counter;
+    protected readonly List<GenContents> GenContents;
 
     public Simulator(
         Random rnd,
-        GenRef genRef)
+        GenRef genRef,
+        List<GenContents> genContents)
     {
         Rnd = rnd;
         GenRef = genRef;
+        GenContents = genContents;
     }
 
     public virtual void SampleEvents(Sample sample)
@@ -37,6 +40,7 @@ public class Simulator
         {
             var childKar = new Karyotype(sample.Kars[node.CloneId]);
             sample.Kars[child.CloneId] = childKar;
+            childKar.GenContents = GenContents;
             var childEvs = new List<CNEventDesc>();
             sample.EventDescs[child.CloneId] = childEvs;
             for (int mutNo = 0; mutNo < child.Distance; mutNo++)

@@ -2,6 +2,7 @@
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
+using SimChA.DataTypes;
 
 namespace SimChA.Simulation;
 
@@ -70,6 +71,19 @@ public static class Sampling
             SexEnum.Male => false,
             _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
         };
+
+    public static Nucleotide SampleNucleotide(Random rnd) 
+        => (Nucleotide) rnd.Next(4);
+
+    public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
+    {
+        // Karyotype stores 0-length contigs for contig-ID-preservation, so we need to filter them out
+        var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0);
+        long totalLength = contigIds.Sum(i => kar.ContigLen(i));
+        var pArray = contigIds.Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
+        var idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
+        return (idSelected, kar.ContigLen(idSelected));
+    }
     
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
@@ -118,6 +132,10 @@ public static class Sampling
             case CNEventType.TICycle:
             case CNEventType.TIBridge:
                 return new TemplatedEventData(rnd, cnEventPars, seq);
+            
+            case CNEventType.SNV:
+                var pointSeq = SampleContigsByLength(rnd, kar);
+                return new PointMutationData(rnd, cnEventPars, pointSeq.id, pointSeq.len);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);

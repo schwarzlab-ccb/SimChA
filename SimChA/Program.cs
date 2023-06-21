@@ -37,6 +37,9 @@ files.WriteSimParams(simParams);
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
+var genContents = options.UseVariants
+    ? FileIO.ReadFasta(options.VariantsFile).ToList()
+    : new List<GenContents>();
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
@@ -47,7 +50,7 @@ else
 {
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
-    var simulator = new Simulator(rnd, genRef);
+    var simulator = new Simulator(rnd, geneLists, genContents);
     if (execMode == ExecMode.Tree)
     {
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
@@ -72,7 +75,7 @@ else
                 throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
             }
 
-            simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
+            simulator = new MCSimulator(rnd, genRef, genContents, simParams.Fitness, simParams.MCParams);
             simulator.SampleEvents(sample);
         }
         else

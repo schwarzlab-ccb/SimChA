@@ -29,6 +29,10 @@ public class Contig
 
     public bool Any()
         => Length() > 0;
+    public List<Region> GetRegions()
+    {
+        return _regions;
+    }
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -137,6 +141,17 @@ public class Contig
 
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);
+    
+   
+    public void SNV(long location, SNV snvData)
+    {
+        _regions = RegionOps.PointMutateRegion(_regions, location, snvData);
+    }
+    
+    public (Region region, long internalLocation) FindRegion(long location)
+    {   
+        return RegionOps.FindRegion(_regions, location);
+    }
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
     {

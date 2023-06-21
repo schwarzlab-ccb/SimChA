@@ -138,7 +138,32 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
-    
+    public static List<Region> PointMutateRegion(List<Region> regions, long pos, SNV snvData)
+    {
+        long seekPos = 0;
+        var newRegions = new List<Region>();
+        foreach (var region in regions)
+        {
+            if (pos > seekPos + region.Length) // region before location
+            {
+                AddIfNotEmpty(newRegions, region);
+            }
+            else if (pos <= seekPos) // region after location
+            {
+                AddIfNotEmpty(newRegions, region);
+            }
+            else // The region we've been looking for
+            {
+                var newSNVDict = region.SNVDict ?? new Dictionary<long, SNV>();
+                newSNVDict[region.Start + pos - seekPos] = snvData;
+                var newRegion = region with { SNVDict = newSNVDict };
+                AddIfNotEmpty(newRegions, newRegion);
+            }
+            seekPos += region.Length;
+        }        
+        return newRegions;
+    }
+
     public static List<Region> GlueNeighbours(List<Region> regions)
     {
         var newRegions = new List<Region>();
@@ -201,4 +226,21 @@ public static class RegionOps
     
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
+
+    public static (Region region, long internalLocation) FindRegion(
+        List<Region> regions, long location)
+    {
+        long seekPos = 0;
+        var region = regions[0];
+        for (int i = 0; i < regions.Count; i++)
+        {
+            region = regions[i];
+            if (location > seekPos && location < seekPos + region.Length)
+            {
+                return (region, region.Start + location - seekPos);
+            }
+            seekPos += region.Length;
+        }
+        throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
+    }
 }

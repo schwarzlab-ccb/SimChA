@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Text.Json;
 using SimChA.DataTypes;
 using SimChA.Simulation;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SimChA.IO;
 
@@ -257,5 +259,41 @@ public static class Parsers
             return SexEnum.Female;
         }
         return SexEnum.Both;
+    }
+    
+    public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
+    {
+        GenContents? genContents = null;
+        while (fastaStream.ReadLine() is { } line)
+        {
+            if (line.StartsWith(";"))
+            {
+                continue;
+            }
+            if (line.StartsWith(">"))
+            {
+                if (genContents != null)
+                {
+                    yield return genContents;
+                }
+                string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
+                var match = Regex.Match(line, pattern);
+                if (match.Value == "" || !Enum.TryParse(match.Value[1..], out ChrNo chrNo))
+                {
+                    genContents = null;
+                    continue;
+                }
+                Console.WriteLine(chrNo);
+                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("", (int)HGRef.GetChromLen(chrNo))};
+            }
+            else if (genContents != null)
+            {
+                genContents.Sequence.Append(line);
+            }
+        }
+        if (genContents != null)
+        {
+            yield return genContents;
+        }
     }
 }

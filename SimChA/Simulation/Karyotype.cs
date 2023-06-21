@@ -11,6 +11,8 @@ public class Karyotype
     public double FitnessVal { get; private set; }
     
     public bool SexXX { get;  }
+
+    public List<GenContents> GenContents { get; set; }
     
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
@@ -77,6 +79,9 @@ public class Karyotype
     
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
+    
+    public List<Contig> GetAllContigs() => _contigs;
+    public Contig GetContig(int contigID) => _contigs[contigID];
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
@@ -241,5 +246,10 @@ public class Karyotype
             }
             lastWasDeletion = !lastWasDeletion;
         }
+    }
+    public void ApplySNV(int contigID, long location, SNV snvData)
+    {
+        var contig = _contigs[contigID];
+        contig.SNV(location, snvData);
     }
 }
