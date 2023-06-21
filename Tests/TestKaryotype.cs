@@ -34,6 +34,7 @@ public class TestKaryotype
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion);
         _dup = new CNEventPars(CNEventType.ChromDuplication);
+        _kar.GenContents = new List<GenContents>();
     }
 
     // Test for each AberrationEnum value
@@ -325,7 +326,7 @@ public class TestKaryotype
         GenContents seqA = new GenContents{ChrNo = ChrNo.chr1, Sequence = new StringBuilder(String.Concat(Enumerable.Repeat("T", (int)lenA)))};
         GenContents seqB = new GenContents{ChrNo = ChrNo.chr2, Sequence = new StringBuilder(String.Concat(Enumerable.Repeat("G", (int)lenB)))};
         _kar = new Karyotype(new List<Contig>{contig}, null, false);
-        _kar.SetGenContents(new List<GenContents>(){seqA, seqB});
+        _kar.GenContents = new List<GenContents> {seqA, seqB};
 
         var eventPars = new CNEventPars(CNEventType.SNV);
         PointMutationData data = new PointMutationData(_rnd, eventPars, 0, contig.Length());

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
@@ -101,5 +102,18 @@ public class TestIO
         Assert.AreEqual(1, clones[2].Distance);
         Assert.AreEqual(1.728, clones[3].FitnessTarget, double.Epsilon * 10);
         
+    }
+
+    [Test]
+    public void TestRegex()
+    {
+        var line = ">chr1";
+        string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
+        var match = Regex.Match(line, pattern);
+        Assert.True(match.Success);
+        Assert.AreEqual(">chr1", match.Value);
+        var parse = Enum.TryParse(match.Value[1..], out ChrNo chrNo);
+        Assert.True(parse);
+        Assert.AreEqual(ChrNo.chr1, chrNo);
     }
 }

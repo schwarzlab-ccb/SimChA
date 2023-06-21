@@ -4,6 +4,7 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SimChA.IO;
 
@@ -196,24 +197,22 @@ public static class Parsers
     
     public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
     {
-        GenContents genContents = null;
-        var idDict = HGFastaIDs.HG38IDs;
+        GenContents? genContents = null;
         while (fastaStream.ReadLine() is { } line)
         {
             if (line.StartsWith(";"))
             {
                 continue;
             }
-
             if (line.StartsWith(">"))
             {
                 if (genContents != null)
                 {
                     yield return genContents;
                 }
-                ChrNo chrNo = ChrNo.chr1;
-                var sub = line.Substring(1, 10);
-                if (!idDict.TryGetValue(line.Substring(1, 10), out chrNo))
+                string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
+                var match = Regex.Match(line, pattern);
+                if (match.Value == "" || !Enum.TryParse(match.Value[1..], out ChrNo chrNo))
                 {
                     genContents = null;
                     continue;
@@ -225,10 +224,10 @@ public static class Parsers
             {
                 genContents.Sequence.Append(line);
             }
-
         }
-        yield return genContents;
+        if (genContents != null)
+        {
+            yield return genContents;
+        }
     }
-    public static List<GenContents> ParseFastaFile(StreamReader fastaStream)
-        => ParseFasta(fastaStream).ToList();
 }

@@ -152,7 +152,7 @@ public class FileIO
         }
     }
 
-    public static List<GenContents> ReadFasta(string filePath)
+    public static IEnumerable<GenContents> ReadFasta(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
@@ -162,7 +162,7 @@ public class FileIO
         try
         {
             var fastaFile = new StreamReader(fileFullPath);
-            return Parsers.ParseFasta(fastaFile).ToList();
+            return Parsers.ParseFasta(fastaFile);
         }
         catch (Exception e)
         {

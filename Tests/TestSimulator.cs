@@ -49,7 +49,7 @@ public class TestSimulator
             _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
 
         listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        var sim = new MCSimulator(_rnd, _fitness, listGenes,_mcParams);
+        var sim = new MCSimulator(_rnd, _fitness, listGenes, new List<GenContents>(), _mcParams);
         double potential = sim.Potential(_kar, 1, events).potential;
         Assert.AreEqual(potential,0.0,EPSILON);
     }
@@ -57,7 +57,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _geneLists);
+        var sim = new Simulator(_rnd, _geneLists, new List<GenContents>());
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)

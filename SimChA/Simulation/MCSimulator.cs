@@ -14,8 +14,9 @@ public class MCSimulator : Simulator
         Random rnd,
         FitnessParams fitnessParams, 
         Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
+        List<GenContents> genContents,
         MCParams mCParams) 
-        : base(rnd, geneLists)
+        : base(rnd, geneLists, genContents)
     {
         Fitness = fitnessParams;
         McParams = mCParams;

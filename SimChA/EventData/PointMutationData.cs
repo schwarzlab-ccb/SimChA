@@ -6,7 +6,6 @@ namespace SimChA.EventData;
 public record PointMutationData : ContigEventData
 {
     public long Location { get; set;}
-    
     public SNV SNV { get; private set; }
     
     public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
@@ -19,7 +18,7 @@ public record PointMutationData : ContigEventData
     private Nucleotide GetOldNucleotide(Karyotype kar)
     {
         var oldNuc = Nucleotide.N;
-        if (kar.GenContents != null)
+        if (kar.GenContents.Any())
         {
             (var region, long internalLocation) = kar.GetContig(ContigId).FindRegion(Location);
             int index = (int) region.ChrID.ChrNo;

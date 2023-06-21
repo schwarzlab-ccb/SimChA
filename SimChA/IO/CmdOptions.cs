@@ -24,7 +24,12 @@ public class CmdOptions
     public string GenesFolder { get; set;}
 
     [Option('M', "mcmc", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
-    public bool UseMCMC {get; set;}
+    public bool UseMCMC { get; set;}
+    
+    [Option('V', "variants", Required = false, Default = "", HelpText = "The FASTA reference file used for SNPs.")]
+    public string VariantsFile { get; set; }
+
+    public bool UseVariants => VariantsFile != "";
 
     public ExecMode ExecMode
     {

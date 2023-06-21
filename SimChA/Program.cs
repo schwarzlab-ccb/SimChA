@@ -38,7 +38,9 @@ files.WriteSimParams(simParams);
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
-var genContents = FileIO.ReadFasta("data/hg38/GCA_000001405.15_GRCh38_genomic.fna").Where(gc => gc != null).ToList();
+var genContents = options.UseVariants
+    ? FileIO.ReadFasta(options.VariantsFile).ToList()
+    : new List<GenContents>();
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
@@ -71,7 +73,7 @@ else
             {
                 throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
             }
-            simulator = new MCSimulator(rnd, simParams.Fitness, geneLists, simParams.MCParams);
+            simulator = new MCSimulator(rnd, simParams.Fitness, geneLists, genContents, simParams.MCParams);
             simulator.SampleEvents(sample);
         }
         else
