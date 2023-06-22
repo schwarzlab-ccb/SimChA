@@ -9,11 +9,11 @@ public static class CopyNumbers
         => genRef.ChrIDsForSex(isFemale)
             .SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
     
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<ChrNo, List<long>> segs, bool isFemale, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool isFemale, bool keepMissing = false) 
         => genRef.ChrIDsForSex(isFemale)
             .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
 
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, ChrNo chrNo, bool keepMissing = false)
+    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, string chrNo, bool keepMissing = false)
     {
         var regionList = curRegs.ToList();
         var starts = regionList.Select(r => r.Start).Append(0).Concat(missing.Select(r => r.Start));
@@ -22,7 +22,7 @@ public static class CopyNumbers
         return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo, keepMissing);
     }
     
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, ChrNo chrNo, bool keepMissing)
+    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing)
     {
         var result = new List<CopyNumber>();
         for (int i = 0; i < segs.Count - 1; i++)
@@ -57,7 +57,7 @@ public static class CopyNumbers
     public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId, bool isFirst)
         => Header(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 
-    public static List<long> GetSegPoints(GenRef genRef, ChrNo chrNo, IList<Karyotype> kars)
+    public static List<long> GetSegPoints(GenRef genRef, string chrNo, IList<Karyotype> kars)
     {
         var segList = new HashSet<long> {0, genRef.ChrLengths[chrNo]};
         foreach (var kar in kars)
@@ -68,6 +68,6 @@ public static class CopyNumbers
         return segList.OrderBy(val => val).ToList();
     }
 
-    public static Dictionary<ChrNo, List<long>> GetSegPoints(GenRef genRef, IList<Karyotype> kars) 
-        => Enum.GetValues<ChrNo>().ToDictionary(chr => chr, chr => GetSegPoints(genRef, chr, kars));
+    public static Dictionary<string, List<long>> GetSegPoints(GenRef genRef, IList<Karyotype> kars) 
+        => genRef.AllChrs.ToDictionary(chr => chr, chr => GetSegPoints(genRef, chr, kars));
 }

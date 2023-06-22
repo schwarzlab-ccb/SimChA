@@ -43,7 +43,7 @@ public class Contig
     public override string ToString()
         => ToString(_regions);
 
-    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo)
+    public IEnumerable<Region> FindRegionsOfChr(string chrNo)
         => _regions.Where(r => r.ChrNo == chrNo);
 
     public void Clear()
@@ -149,7 +149,7 @@ public class Contig
     public (Region region, long internalLocation) FindRegion(long location) 
         => RegionOps.FindRegion(_regions, location);
 
-    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
+    public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
         foreach ((long start, long end, var chrNo, var _, bool forward, var _) in _regions)

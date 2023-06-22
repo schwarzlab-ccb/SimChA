@@ -22,12 +22,12 @@ public class Karyotype
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
 
     private readonly List<Contig> _contigs;
-    private readonly Dictionary<ChrNo, List<GenRange>> _missingRanges;
+    private readonly Dictionary<string, List<GenRange>> _missingRanges;
     
     public Karyotype(GenRef genRef, bool sexXX)
     {
         _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
-        _missingRanges = Enum.GetValues<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
+        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         SexXX = sexXX;
     }
     
@@ -41,9 +41,11 @@ public class Karyotype
     public Karyotype(List<Contig> contigs, List<GenRange> missingList, bool sexXX)
     {
         _contigs = contigs;
-        _missingRanges = Enum.GetValues<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
+        _missingRanges = new Dictionary<string, List<GenRange>>();
         foreach (var range in missingList)
         {
+            if (!_missingRanges.ContainsKey(range.ChrNo))
+                _missingRanges[range.ChrNo] = new List<GenRange>();
             _missingRanges[range.ChrNo].Add(range);
         }
         SexXX = sexXX;
@@ -63,10 +65,10 @@ public class Karyotype
     public long MissingLen()
         => _missingRanges.Sum(r => r.Value.Sum(range => range.Length));
 
-    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
+    public IEnumerable<Region> FindRegionsOfChr(string chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
-    public IList<GenRange> GetMissingOfChr(ChrNo chrNo)
+    public IList<GenRange> GetMissingOfChr(string chrNo)
         => _missingRanges[chrNo];
 
     public static long GetTail(long segLength, Contig contig, bool fiveToThree) 
@@ -81,7 +83,7 @@ public class Karyotype
     public List<Contig> GetAllContigs() => _contigs;
     public Contig GetContig(int contigID) => _contigs[contigID];
 
-    public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
+    public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
 
     public double UpdateFitness(GenRef genRef, FitnessParams fParams)

@@ -26,8 +26,8 @@ public abstract class CNProfile
         
         double fitness = Fitness.Calculate(kar, genRef, fParams);
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.SexXX), kar.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(tsgCNs, kar.SexXX);
-        double og = Fitness.TsgOgTerm(ogCNs, kar.SexXX);
+        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.SexXX);
+        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.SexXX);
         double ess = Fitness.EssTerm(essCNs);
 
         return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, stress, tsg, og, ess);

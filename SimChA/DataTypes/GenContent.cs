@@ -5,6 +5,6 @@ namespace SimChA.DataTypes;
 
 public class GenContents
 {
-    public ChrNo ChrNo {get; set;}
+    public string ChrNo {get; set;}
     public StringBuilder Sequence{get; set;}
 }

@@ -209,9 +209,9 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder)
+    public static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder)
     {
-        var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
+        var geneLists = new Dictionary<GeneListType, Dictionary<string, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
         {
             { GeneListType.TumorSuppressor, TSGS_TSV },
@@ -262,7 +262,7 @@ public class FileIO
         }
     }
     
-    public static (Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex) ReadChromosomes(string folder)
+    public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ReadChromosomes(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
         string assemblyName = Path.GetFileName(folder) ?? throw new Exception($"Failed to parse assembly name from {folder}");
@@ -286,7 +286,7 @@ public class FileIO
         var genContentsList = variantsFile != "" ? ReadFasta(variantsFile).ToList() : null;
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
-        var geneLists = FileIO.ReadGeneLists(dataFolder);
+        var geneLists = ReadGeneLists(dataFolder);
         return new GenRef(refName, chrLengths, chrSex, geneLists, genContentsList);
     }
 }
