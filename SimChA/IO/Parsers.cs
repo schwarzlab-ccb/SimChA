@@ -1,6 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Collections;
+using System.Globalization;
 using System.Text.Json;
-using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using System.Text;
@@ -33,32 +33,21 @@ public static class Parsers
         return res;
     }
 
-    private static Karyotype MakeKaryotype(List<Region> regionsA, List<Region> regionsB, IEnumerable<GenRange> missingRanges, bool sexXX)
-    {
-        regionsA = RegionOps.StitchRegions(regionsA);
-        var contigA = new Contig(regionsA);
-        regionsB = RegionOps.StitchRegions(regionsB);
-        var contigB = new Contig(regionsB);
-        // Add full missing chromosomes
-        var chrPresent = HGRef.ChrIDsForSex(sexXX).ToDictionary(c => c, _ => false);
-        regionsA.ForEach(r => chrPresent[r.ChrNo] = true);
-        regionsB.ForEach(r => chrPresent[r.ChrNo] = true);
-        var missingChrs = chrPresent.Where(pair => !pair.Value).Select(pair => new GenRange(0, HGRef.GetChromLen(pair.Key), pair.Key));
-        var totalMissing = missingChrs.Concat(missingRanges).ToList();
-        return new Karyotype(new List<Contig> {contigA, contigB}, totalMissing, sexXX);
-    }
-    
-    public static Dictionary<string, Karyotype> ParseCNAProfile(TextReader cnaFile)
+    // Expected format is that there is a header and the columns contain:
+    // SampleID, Chr, Start, End, CN hap1, CN hap2
+    // NOTE: This became quite unwieldy due to the missing regions calculation,
+    // however it works so don't refactor unless needed
+    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        bool sexXX = true;
         string lastSample = "";
         var lastChr = ChrNo.chr1;
         long lastPos = 0L;
         cnaFile.ReadLine(); // Skip header
+        var present = Enum.GetValues<ChrNo>().ToDictionary(c => c, _ => false);
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
@@ -66,9 +55,26 @@ public static class Parsers
             // Set the new sample
             if (sample != lastSample)
             {
+                // First is empty
                 if (regionsA.Any() || regionsB.Any())
                 {
-                    result[lastSample] = MakeKaryotype(regionsA, regionsB, missingRanges, sexXX);
+                    // Till the end of a chromosome
+                    if (lastPos != genRef.ChrLengths[lastChr])
+                    {
+                        missingRanges.Add(new GenRange(lastPos, genRef.ChrLengths[lastChr], lastChr));
+                    }
+                    missingRanges.AddRange(
+                        present
+                            .Where(pair => !pair.Value)
+                            .Select(c => new GenRange(0, genRef.ChrLengths[c.Key], c.Key)));
+                    // Consider missing to be haplotypes by default
+                    foreach (var range in missingRanges)
+                    {
+                        regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
+                        regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
+                    }
+                    bool sexXX = !present[ChrNo.chrY];
+                    result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
                 }
                 // Reset
                 regionsA.Clear();
@@ -77,58 +83,81 @@ public static class Parsers
                 lastSample = sample;
                 lastChr = ChrNo.chr1;
                 lastPos = 0L;
-                sexXX = true;
+                foreach (var pair in present)
+                {
+                    present[pair.Key] = false;
+                }
             }
+            try
+            {
+                // Parse the line
+                var chrNo = (ChrNo)Enum.Parse(typeof(ChrNo), lineSplit[1]);
+                present[chrNo] = true;
+                int start = int.Parse(lineSplit[2]) - 1;
+                int end = int.Parse(lineSplit[3]);
+                int cnA = int.Parse(lineSplit[4]);
+                int cnB = int.Parse(lineSplit[5]);
 
-            // Parse the line
-            var chrNo = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[1]);
-            if (chrNo == ChrNo.chrY)
-            {
-                sexXX = false;
-            }
-            int start = int.Parse(lineSplit[2]) - 1;
-            int end = int.Parse(lineSplit[3]);
-            int cnA = int.Parse(lineSplit[4]);
-            int cnB = int.Parse(lineSplit[5]);
-            
-            // Check for missing ranges
-            if (chrNo == lastChr)
-            {
-                // Range skipped
-                if (lastPos != start)
+                // Check for missing ranges
+                if (chrNo == lastChr)
                 {
-                    missingRanges.Add(new GenRange(lastPos, start, lastChr));
+                    // Range skipped
+                    if (lastPos != start)
+                    {
+                        missingRanges.Add(new GenRange(lastPos, start, lastChr));
+                    }
+                }
+                else
+                {
+                    // Till the end of a chromosome
+                    if (lastPos != genRef.ChrLengths[lastChr])
+                    {
+                        missingRanges.Add(new GenRange(lastPos, genRef.ChrLengths[lastChr], lastChr));
+                    }
+                    // Start of a chromosome
+                    if (start != 0)
+                    {
+                        missingRanges.Add(new GenRange(0, start, chrNo));
+                    }
+                }
+                lastChr = chrNo;
+                lastPos = end;
+
+                // Add the new regions
+                for (int i = 0; i < cnA; i++)
+                {
+                    regionsA.Add(new Region(start, end, chrNo, true));
+                }
+                for (int i = 0; i < cnB; i++)
+                {
+                    regionsB.Add(new Region(start, end, chrNo, false));
                 }
             }
-            else
+            catch (Exception e)
             {
-                // Till the end of a chromosome
-                if (lastPos != HGRef.GetChromLen(lastChr))
-                {
-                    missingRanges.Add(new GenRange(lastPos, HGRef.GetChromLen(lastChr), lastChr));
-                }
-                // Start of a chromosome
-                if (start != 0)
-                {
-                    missingRanges.Add(new GenRange(0, start, chrNo));
-                }
-            }
-            lastChr = chrNo;
-            lastPos = end;
-            
-            // Add the new regions
-            for (int i = 0; i < cnA; i++)
-            {
-                regionsA.Add(new Region(start, end, new ChrID(chrNo, true)));
-            }
-            for (int i = 0; i < cnB; i++)
-            {
-                regionsB.Add(new Region(start, end, new ChrID(chrNo, false)));
+                throw new Exception($"Could not parse the CNA profile:\n{line}\n{e.Message}");
             }
         }
-        
+
+        // Till the end of a chromosome
+        if (lastPos != genRef.ChrLengths[lastChr])
+        {
+            missingRanges.Add(new GenRange(lastPos, genRef.ChrLengths[lastChr], lastChr));
+        }
+        missingRanges.AddRange(
+            present
+                .Where(pair => !pair.Value)
+                .Select(c => new GenRange(0, genRef.ChrLengths[lastChr], c.Key)));
+        // Consider missing to be haplotypes by default
+        foreach (var range in missingRanges)
+        {
+            regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
+            regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
+        }
+
         // Add the last sample
-        result[lastSample] = MakeKaryotype(regionsA, regionsB, missingRanges, sexXX);
+        bool sexXX1 = !present[ChrNo.chrY];
+        result[lastSample] = new(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX1);
         return result;
     }
 
@@ -143,7 +172,7 @@ public static class Parsers
             string[] genString = line.Split('\t');
             string name = genString[3];
             double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
-            var chrNum = (ChrNo) Enum.Parse(typeof(ChrNo), genString[0]);
+            var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[0]);
             // Convert to zero-based [start, end) index 
             var region = new GenRange(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrNum);
             var gene = new Gene(name, region, fitness);
@@ -155,23 +184,23 @@ public static class Parsers
         }
         return geneList;
     }
-    
+
     public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness, string sep)
     {
         const string idKey = "ID";
         const string parentIDKey = "ParentID";
         const string distanceKey = "Distance";
         const string fitnessKey = "Fitness";
-        
+
         string? firstLine = cloneStream.ReadLine();
         if (firstLine == null) throw new Exception("CloneIn file is empty.");
         var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
-        var columns = new Dictionary<string, int> {{idKey, -1}, {parentIDKey, -1},  {distanceKey, -1}};
+        var columns = new Dictionary<string, int> { { idKey, -1 }, { parentIDKey, -1 }, { distanceKey, -1 } };
         if (parseFitness)
         {
             columns.Add(fitnessKey, -1);
         }
-        
+
         foreach (var column in columns)
         {
             int idx = header.IndexOf(column.Key);
@@ -193,6 +222,43 @@ public static class Parsers
             cloneFitness.Add(clone);
         }
         return cloneFitness;
+    }
+
+    public static (Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex) ParseChromosomes(string text)
+    {
+        IList<string> lines = text.Split("\n");
+        Dictionary<ChrNo, int> chrLengths = new();
+        Dictionary<ChrNo, SexEnum> chrSex = new();
+        for (var index = 0; index < lines.Count; index++)
+        {
+            string line = lines[index];
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            var chrNo = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[0]);
+            int length = int.Parse(lineSplit[1]);
+            chrLengths.Add(chrNo, length);
+            var sexEnum = GetSexEnum(lines, lineSplit, index);
+            chrSex.Add(chrNo, sexEnum);
+        }
+
+        return (chrLengths, chrSex);
+    }
+
+    private static SexEnum GetSexEnum(IList<string> lines, IReadOnlyList<string> lineSplit, int index)
+    {
+        if (lineSplit.Count > 2)
+        {
+            string sexString = lineSplit[2];
+            return Enum.Parse<SexEnum>(sexString);
+        }
+        if (index == lines.Count - 1)
+        {
+            return SexEnum.Male;
+        }
+        if (index == lines.Count - 2)
+        {
+            return SexEnum.Female;
+        }
+        return SexEnum.Both;
     }
     
     public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
@@ -218,7 +284,8 @@ public static class Parsers
                     continue;
                 }
                 Console.WriteLine(chrNo);
-                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("", (int)HGRef.GetChromLen(chrNo))};
+                // TODO: optimize the string builder
+                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("")};
             }
             else if (genContents != null)
             {

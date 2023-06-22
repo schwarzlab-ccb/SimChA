@@ -9,14 +9,14 @@ public static class Fitness
 {
     public static double Calculate(
         Karyotype karyotype,
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
+        GenRef genRef,
         FitnessParams fParams)
     {
-        var tsgCNs = CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
-        var ogCNs = CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        var essCNs = CalcCNs(geneLists[GeneListType.Essentiality], karyotype);
+        var tsgCNs = CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
+        var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
+        var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
         return 1 
-               + fParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
+               + fParams.Stress * StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen()) 
                + fParams.TsgOg * (TsgOgTerm(ogCNs, karyotype.SexXX) - TsgOgTerm(tsgCNs, karyotype.SexXX)) 
                + fParams.Essentiality * EssTerm(essCNs);
     }
@@ -30,10 +30,19 @@ public static class Fitness
         }
     }
 
+    public static double Sigmoid(double x)
+        => 1 / (1 + Math.Exp(-((x * 1.5 - 1) * 10)));
+
+    public static double Exponential(double x)
+        => Math.Pow(x, 9) * 5;
+
+    public static double Linear(double x)
+        => x;
+
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
-    public static double StressTerm(long baseCount, bool isFemale)
-        => 1 - baseCount / (double) HGRef.GetGenomeLen(isFemale);
+    public static double StressTerm(long refBaseCount, long baseCount)
+        => 1 - baseCount / (double) refBaseCount;
 
     private static double ExpectedCN(ChrNo chrNo, bool sexXX)
         => chrNo switch
@@ -44,7 +53,7 @@ public static class Fitness
         };
     
     public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
-        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * g.gene.DeltaFitness);
+        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness));
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
@@ -54,8 +63,6 @@ public static class Fitness
         var present = karyotype.GetPresentGenes(searched);
         var counts = present.GroupBy(g => g).ToDictionary(g =>g.Key, g => g.Count());
         var allSearched = searched.SelectMany(p => p.Value);
-        var covered = allSearched.Where(g
-            => !karyotype.IsMissing(g.Range) && (karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY));
-        return covered.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
+        return allSearched.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
     }
 }

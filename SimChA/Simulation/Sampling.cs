@@ -17,7 +17,7 @@ public static class Sampling
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen - 2));
 
-    // Get two positions within the contig (boundaries are excluded)
+    // GetDouble two positions within the contig (boundaries are excluded)
     public static long GetInternalPos(Random rnd, long contigLen)
         => rnd.NextInt64(1, Math.Max(1, contigLen - 1));
     
@@ -42,21 +42,10 @@ public static class Sampling
         {
             return stops;
         }
-        if (stops.Count > contigLen)
-        {
-            throw new ArgumentException($"Too many shards ({shardCount}) for contig length {contigLen}");
-        }
         for (int i = 1; i < shardCount; i++)
         {
             long newStop = GetInternalPos(rnd, contigLen);
-            if (stops.Any(s => s == newStop))
-            {
-                i--;
-            }
-            else
-            {
-                stops.Add(newStop);
-            }
+            stops.Add(newStop);
         }
         return stops;
     }
@@ -83,7 +72,7 @@ public static class Sampling
             _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
         };
 
-    public static Nucleotide SampleNucleotide(Random rnd) 
+    public static Nucleotide SampleBase(Random rnd) 
         => (Nucleotide) rnd.Next(4);
 
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)

@@ -12,8 +12,6 @@ public class Karyotype
     
     public bool SexXX { get;  }
 
-    public List<GenContents> GenContents { get; set; }
-    
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
     
@@ -24,12 +22,12 @@ public class Karyotype
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
 
     private readonly List<Contig> _contigs;
-    private readonly List<GenRange> _missingRanges;
+    private readonly Dictionary<ChrNo, List<GenRange>> _missingRanges;
     
-    public Karyotype(bool sexXX)
+    public Karyotype(GenRef genRef, bool sexXX)
     {
-        _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
-        _missingRanges = new List<GenRange>();
+        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _missingRanges = Enum.GetValues<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         SexXX = sexXX;
     }
     
@@ -40,30 +38,36 @@ public class Karyotype
         SexXX = other.SexXX;
     }
     
-    public Karyotype(List<Contig> contigs, List<GenRange> missingRanges, bool sexXX)
+    public Karyotype(List<Contig> contigs, List<GenRange> missingList, bool sexXX)
     {
         _contigs = contigs;
-        _missingRanges = missingRanges;
+        _missingRanges = Enum.GetValues<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
+        foreach (var range in missingList)
+        {
+            _missingRanges[range.ChrNo].Add(range);
+        }
         SexXX = sexXX;
     }
 
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
-    public bool IsMissing(GenRange other)
-        => _missingRanges.Any(range => range.Overlaps(other));
-
+    public void GlueNeighbours()
+    {
+        foreach (var contig in _contigs)
+        {
+            contig.GlueNeighbours();
+        }
+    }
+    
     public long MissingLen()
-        => _missingRanges.Sum(r => r.Length);
-    
-    public double CalcPloidy()
-        => 2.0 * GenomeLen() / HGRef.GetGenomeLen(SexXX);
-    
-    public double CalcCoverage()
-        => (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
-    
+        => _missingRanges.Sum(r => r.Value.Sum(range => range.Length));
+
     public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
+
+    public IList<GenRange> GetMissingOfChr(ChrNo chrNo)
+        => _missingRanges[chrNo];
 
     public static long GetTail(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;
@@ -79,9 +83,9 @@ public class Karyotype
 
     public List<Gene> GetPresentGenes(Dictionary<ChrNo, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
-    
-    public double UpdateFitness(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
-        => FitnessVal = Fitness.Calculate(this, geneLists, fParams);
+
+    public double UpdateFitness(GenRef genRef, FitnessParams fParams)
+        => FitnessVal = Fitness.Calculate(this, genRef, fParams);
     
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
@@ -241,9 +245,9 @@ public class Karyotype
             lastWasDeletion = !lastWasDeletion;
         }
     }
-    public void ApplySNV(int contigID, long location, SNV snvData)
+    public void ApplySNV(int contigID, long location, Nucleotide newNucleotide)
     {
         var contig = _contigs[contigID];
-        contig.SNV(location, snvData);
+        contig.SNV(location, newNucleotide);
     }
 }

@@ -7,7 +7,6 @@ public record SimParams(
     SexEnum Sex,
     int EventCount,
     Distribution Distribution,
-    GenomeAssembly Assembly,
     FitnessParams Fitness,
     List<Signature>? Signatures = null,
     MCParams? MCParams = null);

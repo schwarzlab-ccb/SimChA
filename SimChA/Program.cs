@@ -18,52 +18,50 @@ var options = cmdOptions.Value;
 var execMode = options.ExecMode;
 
 SimParams simParams;
-string configFile = options.ConfigFile;
-if (configFile != "")
+if (options.ConfigFile != "")
 {
-    simParams = FileIO.ReadSimParams(configFile);
+    simParams = FileIO.ReadSimParams(options.ConfigFile);
 }
 else
 {
     int seed = new Random().Next();
     var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fitness);
+    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, fitness);
 }
-HGRef.Assembly = simParams.Assembly;
+
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var geneLists = FileIO.ReadGeneLists(options.GenesFolder, HGRef.Assembly);
+var genRef = FileIO.GetGenRef(options.DataFolder, options.VariantsFile);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
-var genContents = options.UseVariants
-    ? FileIO.ReadFasta(options.VariantsFile).ToList()
-    : new List<GenContents>();
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
-    var profiles = FileIO.ReadProfiles(options.CNProfiles);
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     samples = Simulator.SamplesFromProfiles(profiles);
 }
 else
 {
     var sigs = Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
-    var simulator = new Simulator(rnd, geneLists, genContents);
+    var simulator = new Simulator(rnd, genRef);
     if (execMode == ExecMode.Tree)
     {
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
-        var eventPs = Converters.PropagateSigs(sigs);
+        var (cnEventPs, mixture) = Converters.PropagateSigs(sigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, eventPs);
-        samples = new List<Sample> { treeSample };
+        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
+        samples = new List<Sample> {treeSample};
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs, simParams.Sex);
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs,
+            simParams.Sex);
     }
+
     foreach (var sample in samples)
     {
         // Monte Carlo sampling of copy-number altering events
@@ -73,7 +71,8 @@ else
             {
                 throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
             }
-            simulator = new MCSimulator(rnd, simParams.Fitness, geneLists, genContents, simParams.MCParams);
+
+            simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
             simulator.SampleEvents(sample);
         }
         else
@@ -82,28 +81,30 @@ else
         }
     }
 }
+
 Console.WriteLine("");
 
 // Fitness data
 Console.WriteLine("Computing clone stats:");
-int counter = 1;
-int total = samples.Sum(s => s.Clones.Count);
 foreach (var sample in samples)
 {
+    int counter = 1;
+    int total = sample.Clones.Count;
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, geneLists, simParams.Fitness, sample.Kars);
+        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
     }
 }
-Console.WriteLine("");
 
 try
 {
+    Console.WriteLine("");
     files.WriteSamples(samples);
-    if (execMode != ExecMode.Profiles)
+    files.WriteCopyNumbers(genRef, samples);
+    if (options.CalcConsistentCNs)
     {
-        files.WriteCopyNumbers(samples);
+        files.WriteConsistentCNs(genRef, samples);
     }
     files.WriteClones(samples);
     files.WriteKaryotypes(samples);

@@ -15,7 +15,7 @@ public record ChromoplexyEventData : BaseEventData
     public ChromoplexyEventData(Random rnd, CNEventPars cnEventPars, IReadOnlyList<(int id, long len)> seq) : base(cnEventPars)
     {
         int contigCount = Math.Min(seq.Count, Sampling.GetChromoplexySiteCount(rnd));
-        double size = cnEventPars.Get("Size", 1_000_000L);
+        double size = cnEventPars.GetLong("Size");
         ContigIds = new List<int>();
         Stops = new List<List<long>>(); 
         long totalLen = 0L;
@@ -32,7 +32,7 @@ public record ChromoplexyEventData : BaseEventData
             }
         }
         Sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-        Breakpoints = totalLen > contigCount + 2 ? Sampling.GetStopsForShards(rnd, totalLen, contigCount) : new();
+        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount);
     }
 
     public override void ApplyEvent(Karyotype kar)

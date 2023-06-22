@@ -1,7 +1,7 @@
 ﻿namespace SimChA.DataTypes;
 
-public record CopyNumber(Region Segment, int CNH1, int CNH2, int NSNVs)
+public record CopyNumber(GenRange Segment, int CNH1, int CNH2, int NSNVs)
 {
     public string ToTSV()
-        => string.Join('\t', Segment.ChrID.ChrNo, Segment.Start, Segment.End, CNH1, CNH2, NSNVs);
+        => string.Join('\t', Segment.ChrNo, Segment.Start + 1, Segment.End, CNH1 >= 0 ? CNH1 : "NA", CNH2 >= 0 ? CNH2 : "NA", NSNVs >= 0 ? NSNVs : "NA");
 }

@@ -16,9 +16,21 @@ namespace Tests;
 public class TestFitness
 {
     private const double EPSILON = 0.0000000001;
+
+    private Dictionary<GenomeAssembly, GenRef> _refs;
+
+    [SetUp]
+    public void Setup()
+    {
+        _refs = new Dictionary<GenomeAssembly, GenRef>
+        {
+            [GenomeAssembly.hg19] = FileIO.GetGenRef("./../../../../data/hg19"),
+            [GenomeAssembly.hg38] = FileIO.GetGenRef("./../../../../data/hg38")
+        };
+    }
     
     private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
-        => new($"G{chrNo}", new Region(0, 50, new ChrID(chrNo, false)), deltaFitness);
+        => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
 
     [Test]
     public void TestEssTerm()
@@ -73,26 +85,27 @@ public class TestFitness
     }
     
     [Test]
-    public void TestStressTerm()
+    public void TestStressTerm([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
     {
-        var xxKaryotype = new Karyotype(true);
-        var xyKaryotype = new Karyotype(false);
-        Assert.AreEqual(0, Fitness.StressTerm(xxKaryotype.GenomeLen(), true), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(xyKaryotype.GenomeLen(), false), EPSILON);
-        Assert.AreNotEqual(0, Fitness.StressTerm(xxKaryotype.GenomeLen(), false));
+        var genRef = _refs[genomeAssembly];
+        var xxKaryotype = new Karyotype(genRef, true);
+        var xyKaryotype = new Karyotype(genRef, false);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreNotEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xxKaryotype.GenomeLen()));
         xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(xxKaryotype.GenomeLen(), true), EPSILON);
-        foreach (int i in Enumerable.Range(0, HGRef.CHR_COUNT)) { xyKaryotype.ApplyContigDeletion(i); }
-        Assert.AreEqual(1, Fitness.StressTerm(xyKaryotype.GenomeLen(), false), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
+        Assert.AreEqual(1, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
     }
     
     [Test]
-    public void TestCNCalulation()
+    public void TestCNCalulation([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
         // Seed 14 to get chr1 delete
+        var genRef = _refs[genomeAssembly];
         var rnd = new Random(14);
-        var karyotype = new Karyotype(true);
+        var karyotype = new Karyotype(genRef, true);
         var deletion = new CNEventPars(CNEventType.ChromDeletion, 1);
         var dict = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(t => t, _ => new List<Gene>());
         dict[ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.01));
@@ -104,34 +117,57 @@ public class TestFitness
     }
 
     [Test]
-    public void TestCalculate()
+    public void TestCalculate([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
     {
-        HGRef.Assembly = GenomeAssembly.hg19;
-        var karyotype = new Karyotype(true);
+        var genRef = _refs[genomeAssembly];
+        var karyotype = new Karyotype(genRef, true);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        //var listGenes = new List<Dictionary<ChrNo, List<Gene>>>();
-        var listGenes = Enum.GetValues(typeof(GeneListType)).Cast<GeneListType>().ToDictionary(
-            t => t,
-            _ => Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToDictionary(chrNo => chrNo, _ => new List<Gene>()));
-
-        listGenes[GeneListType.Oncogene][ChrNo.chr1].Add(MakeGene(ChrNo.chr1, 0.001));
-        Assert.AreEqual(1, Fitness.Calculate(karyotype, listGenes, fit), EPSILON);
-
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
     }
 
     [Test]
     public void TestReferenceFitness([Values] bool sexXX, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly, [Values(-1, 0, 1)] int myInt)
     {
-        const string dataPath = "./../../../../data";
-        HGRef.Assembly = genomeAssembly;
-        var geneLists = FileIO.ReadGeneLists(dataPath, genomeAssembly);
-        HGRef.Assembly = genomeAssembly;
-        var karyotype = new Karyotype(sexXX);
-        var tsgCNs = Fitness.CalcCNs(geneLists[GeneListType.TumorSuppressor], karyotype);
+        var genRef = _refs[genomeAssembly];
+        var karyotype = new Karyotype(genRef, sexXX);
+        var tsgCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
         double tsg = Fitness.TsgOgTerm(tsgCNs, sexXX);
-        var ogsCNs = Fitness.CalcCNs(geneLists[GeneListType.Oncogene], karyotype);
-        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);
-        Console.WriteLine($"sex: {sexXX}, assembly: {genomeAssembly}, TSG: {tsg}, OG: {og}");
+        Assert.AreEqual(0, tsg, EPSILON);
+        var ogsCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
+        double og = Fitness.TsgOgTerm(ogsCNs, sexXX);;
+        Assert.AreEqual(0, og, EPSILON);
+    }
+
+
+    [Test]
+    public void TestGetPresentGenes([Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        var genRef = _refs[genomeAssembly];
+        var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        var contigs = genRef.GetGenotype(false).Select(region => new Contig(region)).ToList();
+        foreach (ChrNo chrNo in Enum.GetValues(typeof(ChrNo)))
+        {
+            int chrToCont = chrNo != ChrNo.chrY ? (int)chrNo : 45;
+            int contigCount = contigs[chrToCont].GetPresentGenes(selectList).Count;
+            int chrCount = selectList[chrNo].Count;
+            Assert.AreEqual(chrCount, contigCount);
+        }
+    }
+    
+    [Test]
+    public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    {
+        var genRef = _refs[genomeAssembly];
+        var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        double sumHap1 = selectList.Where(pair => pair.Key != ChrNo.chrY).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
+        var missingChr = sexXX ? ChrNo.chrY : ChrNo.chrX;
+        double sumHap2 = selectList.Where(pair => pair.Key != missingChr).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
+        double total = sumHap1 + sumHap2;
+        var karyotype = new Karyotype(genRef, sexXX);
+        karyotype.ApplyWGD();
+        var cnList = Fitness.CalcCNs(selectList, karyotype);
+        double sum = Fitness.TsgOgTerm(cnList, sexXX);
+        Assert.AreEqual(total, sum, EPSILON);
     }
 }

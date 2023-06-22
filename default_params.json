@@ -69,7 +69,8 @@
           "Type": "Translocation",
           "Prob": 4,
           "Pars": {
-            "Size": 100000000
+            "Size": 100000000,
+            "PInv": 0.5
           }
         },
         {

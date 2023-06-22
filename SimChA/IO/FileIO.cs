@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Text;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -9,16 +8,24 @@ namespace SimChA.IO;
 
 public class FileIO
 {
+    // data
+    private const string CHROMOSOMES_TSV = "chromosomes.tsv";
+    private const string ESSENTIALS_TSV = "essentials.tsv";
+    private const string OGS_TSV = "ogs.tsv";
+    private const string TSGS_TSV = "tsgs.tsv";
+    
+    // input
+    private const string SIM_PARAMS_FILENAME = "sim_params.json";
+    
+    // output
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
+    private const string CONSISTENT_CNS_FILENAME = "consistent_CNs.tsv";
     private const string SNVCOPYNUMBERS_FILENAME = "snv_copynumbers.tsv";
-    private const string SIM_PARAMS_FILENAME = "sim_params.json";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
-    private const string ESSENTIALS_TSV = "essentials.tsv";
-    private const string OGS_TSV = "OGs.tsv";
-    private const string TSGS_TSV = "TSGs.tsv";
+    
     private string Timestamp { get; }
     private string OutFolder { get; }
 
@@ -31,13 +38,6 @@ public class FileIO
         if (!Directory.Exists(OutFolder))
         {
             Directory.CreateDirectory(OutFolder);
-        }
-        else
-        {
-            foreach (string file in Directory.EnumerateFiles(OutFolder))
-            {
-                File.Delete(file);
-            }
         }
     }
 
@@ -53,24 +53,46 @@ public class FileIO
         }
     }
     
-    public void WriteCopyNumbers(IEnumerable<Sample> samples)
+    public void WriteConsistentCNs(GenRef genRef, IList<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CONSISTENT_CNS_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        
+        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
+
+        var segs = CopyNumbers.GetSegPoints(genRef , samples.SelectMany(s => s.Kars.Values).ToList());
+        
+        foreach (var sample in samples)
+        {
+            foreach (var clone in sample.Clones)
+            {
+                var kar = sample.Kars[clone.CloneId];
+                var cns = CopyNumbers.CalcCopyNumbers(genRef, kar, segs, sample.SexXX, true);
+                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
+            }
+        }
+    }
+    
+    public void WriteCopyNumbers(GenRef genRef, IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        
         outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\tn_snv");
 
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
-                var cns = CopyNumbers.CalcCopyNumbers(sample.Kars[clone.CloneId], sample.SexXX);
+                var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.SexXX);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
     }
+
     public void WriteSimParams(SimParams simParams)
     {
         string filePath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
@@ -194,9 +216,7 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(
-        string folder,
-        GenomeAssembly assembly)
+    public static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> ReadGeneLists(string folder)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
@@ -207,7 +227,7 @@ public class FileIO
         };
         foreach ((var key, string filename) in fileMap)
         {
-            string filePath = Path.Combine(folder, assembly.ToString(), filename);
+            string filePath = Path.Combine(folder, filename);
             string fileFullPath = Path.GetFullPath(filePath);
             if (!File.Exists(fileFullPath))
             {
@@ -226,7 +246,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static Dictionary<string, Karyotype> ReadProfiles(string cnaProfile)
+    public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -236,11 +256,44 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            return Parsers.ParseCNAProfile(cnaFile);
+            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile);
+            foreach (var pro in profiles)
+            {
+                pro.Value.GlueNeighbours();
+            }
+            return profiles;
         }
         catch (Exception e)
         {
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
+    }
+    
+    public static (Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex) ReadChromosomes(string folder)
+    {
+        string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
+        string assemblyName = Path.GetFileName(folder) ?? throw new Exception($"Failed to parse assembly name from {folder}");
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            string fileContent = File.ReadAllText(fileFullPath);
+            return Parsers.ParseChromosomes(fileContent);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
+    public static GenRef GetGenRef(string dataFolder, string variantsFile = "")
+    {
+        var genContentsList = variantsFile != "" ? ReadFasta(variantsFile).ToList() : null;
+        string refName = Path.GetFileName(dataFolder);
+        var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
+        var geneLists = FileIO.ReadGeneLists(dataFolder);
+        return new GenRef(refName, chrLengths, chrSex, geneLists, genContentsList);
     }
 }

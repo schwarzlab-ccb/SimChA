@@ -11,6 +11,7 @@ using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
+using NUnit.Framework;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Tests;
@@ -18,6 +19,15 @@ namespace Tests;
 [TestFixture]
 public class TestIO
 {
+    private GenRef _genRef;
+    
+    [SetUp]
+    public void Setup()
+    {
+        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
+    }
+
+    
     [Test]
     public void TestContig()
     {
@@ -29,7 +39,7 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
-        var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, GenomeAssembly.hg38, fit, null, null);
+        var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, fit, null, null);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         Console.WriteLine(serialized);
@@ -52,8 +62,6 @@ public class TestIO
         Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events.First().Type);
         res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Pars"": {""Mean"": 0.1}}]}]}");
         Assert.AreEqual(0.1, res.Signatures!.First().Events.First().Pars!["Mean"], 0.000001);
-        res = Parsers.ParseSimParams(@"{""Assembly"":""hg38""}");
-        Assert.AreEqual(GenomeAssembly.hg38, res.Assembly);
     }
 
     [Test]
@@ -80,10 +88,10 @@ public class TestIO
     {
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
-        var kar = new Karyotype(false);
-        var ceParams = new Dictionary<string, double> {{"Size", 2000000}};
+        var kar = new Karyotype( _genRef, false);
+        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
         var rnd = new Random(48);
-        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, ceParams));
+        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, pars));
         var clone = new CloneIn(1, -1, 0, 1);
     }
 
@@ -95,7 +103,7 @@ public class TestIO
                                  "1,0,1,149897,0,339690,2,0,1.44,0.8619\n" +
                                  "5,1,1,310270,0,426497,3,0,1.728,0.3025\n" +
                                  "6,1,1,423957,0,583948,3,0,1.728,0.4133";
-        var clones = Parsers.ParseClones(new StringReader(clonesStr), true);
+        var clones = Parsers.ParseClones(new StringReader(clonesStr), true, ",");
         Assert.AreEqual(4, clones.Count);
         Assert.AreEqual(0, clones[0].CloneId);
         Assert.AreEqual(0, clones[1].ParentId);
@@ -105,15 +113,29 @@ public class TestIO
     }
 
     [Test]
-    public void TestRegex()
+    public void TestParseCNAProfiles()
     {
-        var line = ">chr1";
-        string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
-        var match = Regex.Match(line, pattern);
-        Assert.True(match.Success);
-        Assert.AreEqual(">chr1", match.Value);
-        var parse = Enum.TryParse(match.Value[1..], out ChrNo chrNo);
-        Assert.True(parse);
-        Assert.AreEqual(ChrNo.chr1, chrNo);
+        const string Profiles = @"sample_id	chrom	start	end	cn_a	cn_b
+1	chr1	1	249250621	1	1
+1	chr2	13133	2429856	0	0
+1	chr3	62226	171636043	2	3
+2	chrX	2	6	1	0
+2	chrY	3	4	0	1";
+        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(Profiles));
+        Assert.AreEqual(2, profiles.Count);
+        Assert.AreEqual(2, profiles["1"].CountContigs());
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr1).Count()); // 2 existing
+        Assert.AreEqual(4, profiles["1"].FindRegionsOfChr(ChrNo.chr2).Count()); // 4 missing (split by null regions)
+        Assert.AreEqual(9, profiles["1"].FindRegionsOfChr(ChrNo.chr3).Count()); // 5 existing + 4 missing
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr4).Count()); // 2 missing
+        Assert.AreEqual(false, profiles["2"].SexXX);
+    }
+    
+    [Test]
+    public void TestParseChromFile()
+    {
+        Assert.AreEqual("hg19", _genRef.Name);
+        Assert.AreEqual(22, _genRef.AutosomeCount);
+        Assert.AreEqual(46, _genRef.ChrCount);
     }
 }

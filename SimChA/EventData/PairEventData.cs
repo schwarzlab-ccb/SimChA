@@ -20,8 +20,7 @@ public record PairEventData : BaseEventData
         PosA = Sampling.GetInternalPos(rnd, lenA);
         ContigIdB = contigB;
         PosB = Sampling.GetInternalPos(rnd, lenB);
-        double invProb = cnEventPars.Get("InvProb", 0.0);
-        Inverted = invProb != 0.0 && rnd.CoinFlip(invProb);
+        Inverted = rnd.CoinFlip();
     }
     
     public override void ApplyEvent(Karyotype kar)

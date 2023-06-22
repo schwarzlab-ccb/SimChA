@@ -7,7 +7,7 @@ namespace SimChA.DataTypes;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SexEnum
 {
-    Both,
     Female,
-    Male
+    Male,
+    Both
 }

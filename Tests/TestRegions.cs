@@ -15,7 +15,7 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
-        _cRegion = HGRef.GetGenotype(true)[0];
+        _cRegion = new Region(0, 249250621, ChrNo.chr1, true, true);
     }
 
     [Test]
@@ -64,6 +64,19 @@ public class TestRegions
         regions = RegionOps.DeleteRange(regions, -1000, _cRegion.Length);
         Console.WriteLine(Contig.ToString(regions));
         Assert.AreEqual(0, Contig.Length(regions));
+    }
+    
+    [Test]
+    public void TestDeleteInverted()
+    {
+        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var newRegions = RegionOps.DeleteRange(regions, 1000, 2000);
+        Assert.AreEqual(1000, newRegions[0].Length);
+        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].Length);
+        Assert.AreEqual(_cRegion.Length - 1000, newRegions[0].Start);
+        Assert.AreEqual(_cRegion.Length, newRegions[0].End);
+        Assert.AreEqual(0, newRegions[1].Start);
+        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].End);
     }
 
     [Test]
@@ -117,20 +130,34 @@ public class TestRegions
         };
         Assert.AreEqual(res, RegionOps.CopyRange(regions, 1, 3));
     }
-    
+
+    [Test]
+    public void TestCopyInverted()
+    {
+        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        // Start and end within a region
+        var regCopy = RegionOps.CopyRange(regions, 1000, 2000);
+        Assert.AreEqual(1, regions.Count);
+        Assert.AreEqual(1000, regCopy[0].Length);
+        Assert.AreEqual(_cRegion.Length - 2000, regCopy[0].Start);
+        Assert.AreEqual(_cRegion.Length - 1000, regCopy[0].End);
+    }
+
     [Test]
     public void TestSplit()
     {
         var regions = new List<Region> { _cRegion };
         
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
+        Assert.AreEqual(2000, before[0].Length);
         Assert.AreEqual(regions[0]  with { End = 2000}, before[0]);
         Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
 
         regions = RegionOps.InvertRegions(regions);
         (before, after) = RegionOps.SplitRegions(regions, 2000);
-        Assert.AreEqual(regions[0] with { End = 2000}, before[0]);
-        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
+        Assert.AreEqual(2000, before[0].Length);
+        Assert.AreEqual(regions[0] with { Start = _cRegion.Length - 2000}, before[0]);
+        Assert.AreEqual(regions[0] with { End = _cRegion.Length - 2000}, after[0]);
     }
     
     [Test]

@@ -17,7 +17,6 @@ public static class Validators
             case CNEventType.SNV:
                 break;
                 
-            case CNEventType.Translocation:
             case CNEventType.BreakageFusionBridge:
             case CNEventType.TailDeletion:
             case CNEventType.InternalDeletion:
@@ -25,10 +24,11 @@ public static class Validators
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
             case CNEventType.Chromothripsis:
+            case CNEventType.Translocation:
                 if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
                 break;
-
+            
             case CNEventType.Chromoplexy:
             case CNEventType.TIChain:
             case CNEventType.TIBridge:

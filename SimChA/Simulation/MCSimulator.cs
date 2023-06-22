@@ -12,11 +12,9 @@ public class MCSimulator : Simulator
     
     public MCSimulator(
         Random rnd,
+        GenRef genRef,
         FitnessParams fitnessParams, 
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists,
-        List<GenContents> genContents,
-        MCParams mCParams) 
-        : base(rnd, geneLists, genContents)
+        MCParams mCParams) : base(rnd, genRef)
     {
         Fitness = fitnessParams;
         McParams = mCParams;
@@ -30,7 +28,7 @@ public class MCSimulator : Simulator
         }
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(sample.SexXX);
+        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
     
@@ -44,7 +42,7 @@ public class MCSimulator : Simulator
             eventData.ApplyEvent(kar);
             eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
         }
-        double dFit = kar.UpdateFitness(GeneLists, Fitness) - targetFit;
+        double dFit = kar.UpdateFitness(GenRef, Fitness) - targetFit;
         // Variable to immediately quit the MC Sampling if we've reached enough accuracy
         bool accept = Math.Abs(dFit / targetFit) < McParams.ThresholdFit;
 
@@ -118,7 +116,7 @@ public class MCSimulator : Simulator
                     Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
                     var eventData = bestEvents[mutNo];
                     eventData.ApplyEvent(childKar);
-                    double newFitness = childKar.UpdateFitness(GeneLists, Fitness);
+                    double newFitness = childKar.UpdateFitness(GenRef, Fitness);
                     double dFit = newFitness - oldFitness;
                     var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit,
                         newFitness);
