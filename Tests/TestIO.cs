@@ -138,4 +138,17 @@ public class TestIO
         Assert.AreEqual(22, _genRef.AutosomeCount);
         Assert.AreEqual(46, _genRef.ChrCount);
     }
+
+    [Test]
+    public void TestParseFasta()
+    {
+        const string sequence = 
+            @"ACTGACTGACTGACTG";
+        const string fasta = @$">chr1
+{sequence}";
+    
+        var genContents = Parsers.ParseFasta(new StringReader(fasta)).ToList();
+        Assert.AreEqual(1, genContents.Count);
+        Assert.AreEqual(sequence, genContents[0].Sequence.ToString());
+    }
 }

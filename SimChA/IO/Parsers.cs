@@ -261,7 +261,7 @@ public static class Parsers
         return SexEnum.Both;
     }
     
-    public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
+    public static IEnumerable<GenContents> ParseFasta(TextReader fastaStream)
     {
         GenContents? genContents = null;
         while (fastaStream.ReadLine() is { } line)
@@ -283,7 +283,6 @@ public static class Parsers
                     genContents = null;
                     continue;
                 }
-                Console.WriteLine(chrNo);
                 // TODO: optimize the string builder
                 genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("")};
             }
