@@ -59,7 +59,7 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         
-        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b");
+        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\tn_snvs");
 
         var segs = CopyNumbers.GetSegPoints(genRef , samples.SelectMany(s => s.Kars.Values).ToList());
         
@@ -160,7 +160,7 @@ public class FileIO
     {
         string fileFullPath = Path.GetFullPath(filePath);
         string fileFormat = filePath.Substring(filePath.Length - 3);
-        if (fileFormat != "tsv" || fileFormat != "csv")
+        if (fileFormat != "tsv" && fileFormat != "csv")
         {
             throw new Exception($"File {filePath} should be a tsv or csv.");
         }
