@@ -138,26 +138,22 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
-    public static List<Region> PointMutateRegion(List<Region> regions, long pos, Nucleotide newNucleotide)
+    public static List<Region> PointMutateRegion(List<Region> regions, long location, Nucleotide newNucleotide)
     {
         long seekPos = 0;
         var newRegions = new List<Region>();
         foreach (var region in regions)
         {
-            if (pos > seekPos + region.Length) // region before location
-            {
-                AddIfNotEmpty(newRegions, region);
-            }
-            else if (pos <= seekPos) // region after location
-            {
-                AddIfNotEmpty(newRegions, region);
-            }
-            else // The region we've been looking for
+            if (location >= seekPos && location < seekPos + region.Length)
             {
                 var newSNVDict = region.SNVDict ?? new Dictionary<long, Nucleotide>();
-                newSNVDict[region.Start + pos - seekPos] = newNucleotide;
+                newSNVDict[region.Start + location - seekPos] = newNucleotide;
                 var newRegion = region with { SNVDict = newSNVDict };
                 AddIfNotEmpty(newRegions, newRegion);
+            }
+            else
+            {
+                AddIfNotEmpty(newRegions, region);
             }
             seekPos += region.Length;
         }        
@@ -235,7 +231,7 @@ public static class RegionOps
         for (int i = 0; i < regions.Count; i++)
         {
             region = regions[i];
-            if (location > seekPos && location < seekPos + region.Length)
+            if (location >= seekPos && location < seekPos + region.Length)
             {
                 return (region, region.Start + location - seekPos);
             }

@@ -192,4 +192,45 @@ public class TestRegions
         Console.WriteLine(Contig.ToString(regions));
         Assert.AreEqual(_cRegion.Length * 4, Contig.Length(regions));
     }
+
+    [Test]
+    public void TestPointMutateRegion()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3 },
+            _cRegion with { Start = 3, End = 4 }
+        };
+        var location = 2;
+        var newNucleotide = Nucleotide.A;
+        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        Assert.AreEqual(regions[0], mutatedRegions[0]);
+        Assert.AreEqual(regions[1], mutatedRegions[1]);
+        Assert.AreNotEqual(regions[2], mutatedRegions[2]);
+        Assert.AreEqual(regions[3], mutatedRegions[3]);
+
+        Assert.NotNull(mutatedRegions[2].SNVDict);
+        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVDict[location]);
+
+    }
+
+    [Test]
+    public void TestFindRegion()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3 },
+            _cRegion with { Start = 3, End = 4 }
+        };
+        var location = 2;
+        (var region, var internalLocation) = RegionOps.FindRegion(regions, location);
+
+        Assert.AreEqual(regions[2], region);
+        Assert.AreEqual(location, internalLocation);
+
+    }
 }
