@@ -15,18 +15,14 @@ namespace Tests;
 [TestFixture]
 public class TestFitness
 {
-    private const double EPSILON = 0.0000000001;
+    public const double EPSILON = 0.0000000001;
 
-    private Dictionary<GenomeAssembly, GenRef> _refs;
+    private List<GenRef> _refs;
 
     [SetUp]
     public void Setup()
     {
-        _refs = new Dictionary<GenomeAssembly, GenRef>
-        {
-            [GenomeAssembly.hg19] = FileIO.GetGenRef("./../../../../data/hg19"),
-            [GenomeAssembly.hg38] = FileIO.GetGenRef("./../../../../data/hg38")
-        };
+        _refs = new List<GenRef> { FileIO.GetGenRef(TestIO.HG_19_PATH), FileIO.GetGenRef(TestIO.HG_38_PATH) };
     }
     
     private static Gene MakeGene(string chrNo, double deltaFitness)
@@ -51,9 +47,9 @@ public class TestFitness
     }
 
     [Test]
-    public void TestTsgOgTerm([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    public void TestTsgOgTerm([Values(0,1)] int refId)
     {
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), true));
         
         var testNoEffect = new List<(Gene, int)> {(MakeGene("chr1", 0), 0)};
@@ -86,9 +82,9 @@ public class TestFitness
     }
     
     [Test]
-    public void TestStressTerm([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    public void TestStressTerm([Values(0,1)] int refId)
     {
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         var xxKaryotype = new Karyotype(genRef, true);
         var xyKaryotype = new Karyotype(genRef, false);
         Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
@@ -101,10 +97,10 @@ public class TestFitness
     }
     
     [Test]
-    public void TestCNCalulation([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    public void TestCNCalulation([Values(0,1)] int refId)
     {
         // Seed 14 to get chr1 delete
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         var rnd = new Random(14);
         var karyotype = new Karyotype(genRef, true);
         var deletion = new CNEventPars(CNEventType.ChromDeletion, 1);
@@ -118,9 +114,9 @@ public class TestFitness
     }
 
     [Test]
-    public void TestCalculate([Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    public void TestCalculate([Values(0,1)] int refId)
     {
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, true);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
@@ -128,9 +124,9 @@ public class TestFitness
     }
 
     [Test]
-    public void TestReferenceFitness([Values] bool sexXX, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly, [Values(-1, 0, 1)] int myInt)
+    public void TestReferenceFitness([Values] bool sexXX, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
     {
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sexXX);
         var tsgCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
         double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, sexXX);
@@ -141,9 +137,9 @@ public class TestFitness
     }
 
     [Test]
-    public void TestGetPresentGenes([Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    public void TestGetPresentGenes([Values] bool useTSG, [Values(0,1)] int refId)
     {
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
         var contigs = genRef.GetGenotype(false).Select(region => new Contig(region)).ToList();
         foreach (string chrNo in genRef.AllChrs)
@@ -156,9 +152,9 @@ public class TestFitness
     }
     
     [Test]
-    public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(GenomeAssembly.hg19, GenomeAssembly.hg38)] GenomeAssembly genomeAssembly)
+    public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(0,1)] int refId)
     {
-        var genRef = _refs[genomeAssembly];
+        var genRef = _refs[refId];
         var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
         double sumHap1 = selectList.Where(pair => pair.Key != "chrY").Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
         string missingChr = sexXX ? "chrY" : "chrX";

@@ -58,12 +58,12 @@ public class TestIO
         res = Parsers.ParseSimParams(@"{""EventCount"": 10, ""Distribution"": ""Normal""}");
         Assert.AreEqual(10, res.EventCount);
         Assert.AreEqual(Distribution.Normal, res.Distribution);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1}]}");
-        Assert.AreEqual(1, res.Signatures!.First().Prob, 0.000001);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""WholeGenomeDoubling"", ""Prob"": 0.1}]}]}");
-        Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events.First().Type);
-        res = Parsers.ParseSimParams(@"{""Signatures"": [{""Name"": ""test"", ""Prob"": 1, ""Events"": [{""Type"": ""InternalInversion"", ""Prob"": 0.1, ""Pars"": {""Mean"": 0.1}}]}]}");
-        Assert.AreEqual(0.1, res.Signatures!.First().Events.First().Pars!["Mean"], 0.000001);
+        res = Parsers.ParseSimParams(@"{""Signatures"": {""test"" : { ""Prob"": 1 }}}");
+        Assert.AreEqual("test", res.Signatures!.First().Key);
+        Assert.AreEqual(1, res.Signatures!.First().Value.Prob, 0.000001);
+        res = Parsers.ParseSimParams(@"{""Signatures"": {""test"" : {""Prob"": 1, ""Events"": [{""Type"": ""WholeGenomeDoubling"", ""Prob"": 0.1}]}}}");
+        Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Value.Events.First().Type);
+        Assert.AreEqual(0.1, res.Signatures!.First().Value.Events.First().Prob, TestFitness.EPSILON);
     }
 
     [Test]
@@ -91,9 +91,8 @@ public class TestIO
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
         var kar = new Karyotype( _genRef, false);
-        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
         var rnd = new Random(48);
-        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, pars));
+        TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, 1_000_000, 10));
         var clone = new CloneIn(1, -1, 0, 1);
     }
 

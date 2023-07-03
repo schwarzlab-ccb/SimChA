@@ -54,8 +54,7 @@ public class TestCopyNumbers
         for (int i = 0; i < 100; i++)
         {
             TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Translocation, 1));
-            var invParams = new Dictionary<string, double> { {"Size", 1_000_000 } };
-            TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1, invParams));
+            TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1, 1_000_000));
         }
         var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
         var ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);

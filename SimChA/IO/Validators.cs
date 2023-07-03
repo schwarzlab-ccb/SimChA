@@ -25,8 +25,8 @@ public static class Validators
             case CNEventType.InvertedDuplication:
             case CNEventType.Chromothripsis:
             case CNEventType.Translocation:
-                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
+                if (cnEventPars.Size <= 0) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
                 break;
             
             case CNEventType.Chromoplexy:
@@ -35,10 +35,10 @@ public static class Validators
             case CNEventType.TICycle:
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
-                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Size")) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Pars\": {{\"Size\": 1000000}}");
-                if (cnEventPars.Pars == null || !cnEventPars.Pars.ContainsKey("Frag")) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Frag parameter. E.g. \"Pars\": {{\"Frag\": 10}}");
+                if (cnEventPars.Size <= 0) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
+                if (cnEventPars.Frag <= 0) 
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Frag\": 5");
                 break;
             
             default:
@@ -47,28 +47,23 @@ public static class Validators
     }
     
     // Removes signatures with probability <=0 and validates the rest
-    public static List<Signature> ValidateSignatures(List<Signature>? signatures)
+    public static void ValidateSignatures(Dictionary<string, Signature> signatures)
     {
-        if (signatures is null || signatures.Count == 0)
+        foreach (var sig in signatures.Where(sig => sig.Value.Prob > 0 && sig.Value.Events.Any(e => e.Prob > 0)))
         {
-            throw new Exception("No signatures were provided.");
-        }
-        foreach (var sig in signatures.Where(sig => sig.Prob > 0 && sig.Events.Any(e => e.Prob > 0)))
-        {
-            if (sig.Events is null || sig.Events.Count == 0)
+            if (sig.Value.Events is null || sig.Value.Events.Count == 0)
             {
-                throw new Exception($"Signature {sig.Id} does not have any events.");
+                throw new Exception($"Signature {sig.Key} does not have any events.");
             }
-            double probSum = sig.Events.Sum(e => e.Prob);
+            double probSum = sig.Value.Events.Sum(e => e.Prob);
             if (probSum <= 0)
             {
-                throw new Exception($"Signature {sig.Id} has a total probability of {probSum}.");
+                throw new Exception($"Signature {sig.Key} has a total probability of {probSum}.");
             }
-            foreach(var cnEventP in sig.Events)
+            foreach(var cnEventP in sig.Value.Events)
             {
                 ValidateEvent(cnEventP);
             }
         }
-        return signatures;
     }
 }
