@@ -158,7 +158,11 @@ public class FileIO
 
                 foreach (var snv in finalSNVs)
                 {
-                    string refBase = "A";
+                    if (genRef.GenContentsList == null)
+                    {
+                        throw new Exception("Genomic Content hasn't been set correctly to allow SNV list to be created");
+                    }
+                    char refBase = genRef.GenContentsList[int.Parse(snv.chrNo)].Sequence[(int)snv.location];
                     outputFile.WriteLine($"{sampleName}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
                 }
             }
