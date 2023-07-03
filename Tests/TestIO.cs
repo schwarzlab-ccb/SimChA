@@ -11,6 +11,7 @@ using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using System.Text;
 
 namespace Tests;
 
@@ -147,8 +148,9 @@ public class TestIO
             @"ACTGACTGACTGACTG";
         const string fasta = @$">chr1
 {sequence}";
-    
-        var genContents = Parsers.ParseFasta(new StringReader(fasta)).ToList();
+        byte[] byteArray = Encoding.UTF8.GetBytes(fasta);
+        MemoryStream stream = new MemoryStream(byteArray);
+        var genContents = Parsers.ParseFasta(new StreamReader(stream)).ToList();
         Assert.AreEqual(1, genContents.Count);
         Assert.AreEqual(sequence, genContents[0].Sequence.ToString());
     }
