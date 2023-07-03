@@ -146,28 +146,25 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), VCF_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        // TODO: Check all the columns. Do we need the header information?
+        // TODO: Do we need the header information?
         outputFile.WriteLine("#SAMPLEID\tCHROM\tPOS\tID\tREF\tALT");
         foreach (var sample in samples)
         {
             foreach (var clone in sample.EventDescs)
             {
-                foreach (var cnEvent in clone.Value)
+                var kar = sample.Kars[clone.Key];
+                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
+                var finalSNVs = kar.GetFinalSNVs();
+
+                foreach (var snv in finalSNVs)
                 {
-                    if (cnEvent.EventType == EventData.CNEventType.SNV)
-                    {
-                        string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
-                        string[] snvData = cnEvent.Description.Split(';');
-                        string contigId = snvData[0].Split(':')[1];
-                        string location = snvData[1].Split(':')[1];
-                        string newBase = snvData[2].Split(':')[1];
-                        string refBase = "A";
-                        outputFile.WriteLine($"{sampleName}\t{contigId}\t{location}\t.\t{refBase}\t{newBase}");
-                    }
+                    string refBase = "A";
+                    outputFile.WriteLine($"{sampleName}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
                 }
             }
         }
     }
+
 
     public void WriteClones(IEnumerable<Sample> samples)
     {

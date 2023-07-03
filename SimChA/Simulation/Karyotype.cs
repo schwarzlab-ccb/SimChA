@@ -252,4 +252,31 @@ public class Karyotype
         var contig = _contigs[contigID];
         contig.SNV(location, newNucleotide);
     }
+
+    public List<(string chrNo, long location, Nucleotide newBase)> GetFinalSNVs()
+    {
+        var snvList = new List<(string, long, Nucleotide)>();
+        foreach (var contig in _contigs)
+        {
+            foreach (var region in contig.GetRegions())
+            {
+                if (region.SNVDict == null)
+                {
+                    continue;
+                }
+                foreach (var snv in region.SNVDict)
+                {
+                    var chrNo = region.ChrNo;
+                    var internalLocation = snv.Key;
+                    var newBase = snv.Value;
+                    if (!snvList.Any(s => s == (chrNo, internalLocation, newBase)))
+                    {
+                        snvList.Add((chrNo, internalLocation, newBase));
+                    }
+                }
+            }
+        }
+        return snvList;
+    }
+    
 }
