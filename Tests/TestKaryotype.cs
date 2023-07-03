@@ -35,8 +35,8 @@ public class TestKaryotype
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _kar = new Karyotype(_genRef, false);
         _rnd = new Random(0);
-        _del = new CNEventPars(CNEventType.ChromDeletion);
-        _dup = new CNEventPars(CNEventType.ChromDuplication);
+        _del = new CNEventPars(CNEventType.ChromDeletion, 1);
+        _dup = new CNEventPars(CNEventType.ChromDuplication, 1);
     }
 
     // Test for each AberrationEnum value
@@ -150,16 +150,14 @@ public class TestKaryotype
     [Test]
     public void TestApplyCNEvent([Values] CNEventType eventType)
     {
-        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10  };
-        var eventP = new CNEventPars(eventType, 1, pars);
+        var eventP = new CNEventPars(eventType, 1, 1_000_000, 10);
         Assert.DoesNotThrow(() => ApplyRandomEvent(_rnd, _kar, eventP));
     }
 
     [Test]
     public void TestRandomEvent([Values] CNEventType eventType, [Values] IntEdgeCases seed)
     {
-        var pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
-        var eventP = new CNEventPars(eventType, 1, pars);
+        var eventP = new CNEventPars(eventType, 1, 1_000_000, 10);
         var eventData = Sampling.GenerateCNEventData(new Random((int) seed), _kar, eventP);
         Assert.DoesNotThrow(() => eventData.ApplyEvent(_kar));
     }

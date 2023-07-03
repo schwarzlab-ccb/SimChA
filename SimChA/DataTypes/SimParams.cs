@@ -8,5 +8,5 @@ public record SimParams(
     int EventCount,
     Distribution Distribution,
     FitnessParams Fitness,
-    List<Signature>? Signatures = null,
+    Dictionary<string, Signature>? Signatures = null,
     MCParams? MCParams = null);

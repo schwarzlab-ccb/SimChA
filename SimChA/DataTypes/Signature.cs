@@ -3,5 +3,5 @@
 namespace SimChA.DataTypes;
 
 [Serializable]
-public record Signature(string Id, double Prob, List<CNEventPars> Events);
+public record Signature(double Prob, List<CNEventPars> Events) : IHasProb;
 

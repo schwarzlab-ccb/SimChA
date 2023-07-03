@@ -15,7 +15,7 @@ namespace Tests;
 [TestFixture]
 public class TestFitness
 {
-    private const double EPSILON = 0.0000000001;
+    public const double EPSILON = 0.0000000001;
 
     private List<GenRef> _refs;
 

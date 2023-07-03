@@ -17,13 +17,12 @@ public class TestEventData
     public void Setup()
     {
         _rnd = new Random(42);
-        _pars = new Dictionary<string, double> { ["Size"] = 1_000_000, ["Frag"] = 10 };
     }
     
     [Test]
     public void TestContigEventData()
     {
-        var eventP = new CNEventPars(CNEventType.ChromDeletion, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.ChromDeletion, 1, 1_000_000);
         var eventData = new ContigEventData(eventP, 1);
         Assert.AreEqual("contig:1", eventData.ToString());
     }
@@ -31,7 +30,7 @@ public class TestEventData
     [Test]
     public void TestBaseEventData()
     {
-        var eventP = new CNEventPars(CNEventType.WholeGenomeDoubling, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.WholeGenomeDoubling, 1, 1_000_000);
         var eventData = new BaseEventData(eventP);
         Assert.AreEqual("", eventData.ToString());
     }
@@ -40,7 +39,7 @@ public class TestEventData
     public void TestInternalEventData()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventPars(CNEventType.InternalDuplication, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.InternalDuplication, 1, 1_000_000);
         var eventData = new InternalEventData(_rnd, eventP, 0, len);
         Assert.GreaterOrEqual(eventData.Start, 0);
         Assert.LessOrEqual(eventData.Start, len);
@@ -52,7 +51,7 @@ public class TestEventData
     public void TestTailEventData()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventPars(CNEventType.TailDeletion, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.TailDeletion, 1, 1_000_000);
         var eventData = new InternalEventData(_rnd, eventP, 0, len);
         Assert.GreaterOrEqual(eventData.Start, 0);
         Assert.LessOrEqual(eventData.Start, len);
@@ -65,7 +64,7 @@ public class TestEventData
     {
         const long lenA = 1_000_000;
         const long lenB = 10_000_000;
-        var eventP = new CNEventPars(CNEventType.Translocation, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.Translocation, 1, 1_000_000);
         var eventData = new PairEventData(_rnd, eventP, 0, lenA, 1, lenB);
         Assert.GreaterOrEqual(eventData.PosA, 0);
         Assert.LessOrEqual(eventData.PosA, lenA);
@@ -78,7 +77,7 @@ public class TestEventData
     public void TestPyrgo()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventPars(CNEventType.Pyrgo, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.Pyrgo, 1, 1_000_000, 10);
         var eventData = new PyrgoEventData(_rnd, eventP, 0, len);
         foreach (var frag in eventData.FragmentsList)
         {
@@ -91,7 +90,7 @@ public class TestEventData
     public void TestRigma()
     {
         const long len = 1_000_000;
-        var eventP = new CNEventPars(CNEventType.Rigma, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.Rigma, 1, 1_000_000, 10);
         var eventData = new RigmaEventData(_rnd, eventP, 0, len);
         Assert.GreaterOrEqual(eventData.Start, 0);
         foreach (long stop in eventData.StopsList)
@@ -103,7 +102,7 @@ public class TestEventData
     [Test]
     public void TestTemplatedEvent()
     {
-        var eventP = new CNEventPars(CNEventType.TIBridge, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.TIBridge, 1, 1_000_000, 10);
         var frags = new List<(int, long)>
         {
             (0, 100_000),
@@ -122,7 +121,7 @@ public class TestEventData
     [Test]
     public void TestChromoplexy()
     {
-        var eventP = new CNEventPars(CNEventType.Chromoplexy, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.Chromoplexy, 1, 1_000_000, 10);
         var frags = new List<(int, long)>
         {
             (0, 5_000_000),
@@ -140,7 +139,7 @@ public class TestEventData
     public void TestChromothripsis([Values] IntEdgeCases seed)
     {
         const long len = 100_000_000;
-        var eventP = new CNEventPars(CNEventType.Chromothripsis, 1, _pars);
+        var eventP = new CNEventPars(CNEventType.Chromothripsis, 1, 1_000_000);
         var eventData = new ChromothripsisEventData(new Random((int) seed), eventP, 0, len);
         foreach (long stop in eventData.StopsList)
         {

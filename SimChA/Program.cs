@@ -45,21 +45,24 @@ if (execMode == ExecMode.Profiles)
 }
 else
 {
-    var sigs = Validators.ValidateSignatures(simParams.Signatures);
+    if (simParams.Signatures is null || simParams.Signatures.Count == 0)
+    {
+        throw new Exception("No signatures were provided.");
+    }
+    Validators.ValidateSignatures(simParams.Signatures);
     Console.WriteLine("Computing mutations:");
     var simulator = new Simulator(rnd, genRef);
     if (execMode == ExecMode.Tree)
     {
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
-        var (cnEventPs, mixture) = Converters.PropagateSigs(sigs);
+        var (cnEventPs, mixture) = Converters.PropagateSigs(simParams.Signatures);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
         var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
         samples = new List<Sample> {treeSample};
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, sigs,
-            simParams.Sex);
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, simParams.Signatures, simParams.Sex);
     }
 
     foreach (var sample in samples)
