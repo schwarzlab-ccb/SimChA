@@ -112,6 +112,10 @@ try
     {
         files.WriteEvents(samples);
     }
+    if (options.UseVariants)
+    {
+        files.WriteVCF(genRef, samples);
+    }
 }
 catch (Exception e)
 {
