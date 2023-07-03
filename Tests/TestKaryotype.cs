@@ -93,7 +93,7 @@ public class TestKaryotype
         long len = _kar.ContigLen(0);
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
-        var regions = _kar.FindRegionsOfChr(ChrNo.chr1).ToList();
+        var regions = _kar.FindRegionsOfChr("chr1").ToList();
         Assert.AreEqual(3, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));
         Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).Start);
@@ -105,7 +105,7 @@ public class TestKaryotype
         long len = _kar.ContigLen(0);
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
-        var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr("chr1").ToList());
         Assert.AreEqual(3, gluedRegions.Count(r => r.Hap1));
         Assert.AreEqual(1, gluedRegions.Count(r => !r.Forward));
         Assert.AreEqual(TEST_FRAC, gluedRegions.First(r => !r.Forward).Start);
@@ -135,14 +135,14 @@ public class TestKaryotype
     public void TestTranslocation()
     {
         long contig0Len = _kar.ContigLen(0);
-        long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList());
+        long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList());
         
         _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, false);
         Assert.AreEqual(contig0Len, _kar.ContigLen(1));
-        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
 
         _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, true);
-        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr(ChrNo.chr1).ToList()));
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
         Assert.AreEqual(contig0Len, _kar.ContigLen(0));
         Console.WriteLine(_kar);
     }
@@ -201,14 +201,14 @@ public class TestKaryotype
         Assert.AreEqual("[]", _kar.ToString());
     }
 
-    private Gene MakeGene(ChrNo chrNo) 
+    private Gene MakeGene(string chrNo) 
         => new("G" + chrNo, new Region(0, 50, chrNo, false), _rnd.NextDouble());
 
     [Test]
     public void TestGetPresentGenes()
     {
-        var chrNums = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>();
-        var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> {MakeGene(c)});
+        var chrNums = _genRef.AllChrs;
+        var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> { MakeGene(c) });
         var tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
         Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
         

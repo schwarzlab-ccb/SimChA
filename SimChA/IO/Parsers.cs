@@ -43,11 +43,11 @@ public static class Parsers
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
+        var present = genRef.AllChrs.ToDictionary(c => c, _ => false);
         string lastSample = "";
-        var lastChr = ChrNo.chr1;
+        string lastChr = genRef.AllChrs.First();
         long lastPos = 0L;
         cnaFile.ReadLine(); // Skip header
-        var present = Enum.GetValues<ChrNo>().ToDictionary(c => c, _ => false);
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
@@ -73,7 +73,7 @@ public static class Parsers
                         regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
-                    bool sexXX = !present[ChrNo.chrY];
+                    bool sexXX = !present[genRef.YChrName];
                     result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
                 }
                 // Reset
@@ -81,7 +81,7 @@ public static class Parsers
                 regionsB.Clear();
                 missingRanges.Clear();
                 lastSample = sample;
-                lastChr = ChrNo.chr1;
+                lastChr = genRef.AllChrs.First();
                 lastPos = 0L;
                 foreach (var pair in present)
                 {
@@ -91,7 +91,7 @@ public static class Parsers
             try
             {
                 // Parse the line
-                var chrNo = (ChrNo)Enum.Parse(typeof(ChrNo), lineSplit[1]);
+                string chrNo = lineSplit[1];
                 present[chrNo] = true;
                 int start = int.Parse(lineSplit[2]) - 1;
                 int end = int.Parse(lineSplit[3]);
@@ -156,23 +156,22 @@ public static class Parsers
         }
 
         // Add the last sample
-        bool sexXX1 = !present[ChrNo.chrY];
-        result[lastSample] = new(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX1);
+        var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
+        result[lastSample] = new Karyotype(newRegs, missingRanges, !present[genRef.YChrName]);
         return result;
     }
 
-    public static Dictionary<ChrNo, List<Gene>> ParseGeneList(TextReader geneFile)
+    public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames)
     {
         // Pre-initialization
-        var noEnum = Enum.GetValues(typeof(ChrNo)).Cast<ChrNo>().ToList();
-        var geneList = noEnum.ToDictionary(c => c, _ => new List<Gene>());
+        var geneList = chrNames.ToDictionary(c => c, _ => new List<Gene>());
         while (geneFile.ReadLine() is { } line)
         {
             if (line == "") continue;
             string[] genString = line.Split('\t');
             string name = genString[3];
             double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
-            var chrNum = (ChrNo)Enum.Parse(typeof(ChrNo), genString[0]);
+            string chrNum = genString[0];
             // Convert to zero-based [start, end) index 
             var region = new GenRange(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrNum);
             var gene = new Gene(name, region, fitness);
@@ -224,16 +223,16 @@ public static class Parsers
         return cloneFitness;
     }
 
-    public static (Dictionary<ChrNo, int> chrLengths, Dictionary<ChrNo, SexEnum> chrSex) ParseChromosomes(string text)
+    public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ParseChromosomes(string text)
     {
         IList<string> lines = text.Split("\n");
-        Dictionary<ChrNo, int> chrLengths = new();
-        Dictionary<ChrNo, SexEnum> chrSex = new();
+        Dictionary<string, int> chrLengths = new();
+        Dictionary<string, SexEnum> chrSex = new();
         for (var index = 0; index < lines.Count; index++)
         {
             string line = lines[index];
             var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
-            var chrNo = (ChrNo) Enum.Parse(typeof(ChrNo), lineSplit[0]);
+            string chrNo = lineSplit[0];
             int length = int.Parse(lineSplit[1]);
             chrLengths.Add(chrNo, length);
             var sexEnum = GetSexEnum(lines, lineSplit, index);
@@ -261,7 +260,7 @@ public static class Parsers
         return SexEnum.Both;
     }
     
-    public static IEnumerable<GenContents> ParseFasta(TextReader fastaStream)
+    public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
     {
         GenContents? genContents = null;
         while (fastaStream.ReadLine() is { } line)
@@ -278,13 +277,15 @@ public static class Parsers
                 }
                 string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
                 var match = Regex.Match(line, pattern);
-                if (match.Value == "" || !Enum.TryParse(match.Value[1..], out ChrNo chrNo))
+                if (match.Value == "")
                 {
                     genContents = null;
                     continue;
                 }
+                string chrNo = match.Value[1..];
+                Console.WriteLine($"Parsing the sequence for chr: " + chrNo);
                 // TODO: optimize the string builder
-                genContents = new GenContents{ChrNo = chrNo, Sequence = new StringBuilder("")};
+                genContents = new GenContents{ ChrNo = chrNo, Sequence = new StringBuilder("") };
             }
             else if (genContents != null)
             {

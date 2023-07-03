@@ -31,7 +31,7 @@ public class TestSimulator
     }
     
     // Taken the MakeGene method from TestFitness
-    private static Gene MakeGene(ChrNo chrNo, double deltaFitness)
+    private static Gene MakeGene(string chrNo, double deltaFitness)
         => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
     
     [Test]
