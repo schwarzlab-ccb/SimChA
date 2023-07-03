@@ -62,7 +62,7 @@ else
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.Distribution, simParams.Signatures, simParams.Sex);
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex);
     }
 
     foreach (var sample in samples)
