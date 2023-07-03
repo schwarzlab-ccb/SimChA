@@ -73,7 +73,7 @@ public static class Parsers
                         regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
-                    bool sexXX = !present[genRef.XYChrName];
+                    bool sexXX = !present[genRef.YChrName];
                     result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
                 }
                 // Reset
@@ -157,22 +157,21 @@ public static class Parsers
 
         // Add the last sample
         var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
-        result[lastSample] = new Karyotype(newRegs, missingRanges, !present[genRef.XYChrName]);
+        result[lastSample] = new Karyotype(newRegs, missingRanges, !present[genRef.YChrName]);
         return result;
     }
 
-    public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile)
+    public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames)
     {
         // Pre-initialization
-        var noEnum = Enum.GetValues(typeof(string)).Cast<string>().ToList();
-        var geneList = noEnum.ToDictionary(c => c, _ => new List<Gene>());
+        var geneList = chrNames.ToDictionary(c => c, _ => new List<Gene>());
         while (geneFile.ReadLine() is { } line)
         {
             if (line == "") continue;
             string[] genString = line.Split('\t');
             string name = genString[3];
             double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
-            var chrNum = (string)Enum.Parse(typeof(string), genString[0]);
+            string chrNum = genString[0];
             // Convert to zero-based [start, end) index 
             var region = new GenRange(int.Parse(genString[1]) - 1, int.Parse(genString[2]), chrNum);
             var gene = new Gene(name, region, fitness);

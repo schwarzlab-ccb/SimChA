@@ -22,7 +22,7 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
+        _genRef = FileIO.GetGenRef(TestIO.HG_19_PATH);
         _rnd = new Random(0);
     }
 
@@ -82,8 +82,8 @@ public class TestCopyNumbers
         var karXY = new Karyotype(_genRef, false);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         karXY.ApplyInternalDeletion(0, 2000, 3000);
-        var segs = CopyNumbers.GetSegPoints(_genRef, ChrNo.chr1, new List<Karyotype> {karXX, karXY});
-        var expected = new List<long> {0, 1000, 2000, 3000, _genRef.ChrLengths[ChrNo.chr1]};
+        var segs = CopyNumbers.GetSegPoints(_genRef, "chr1", new List<Karyotype> {karXX, karXY});
+        var expected = new List<long> {0, 1000, 2000, 3000, _genRef.ChrLengths["chr1"]};
         Assert.AreEqual(expected, segs);
     }
     
@@ -92,12 +92,13 @@ public class TestCopyNumbers
     {
         var karXX = new Karyotype(_genRef, true);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
-        var segs = CopyNumbers.GetSegPoints(_genRef, ChrNo.chr1, new List<Karyotype> {karXX});
+        string chrNo = "chr1";
+        var segs = CopyNumbers.GetSegPoints(_genRef, chrNo, new List<Karyotype> {karXX});
         var cns = CopyNumbers.CalcChrCopyNumbers(
-            karXX.FindRegionsOfChr(ChrNo.chr1).ToList(), 
-            karXX.GetMissingOfChr(ChrNo.chr1), 
+            karXX.FindRegionsOfChr(chrNo).ToList(), 
+            karXX.GetMissingOfChr(chrNo), 
             segs, 
-            ChrNo.chr1, 
+            chrNo, 
             false);
         Console.WriteLine(string.Join(", ", cns));
     }

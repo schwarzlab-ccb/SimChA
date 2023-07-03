@@ -5,13 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using SimChA.IO;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
-using NUnit.Framework;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Tests;
@@ -19,15 +17,18 @@ namespace Tests;
 [TestFixture]
 public class TestIO
 {
+    public static string DATA_PATH = "./../../../../data/";
+    public static string HG_19_PATH => DATA_PATH + "./hg19";
+    public static string HG_38_PATH => DATA_PATH + "./hg38";
+    
     private GenRef _genRef;
     
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
+        _genRef = FileIO.GetGenRef(HG_19_PATH);
     }
 
-    
     [Test]
     public void TestContig()
     {
@@ -67,19 +68,19 @@ public class TestIO
     [Test]
     public void TestReadGeneLists()
     {
-        var tsgList = Enum.GetValues<ChrNo>().ToDictionary(t => t, t => new List<Gene>());
+        var tsgList = _genRef.AllChrs.ToDictionary(t => t, t => new List<Gene>());
         
         string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
         
-        var gene1 = new Gene("TSG1", new GenRange(0, 50, ChrNo.chr1), 0.001);
-        tsgList[ChrNo.chr1].Add(gene1);
-        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG));
+        var gene1 = new Gene("TSG1", new GenRange(0, 50, "chr1"), 0.001);
+        tsgList["chr1"].Add(gene1);
+        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs);
         Assert.AreEqual(tsgList, listFromString);
         
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
-        var gene2 = new Gene("TSG2", new GenRange(99, 5000, ChrNo.chr2), 0.01);
-        tsgList[ChrNo.chr2].Add(gene2);
-        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG));
+        var gene2 = new Gene("TSG2", new GenRange(99, 5000, "chr2"), 0.01);
+        tsgList["chr2"].Add(gene2);
+        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs);
         Assert.AreEqual(tsgList, listFromString);
     }
 
@@ -124,10 +125,10 @@ public class TestIO
         var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(Profiles));
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
-        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr1).Count()); // 2 existing
-        Assert.AreEqual(4, profiles["1"].FindRegionsOfChr(ChrNo.chr2).Count()); // 4 missing (split by null regions)
-        Assert.AreEqual(9, profiles["1"].FindRegionsOfChr(ChrNo.chr3).Count()); // 5 existing + 4 missing
-        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr(ChrNo.chr4).Count()); // 2 missing
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr1").Count()); // 2 existing
+        Assert.AreEqual(4, profiles["1"].FindRegionsOfChr("chr2").Count()); // 4 missing (split by null regions)
+        Assert.AreEqual(9, profiles["1"].FindRegionsOfChr("chr3").Count()); // 5 existing + 4 missing
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr4").Count()); // 2 missing
         Assert.AreEqual(false, profiles["2"].SexXX);
     }
     

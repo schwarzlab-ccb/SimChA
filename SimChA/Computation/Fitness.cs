@@ -46,11 +46,11 @@ public static class Fitness
 
     private static double ExpectedCN(GenRef genRef, string chrNo, bool sexXX)
     {
-        if (chrNo == genRef.XYChrName)
+        if (chrNo == genRef.YChrName)
         {
             return sexXX ? 0 : 1;
         }
-        if (chrNo == genRef.XXChrName)
+        if (chrNo == genRef.XChrName)
         {
             return sexXX ? 2 : 1;
         }

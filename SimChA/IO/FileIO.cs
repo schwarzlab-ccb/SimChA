@@ -209,7 +209,7 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder)
+    public static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexEnum> chrSex)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<string, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
@@ -229,7 +229,8 @@ public class FileIO
             try
             {
                 var geneFile = new StreamReader(fileFullPath);
-                geneLists[key] = Parsers.ParseGeneList(geneFile);
+                var chrNames = chrSex.Select(pair => pair.Key).ToList();
+                geneLists[key] = Parsers.ParseGeneList(geneFile, chrNames);
             }
             catch (Exception e)
             {
@@ -286,7 +287,7 @@ public class FileIO
         var genContentsList = variantsFile != "" ? ReadFasta(variantsFile).ToList() : null;
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
-        var geneLists = ReadGeneLists(dataFolder);
+        var geneLists = ReadGeneLists(dataFolder, chrSex);
         return new GenRef(refName, chrLengths, chrSex, geneLists, genContentsList);
     }
 }

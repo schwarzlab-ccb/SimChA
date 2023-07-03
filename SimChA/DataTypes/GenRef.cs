@@ -17,9 +17,9 @@ public class GenRef
     private List<string> XXChrs { get; }
     public List<string> AllChrs { get; }
     
-    public string XYChrName { get; }
+    public string YChrName { get; }
     
-    public string XXChrName { get; }
+    public string XChrName { get; }
     
     public List<GenContents>? GenContentsList { get; }
 
@@ -42,11 +42,11 @@ public class GenRef
         ChrSex = chrSex;
         AutosomeCount = chrSex.Count(x => x.Value == SexEnum.Both);
         ChrCount = AutosomeCount * 2 + (chrSex.Count - AutosomeCount);
-        XYChrs = chrSex.Where(pair => pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
+        XYChrs = chrSex.Select(pair => pair.Key).ToList();
         XXChrs = chrSex.Where(pair => pair.Value != SexEnum.Male).Select(pair => pair.Key).ToList();
         AllChrs = chrSex.Select(pair => pair.Key).ToList();
-        XYChrName = chrSex.Where(pair => pair.Value == SexEnum.Male).Select(pair => pair.Key).FirstOrDefault("");
-        XXChrName = chrSex.Where(pair => pair.Value == SexEnum.Female).Select(pair => pair.Key).FirstOrDefault("");
+        YChrName = chrSex.Where(pair => pair.Value == SexEnum.Male).Select(pair => pair.Key).FirstOrDefault("");
+        XChrName = chrSex.Where(pair => pair.Value == SexEnum.Female).Select(pair => pair.Key).FirstOrDefault("");
         bool useSNV = genContentsList != null;
         var haplotypeOneF = CreateHaplotype(true, true, useSNV);
         var haplotypeTwoF = CreateHaplotype(false, true, useSNV);
