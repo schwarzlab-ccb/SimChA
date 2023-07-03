@@ -6,7 +6,7 @@ public record SimParams(
     int Seed,
     SexEnum Sex,
     int EventCount,
-    Distribution Distribution,
+    Distribution EventDist,
     FitnessParams Fitness,
     Dictionary<string, Signature>? Signatures = null,
     MCParams? MCParams = null);

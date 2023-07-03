@@ -54,9 +54,9 @@ public class TestIO
     {
         var res = Parsers.ParseSimParams(@"{}");
         Assert.AreEqual(0, res.Seed);
-        res = Parsers.ParseSimParams(@"{""EventCount"": 10, ""Distribution"": ""Normal""}");
+        res = Parsers.ParseSimParams(@"{""EventCount"": 10, ""EventDist"": ""Normal""}");
         Assert.AreEqual(10, res.EventCount);
-        Assert.AreEqual(Distribution.Normal, res.Distribution);
+        Assert.AreEqual(Distribution.Normal, res.EventDist);
         res = Parsers.ParseSimParams(@"{""Signatures"": {""test"" : { ""Prob"": 1 }}}");
         Assert.AreEqual("test", res.Signatures!.First().Key);
         Assert.AreEqual(1, res.Signatures!.First().Value.Prob, 0.000001);

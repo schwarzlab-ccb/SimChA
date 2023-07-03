@@ -1,77 +1,60 @@
 {
   "Seed": 0,
   "Sex": "Both",
-  "EventCount": 75,
-  "Distribution": "Exponential",
-  "Assembly": "hg19",
+  "EventCount": 100,
+  "EventDist": "Exponential",
   "Fitness": {
     "Stress": 1,
     "TsgOg": 0.01,
     "Essentiality": 0.1
   },
-  "Signatures": [
-    {
-      "Id": "sig1",
+  "Signatures": {
+    "CNs": {
       "Prob": 1,
-      "Circularization": 0,
       "Events": [
         {
           "Type": "ChromDeletion",
-          "Prob": 2
+          "Prob": 1
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 2
+          "Prob": 1
         },
         {
           "Type": "InternalDuplication",
           "Prob": 10,
-          "Pars": {
-            "Size": 20000000
-          }
+          "Size": 20000000
         },
         {
           "Type": "InternalDeletion",
           "Prob": 20,
-          "Pars": {
-            "Size": 20000000
-          }
+          "Size": 20000000
         },
         {
           "Type": "InternalInversion",
           "Prob": 10,
-          "Pars": {
-            "Size": 20000000
-          }
+          "Size": 20000000
         },
         {
           "Type": "InvertedDuplication",
           "Prob": 10,
-          "Pars": {
-            "Size": 20000000
-          }
+          "Size": 20000000
         },
         {
           "Type": "BreakageFusionBridge",
-          "Prob": 4,
-          "Pars": {
-            "Size": 100000000
-          }
+          "Prob": 2,
+          "Size": 100000000
         },
         {
           "Type": "TailDeletion",
-          "Prob": 4,
-          "Pars": {
-            "Size": 100000000
-          }
+          "Prob": 2,
+          "Size": 100000000
         },
         {
           "Type": "Translocation",
-          "Prob": 4,
-          "Pars": {
-            "Size": 100000000,
-            "PInv": 0.5
-          }
+          "Prob": 2,
+          "Size": 100000000,
+          "PInv": 0.5
         },
         {
           "Type": "WholeGenomeDoubling",
@@ -80,65 +63,56 @@
         {
           "Type": "Chromoplexy",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000,
-            "Frag": 5
-          }
+          "Size": 100000000,
+          "Frag": 5
         },
         {
           "Type": "Chromothripsis",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000
-          }
+          "Size": 100000000
         },
         {
           "Type": "Pyrgo",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000,
-            "Frag": 5
-          }
+          "Size": 100000000,
+          "Frag": 5
         },
         {
           "Type": "Rigma",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000,
-            "Frag": 5
-          }
+          "Size": 100000000,
+          "Frag": 5
         },
         {
           "Type": "TIChain",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000,
-            "Frag": 5
-          }
+          "Size": 100000000,
+          "Frag": 5
         },
         {
           "Type": "TICycle",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000,
-            "Frag": 5
-          }
+          "Size": 100000000,
+          "Frag": 5
         },
         {
           "Type": "TIBridge",
           "Prob": 1,
-          "Pars": {
-            "Size": 100000000,
-            "Frag": 5
-          }
-        },
+          "Size": 100000000,
+          "Frag": 5
+        }
+      ]
+    },
+    "SNVs": {
+      "Prob": 1,
+      "Events": [
         {
           "Type": "SNV",
           "Prob": 100
         }
       ]
     }
-  ],
+  },
   "MCParams": {
     "NumSamplesMin": 100,
     "NumSamplesTotal": 2000,
