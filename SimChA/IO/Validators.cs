@@ -23,13 +23,13 @@ public static class Validators
             case CNEventType.InternalDuplication:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-            case CNEventType.Chromothripsis:
             case CNEventType.Translocation:
+            case CNEventType.Chromothripsis:
+            case CNEventType.Chromoplexy:
                 if (cnEventPars.Size <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
                 break;
             
-            case CNEventType.Chromoplexy:
             case CNEventType.TIChain:
             case CNEventType.TIBridge:
             case CNEventType.TICycle:
