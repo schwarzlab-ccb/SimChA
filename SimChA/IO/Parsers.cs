@@ -260,9 +260,9 @@ public static class Parsers
         return SexEnum.Both;
     }
     
-    public static IEnumerable<GenContents> ParseFasta(StreamReader fastaStream)
+    public static IEnumerable<StringBuilder> ParseFasta(StreamReader fastaStream)
     {
-        GenContents? genContents = null;
+        StringBuilder? sequence = null;
         while (fastaStream.ReadLine() is { } line)
         {
             if (line.StartsWith(";"))
@@ -271,30 +271,30 @@ public static class Parsers
             }
             if (line.StartsWith(">"))
             {
-                if (genContents != null)
+                if (sequence != null)
                 {
-                    yield return genContents;
+                    yield return sequence;
                 }
                 string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
                 var match = Regex.Match(line, pattern);
                 if (match.Value == "")
                 {
-                    genContents = null;
+                    sequence = null;
                     continue;
                 }
                 string chrNo = match.Value[1..];
                 Console.WriteLine($"Parsing the sequence for chr: " + chrNo);
                 // TODO: optimize the string builder
-                genContents = new GenContents{ ChrNo = chrNo, Sequence = new StringBuilder("") };
+                sequence = new StringBuilder("");
             }
-            else if (genContents != null)
+            else if (sequence != null)
             {
-                genContents.Sequence.Append(line);
+                sequence.Append(line);
             }
         }
-        if (genContents != null)
+        if (sequence != null)
         {
-            yield return genContents;
+            yield return sequence;
         }
     }
 }

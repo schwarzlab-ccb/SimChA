@@ -151,6 +151,6 @@ public class TestIO
         MemoryStream stream = new MemoryStream(byteArray);
         var genContents = Parsers.ParseFasta(new StreamReader(stream)).ToList();
         Assert.AreEqual(1, genContents.Count);
-        Assert.AreEqual(sequence, genContents[0].Sequence.ToString());
+        Assert.AreEqual(sequence, genContents[0].ToString());
     }
 }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
+using System.Text;
 
 namespace SimChA.IO;
 
@@ -13,6 +14,7 @@ public class FileIO
     private const string ESSENTIALS_TSV = "essentials.tsv";
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
+    private const string GENOME_FASTA = "genome.fa";
     
     // input
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
@@ -158,11 +160,11 @@ public class FileIO
 
                 foreach (var snv in finalSNVs)
                 {
-                    if (genRef.GenContentsList == null)
+                    if (genRef.GenContentsDict == null)
                     {
                         throw new Exception("Genomic Content hasn't been set correctly to allow SNV list to be created");
                     }
-                    char refBase = genRef.GenContentsList[int.Parse(snv.chrNo)].Sequence[(int)snv.location];
+                    char refBase = genRef.GenContentsDict[snv.chrNo][(int)snv.location];
                     outputFile.WriteLine($"{sampleName}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
                 }
             }
@@ -211,9 +213,9 @@ public class FileIO
         }
     }
 
-    public static IEnumerable<GenContents> ReadFasta(string filePath)
+    public static Dictionary<string, StringBuilder> ReadFasta(List<string> allChrs, string folder)
     {
-        string fileFullPath = Path.GetFullPath(filePath);
+        string fileFullPath = Path.GetFullPath(Path.Combine(folder, GENOME_FASTA));
         if (!File.Exists(fileFullPath))
         {
             throw new Exception($"File {fileFullPath} does not exist");
@@ -221,7 +223,8 @@ public class FileIO
         try
         {
             var fastaFile = new StreamReader(fileFullPath);
-            return Parsers.ParseFasta(fastaFile);
+            var sequenceList =  Parsers.ParseFasta(fastaFile).ToList();
+            return sequenceList.Select((seq, i) => new {i, seq}).ToDictionary(x => allChrs[x.i], x => x.seq);
         }
         catch (Exception e)
         {
@@ -320,12 +323,13 @@ public class FileIO
         }
     }
 
-    public static GenRef GetGenRef(string dataFolder, string variantsFile = "")
+    public static GenRef GetGenRef(string dataFolder, bool useVariants = false)
     {
-        var genContentsList = variantsFile != "" ? ReadFasta(variantsFile).ToList() : null;
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
+        var allChrs = chrSex.Select(pair => pair.Key).ToList();
+        var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
         var geneLists = ReadGeneLists(dataFolder, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, geneLists, genContentsList);
+        return new GenRef(refName, chrLengths, chrSex, geneLists, genContentsDict);
     }
 }

@@ -30,10 +30,8 @@ public class CmdOptions
     [Option('s', Required = false, Default = false, HelpText = "Calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.")]
     public bool CalcConsistentCNs { get; set; }
 
-    [Option('V', "variants", Required = false, Default = "", HelpText = "The FASTA reference file used for SNPs.")]
-    public string VariantsFile { get; set; }
-
-    public bool UseVariants => VariantsFile != "";
+    [Option('V', "variants", Required = false, Default = false, HelpText = "Use the included FASTA reference files for SNVs.")]
+    public bool UseVariants {get;set;}
 
     public ExecMode ExecMode
     {

@@ -31,7 +31,7 @@ else
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var genRef = FileIO.GetGenRef(options.DataFolder, options.VariantsFile);
+var genRef = FileIO.GetGenRef(options.DataFolder, options.UseVariants);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();

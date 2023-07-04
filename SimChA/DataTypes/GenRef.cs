@@ -1,4 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
+using System.Text;
 
 namespace SimChA.DataTypes;
 
@@ -21,7 +22,7 @@ public class GenRef
     
     public string XChrName { get; }
     
-    public List<GenContents>? GenContentsList { get; }
+    public Dictionary<string, StringBuilder>? GenContentsDict { get; }
 
     public Region[] GetGenotype(bool sexXX)
         => sexXX ? XXGenome : XYGenome;
@@ -35,7 +36,7 @@ public class GenRef
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
 
     public GenRef(string name, Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex, 
-        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, List<GenContents>? genContentsList = null)
+        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
         ChrLengths = chrLengths;
@@ -47,7 +48,7 @@ public class GenRef
         AllChrs = chrSex.Select(pair => pair.Key).ToList();
         YChrName = chrSex.Where(pair => pair.Value == SexEnum.Male).Select(pair => pair.Key).FirstOrDefault("");
         XChrName = chrSex.Where(pair => pair.Value == SexEnum.Female).Select(pair => pair.Key).FirstOrDefault("");
-        bool useSNV = genContentsList != null;
+        bool useSNV = genContentsDict != null;
         var haplotypeOneF = CreateHaplotype(true, true, useSNV);
         var haplotypeTwoF = CreateHaplotype(false, true, useSNV);
         var haplotypeOneM = CreateHaplotype(true, false, useSNV);
@@ -57,7 +58,7 @@ public class GenRef
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
         GeneLists = geneList;
-        GenContentsList = genContentsList;
+        GenContentsDict = genContentsDict;
     }
 
     private Region GetRegion(string chrNo, bool isFirstHaplotype, bool useSNV) => 
