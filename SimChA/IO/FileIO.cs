@@ -149,6 +149,9 @@ public class FileIO
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         // TODO: Do we need the header information?
+        outputFile.WriteLine("##fileformat=VCFv4.3");
+        outputFile.WriteLine("##source=SimChAV1.0");
+        outputFile.WriteLine("##reference=verily_hg38_genome.fa");
         outputFile.WriteLine("#SAMPLEID\tCHROM\tPOS\tID\tREF\tALT");
         foreach (var sample in samples)
         {
@@ -165,7 +168,11 @@ public class FileIO
                         throw new Exception("Genomic Content hasn't been set correctly to allow SNV list to be created");
                     }
                     char refBase = genRef.GenContentsDict[snv.chrNo][(int)snv.location];
-                    outputFile.WriteLine($"{sampleName}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
+                    // The VCF should *not* be aware of SNVs that didn't end up altering the location in the final karyotype
+                    if (char.ToUpper(refBase) != snv.newBase.ToString()[0])
+                    {
+                        outputFile.WriteLine($"{sampleName}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
+                    }
                 }
             }
         }
