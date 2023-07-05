@@ -151,7 +151,7 @@ public class FileIO
         // TODO: Do we need the header information?
         outputFile.WriteLine("##fileformat=VCFv4.3");
         outputFile.WriteLine("##source=SimChAV1.0");
-        outputFile.WriteLine("##reference=verily_hg38_genome.fa");
+        outputFile.WriteLine($"##reference=verily_{genRef.Name}_genome.fa");
         outputFile.WriteLine("#SAMPLEID\tCHROM\tPOS\tID\tREF\tALT");
         foreach (var sample in samples)
         {

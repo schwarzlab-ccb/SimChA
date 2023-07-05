@@ -22,7 +22,7 @@ public class GenRef
     
     public string XChrName { get; }
     
-    public Dictionary<string, StringBuilder>? GenContentsDict { get; }
+    public Dictionary<string, StringBuilder>? GenContentsDict { get; set;}
 
     public Region[] GetGenotype(bool sexXX)
         => sexXX ? XXGenome : XYGenome;
