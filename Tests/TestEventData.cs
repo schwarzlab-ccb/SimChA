@@ -148,4 +148,15 @@ public class TestEventData
         }
         Assert.GreaterOrEqual(eventData.StopsList.Count + 1,eventData.SelectionList.Count);
     }
+    [Test]
+    public void TestPointMutationEventData([Values] IntEdgeCases seed)
+    {
+        const long len = 100_000_000;
+        var eventP = new CNEventPars(CNEventType.SNV, 1);
+        var eventData = new PointMutationData(new Random((int) seed), eventP, 0, len);
+        var dataArray = eventData.ToString().Split(';');
+        Assert.AreEqual("contig:0", dataArray[0]);
+        Assert.Less(eventData.Location, len);
+        Assert.AreNotEqual("N", eventData.Base.ToString());
+    }
 }
