@@ -27,6 +27,16 @@ The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so 
 git lfs pull
 ```
 
+### Somatic Nucleotide Variants (SNVs)
+
+SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run as follows:
+
+```
+chmod +x DownloadRefData.sh && ./DownloadRefData.sh
+```
+
+Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
+
 
 ### Simulation
 
