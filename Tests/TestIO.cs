@@ -113,26 +113,28 @@ public class TestIO
 
         var eventPars = new List<CNEventPars>(){new CNEventPars(CNEventType.SNV, 1.0)};
         
-        var clonesIn = new List<CloneIn> (){new CloneIn(1,-1, 0, 1), new CloneIn(2, 1, 1, 1)};
+        var clonesIn = new List<CloneIn> (){new CloneIn(0,-1, 0, 1), new CloneIn(1, 0, 1, 1)};
 
-        var sample = new Sample("sample_1", false, clonesIn, eventPars, null);
+        var sample = new Sample("sample", false, clonesIn, eventPars, null);
+        var contigs = new List<Contig> (){new Contig(new Region(0, sequence.Count(), "chr1", true))};
+        sample.EventDescs[0] = new List<CNEventDesc> ();
+        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), false);
         sample.EventDescs[1] = new List<CNEventDesc> ();
-        sample.Kars[1] = new Karyotype( _genRef, false);
-        sample.EventDescs[2] = new List<CNEventDesc> ();
-        sample.Kars[2] = new Karyotype(sample.Kars[1]);
+        sample.Kars[1] = new Karyotype(sample.Kars[0]);
 
         long loc = 5;
         int contigID = 0;
-        var newNucleotide = Nucleotide.C;
-        sample.Kars[2].ApplySNV(contigID, loc, newNucleotide);
+        var newNucleotide = Nucleotide.N;
+        sample.Kars[1].ApplySNV(contigID, loc, newNucleotide);
         var rnd = new Random(48);
         var eventData = new PointMutationData(rnd, eventPars[0], contigID, sequence.Count());
         var eventDesc = new CNEventDesc(CNEventType.SNV, 1, eventData.ToString());
-        sample.EventDescs[2].Append(eventDesc);
+        sample.EventDescs[1].Append(eventDesc);
 
         var samples = new List<Sample> (){sample};
         if (samples.Any(s => s.EventDescs.Any()) )
         {
+            Console.WriteLine("Hello");
             files.WriteVCF(_genRef, samples);
         }
     }
@@ -193,5 +195,43 @@ public class TestIO
         var genContents = Parsers.ParseFasta(new StreamReader(stream)).ToList();
         Assert.AreEqual(1, genContents.Count);
         Assert.AreEqual(sequence, genContents[0].ToString());
+    }
+
+    [Test]
+    public void TestWriteFasta()
+    {
+        string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
+        var files = new FileIO(projectPath + "/out");
+        const string sequence = 
+            @"ACTGACTGACTG";
+        const string fasta = @$">chr1
+{sequence}";
+
+        byte[] byteArray = Encoding.UTF8.GetBytes(fasta);
+        MemoryStream stream = new MemoryStream(byteArray);
+        var genContents = Parsers.ParseFasta(new StreamReader(stream)).ToList();
+        _genRef.GenContentsDict = new Dictionary<string, StringBuilder> (){{"chr1", genContents[0]}};
+
+        var eventPars = new List<CNEventPars>(){new CNEventPars(CNEventType.InternalInversion, 1, 10)};
+        
+        var clonesIn = new List<CloneIn> (){new CloneIn(0,-1, 1, 1)};
+
+        var sample = new Sample("sample_1", false, clonesIn, eventPars, null);
+        var contigs = new List<Contig> (){new Contig(new Region(0, sequence.Count(), "chr1", true))};
+        sample.EventDescs[0] = new List<CNEventDesc> ();
+        sample.Kars[0] = new Karyotype( contigs, new List<GenRange>(), false);
+        // Apply an internal inversion
+        var rnd = new Random(0);
+        var contigID = 0;
+        var eventData = new InternalEventData(rnd, eventPars[0], contigID, sequence.Count());
+        var eventDesc = new CNEventDesc(CNEventType.InternalInversion, 1, eventData.ToString());
+        sample.EventDescs[0].Append(eventDesc);
+        sample.Kars[0].ApplyInternalInversion(contigID, 4, 8);
+
+        var samples = new List<Sample> (){sample};
+        if (samples.Any(s => s.EventDescs.Any()) )
+        {
+            files.WriteFasta(_genRef, samples);
+        }
     }
 }

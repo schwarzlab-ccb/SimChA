@@ -31,7 +31,10 @@ public class CmdOptions
     public bool CalcConsistentCNs { get; set; }
 
     [Option('V', "variants", Required = false, Default = false, HelpText = "Use the included FASTA reference files for SNVs.")]
-    public bool UseVariants {get;set;}
+    public bool UseVariants { get; set; }
+
+    [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
+    public bool WriteFasta { get; set; }
 
     public ExecMode ExecMode
     {

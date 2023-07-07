@@ -28,6 +28,7 @@ public class FileIO
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
+    private const string FASTA_FILENAME = "genome.fa";
     
     private string Timestamp { get; }
     private string OutFolder { get; }
@@ -178,6 +179,58 @@ public class FileIO
         }
     }
 
+    public void WriteFasta(GenRef genRef, IEnumerable<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FASTA_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        // TODO: Do we want WriteFasta to work with multiple samples? Currently only set up for single samples
+        var count = 0;
+        if (genRef.GenContentsDict == null)
+        {
+            throw new Exception("Reference Genome was not set. Please check that you have downloaded the correct assembly (see DownloadRefData.sh)");
+        }
+        foreach (var sample in samples)
+        {
+            foreach (var clone in sample.EventDescs)
+            {
+                var kar = sample.Kars[clone.Key];
+
+                foreach (var contigId in kar.ContigIds())
+                {
+                    outputFile.WriteLine($">ctg{contigId}");
+                    Console.WriteLine($"Writing out contig {contigId}");
+                    var contig = kar.GetContig(contigId);
+                    StringBuilder contigSeq = new StringBuilder();
+                    foreach (var region in contig.GetRegions())
+                    {
+                        var chrNo = region.ChrNo;
+                        var start = region.Start;
+                        var end   = region.End;
+                        // TODO: check the indexing
+                        var regionSeq = new StringBuilder (genRef.GenContentsDict[chrNo].ToString((int)start, (int)(end-start)));
+                        /*if (region.SNVDict != null)
+                        {
+                            foreach (var snv in region.SNVDict)
+                            {
+                                regionSeq[(int)(start-snv.Key)] = snv.Value.ToString()[0];
+                            }
+                        }*/
+
+                        if (!region.Forward)
+                        {
+                            char[] baseArray = regionSeq.ToString().ToCharArray();
+                            Array.Reverse(baseArray);
+                            regionSeq = new StringBuilder(new string(baseArray));
+                        }
+                        contigSeq.Append(regionSeq);
+                    }
+                    outputFile.WriteLine(contigSeq);
+                }
+                if (count > 0) return;
+            }
+        }
+    }
 
     public void WriteClones(IEnumerable<Sample> samples)
     {

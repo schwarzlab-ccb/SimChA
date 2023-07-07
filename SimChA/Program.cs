@@ -119,6 +119,10 @@ try
     {
         files.WriteVCF(genRef, samples);
     }
+    if (options.WriteFasta)
+    {
+        files.WriteFasta(genRef, samples);
+    }
 }
 catch (Exception e)
 {
