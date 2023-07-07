@@ -233,4 +233,27 @@ public class TestRegions
         Assert.AreEqual(location, internalLocation);
 
     }
+
+    [Test]
+    public void TestUpdateSNVDict()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with {Start = 0, End = 100}
+        };
+        var location = 45;
+        var newNucleotide = Nucleotide.A;
+        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        foreach (var region in mutatedRegions)
+        {
+            Assert.IsNotNull(region.SNVDict);
+        }
+        // TODO: Why does DeleteRange remove the original mutatedRegions SNVDict?
+        // Does it matter?
+        var finalRegions = RegionOps.DeleteRange(mutatedRegions, 30, 70);
+        foreach (var region in finalRegions)
+        {
+            Assert.IsNull(region.SNVDict);
+        }
+    }
 }

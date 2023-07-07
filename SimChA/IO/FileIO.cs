@@ -209,13 +209,19 @@ public class FileIO
                         var end   = region.End;
                         // TODO: check the indexing
                         var regionSeq = new StringBuilder (genRef.GenContentsDict[chrNo].ToString((int)start, (int)(end-start)));
-                        /*if (region.SNVDict != null)
+                        if (region.SNVDict != null)
                         {
                             foreach (var snv in region.SNVDict)
                             {
-                                regionSeq[(int)(start-snv.Key)] = snv.Value.ToString()[0];
+                                var loc = snv.Key - start;
+                                if (loc < 0)
+                                {
+                                    Console.WriteLine($"{region.Forward}");
+                                }
+                                Console.WriteLine($"{loc}");
+                                regionSeq[(int)(snv.Key-start)] = snv.Value.ToString()[0];
                             }
-                        }*/
+                        }
 
                         if (!region.Forward)
                         {
