@@ -119,7 +119,7 @@ public class TestEventData
     }
 
     [Test]
-    public void TestChromoplexy()
+    public void TestChromoplexy([Values] IntEdgeCases seed)
     {
         var eventP = new CNEventPars(CNEventType.Chromoplexy, 1, 1_000_000, 10);
         var frags = new List<(int, long)>
@@ -129,7 +129,7 @@ public class TestEventData
             (2, 20_000_000),
             (3, 30_000_000)
         };
-        var eventData = new ChromoplexyEventData(_rnd, eventP, frags);
+        var eventData = new ChromoplexyEventData(new Random((int) seed), eventP, frags);
         Assert.AreEqual(eventData.Stops.Sum(s => s.Count + 1), eventData.Sequence.Count);
         Assert.AreEqual(eventData.ContigIds.Count - 1, eventData.Breakpoints.Count);
         Console.WriteLine(eventData);
