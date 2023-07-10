@@ -203,7 +203,7 @@ public class TestIO
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
         const string sequence1 = 
-            @"ACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTG";
+            @"AAAAACTGGGGG";
         const string sequence2 =
             @"TTTTTTTTTTTTT";
         const string fasta = @$">chr1
@@ -232,10 +232,24 @@ public class TestIO
         sample.EventDescs[0].Append(eventDesc);
         sample.Kars[0].ApplyInternalInversion(contigID, 4, 8);
 
+        contigID = 1;
+        var snvEventPars = new CNEventPars(CNEventType.SNV, 1);
+        var snvEventData = new PointMutationData(rnd, snvEventPars, contigID, sequence2.Count());
+        var snvEventDesc = new CNEventDesc(CNEventType.SNV, 2, snvEventData.ToString());
+        sample.EventDescs[0].Append(snvEventDesc);
+        sample.Kars[0].ApplySNV(contigID, 10, Nucleotide.A);
+
         var samples = new List<Sample> (){sample};
         if (samples.Any(s => s.EventDescs.Any()) )
         {
             files.WriteFasta(_genRef, samples);
         }
+        // The expected output is
+        /*
+        >ctg0
+        AAAAGTCAGGGG
+        >ctg1
+        TTTTTTTTTTATT
+        */
     }
 }

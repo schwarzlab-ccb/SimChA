@@ -200,8 +200,7 @@ public class FileIO
                 {
                     outputFile.WriteLine($">ctg{contigId}");
                     Console.WriteLine($"Writing out contig {contigId}");
-                    var contig = kar.GetContig(contigId);
-                    foreach (var region in contig.GetRegions())
+                    foreach (var region in kar.GetContig(contigId).GetRegions())
                     {
                         var chrNo = region.ChrNo;
                         var start = region.Start;
