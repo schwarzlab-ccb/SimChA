@@ -15,19 +15,28 @@ public static class RegionOps
     }
 
     private static Region OffsetStart(Region region, long howMuch)
-        => region.Forward
+    {
+        var newRegion = region.Forward
             ? region with { Start = region.Start + howMuch }
             : region with { End = region.End - howMuch };
+        return UpdateSNVDict(newRegion);
+    }
     
     private static Region OffsetEnd(Region region, long howMuch)
-        => region.Forward 
+    {
+        var newRegion = region.Forward 
             ? region with {End = region.Start + howMuch}
             : region with {Start = region.End - howMuch};
-    
+        return UpdateSNVDict(newRegion);
+    }    
     private static Region OffsetBoth(Region region, long start, long end)
-        => region.Forward 
+    {
+        var newRegion = region.Forward 
             ? region with {Start = region.Start + start, End = region.Start + end}
             : region with {Start = region.End - end, End = region.End - start };
+        
+        return UpdateSNVDict(newRegion);
+    }
     
     private static Region UpdateSNVDict(Region region)
     {
@@ -71,23 +80,19 @@ public static class RegionOps
             {
                 var newRegion = OffsetEnd(region, start - seekPos);
                 // SNVs inside of the deleted region must be removed from dictionary
-                newRegion = UpdateSNVDict(newRegion);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region, end inside the region
             {
                 var newRegion = OffsetStart(region, end - seekPos);
-                newRegion = UpdateSNVDict(newRegion);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
                 var firstRegion = OffsetEnd(region, start - seekPos);
-                firstRegion = UpdateSNVDict(firstRegion);
                 AddIfNotEmpty(newRegions, firstRegion);
 
                 var secondRegion = OffsetStart(region, end - seekPos);
-                secondRegion = UpdateSNVDict(secondRegion);
                 AddIfNotEmpty(newRegions, secondRegion);
             }
 
