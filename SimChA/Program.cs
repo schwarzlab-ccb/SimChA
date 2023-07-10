@@ -31,7 +31,8 @@ else
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var genRef = FileIO.GetGenRef(options.DataFolder, options.UseVariants);
+bool parseGenContents = (execMode == ExecMode.ParseGenContents);
+var genRef = FileIO.GetGenRef(options.DataFolder, parseGenContents);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();

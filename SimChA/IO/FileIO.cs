@@ -201,13 +201,11 @@ public class FileIO
                     outputFile.WriteLine($">ctg{contigId}");
                     Console.WriteLine($"Writing out contig {contigId}");
                     var contig = kar.GetContig(contigId);
-                    StringBuilder contigSeq = new StringBuilder();
                     foreach (var region in contig.GetRegions())
                     {
                         var chrNo = region.ChrNo;
                         var start = region.Start;
                         var end   = region.End;
-                        // TODO: check the indexing
                         var regionSeq = new StringBuilder (genRef.GenContentsDict[chrNo].ToString((int)start, (int)(end-start)));
                         if (region.SNVDict != null)
                         {
@@ -217,16 +215,17 @@ public class FileIO
                                 regionSeq[(int)(snv.Key-start)] = snv.Value.ToString()[0];
                             }
                         }
-
                         if (!region.Forward)
                         {
                             char[] baseArray = regionSeq.ToString().ToCharArray();
                             Array.Reverse(baseArray);
                             regionSeq = new StringBuilder(new string(baseArray));
                         }
-                        contigSeq.Append(regionSeq);
+                        outputFile.Write(regionSeq);
+                        // Note that the output FASTA will not be in blocks of 80 characters wide
+                        // Implementing it means the write-out function takes way longer.
                     }
-                    outputFile.WriteLine(contigSeq);
+                    outputFile.Write("\n");
                 }
                 if (count > 0) return;
             }

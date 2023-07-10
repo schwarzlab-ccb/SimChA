@@ -7,5 +7,6 @@ public enum ExecMode
     None,
     Tree,
     Repeats,
-    Profiles
+    Profiles,
+    ParseGenContents
 }

@@ -202,28 +202,32 @@ public class TestIO
     {
         string? projectPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
-        const string sequence = 
-            @"ACTGACTGACTG";
+        const string sequence1 = 
+            @"ACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTGACTG";
+        const string sequence2 =
+            @"TTTTTTTTTTTTT";
         const string fasta = @$">chr1
-{sequence}";
+{sequence1}
+>chr2
+{sequence2}";
 
         byte[] byteArray = Encoding.UTF8.GetBytes(fasta);
         MemoryStream stream = new MemoryStream(byteArray);
         var genContents = Parsers.ParseFasta(new StreamReader(stream)).ToList();
-        _genRef.GenContentsDict = new Dictionary<string, StringBuilder> (){{"chr1", genContents[0]}};
+        _genRef.GenContentsDict = new Dictionary<string, StringBuilder> (){{"chr1", genContents[0]},{"chr2", genContents[1]}};
 
         var eventPars = new List<CNEventPars>(){new CNEventPars(CNEventType.InternalInversion, 1, 10)};
         
         var clonesIn = new List<CloneIn> (){new CloneIn(0,-1, 1, 1)};
 
         var sample = new Sample("sample_1", false, clonesIn, eventPars, null);
-        var contigs = new List<Contig> (){new Contig(new Region(0, sequence.Count(), "chr1", true))};
+        var contigs = new List<Contig> (){new Contig(new Region(0, sequence1.Count(), "chr1", true)), new Contig(new Region(0, sequence2.Count(), "chr2", true))};
         sample.EventDescs[0] = new List<CNEventDesc> ();
         sample.Kars[0] = new Karyotype( contigs, new List<GenRange>(), false);
         // Apply an internal inversion
         var rnd = new Random(0);
         var contigID = 0;
-        var eventData = new InternalEventData(rnd, eventPars[0], contigID, sequence.Count());
+        var eventData = new InternalEventData(rnd, eventPars[0], contigID, sequence1.Count());
         var eventDesc = new CNEventDesc(CNEventType.InternalInversion, 1, eventData.ToString());
         sample.EventDescs[0].Append(eventDesc);
         sample.Kars[0].ApplyInternalInversion(contigID, 4, 8);

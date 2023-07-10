@@ -332,6 +332,26 @@ Information about the individual events in the simulation. The columns are:
 |----|------------|-------------|----------|-----------|------------|
 |  0 | ChromDuplication | contig:23 | 11.53782375 | 11.53782375 | 1 |
 
+#### 'vcf.tsv'
+
+Generates a simple VCF file of all the observable (i.e. final and nucleotide-changing) SNVs that occurred to the samples during simulation. The columns are:
+
+`##fileformat=VCFv4.3`
+
+`##source=SimChAV1.0`
+
+`##reference=verily_hg19_genome.fa`
+
+| `#SAMPLEID` | 	CHROM	| POS	| ID |	REF |	ALT |
+|----|------------|-------------|----------|-----------|------------|
+|  0 | chr1 | 8114090 | . | a | C |
+
+#### 'genome.fa'
+
+*Note that this only currently works with single-sample simulations* 
+
+Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include 
+
 
 ### Plots (created by `./plots.sh`)
 

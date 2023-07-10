@@ -52,6 +52,10 @@ public class CmdOptions
             {
                 return ExecMode.Profiles;
             }
+            if (UseVariants || WriteFasta)
+            {
+                return ExecMode.ParseGenContents;
+            }
             return ExecMode.None;
         }
     }
