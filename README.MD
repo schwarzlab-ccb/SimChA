@@ -78,6 +78,8 @@ Use `dotnet run -- [options]` to specify any of the following:
   -P --profile path   A path to a file with copy number profiles.
   -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. 
   -s  Calculate consistent copy numbers segmentation in addition to a normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
+  -V, --variants     Generate a Variant Call Format-like (VCF) file at the end of the run.
+  -F, --fasta       Generate the FASTA file of the produced karyotype (Note: this currently only works for single-sample simulations).
 ```
 
 ### Parameters
