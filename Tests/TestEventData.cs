@@ -141,6 +141,7 @@ public class TestEventData
         const long len = 100_000_000;
         var eventP = new CNEventPars(CNEventType.Chromothripsis, 1, 1_000_000);
         var eventData = new ChromothripsisEventData(new Random((int) seed), eventP, 0, len);
+        Assert.Less(0, eventData.StopsList.Count);
         foreach (long stop in eventData.StopsList)
         {
             Assert.Greater(stop, 0);
