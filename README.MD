@@ -76,7 +76,7 @@ Use `dotnet run -- [options]` to specify any of the following:
   -R --repeats n   Will run the simulation and generate n independent samples.
   -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
   -P --profile path   A path to a file with copy number profiles.
-  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. 
+  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. If you want to use either of the flags "--variants" or "--fasta", you must also have the corresponding reference genome, named genome.fa in the same directory.
   -s  Calculate consistent copy numbers segmentation in addition to a normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
   -V, --variants     Generate a Variant Call Format-like (VCF) file at the end of the run.
   -F, --fasta       Generate the FASTA file of the produced karyotype (Note: this currently only works for single-sample simulations).
@@ -300,9 +300,9 @@ The text files are primarily used as source for plots shown below.
 CN output in the format examplifed as:
 
 
-| sample_id | chrom | start | end   | cn_a | cn_b |
-|-----------|-------|-------|-------|------|------|
-|0          |	chr1  |	24721 |	98434 |	1    |   	4 |
+| sample_id | chrom | start | end   | cn_a | cn_b | n_snvs |
+|-----------|-------|-------|-------|------|------|--------|
+|0          |	chr1  |	24721 |	98434 |	1    |   	4 |      2 |
 
 #### `clone_tree.new`
 
