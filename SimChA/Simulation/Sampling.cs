@@ -51,7 +51,7 @@ public static class Sampling
     }
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
-        => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
+        => concentrations.Any() ? new DirichletDistribution(concentrations.Where(c => c > 0).ToArray()).Sample(rnd).ToList() : new List<double>();
     
     public static double SampleDist(Random rnd, DataTypes.Distribution dist)
     {
