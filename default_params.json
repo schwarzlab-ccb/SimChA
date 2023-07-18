@@ -1,5 +1,5 @@
 {
-  "Seed": 0,
+  "Seed": -1,
   "Sex": "Both",
   "EventCount": 100,
   "EventDist": "Exponential",
@@ -104,7 +104,7 @@
       ]
     },
     "SNVs": {
-      "Prob": 1,
+      "Prob": 0,
       "Events": [
         {
           "Type": "SNV",
@@ -115,9 +115,9 @@
   },
   "MCParams": {
     "NumSamplesMin": 100,
-    "NumSamplesTotal": 2000,
-    "ThetaFitness": 20.0,
+    "NumSamplesTotal": 5000,
+    "ThetaFitness": 10.0,
     "SwapEventP": 1.0,
-    "ThresholdFit": 0.01
+    "ThresholdFit": 0.00000001
   }
 }

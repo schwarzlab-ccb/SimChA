@@ -47,8 +47,8 @@ public static class Converters
     {
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Value.Prob > 0).ToDictionary(s => s.Key, s => s.Value);
-        string[] sigNames = sigs.Select(s => s.Key).ToArray();
-        double[] sigProbs = sigs.Select(s => s.Value.Prob).ToArray();
+        string[] sigNames = selectedSigs.Select(s => s.Key).ToArray();
+        double[] sigProbs = selectedSigs.Select(s => s.Value.Prob).ToArray();
         for (int i = 0; i < repeats; i++)
         {
             double dist = Sampling.SampleDist(rnd, distribution);
