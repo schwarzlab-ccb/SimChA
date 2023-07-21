@@ -49,8 +49,7 @@ conda install -c conda-forge dotnet
 
 The analysis code is written in **Python 3.8**. The following packages are required (either from *Conda* or *Pip*):
 ```
-conda install -c bioconda
-conda install -c conda-forge biopython matplotlib numpy pandas seaborn pillow
+conda install -c conda-forge -c bioconda biopython matplotlib numpy pandas seaborn pillow
 ```
 
 ## Execution
