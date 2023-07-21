@@ -11,24 +11,29 @@ public class Contig
 
     public Contig()
         => _regions = new List<Region>();
-    
-    public Contig(Region initialRegion) 
+
+    public Contig(Region initialRegion)
         => _regions = new List<Region> { initialRegion };
 
     public Contig(IEnumerable<Region> regions)
         => _regions = regions.Where(r => r.Length > 0).ToList();
 
-    public Contig(Contig other) 
+    public Contig(Contig other)
         => _regions = new List<Region>(other._regions);
-    
-    public static Contig Concat(IEnumerable<Contig> contigs) 
+
+    public static Contig Concat(IEnumerable<Contig> contigs)
         => new(contigs.SelectMany(c => c._regions));
 
-    public long Length() 
+    public long Length()
         => Length(_regions);
 
-    public bool Any() 
+    public bool Any()
         => Length() > 0;
+
+    public List<Region> GetRegions()
+    {
+        return _regions;
+    }
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -38,9 +43,9 @@ public class Contig
 
     public override string ToString()
         => ToString(_regions);
-    
-    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo)
-        => _regions.Where(r => r.ChrID.ChrNo == chrNo);
+
+    public IEnumerable<Region> FindRegionsOfChr(string chrNo)
+        => _regions.Where(r => r.ChrNo == chrNo);
 
     public void Clear()
         => _regions.Clear();
@@ -125,19 +130,46 @@ public class Contig
         else
         {
             var (first, second) = RegionOps.SplitRegions(_regions, location);
-            _regions = RegionOps.ConcatRegions(new[] {first, other._regions, second});
+            _regions = RegionOps.ConcatRegions(new[] { first, other._regions, second });
         }
     }
-    
+
     public void AppendContig(Contig other)
     {
         _regions = RegionOps.ConcatRegions(_regions, other._regions);
     }
-
-
+    
     public void GlueNeighbours()
         => _regions = RegionOps.GlueNeighbours(_regions);
     
-    public IEnumerable<Gene> GetPresentGenes(GeneListType geneListType)
-        => _regions.Where(r => r.Forward).SelectMany(r => r.GeneLists[geneListType]).ToList();
+    public void SNV(long location, Nucleotide newNucleotide)
+    {
+        _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
+    }
+    
+    public (Region region, long internalLocation) FindRegion(long location) 
+        => RegionOps.FindRegion(_regions, location);
+
+    public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
+    {
+        List<Gene> presentGenes = new();
+        foreach ((long start, long end, var chrNo, var _, bool forward, var _) in _regions)
+        {
+            var geneList = geneLists[chrNo];
+            if (forward && geneList.Count > 0)
+            {
+                int geneIndex = 0;
+                while (geneIndex < geneList.Count && start > geneList[geneIndex].Range.Start)
+                {
+                    geneIndex++;
+                }
+                while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= end)
+                {
+                    presentGenes.Add(geneList[geneIndex]);
+                    geneIndex++;
+                }
+            }
+        }
+        return presentGenes;
+    }
 }

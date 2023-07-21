@@ -1,9 +1,9 @@
 ﻿using SimChA.DataTypes;
-using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.Computation;
 
+// TODO: Inverted regions currently not 
 public static class RegionOps
 {
     private static void AddIfNotEmpty(ICollection<Region> regions, Region region)
@@ -14,6 +14,51 @@ public static class RegionOps
         }
     }
 
+    private static Region OffsetStart(Region region, long howMuch)
+    {
+        var newRegion = region.Forward
+            ? region with { Start = region.Start + howMuch }
+            : region with { End = region.End - howMuch };
+        return UpdateSNVDict(newRegion);
+    }
+    
+    private static Region OffsetEnd(Region region, long howMuch)
+    {
+        var newRegion = region.Forward 
+            ? region with {End = region.Start + howMuch}
+            : region with {Start = region.End - howMuch};
+        return UpdateSNVDict(newRegion);
+    }    
+    private static Region OffsetBoth(Region region, long start, long end)
+    {
+        var newRegion = region.Forward 
+            ? region with {Start = region.Start + start, End = region.Start + end}
+            : region with {Start = region.End - end, End = region.End - start };
+        
+        return UpdateSNVDict(newRegion);
+    }
+    
+    private static Region UpdateSNVDict(Region region)
+    {
+        if (region.SNVDict == null)
+        {
+            return region;
+        }
+        var newSNVDict = region.SNVDict;
+        foreach (var snv in region.SNVDict)
+        {
+            if (snv.Key <= region.Start || region.End <= snv.Key)
+            {
+                newSNVDict.Remove(snv.Key);
+            }
+        }
+        if (newSNVDict.Keys.Count == 0)
+        {
+            newSNVDict = null;
+        }
+        return region with {SNVDict = newSNVDict};
+    }
+    
     public static List<Region> DeleteRange(List<Region> regions, long start, long end)
     {
         var newRegions = new List<Region>();
@@ -33,36 +78,20 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
-                var newRegion = region with 
-                {
-                    End = region.End + start - seekPos - region.Length,
-                    GeneLists = Fitness.GetGeneList(region.Start, region.End + start - seekPos - region.Length, region.ChrNo)
-                };
+                var newRegion = OffsetEnd(region, start - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region, end inside the region
             {
-                var newRegion = region with 
-                {
-                    Start = region.Start - seekPos + end,
-                    GeneLists = Fitness.GetGeneList(region.Start - seekPos + end, region.End, region.ChrNo)                    
-                };
+                var newRegion = OffsetStart(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var firstRegion = region with 
-                {
-                    End = region.End + start - seekPos - region.Length,
-                    GeneLists = Fitness.GetGeneList(region.Start, region.End + start - seekPos - region.Length, region.ChrNo)
-                };
+                var firstRegion = OffsetEnd(region, start - seekPos);
                 AddIfNotEmpty(newRegions, firstRegion);
 
-                var secondRegion = region with 
-                {
-                    Start = region.Start - seekPos + end,
-                    GeneLists = Fitness.GetGeneList(region.Start - seekPos + end, region.End, region.ChrNo)
-                };
+                var secondRegion = OffsetStart(region, end - seekPos);
                 AddIfNotEmpty(newRegions, secondRegion);
             }
 
@@ -91,30 +120,17 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // end outside of region
             {
-                var newRegion = region with 
-                { 
-                    Start = region.Start + start - seekPos,
-                    GeneLists = Fitness.GetGeneList(region.Start + start - seekPos, region.End, region.ChrNo)
-                };
+                var newRegion = OffsetStart(region, start - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region
             {
-                var newRegion = region with 
-                {
-                    End = region.Start + (end - seekPos),
-                    GeneLists = Fitness.GetGeneList(region.Start, region.Start + (end - seekPos), region.ChrNo)
-                };
+                var newRegion = OffsetEnd(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // Both coordinates inside of the region
             {
-                var newRegion = region with 
-                {
-                    Start = region.Start + start - seekPos,
-                    End = region.Start + end -  seekPos,
-                    GeneLists = Fitness.GetGeneList(region.Start + start - seekPos, region.Start + end - seekPos, region.ChrNo)
-                }; 
+                var newRegion = OffsetBoth(region, start - seekPos, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
 
@@ -141,17 +157,9 @@ public static class RegionOps
             }
             else // split inside the region
             {
-                var firstPart = region with 
-                { 
-                    End = region.Start + pos - seekPos,
-                    GeneLists = Fitness.GetGeneList(region.Start, region.Start + pos - seekPos, region.ChrNo)
-                };
+                var firstPart = OffsetEnd(region, pos - seekPos);
                 AddIfNotEmpty(beforeRegions, firstPart);
-                var secondPart = region with 
-                { 
-                    Start = firstPart.End,
-                    GeneLists = Fitness.GetGeneList(firstPart.End, region.End, region.ChrNo)
-                };
+                var secondPart = OffsetStart(region, pos - seekPos);
                 AddIfNotEmpty(afterRegions, secondPart);
             }
 
@@ -160,38 +168,28 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
-
-    public static List<T> StitchRegions<T>(List<T> regions) where T : GeneRegionList
+    public static List<Region> PointMutateRegion(List<Region> regions, long location, Nucleotide newNucleotide)
     {
-        var newRegions = new List<T>();
-        bool[] merged = new bool[regions.Count];
-        for (int i = 0; i < regions.Count; i++)
+        long seekPos = 0;
+        var newRegions = new List<Region>();
+        foreach (var region in regions)
         {
-            if (merged[i])
+            if (location >= seekPos && location < seekPos + region.Length)
             {
-                continue;
+                var newSNVDict = region.SNVDict ?? new Dictionary<long, Nucleotide>();
+                newSNVDict[region.Start + location - seekPos] = newNucleotide;
+                var newRegion = region with { SNVDict = newSNVDict };
+                AddIfNotEmpty(newRegions, newRegion);
             }
-            var newRegion = regions[i];
-            for (int j = i + 1; j < regions.Count; j++)
+            else
             {
-                if (merged[j] 
-                    || regions[j].ChrNo != newRegion.ChrNo 
-                    || regions[j].Start != newRegion.End)
-                {
-                    continue;
-                }
-                newRegion = newRegion with 
-                {
-                    End = regions[j].End,
-                    GeneLists = Fitness.GetGeneList(newRegion.Start, regions[j].End, newRegion.ChrNo)
-                };
-                merged[j] = true;
+                AddIfNotEmpty(newRegions, region);
             }
-            newRegions.Add(newRegion);
-        }
+            seekPos += region.Length;
+        }        
         return newRegions;
     }
-    
+
     public static List<Region> GlueNeighbours(List<Region> regions)
     {
         var newRegions = new List<Region>();
@@ -210,11 +208,7 @@ public static class RegionOps
                 && regions[j].Start == newRegion.End 
                 && regions[j].Forward == newRegion.Forward)
             {
-                newRegion = newRegion with 
-                {
-                    End = regions[j].End,
-                    GeneLists = Fitness.GetGeneList(newRegion.Start, regions[j].End, newRegion.ChrNo)
-                };
+                newRegion = newRegion with {End = regions[j].End};
                 merged[j] = true;
             }
             newRegions.Add(newRegion);
@@ -258,4 +252,21 @@ public static class RegionOps
     
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
+
+    public static (Region region, long internalLocation) FindRegion(
+        List<Region> regions, long location)
+    {
+        long seekPos = 0;
+        var region = regions[0];
+        for (int i = 0; i < regions.Count; i++)
+        {
+            region = regions[i];
+            if (location >= seekPos && location < seekPos + region.Length)
+            {
+                return (region, region.Start + location - seekPos);
+            }
+            seekPos += region.Length;
+        }
+        throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
+    }
 }

@@ -15,25 +15,24 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
-        HGRef.Assembly = GenomeAssembly.hg38;
-        _cRegion = HGRef.GetGenotype(true)[0];
+        _cRegion = new Region(0, 249250621, "chr1", true, true);
     }
 
     [Test]
     public void TestOverlap()
     {
-        var testRange = new GeneRange(1000, 2000, ChrNo.chr1);
-        Assert.IsTrue(testRange.Overlaps(new GeneRange(500, 1500, ChrNo.chr1)));
-        Assert.IsFalse(testRange.Overlaps(new GeneRange(500, 1500, ChrNo.chr2)));
+        var testRange = new GenRange(1000, 2000, "chr1");
+        Assert.IsTrue(testRange.Overlaps(new GenRange(500, 1500, "chr1")));
+        Assert.IsFalse(testRange.Overlaps(new GenRange(500, 1500, "chr2")));
         
-        Assert.IsTrue(testRange.Overlaps(new GeneRange(0, 1001, ChrNo.chr1)));
-        Assert.IsFalse(testRange.Overlaps(new GeneRange(0, 1000, ChrNo.chr1)));
+        Assert.IsTrue(testRange.Overlaps(new GenRange(0, 1001, "chr1")));
+        Assert.IsFalse(testRange.Overlaps(new GenRange(0, 1000, "chr1")));
 
-        Assert.IsTrue(testRange.Overlaps(new GeneRange(1999, 3000, ChrNo.chr1)));
-        Assert.IsFalse(testRange.Overlaps(new GeneRange(2000, 3000, ChrNo.chr1)));
+        Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, "chr1")));
+        Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, "chr1")));
 
-        var gene = new Gene("OR4F5", new GeneRange(69090, 70008, ChrNo.chr1), 0.142321064);
-        var range = new GeneRange(0, 249250621, ChrNo.chr1);
+        var gene = new Gene("OR4F5", new GenRange(69090, 70008, "chr1"), 0.142321064);
+        var range = new GenRange(0, 249250621, "chr1");
         Assert.IsTrue(range.Overlaps(gene.Range));
     }
 
@@ -65,6 +64,19 @@ public class TestRegions
         regions = RegionOps.DeleteRange(regions, -1000, _cRegion.Length);
         Console.WriteLine(Contig.ToString(regions));
         Assert.AreEqual(0, Contig.Length(regions));
+    }
+    
+    [Test]
+    public void TestDeleteInverted()
+    {
+        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var newRegions = RegionOps.DeleteRange(regions, 1000, 2000);
+        Assert.AreEqual(1000, newRegions[0].Length);
+        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].Length);
+        Assert.AreEqual(_cRegion.Length - 1000, newRegions[0].Start);
+        Assert.AreEqual(_cRegion.Length, newRegions[0].End);
+        Assert.AreEqual(0, newRegions[1].Start);
+        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].End);
     }
 
     [Test]
@@ -118,20 +130,34 @@ public class TestRegions
         };
         Assert.AreEqual(res, RegionOps.CopyRange(regions, 1, 3));
     }
-    
+
+    [Test]
+    public void TestCopyInverted()
+    {
+        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        // Start and end within a region
+        var regCopy = RegionOps.CopyRange(regions, 1000, 2000);
+        Assert.AreEqual(1, regions.Count);
+        Assert.AreEqual(1000, regCopy[0].Length);
+        Assert.AreEqual(_cRegion.Length - 2000, regCopy[0].Start);
+        Assert.AreEqual(_cRegion.Length - 1000, regCopy[0].End);
+    }
+
     [Test]
     public void TestSplit()
     {
         var regions = new List<Region> { _cRegion };
         
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
+        Assert.AreEqual(2000, before[0].Length);
         Assert.AreEqual(regions[0]  with { End = 2000}, before[0]);
         Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
 
         regions = RegionOps.InvertRegions(regions);
         (before, after) = RegionOps.SplitRegions(regions, 2000);
-        Assert.AreEqual(regions[0] with { End = 2000}, before[0]);
-        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
+        Assert.AreEqual(2000, before[0].Length);
+        Assert.AreEqual(regions[0] with { Start = _cRegion.Length - 2000}, before[0]);
+        Assert.AreEqual(regions[0] with { End = _cRegion.Length - 2000}, after[0]);
     }
     
     [Test]
@@ -165,5 +191,69 @@ public class TestRegions
         regions = RegionOps.ConcatRegions(new[] {regions, regions });
         Console.WriteLine(Contig.ToString(regions));
         Assert.AreEqual(_cRegion.Length * 4, Contig.Length(regions));
+    }
+
+    [Test]
+    public void TestPointMutateRegion()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3 },
+            _cRegion with { Start = 3, End = 4 }
+        };
+        var location = 2;
+        var newNucleotide = Nucleotide.A;
+        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        Assert.AreEqual(regions[0], mutatedRegions[0]);
+        Assert.AreEqual(regions[1], mutatedRegions[1]);
+        Assert.AreNotEqual(regions[2], mutatedRegions[2]);
+        Assert.AreEqual(regions[3], mutatedRegions[3]);
+
+        Assert.NotNull(mutatedRegions[2].SNVDict);
+        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVDict[location]);
+
+    }
+
+    [Test]
+    public void TestFindRegion()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3 },
+            _cRegion with { Start = 3, End = 4 }
+        };
+        var location = 2;
+        (var region, var internalLocation) = RegionOps.FindRegion(regions, location);
+
+        Assert.AreEqual(regions[2], region);
+        Assert.AreEqual(location, internalLocation);
+
+    }
+
+    [Test]
+    public void TestUpdateSNVDict()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with {Start = 0, End = 100}
+        };
+        var location = 45;
+        var newNucleotide = Nucleotide.A;
+        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        foreach (var region in mutatedRegions)
+        {
+            Assert.IsNotNull(region.SNVDict);
+        }
+        // TODO: Why does DeleteRange remove the original mutatedRegions SNVDict?
+        // Does it matter?
+        var finalRegions = RegionOps.DeleteRange(mutatedRegions, 30, 70);
+        foreach (var region in finalRegions)
+        {
+            Assert.IsNull(region.SNVDict);
+        }
     }
 }

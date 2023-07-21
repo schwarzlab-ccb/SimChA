@@ -27,6 +27,16 @@ The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so 
 git lfs pull
 ```
 
+### Somatic Nucleotide Variants (SNVs)
+
+SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run as follows:
+
+```
+chmod +x DownloadRefData.sh && ./DownloadRefData.sh
+```
+
+Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
+
 
 ### Simulation
 
@@ -66,34 +76,64 @@ Use `dotnet run -- [options]` to specify any of the following:
   -R --repeats n   Will run the simulation and generate n independent samples.
   -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
   -P --profile path   A path to a file with copy number profiles.
-  --data (Default: ./data) The path for the tsv-files with the essential-, tsg- and og-genes with scores. The files should be named: essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.
+  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. If you want to use either of the flags "--variants" or "--fasta", you must also have the corresponding reference genome, named genome.fa in the same directory.
+  -s  Calculate consistent copy numbers segmentation in addition to a normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
+  -V, --variants     Generate a Variant Call Format-like (VCF) file at the end of the run.
+  -F, --fasta       Generate the FASTA file of the produced karyotype (Note: this currently only works for single-sample simulations).
 ```
 
-## Parameters
+### Parameters
 
 Default parameters are found in the file: `default_params.json`. The exact parameters are dependent on the execution mode. The parameters are:
 
-### Common
-* `Seed: int` - The seed for the random number generator.
-* `SexXX: bool` - If true, uses the XX genome, otherwise the XY genome.
-* `Assembly: string` - The assembly to use. Currently hg19 and hg38 are supported.
+#### Common (R, T, P)
 * `Fitness: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
 
-### Repeats mode
+#### Simulation mode only (R, T)
+* `Seed: int` - The seed for the random number generator.
+* `Sex: ["Female", "Male", "Both"]` - Whether to simulate only female chromosome, male chromosome, or randomly select from the two.
+
+#### Repeats mode only (R)
 * `EventCount: int` - The mean number of events per sample.
-* `Distribution: ["Uniform", "Exponential", "Normal"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
+* `EventDist: ["Uniform", "Exponential", "Normal"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
 
-### Simulation mode
+#### MCMC mode (M)
+TODO
 
+## Input Data
 
-## Fitness calculation
+Data should be provided as a path to a folder using the `--data` parameter. The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectivelly. 
+
+### Chromosomes
+
+The chromosome contains the lengths and sex-specific information of individual chromosomes. By default there are two columns, one with the name of a chromosome, one with a number of basises.
+
+Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Both`.
+
+Example file:
+
+```
+chr1	248956422	Both
+...
+chrY	59373566	Male
+```
 
 ### TSG/OG/Eseentiality Score
 We use three data files, providing the TSG/OG/Essentiality score. Each file is a tab-separated file with the following columns:
 
-| Chromosome | Start Position | End Position | Gene | Score |
-|------------|----------------|--------------|------|-------|
-| chr1       | 1000           | 2000         | gene | 0.5   |
+* `Chromosome: string` - The name of the chromosome.
+* `Start: long` - The start position of the gene (inclusive).
+* `End: long` - The end position of the gene (inclusive).
+* `Gene: string` - The name of the gene.
+* `Score: float` - The score of the gene.
+
+Example file:
+```
+chr3	178865902	178957881	PIK3CA	1
+chr7	140419127	140624564	BRAF	0.991919559
+chr12	25357723	25403870	KRAS	0.990684897
+...
+```
 
 For each gene, the:
 
@@ -101,98 +141,137 @@ For each gene, the:
 * OG score is the probability that the gene is an Oncogene (OG) 
 * Essentiality score is the log2 fold change in the reproducibility of a cell after a knock-out of the gene (both alleles).
 
-## Aberrations
+## Signatures
 
-### Chromosome Deletion
+SimChA simulates events based on mutational signatures. Each signature is a set of events and their associated parameters, for example consider the following excerpt from a configuration file:
 
-A single chromosome is selected at random and removed.
+```
+"Signatures" : {
+  "WChE_example" : {
+    "Prob": 1,
+    "Events": [
+      {
+        "Type": "ChromDeletion",
+        "Prob": 1
+      },
+      {
+        "Type": "ChromDuplication",
+        "Prob": 2
+      }        
+    ]
+  },
+  "Internal_example" : {
+    "Prob": 5,
+    "Events": [
+      {
+        "Type": "InternalDeletion",
+        "Prob": 1
+        "Size": 1000000
+      }      
+    ]
+  }
+}
+```
+These are two signatures, one for Whole Chromosome Events (WChE) and one for Internal events. The likelihood of a signature being selected is 1 : 5, meaning the Internal is 5 times as likely. 
 
-##### Params:
-* `Prob: float`.
+If the WChE is selected, the probability of a deletion compared to duplication is 1 : 2. SimChA works with *contigs*, i.e. contiguous sequences of bases. A deletion or duplication will be a deletion or duplication of a contig. A contig may be comprised of parts of different chromosomes, e.g. after a translocation, however at the start of simulation, the set of contigs is the same as the set of chromosomes.
+
+If the Internal Deletion is selected, the mean size of a deleted segment will be 1MB, distributed exponentially.
+
+Each Event has an associated type and a probability, which is relative to all the other events in the signature. The following events are available:
+
+* `ChromDeletion`
+* `ChromDuplication`
+* `TailDeletion`
+* `InternalDeletion`
+* `InternalDuplication`
+* `InternalInversion`
+* `InvertedDuplication`
+* `Translocation`
+* `BreakageFusionBridge`
+* `WholeGenomeDoubling`
+* `Chromothripsis`
+* `Chromoplexy`
+* `TIChain`
+* `TICycle`
+* `TIBridge`
+* `Pyrgo`
+* `Rigma`
+* `SNV`
+
+Events have parameters from the following:
+* `Type: string` - The type of the event, one from the list above.
+* `Prob: double` - The probability of the event being selected.
+* `Size: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal events.
+* `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
+
+### Chromosome Deletion (Prob)
+
+A single contig is selected at random and removed.
+
+### Chromosome Duplication (Prob)
+
+A single contig is selected at random and duplicated.
+
+### Whole Genome Doubling (Prob)
+
+All the existing contigs are duplicated.
+
+### Tail Deletion (Prob, Size)
+
+A tail of a length given by the `Size` parameter is removed from an end of a contig. The end is selected by a coin flip.
+
+### Internal Deletion (Prob, Size)
+
+A single contig is selected, from which a segment distributed by along the `Size` parameter is removed. The position of a segments is guaranteed to be internal and uniformly distributed.
 
 
-### Chromosome Duplication
-
-A single chromosome is selected at random and duplicated.
-
-##### Params:
-* `Prob: float`.
-
-### Tail Deletion
-
-A single chromosome is selected, then an either end thereof, lastly a length of the segmend. The segment is then removed from the end of the chromosome.
-
-##### Params:
-* `Prob: float`,
-* `Size: long`.
-
-### Internal Deletion
-
-A single chromosome is selected, then a length of the segmend. This segment is then removed from a uniformly distrubuted position on the chromosome excluding the first and the last base.
-
-##### Params:
-* `Prob: float`,
-* `Size: long`.
-
-### Internal Duplication
-A single chromosome is selected, then a length of the segmend. This segment is then pasted directly after its original position, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+### Internal Duplication (Prob, Size)
+A single contig is selected, from which a segment distributed by along the `Size` parameter is duplicated. The position of a segments is guaranteed to be internal and uniformly distributed. This segment is pasted directly after its original position.
 
 ![Translocation Cartoon](./doc/img/InternalDuplication.png)
 
-##### Params:
-* `Prob: float`,
-* `Size: long`.
+### Internal Inversion (Prob, Size)
+A single contig is selected, from which a segment distributed by along the `Size` parameter is inverted. The position of a segments is guaranteed to be internal and uniformly distributed.
 
-### Internal Inversion
-A single chromosome is selected, then a length of the segmend. This segment is then cut and pasted to the original position in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
+### Inverted Duplication (Prob, Size)
+Like a duplication, but the segment is inverted before being pasted.
 
-##### Params:
-* `Prob: float`,
-* `Size: long`.
-
-### Inverted Duplication
-A single chromosome is selected, then a length of the segmend. This segment is then copied and pasted at the end of the segment in a reversed order, at a uniformly distrubuted position on the chromosome excluding the first and the last base. 
-
-##### Params:
-* `Prob: float`,
-* `Size: long`.
-
-### Translocation
-Two chromosomes are selected and on each of those a single uniformly distributed position. 
-
-Each of the choromosomes is split on the position. The first part of the first chromosome is then attached to the second part of the second chromosome and vice versa.
+### Translocation  (Prob, Size)
+Two contigs are selected, from which a segment distributed along the `Size` parameter is swapped. The position is selected individualy for each contig. A coin flip decides if one of the segments is inverted before being pasted.
 
 ![Translocation Cartoon](./doc/img/translocation.png)
 
-##### Params:
-* `Prob: float`.
+### BreakageFusionBridge (Prob, Size)
 
-### BreakageFusionBridge
-
-A chromosome and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
-
+A contig and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
 
 ![Translocation Cartoon](./doc/img/BFB_cartoon.png)
 
-##### Params:
-* `Prob: float`,
-* `Size: long`.
+### Chromothripsis (Prob, Size)
 
-### WholeGenomeDoubling
+1. A contig is broken into a number of fragments, such that the fragment size is distributed exponentially with a mean of `Size`.
+2. Have, `f` the number of fragments from step 1). A `k` framgents are then randomly selected such that `0 < k <= f`.
+3. The `k` fragments are then reassembled in a random order.  
 
-All the existing chromosomes are duplicated.
+TODO: image
 
-##### Params:
-* `Prob: float`.
+### Chromoplexy (Prob, Size)
 
+1. A number `c` of contigs is selected, following the probability distribution listed below.
+2. Each contig is broken into a number of fragments, such that the fragment size is distributed exponentially with a mean of `Size`.
+3. These contigs are then reassembled in a random order into a single contig.
+4. This contig is broken down a uniformly distributed positions back into `c` contigs.	
 
-### Chromothripsis
+Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important):
 
-TODO
+* 2 contigs: 0.23%
+* 3 contigs: 0.46%
+* 4 contigs: 0.16%
+* 5 contigs: 0.10%
+* 6 contigs: 0.05%
 
-### Chromoplexy
-
-TODO
+TODO: check
 
 ### Pyrgo 
 ![Pyrgo](./doc/img/pyrgo_128.png)
@@ -202,10 +281,15 @@ TODO
 ![Rigma](./doc/img/rigma_128.png)
 TODO
 
-### Tyfonas
-![Tyfonas](./doc/img/tyfonas_128.png)
-
+### Template Insertion Chain
 TODO
+
+### Template Insertion Cycle
+TODO
+
+### Template Insertion Bridge
+TODO
+
 
 ## Output
 
@@ -216,9 +300,9 @@ The text files are primarily used as source for plots shown below.
 CN output in the format examplifed as:
 
 
-| sample_id | chrom | start | end   | cn_a | cn_b |
-|-----------|-------|-------|-------|------|------|
-|0          |	chr1  |	24721 |	98434 |	1    |   	4 |
+| sample_id | chrom | start | end   | cn_a | cn_b | n_snvs |
+|-----------|-------|-------|-------|------|------|--------|
+|0          |	chr1  |	24721 |	98434 |	1    |   	4 |      2 |
 
 #### `clone_tree.new`
 
@@ -247,6 +331,26 @@ Information about the individual events in the simulation. The columns are:
 | Id | 	EventType	| EventString	| dFitness |	tFitness |	Mutations |
 |----|------------|-------------|----------|-----------|------------|
 |  0 | ChromDuplication | contig:23 | 11.53782375 | 11.53782375 | 1 |
+
+#### 'vcf.tsv'
+
+Generates a simple VCF file of all the observable (i.e. final and nucleotide-changing) SNVs that occurred to the samples during simulation. The columns are:
+
+`##fileformat=VCFv4.3`
+
+`##source=SimChAV1.0`
+
+`##reference=verily_hg19_genome.fa`
+
+| `#SAMPLEID` | 	CHROM	| POS	| ID |	REF |	ALT |
+|----|------------|-------------|----------|-----------|------------|
+|  0 | chr1 | 8114090 | . | a | C |
+
+#### 'genome.fa'
+
+*Note that this only currently works with single-sample simulations* 
+
+Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include 
 
 
 ### Plots (created by `./plots.sh`)

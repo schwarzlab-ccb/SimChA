@@ -24,5 +24,6 @@ public enum CNEventType
     TIBridge,
     Pyrgo,
     Rigma,
+    SNV
     // Tyfonas
 }

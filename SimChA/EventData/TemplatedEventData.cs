@@ -13,9 +13,7 @@ public record TemplatedEventData : BaseEventData
     
     public TemplatedEventData(Random rnd, CNEventPars cnEventPars, IReadOnlyList<(int id, long len)> seq) : base(cnEventPars)
     {
-        long size = cnEventPars.Get("Size", 1_000_000L);
-        double fragMean = cnEventPars.Get("Frag", 10.0);
-        int contigCount = GeometricDistribution.Sample(rnd, 1 / fragMean) 
+        int contigCount = GeometricDistribution.Sample(rnd, 1.0 / cnEventPars.Frag) 
                           + (cnEventPars.Type != CNEventType.TIBridge ? 1 : 2);
         
         for (int i = 0; i < Math.Min(contigCount, seq.Count); i++)
@@ -25,7 +23,7 @@ public record TemplatedEventData : BaseEventData
             // First segment of a bridge, or first and last on a chain do not have a length
             bool skipLen = i == 0 && cnEventPars.Type != CNEventType.TICycle ||
                            i == contigCount - 1 && cnEventPars.Type == CNEventType.TIChain;
-            long fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, size);
+            long fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Size);
             long fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
             bool dir = i == 0 || rnd.CoinFlip();
             Frags.Add((id, fragStart, fragLen, dir));

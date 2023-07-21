@@ -11,7 +11,7 @@ public class Karyotype
     public double FitnessVal { get; private set; }
     
     public bool SexXX { get;  }
-    
+
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
     
@@ -22,12 +22,12 @@ public class Karyotype
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
 
     private readonly List<Contig> _contigs;
-    private readonly List<GeneRange> _missingRanges;
+    private readonly Dictionary<string, List<GenRange>> _missingRanges;
     
-    public Karyotype(bool sexXX)
+    public Karyotype(GenRef genRef, bool sexXX)
     {
-        _contigs = HGRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
-        _missingRanges = new List<GeneRange>();
+        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         SexXX = sexXX;
     }
     
@@ -38,30 +38,38 @@ public class Karyotype
         SexXX = other.SexXX;
     }
     
-    public Karyotype(List<Contig> contigs, List<GeneRange> missingRanges, bool sexXX)
+    public Karyotype(List<Contig> contigs, List<GenRange> missingList, bool sexXX)
     {
         _contigs = contigs;
-        _missingRanges = missingRanges;
+        _missingRanges = new Dictionary<string, List<GenRange>>();
+        foreach (var range in missingList)
+        {
+            if (!_missingRanges.ContainsKey(range.ChrNo))
+                _missingRanges[range.ChrNo] = new List<GenRange>();
+            _missingRanges[range.ChrNo].Add(range);
+        }
         SexXX = sexXX;
     }
 
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
-    public bool IsMissing(GeneRange other)
-        => _missingRanges.Any(range => range.Overlaps(other));
-
+    public void GlueNeighbours()
+    {
+        foreach (var contig in _contigs)
+        {
+            contig.GlueNeighbours();
+        }
+    }
+    
     public long MissingLen()
-        => _missingRanges.Sum(r => r.Length);
-    
-    public double CalcPloidy()
-        => 2.0 * GenomeLen() / HGRef.GetGenomeLen(SexXX);
-    
-    public double CalcCoverage()
-        => (HGRef.GetGenomeLen(SexXX) - MissingLen()) / (double) HGRef.GetGenomeLen(SexXX);
-    
-    public IEnumerable<Region> FindRegionsOfChr(ChrNo chrNo) 
+        => _missingRanges.Sum(r => r.Value.Sum(range => range.Length));
+
+    public IEnumerable<Region> FindRegionsOfChr(string chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
+
+    public IList<GenRange> GetMissingOfChr(string chrNo)
+        => _missingRanges[chrNo];
 
     public static long GetTail(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;
@@ -71,13 +79,16 @@ public class Karyotype
     
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
-
-    public List<Gene> GetPresentGenes(GeneListType geneListType)
-        => _contigs.SelectMany(c => c.GetPresentGenes(geneListType)).ToList();
     
-    public double UpdateFitness()
-        => FitnessVal = Fitness.Calculate(this);
+    public List<Contig> GetAllContigs() => _contigs;
+    public Contig GetContig(int contigID) => _contigs[contigID];
 
+    public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
+        => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+
+    public double UpdateFitness(GenRef genRef, FitnessParams fParams)
+        => FitnessVal = Fitness.Calculate(this, genRef, fParams);
+    
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
@@ -236,4 +247,36 @@ public class Karyotype
             lastWasDeletion = !lastWasDeletion;
         }
     }
+    public void ApplySNV(int contigID, long location, Nucleotide newNucleotide)
+    {
+        var contig = _contigs[contigID];
+        contig.SNV(location, newNucleotide);
+    }
+
+    public List<(string chrNo, long location, Nucleotide newBase)> GetFinalSNVs()
+    {
+        var snvList = new List<(string, long, Nucleotide)>();
+        foreach (var contig in _contigs)
+        {
+            foreach (var region in contig.GetRegions())
+            {
+                if (region.SNVDict == null)
+                {
+                    continue;
+                }
+                foreach (var snv in region.SNVDict)
+                {
+                    var chrNo = region.ChrNo;
+                    var internalLocation = snv.Key;
+                    var newBase = snv.Value;
+                    if (!snvList.Any(s => s == (chrNo, internalLocation, newBase)))
+                    {
+                        snvList.Add((chrNo, internalLocation, newBase));
+                    }
+                }
+            }
+        }
+        return snvList;
+    }
+    
 }

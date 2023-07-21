@@ -11,8 +11,7 @@ public record TailEventData : ContigEventData
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
-        long tailSize = CNEventPars.Get("Size", 1_000_000);
-        DelFraction = Sampling.GetExpSeg(rnd, contigLen, tailSize);
+        DelFraction = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
         Direction = rnd.CoinFlip();
     }
 

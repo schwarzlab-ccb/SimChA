@@ -1,9 +1,10 @@
 ﻿namespace SimChA.DataTypes;
 
-public enum Nucleotides
+public enum Nucleotide
 {
+    A,
+    C,
     G,
     T,
-    C,
-    A
+    N
 }

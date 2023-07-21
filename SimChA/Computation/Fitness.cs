@@ -7,24 +7,18 @@ namespace SimChA.Computation;
 
 public static class Fitness
 {
-    private static Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
-    private static FitnessParams FParams;
-
-    public static double Calculate(Karyotype karyotype)
+    public static double Calculate(
+        Karyotype karyotype,
+        GenRef genRef,
+        FitnessParams fParams)
     {
-        var tsgCNs = CalcCNs(GeneListType.TumorSuppressor, karyotype);
-        var ogCNs = CalcCNs(GeneListType.Oncogene, karyotype);
-        var essCNs = CalcCNs(GeneListType.Essentiality, karyotype);
+        var tsgCNs = CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
+        var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
+        var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
         return 1 
-               + FParams.Stress * StressTerm(karyotype.GenomeLen(), karyotype.SexXX) 
-               + FParams.TsgOg * (TsgOgTerm(ogCNs,karyotype.SexXX) - TsgOgTerm(tsgCNs,karyotype.SexXX)) 
-               + FParams.Essentiality * EssTerm(essCNs);
-    }
-
-    public static void SetStartingParams(Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists, FitnessParams fParams)
-    {
-        GeneLists = geneLists;
-        FParams = fParams;
+               + fParams.Stress * StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen()) 
+               + fParams.TsgOg * (TsgOgTerm(genRef, ogCNs, karyotype.SexXX) - TsgOgTerm(genRef, tsgCNs, karyotype.SexXX)) 
+               + fParams.Essentiality * EssTerm(essCNs);
     }
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
@@ -36,44 +30,44 @@ public static class Fitness
         }
     }
 
-    public static Dictionary<GeneListType, List<Gene>> GetGeneList(long start, long end, ChrNo chrNo)
-    {
-        if(GeneLists == null)
-            return null;
-        var geneList = new Dictionary<GeneListType, List<Gene>>();
-        foreach(var gl in GeneLists.Keys)
-        {
-            geneList[gl] = GeneLists[gl][chrNo].FindAll(g => g.Range.IsInside(start, end, chrNo));
-        }
-        return geneList;
-    }
+    public static double Sigmoid(double x)
+        => 1 / (1 + Math.Exp(-((x * 1.5 - 1) * 10)));
+
+    public static double Exponential(double x)
+        => Math.Pow(x, 9) * 5;
+
+    public static double Linear(double x)
+        => x;
 
     // Represents the limitation of space in the nucleus - more contigs ==> more stress
     // TODO: This needs to be validated
-    public static double StressTerm(long baseCount, bool isFemale)
-        => 1 - baseCount / (double) HGRef.GetGenomeLen(isFemale);
+    public static double StressTerm(long refBaseCount, long baseCount)
+        => 1 - baseCount / (double) refBaseCount;
 
-    private static double ExpectedCN(ChrNo chrNo, bool sexXX)
-        => chrNo switch
+    private static double ExpectedCN(GenRef genRef, string chrNo, bool sexXX)
+    {
+        if (chrNo == genRef.YChrName)
         {
-            ChrNo.chrY => sexXX ? 0 : 1,
-            ChrNo.chrX => sexXX ? 2 : 1,
-            _ => 2
-        };
-    
-    public static double TsgOgTerm(IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
-        => geneCNs.Sum(g => (g.CN - ExpectedCN(g.gene.Range.ChrNo, sexXX)) * g.gene.DeltaFitness);
+            return sexXX ? 0 : 1;
+        }
+        if (chrNo == genRef.XChrName)
+        {
+            return sexXX ? 2 : 1;
+        }
+        return 2;
+    }
+
+    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
+        => geneCNs.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness));
 
     public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
         => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
 
-    public static IEnumerable<(Gene, int)> CalcCNs(GeneListType geneListType, Karyotype karyotype)
+    public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<string, List<Gene>> searched, Karyotype karyotype)
     {
-        var present = karyotype.GetPresentGenes(geneListType);
+        var present = karyotype.GetPresentGenes(searched);
         var counts = present.GroupBy(g => g).ToDictionary(g =>g.Key, g => g.Count());
-        var allSearched = GeneLists[geneListType].SelectMany(p => p.Value);
-        var covered = allSearched.Where(g
-            => !karyotype.IsMissing(g.Range) && (karyotype.SexXX || g.Range.ChrNo != ChrNo.chrY));
-        return covered.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
+        var allSearched = searched.SelectMany(p => p.Value);
+        return allSearched.Select(g => (g, counts.TryGetValue(g, out int count) ? count : 0));
     }
 }

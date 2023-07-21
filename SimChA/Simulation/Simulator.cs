@@ -8,15 +8,15 @@ namespace SimChA.Simulation;
 public class Simulator
 {
     protected readonly Random Rnd;
-    protected readonly Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> GeneLists;
+    protected readonly GenRef GenRef;
     protected int Counter;
 
     public Simulator(
         Random rnd,
-        Dictionary<GeneListType, Dictionary<ChrNo, List<Gene>>> geneLists)
+        GenRef genRef)
     {
         Rnd = rnd;
-        GeneLists = geneLists;
+        GenRef = genRef;
     }
 
     public virtual void SampleEvents(Sample sample)
@@ -27,7 +27,7 @@ public class Simulator
         }
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(sample.SexXX);
+        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
     
@@ -61,7 +61,7 @@ public class Simulator
     public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
         => (from profile in profiles
             let clones = new List<CloneIn> { new(0, -1, 0, 0) }
-            select new Sample(profile.Key, profile.Value.SexXX, clones, new List<CNEventPars>())
+            select new Sample(profile.Key, profile.Value.SexXX, clones, new List<CNEventPars>(), new Dictionary<string, double>())
             { Kars = { [0] = profile.Value } }).ToList();
 
     public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)

@@ -1,5 +1,7 @@
 * text=auto eol=lf
 *.tsv filter=lfs diff=lfs merge=lfs -text
+data/hg19/genome.fa filter=lfs diff=lfs merge=lfs -text
+data/hg38/genome.fa filter=lfs diff=lfs merge=lfs -text
 *.tsv !text !filter !merge !diff
 data/hg19/genome.fa !text !filter !merge !diff
 data/hg38/genome.fa !text !filter !merge !diff
