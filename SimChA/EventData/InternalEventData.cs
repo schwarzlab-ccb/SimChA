@@ -11,7 +11,7 @@ public record InternalEventData : ContigEventData
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
-        Start = Sampling.GetInternalPos(rnd, contigLen - segLen);
+        Start = Sampling.GetPos(rnd, contigLen - segLen);
         End = Start + segLen;
     }
 

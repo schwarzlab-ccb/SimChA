@@ -2,24 +2,22 @@
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
-using SimChA.DataTypes;
 
 namespace SimChA.Simulation;
 
 public static class Sampling
 {
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen - 2));
+        => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen));
     
     public static long GetExpSeg(Random rnd, long contigLen, long meanLen) 
-        => Math.Max(1, Math.Min((long) Math.Round(ExponentialDistribution.Sample(rnd, meanLen)), contigLen - 2));
+        => Math.Max(1, Math.Min((long) Math.Round(ExponentialDistribution.Sample(rnd, meanLen)), contigLen));
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen - 2));
+        => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen));
 
-    // GetDouble two positions within the contig (boundaries are excluded)
-    public static long GetInternalPos(Random rnd, long contigLen)
-        => rnd.NextInt64(1, Math.Max(1, contigLen - 1));
+    public static long GetPos(Random rnd, long contigLen)
+        => rnd.NextInt64(0, contigLen);
     
     public static int GetFragCount(Random rnd, double mean)
         => (int) Math.Max(1, Math.Round(NormalDistribution.Sample(rnd, mean)));
@@ -44,7 +42,7 @@ public static class Sampling
         }
         for (int i = 1; i < shardCount; i++)
         {
-            long newStop = GetInternalPos(rnd, contigLen);
+            long newStop = GetPos(rnd, contigLen);
             stops.Add(newStop);
         }
         return stops;
@@ -78,8 +76,8 @@ public static class Sampling
     public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
     {
         // Karyotype stores 0-length contigs for contig-ID-preservation, so we need to filter them out
-        var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0);
-        long totalLength = contigIds.Sum(i => kar.ContigLen(i));
+        var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0).ToList();
+        long totalLength = contigIds.Sum(kar.ContigLen);
         var pArray = contigIds.Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
         var idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
         return (idSelected, kar.ContigLen(idSelected));

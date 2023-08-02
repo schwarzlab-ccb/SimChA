@@ -24,7 +24,7 @@ public record TemplatedEventData : BaseEventData
             bool skipLen = i == 0 && cnEventPars.Type != CNEventType.TICycle ||
                            i == contigCount - 1 && cnEventPars.Type == CNEventType.TIChain;
             long fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Size);
-            long fragStart = Sampling.GetInternalPos(rnd, contigLen - fragLen);
+            long fragStart = Sampling.GetPos(rnd, contigLen - fragLen);
             bool dir = i == 0 || rnd.CoinFlip();
             Frags.Add((id, fragStart, fragLen, dir));
         }

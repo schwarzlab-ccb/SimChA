@@ -53,8 +53,7 @@
         {
           "Type": "Translocation",
           "Prob": 2,
-          "Size": 100000000,
-          "PInv": 0.5
+          "Size": 100000000
         },
         {
           "Type": "WholeGenomeDoubling",

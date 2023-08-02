@@ -11,7 +11,7 @@ public record PointMutationData : ContigEventData
     public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
         : base(CNEventPars, contigId)
     {
-        Location = Sampling.GetInternalPos(rnd, contigLen);
+        Location = Sampling.GetPos(rnd, contigLen);
         Base = Sampling.SampleBase(rnd);
     }
     

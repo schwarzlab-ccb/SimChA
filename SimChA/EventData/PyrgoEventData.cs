@@ -13,7 +13,7 @@ public record PyrgoEventData : ContigEventData
     {
         ContigId = contigId;
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Size);
-        long pyrgoStart = Sampling.GetInternalPos(rnd, contigLen - pyrgoFrag);
+        long pyrgoStart = Sampling.GetPos(rnd, contigLen - pyrgoFrag);
         
         int fracCount = GeometricDistribution.Sample(rnd, 1.0 / cnEventPars.Frag) + 1;
         
@@ -21,7 +21,7 @@ public record PyrgoEventData : ContigEventData
         for (int i = 0; i < fracCount; i++)
         {
             long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, cnEventPars.Size / cnEventPars.Frag);
-            long fracStart = Sampling.GetInternalPos(rnd, pyrgoFrag - fracLen);
+            long fracStart = Sampling.GetPos(rnd, pyrgoFrag - fracLen);
             FragmentsList.Add((pyrgoStart + fracStart, fracLen));
         }
     }

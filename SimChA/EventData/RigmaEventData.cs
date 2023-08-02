@@ -14,7 +14,7 @@ public record RigmaEventData : ContigEventData
     {
         ContigId = contigId;
         int fracCount = GeometricDistribution.Sample(rnd, 1 / cnEventPars.Frag) + 1;
-        Start = Sampling.GetInternalPos(rnd, contigLen - cnEventPars.Size);
+        Start = Sampling.GetPos(rnd, contigLen - cnEventPars.Size);
         StopsList = Enumerable.Range(0, fracCount).Select(_ => Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frag / cnEventPars.Size)).ToList();
     }
     

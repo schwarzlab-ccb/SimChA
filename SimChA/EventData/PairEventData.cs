@@ -17,9 +17,9 @@ public record PairEventData : BaseEventData
     public PairEventData(Random rnd, CNEventPars cnEventPars, int contigA, long lenA, int contigB, long lenB) : base(cnEventPars)
     {
         ContigIdA = contigA;
-        PosA = Sampling.GetInternalPos(rnd, lenA);
+        PosA = Sampling.GetPos(rnd, lenA);
         ContigIdB = contigB;
-        PosB = Sampling.GetInternalPos(rnd, lenB);
+        PosB = Sampling.GetPos(rnd, lenB);
         Inverted = rnd.CoinFlip();
     }
     
