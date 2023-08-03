@@ -111,9 +111,11 @@ public static class Sampling
             case CNEventType.InvertedDuplication:
                 return new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
             
-            case CNEventType.Translocation:
-                return new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len);
-            
+            case CNEventType.Translocation:        
+                return seq.Count < 2 
+                    ? null 
+                    : new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len);
+
             case CNEventType.Chromothripsis:
                 return new ChromothripsisEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
 

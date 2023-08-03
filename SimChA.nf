@@ -25,9 +25,9 @@ process SimChA {
 
     script:
         def new_config = config        
-        new_config.Signatures.each { sig ->
+        new_config.Signatures.each { key, val ->
             // Iterate through the events
-            sig.Events.each { event ->
+            val.Events.each { event ->
                 if(event.Type in ['ChromDeletion', 'ChromDuplication']) {
                     event.Prob = whole_chr_p
                 }
