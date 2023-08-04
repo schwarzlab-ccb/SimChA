@@ -40,7 +40,7 @@ public class TestSimulator
         var events = new List<BaseEventData>();
         var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams);
         double potential = sim.Potential(_kar, 1, events).potential;
-        Assert.AreEqual(potential,0.0,EPSILON);
+        Assert.AreEqual(0.0, potential,EPSILON);
     }
 
     [Test]

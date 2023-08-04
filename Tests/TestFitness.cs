@@ -29,21 +29,22 @@ public class TestFitness
         => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
 
     [Test]
-    public void TestEssTerm()
+    public void TestEssTerm([Values(0,1)] int refId)
     {
-        Assert.AreEqual(0, Fitness.EssTerm(new List<(Gene, int)>()));
+        var genRef = _refs[refId];
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), true));
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
-        Assert.AreEqual(0, Fitness.EssTerm(testNoEffect));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, true));
         
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
-        Assert.AreEqual(-0.1, Fitness.EssTerm(testMissing));
+        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testMissing, true));
 
         var testHaplosufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
-        Assert.AreEqual(0, Fitness.EssTerm(testHaplosufficient));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testHaplosufficient, true));
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
-        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(testList));
+        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, true));
     }
 
     [Test]

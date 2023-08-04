@@ -15,10 +15,13 @@ public static class Fitness
         var tsgCNs = CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
         var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
-        return 1 
-               + fParams.Stress * StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen()) 
-               + fParams.TsgOg * (TsgOgTerm(genRef, ogCNs, karyotype.SexXX) - TsgOgTerm(genRef, tsgCNs, karyotype.SexXX)) 
-               + fParams.Essentiality * EssTerm(essCNs);
+        
+        double stressTerm = StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen());
+        double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.SexXX);
+        double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.SexXX);
+        double essTerm = EssTerm(genRef, essCNs, karyotype.SexXX);
+        
+        return 1 + fParams.Stress*stressTerm + fParams.TsgOg*(ogTerm - tsgTerm) + fParams.Essentiality*essTerm;
     }
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
@@ -60,8 +63,8 @@ public static class Fitness
     public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
         => geneCNs.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness));
 
-    public static double EssTerm(IEnumerable<(Gene gene, int CN)> essCNs)
-        => essCNs.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness);
+    public static double EssTerm(GenRef genRef,IEnumerable<(Gene gene, int CN)> essCNs, bool sexXX)
+        => essCNs.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness : 0);
 
     public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<string, List<Gene>> searched, Karyotype karyotype)
     {

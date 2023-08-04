@@ -16,6 +16,8 @@ def timestamp = currentDateTime.format(formatter)
 process SimChA {
     publishDir "${workflow.launchDir}/results/${timestamp}/${whole_chr_p}_${internal_p}_${telomere_p}_${wgd_p}_${complex_p}", mode: 'move'
 
+    cpus 32
+
     input:
         val config
         tuple val(whole_chr_p), val(internal_p), val(telomere_p), val(wgd_p), val(complex_p)
