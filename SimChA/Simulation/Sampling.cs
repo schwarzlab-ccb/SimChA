@@ -44,6 +44,7 @@ public static class Sampling
         {
             long newStop = GetPos(rnd, contigLen);
             stops.Add(newStop);
+            stops.Sort();
         }
         return stops;
     }
