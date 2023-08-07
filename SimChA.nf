@@ -16,14 +16,12 @@ def timestamp = currentDateTime.format(formatter)
 process SimChA {
     publishDir "${workflow.launchDir}/results/${timestamp}/${whole_chr_p}_${internal_p}_${telomere_p}_${wgd_p}_${complex_p}", mode: 'move'
 
-    cpus 32
-
     input:
         val config
         tuple val(whole_chr_p), val(internal_p), val(telomere_p), val(wgd_p), val(complex_p)
 
     output:
-        path("*")
+        tuple path("*.tsv"), path("*.json")
 
     script:
         def new_config = config        
@@ -59,7 +57,7 @@ process SimChA {
 
 workflow {
     def params_file = file('default_params.json')
-    def max_vals_per_param = 4
+    def max_vals_per_param = 5
     def config = new JsonSlurper().parseText(params_file.text)
     def whole_chr_p = Channel.from(params.whole_chr_p).take(max_vals_per_param)
     def internal_p = Channel.from(params.internal_p).take(max_vals_per_param)
