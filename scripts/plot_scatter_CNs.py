@@ -108,8 +108,6 @@ def plot_scatter_CNs(data, use_hg19=True, output="../out"):
     fig.savefig(f"{output}/scatter_CNs.png", dpi=150, bbox_inches="tight")
 
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot the average scatter CN plots for a given dataset')
     parser.add_argument('-i', "--input", type=str, help='The folder to input dataset to plot')

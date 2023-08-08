@@ -23,15 +23,15 @@ def get_test_data():
 
 def parse_region_string(s):
     # Define the regular expression pattern to match the string
-    pattern = r'(chr[\d,Y,X]+)_H([1, 2])([<>])\[(\d+):(\d+)\)'
+    pattern = r'H([1, 2])([<>])(chr[\d,Y,X]+)\[(\d+):(\d+)\)'
     
     # Use re.search() to find the pattern in the string and extract the groups
     match = re.search(pattern, s)
     if match:
         # Extract the groups from the match object
-        chromosome = match.group(1)
-        haplotype = match.group(2)
-        direction = True if match.group(3) == '>' else False
+        haplotype = match.group(1)
+        direction = True if match.group(2) == '>' else False
+        chromosome = match.group(3)
         start = int(match.group(4))
         end = int(match.group(5))
 
@@ -85,7 +85,7 @@ def get_data(input_file, sample_name):
         print(f"Sample {sample_name} not found")
         raise SystemExit
     
-    return sample_name, parse_karyotype(sample["karyotype"])
+    return parse_karyotype(sample["karyotype"]), sample_name
 
 
 def plot_karyotype(data, sample_name, dpi=150):
@@ -132,11 +132,11 @@ def plot_karyotype(data, sample_name, dpi=150):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
-    parser.add_argument("-I", "--input", default="./out/karyotypes.tsv", help="The file with the karyotype data.")
+    parser.add_argument("-I", "--input", default="karyotypes.tsv", help="The file with the karyotype data.")
     parser.add_argument("-S", "--sample", default="sample_1", help="Sample ID")
-    parser.add_argument("-O", "--output", default="./out/karyotype.png", help="Output file path")
+    parser.add_argument("-O", "--output", default="karyotype.png", help="Output file path")
     args = parser.parse_args()
 
-    sample_name, data = get_data(args.input, args.sample)
-    plot_karyotype(data, sample_name, dpi=150)
+    data, sample_name = get_data(args.input, args.sample)
+    plot_karyotype(data, sample_name, dpi=150)    
     plt.savefig(args.output, dpi=150)
