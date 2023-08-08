@@ -217,7 +217,7 @@ public static class RegionOps
     }
 
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
-        => regions.Select(r => r with { Forward = false }).Reverse().ToList();
+        => regions.Select(r => r with { Forward = !r.Forward }).Reverse().ToList();
 
     public static List<Region> ConcatRegions(IEnumerable<IEnumerable<Region>> listOfRegions)
         => listOfRegions.SelectMany(x => x).ToList();

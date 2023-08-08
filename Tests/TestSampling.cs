@@ -17,6 +17,21 @@ public class TestSampling
     {
         _rnd = new Random(0);
     }
+
+    [Test]
+    public void TestStops()
+    {
+        var stops = Sampling.GetStopsForShards(_rnd, 1_000_000, 10);
+        Assert.AreEqual(9, stops.Count);
+        long prev = 0;
+        foreach (long stop in stops)
+        {
+            Assert.Greater(stop, 0);
+            Assert.Less(stop, 1_000_000);
+            Assert.Greater(stop, prev);
+            prev = stop;
+        }
+    }
     
     [Test]
     public void TestGetExpSeg()

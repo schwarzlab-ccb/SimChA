@@ -130,6 +130,23 @@ public class TestKaryotype
         Assert.AreEqual((len - TEST_FRAC) * 2, newLen);
     }
     
+    [Test]
+    public void TestBFBChain()
+    {
+        for (int i = 1; i < 46; i++)
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            var eventP = new CNEventPars(CNEventType.BreakageFusionBridge, 1, 10_000_000);
+            var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventP);
+            Assert.NotNull(eventData);
+            eventData.ApplyEvent(_kar);
+            Assert.AreEqual((int) Math.Pow(2, i+1), _kar.ToString().Split("~").Length);
+        }
+    }
+    
     
     [Test]
     public void TestTranslocation()

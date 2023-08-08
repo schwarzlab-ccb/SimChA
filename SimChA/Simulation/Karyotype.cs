@@ -71,7 +71,7 @@ public class Karyotype
     public IList<GenRange> GetMissingOfChr(string chrNo)
         => _missingRanges[chrNo];
 
-    public static long GetTail(long segLength, Contig contig, bool fiveToThree) 
+    public static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;
     
     public long ContigLen(int contigId)
@@ -92,7 +92,7 @@ public class Karyotype
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
-        long tailSplit = GetTail(tailLen, contig, fiveToThree);
+        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.DeleteRange(tailStart, tailEnd);
     }
@@ -100,7 +100,7 @@ public class Karyotype
     public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
-        long tailSplit = GetTail(tailLen, contig, fiveToThree);
+        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         contig.Bridge(tailSplit, fiveToThree);
     }
     
