@@ -18,7 +18,7 @@ process SimChA {
 
     input:
         val config
-        tuple val(whole_chr_p), val(internal_p), val(telomere_p), val(wgd_p), val(complex_p)
+        tuple val(chrDup), val(chrDel), val(intDup), val(intDel), val(tailDel), val(bfb), val(wgd)
 
     output:
         tuple path("*.tsv"), path("*.json")
@@ -28,22 +28,28 @@ process SimChA {
         new_config.Signatures.each { key, val ->
             // Iterate through the events
             val.Events.each { event ->
-                if(event.Type in ['ChromDeletion', 'ChromDuplication']) {
-                    event.Prob = whole_chr_p
+                if(event.Type in ['ChromDeletion']) {
+                    event.Prob = chrDel
                 }
-                else if (event.Type in ['InternalDuplication', 'InternalDeletion', 'InternalInversion']) {
-                    event.Prob = internal_p
+				else if (event.Type in ['ChromDuplication']) {
+					event.Prob = chrDup
+				} 
+				else if (event.Type in ['InternalDeletion']) {
+					event.Prob = intDel
+				}
+				else if (event.Type in ['InternaDuplication']) {
+					event.Prob = intDup
+				}
+                else if (event.Type in ['TailDeletion']) {
+                    event.Prob = tailDel
                 }
-                else if (event.Type in ['TailDeletion', 'BreakageFusionBridge']) {
-                    event.Prob = telomere_p
+				else if (event.Type in ['BreakageFusionBridge']) {
+                    event.Prob = bfb
                 }
                 else if (event.Type in ['WholeGenomeDoubling']) {
-                    event.Prob = wgd_p
+                    event.Prob = wgd
                 }
-                else if (event.Type in ['Chromoplexy', 'Chromothripsis', 'Pyrgo', 'TIChain']) {
-                    event.Prob = complex_p
-                }
-                else if (event.Type in ['Rigma', 'TICycle', 'TIBridge']) {
+                else {
                     event.Prob = 0
                 }
             }
@@ -57,13 +63,20 @@ process SimChA {
 
 workflow {
     def params_file = file('default_params.json')
-    def max_vals_per_param = 5
     def config = new JsonSlurper().parseText(params_file.text)
-    def whole_chr_p = Channel.from(params.whole_chr_p).take(max_vals_per_param)
-    def internal_p = Channel.from(params.internal_p).take(max_vals_per_param)
-    def telomere_p = Channel.from(params.telomere_p).take(max_vals_per_param)
-    def wgd_p = Channel.from(params.wgd_p).take(max_vals_per_param)
-    def complex_p = Channel.from(params.complex_p).take(max_vals_per_param)
-    def product = whole_chr_p.combine(internal_p).combine(telomere_p).combine(wgd_p).combine(complex_p)
+    def chrDup = Channel.from(params.chrDup)
+	def chrDel = Channel.from(params.chrDel)
+	def intDup = Channel.from(params.intDup)
+	def intDel = Channel.from(params.intDel)
+	def tailDel = Channel.from(params.tailDel)
+	def bfb = Channel.from(params.bfb)
+	def wgd = Channel.from(params.wgd)
+    def product = chrDup
+		.combine(chrDel)
+		.combine(intDup)
+		.combine(intDel)
+		.combine(tailDel)
+		.combine(bfb)
+		.combine(wgd)
     SimChA(config, product)
 }
