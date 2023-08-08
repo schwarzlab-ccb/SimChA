@@ -14,7 +14,7 @@ def formatter = DateTimeFormatter.ofPattern("yy_MM_dd_HH_mm_ss")
 def timestamp = currentDateTime.format(formatter)
 
 process SimChA {
-    publishDir "${workflow.launchDir}/results/${timestamp}/${whole_chr_p}_${internal_p}_${telomere_p}_${wgd_p}_${complex_p}", mode: 'move'
+    publishDir "${workflow.launchDir}/results/${timestamp}/${chrDup}_${chrDel}_${intDup}_${intDel}_${tailDel}_${bfb}_${wgd}", mode: 'move'
 
     input:
         val config
