@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pandas as pd
 import argparse
 import numpy as np
@@ -60,7 +62,7 @@ def plot_scatter_CNs(data, use_hg19=True, output="../out"):
         positions[sample] = sample_to_CNs(cns.loc[sample, :], step_size, hg19_chr_cum_starts, hg38_chr_cum_starts) 
     df_CNs = pd.DataFrame(positions)
 
-    print(df_CNs)
+    # print(df_CNs)
     # Create a figure and ax[0]is object
     fig, ax = plt.subplots(1, figsize=(32, 9))
 
@@ -110,9 +112,9 @@ def plot_scatter_CNs(data, use_hg19=True, output="../out"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot the average scatter CN plots for a given dataset')
-    parser.add_argument('-i', "--input", type=str, help='The folder to input dataset to plot')
+    parser.add_argument('-I', "--input", type=str, default=".", help='The folder to input dataset to plot')
     parser.add_argument("--hg19",action="store_true", dest="use_hg19", default=False, help="Use hg19 instead of hg38")
-    parser.add_argument('-o', "--output", type=str, help='The folder to output the plots to')
+    parser.add_argument('-O', "--output", type=str, default=".", help='The folder to output the plots to')
     args = parser.parse_args()
 
     plot_scatter_CNs(args.input, args.use_hg19, args.output)
