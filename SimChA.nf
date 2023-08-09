@@ -17,14 +17,14 @@ process SimChA {
     publishDir "${workflow.launchDir}/results/${timestamp}/${chrDup}_${chrDel}_${intDup}_${intDel}_${tailDel}_${bfb}_${wgd}", mode: 'move'
 
     input:
-        val config
+        val params_text
         tuple val(chrDup), val(chrDel), val(intDup), val(intDel), val(tailDel), val(bfb), val(wgd)
 
     output:
-        tuple path("*.tsv"), path("*.json")
+        tuple path("*")
 
     script:
-        def new_config = config        
+        def new_config = new JsonSlurper().parseText(params_text)     
         new_config.Signatures.each { key, val ->
             // Iterate through the events
             val.Events.each { event ->
@@ -37,7 +37,7 @@ process SimChA {
 				else if (event.Type in ['InternalDeletion']) {
 					event.Prob = intDel
 				}
-				else if (event.Type in ['InternaDuplication']) {
+				else if (event.Type in ['InternalDuplication']) {
 					event.Prob = intDup
 				}
                 else if (event.Type in ['TailDeletion']) {
@@ -57,13 +57,12 @@ process SimChA {
         def config_json = JsonOutput.toJson(new_config)
         """
         echo '${config_json}' > config.json
-        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data/hg19 -R 1000 -O "."
+        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data/hg19 -R 100 -O "."
         """
 }
 
 workflow {
     def params_file = file('default_params.json')
-    def config = new JsonSlurper().parseText(params_file.text)
     def chrDup = Channel.from(params.chrDup)
 	def chrDel = Channel.from(params.chrDel)
 	def intDup = Channel.from(params.intDup)
@@ -78,5 +77,5 @@ workflow {
 		.combine(tailDel)
 		.combine(bfb)
 		.combine(wgd)
-    SimChA(config, product)
+    SimChA(params_file.text, product)
 }
