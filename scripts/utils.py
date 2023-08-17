@@ -40,8 +40,10 @@ chromosome_colors = {
     'chrY': 'darkslateblue'
 }
 
+
 def format_chromosomes_int(chroms):
     return chroms.astype(str).str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
+
 
 def format_chromosomes(ds):
     """ Expects pandas Series with chromosome names. 
@@ -69,24 +71,29 @@ def format_chromosomes(ds):
 
     return newchr
 
+
 def get_min_maj_CNs(data, is_major):
     cols = data[['cn_a', 'cn_b']]
     return cols.max(axis=1) if is_major else cols.min(axis=1)
 
 # calculate the average CN for each sample
+
+
 def get_CNs_by_sample(data, is_major):
     CNs = data.groupby(['sample_id']).apply(get_min_maj_CNs, is_major)
     return CNs.groupby(['sample_id']).mean()
 
+
 def get_hap_by_sample(data, hap):
-   return data.groupby(['sample_id'])[hap].mean()
+    return data.groupby(['sample_id'])[hap].mean()
+
 
 def load_dataset(dataset_path):
-    loaded_data = {        
-        "CNs" : pd.read_csv(join(dataset_path, "copynumbers.tsv"), index_col=0, sep="\t"),
-        "clones" : pd.read_csv(join(dataset_path, "clones.tsv"), index_col=0, sep="\t"),
-        "karyotypes" : pd.read_csv(join(dataset_path, "karyotypes.tsv"), index_col=0, sep="\t"),
-        "samples" : pd.read_csv(join(dataset_path, "samples.tsv"), index_col=0, sep="\t"),
+    loaded_data = {
+        "CNs": pd.read_csv(join(dataset_path, "copynumbers.tsv"), index_col=0, sep="\t"),
+        "clones": pd.read_csv(join(dataset_path, "clones.tsv"), index_col=0, sep="\t"),
+        "karyotypes": pd.read_csv(join(dataset_path, "karyotypes.tsv"), index_col=0, sep="\t"),
+        "samples": pd.read_csv(join(dataset_path, "samples.tsv"), index_col=0, sep="\t"),
     }
     config_file = join(dataset_path, "sim_params.json")
     # import json into a dict
@@ -94,11 +101,14 @@ def load_dataset(dataset_path):
         loaded_data["config"] = json.load(f)
     return loaded_data
 
+
 def calc_CNs(dataset):
-    cns = [get_CNs_by_sample(dataset, True), get_CNs_by_sample(dataset, False), get_hap_by_sample(dataset, "cn_a"), get_hap_by_sample(dataset, "cn_b")]
-    df =  pd.DataFrame(cns).T
+    cns = [get_CNs_by_sample(dataset, True), get_CNs_by_sample(
+        dataset, False), get_hap_by_sample(dataset, "cn_a"), get_hap_by_sample(dataset, "cn_b")]
+    df = pd.DataFrame(cns).T
     df.columns = ["major", "minor", "hap_a", "hap_b"]
     return df
+
 
 # https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh37
 hg19_chr_lengths = {
@@ -128,6 +138,7 @@ hg19_chr_lengths = {
     "chrY": 59_373_566
 }
 
+
 # https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh38
 hg38_chr_lengths = {
     "chr1": 248_956_422,
@@ -155,3 +166,94 @@ hg38_chr_lengths = {
     "chrX": 156_040_895,
     "chrY": 57_227_415
 }
+
+hg19_chr_cum_starts = {
+    'chr1': 0,
+    'chr2': 249250621,
+    'chr3': 492449994,
+    'chr4': 690472424,
+    'chr5': 881626700,
+    'chr6': 1062541960,
+    'chr7': 1233657027,
+    'chr8': 1392795690,
+    'chr9': 1539159712,
+    'chr10': 1680373143,
+    'chr11': 1815907890,
+    'chr12': 1950914406,
+    'chr13': 2084766301,
+    'chr14': 2199936179,
+    'chr15': 2307285719,
+    'chr16': 2409817111,
+    'chr17': 2500171864,
+    'chr18': 2581367074,
+    'chr19': 2659444322,
+    'chr20': 2718573305,
+    'chr21': 2781598825,
+    'chr22': 2829728720,
+    'chrX': 2881033286,
+    'chrY': 3036303846
+ }
+
+hg38_chr_cum_starts = {
+    'chr1': 0,
+    'chr2': 248956422,
+    'chr3': 491149951,
+    'chr4': 689445510,
+    'chr5': 879660065,
+    'chr6': 1061198324,
+    'chr7': 1232004303,
+    'chr8': 1391350276,
+    'chr9': 1536488912,
+    'chr10': 1674883629,
+    'chr11': 1808681051,
+    'chr12': 1943767673,
+    'chr13': 2077042982,
+    'chr14': 2191407310,
+    'chr15': 2298451028,
+    'chr16': 2400442217,
+    'chr17': 2490780562,
+    'chr18': 2574038003,
+    'chr19': 2654411288,
+    'chr20': 2713028904,
+    'chr21': 2777473071,
+    'chr22': 2824183054,
+    'chrX': 2875001522,
+    'chrY': 3031042417
+ }
+
+hg19_genome_length = 3095677412
+hg38_genome_length = 3088269832
+
+# Define a function to convert a row to a list
+def row_to_list(row, column, step_size):
+    # Initialize an empty list
+    res = []
+
+    start = row['start'] + hg19_chr_cum_starts[row['chrom']]
+    if start % step_size != 0:
+        start = start - (start % step_size) + step_size
+    end = row['end'] + hg19_chr_cum_starts[row['chrom']]
+
+    # Loop over each position between start and end, divisible by step
+    for pos in range(start, end, step_size):
+        cn = row[column]
+        res.append((pos, cn))
+
+    # Return the list
+    return res
+
+
+def sample_to_SNPs(sample, column, step_size):
+    rows = sample.apply(lambda x: row_to_list(x, column, step_size), axis=1)
+    filtered = rows[rows.apply(lambda x: len(x) > 0)]
+    return pd.Series(dict(np.concatenate(filtered.values)))
+
+
+def samples_to_SNPs(cns, column='cn', step_size=1_000_000):
+    # list of unique indices in cns
+    samples = cns.index.unique()
+    positions = {}
+    for sample in samples:
+        positions[sample] = sample_to_SNPs(cns.loc[sample, :], column, step_size)
+    df_CNs = pd.DataFrame(positions)
+    return df_CNs
