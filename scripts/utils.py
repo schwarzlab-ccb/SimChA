@@ -103,8 +103,7 @@ def load_dataset(dataset_path):
 
 
 def calc_CNs(dataset):
-    cns = [get_CNs_by_sample(dataset, True), get_CNs_by_sample(
-        dataset, False), get_hap_by_sample(dataset, "cn_a"), get_hap_by_sample(dataset, "cn_b")]
+    cns = [get_CNs_by_sample(dataset, True), get_CNs_by_sample(dataset, False), get_hap_by_sample(dataset, "cn_a"), get_hap_by_sample(dataset, "cn_b")]
     df = pd.DataFrame(cns).T
     df.columns = ["major", "minor", "hap_a", "hap_b"]
     return df

@@ -57,19 +57,20 @@ process SimChA {
         def config_json = JsonOutput.toJson(new_config)
         """
         echo '${config_json}' > config.json
-        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data/hg19 -R 100 -O "."
+        dotnet run --no-build --project ${simcha_path} -- -C config.json --data ${workflow.launchDir}/data/hg19 -R ${params.reps} -O "."
         """
 }
 
 workflow {
     def params_file = file('default_params.json')
-    def chrDup = Channel.from(params.chrDup)
-	def chrDel = Channel.from(params.chrDel)
-	def intDup = Channel.from(params.intDup)
-	def intDel = Channel.from(params.intDel)
-	def tailDel = Channel.from(params.tailDel)
-	def bfb = Channel.from(params.bfb)
-	def wgd = Channel.from(params.wgd)
+    def max_params = 2
+    def chrDup = Channel.from(params.chrDup).take(max_params)
+	def chrDel = Channel.from(params.chrDel).take(max_params)
+	def intDup = Channel.from(params.intDup).take(max_params)
+	def intDel = Channel.from(params.intDel).take(max_params)
+	def tailDel = Channel.from(params.tailDel).take(max_params)
+	def bfb = Channel.from(params.bfb).take(max_params)
+	def wgd = Channel.from(params.wgd).take(max_params)
     def product = chrDup
 		.combine(chrDel)
 		.combine(intDup)
