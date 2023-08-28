@@ -9,4 +9,5 @@ public record SimParams(
     Distribution EventDist,
     FitnessParams Fitness,
     Dictionary<string, Signature>? Signatures = null,
-    MCParams? MCParams = null);
+    MCParams? MCParams = null,
+    MCTarget? MCTarget = null);
