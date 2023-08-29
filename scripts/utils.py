@@ -203,7 +203,6 @@ hg19_chr_lengths = {
     "chrY": 59_373_566
 }
 
-
 # https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh38
 hg38_chr_lengths = {
     "chr1": 248_956_422,
@@ -287,7 +286,9 @@ hg38_chr_cum_starts = {
  }
 
 hg19_genome_length = 3095677412
+hg19_autosome_length = 2881033286
 hg38_genome_length = 3088269832
+hg38_autosome_length = 2875001522
 
 # Define a function to convert a row to a list
 def row_to_list(row, column, step_size):

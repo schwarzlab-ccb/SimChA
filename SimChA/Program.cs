@@ -31,7 +31,7 @@ else
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-bool parseGenContents = (execMode == ExecMode.ParseGenContents);
+bool parseGenContents = execMode == ExecMode.ParseGenContents;
 var genRef = FileIO.GetGenRef(options.DataFolder, parseGenContents);
 files.WriteSimParams(simParams);
 
@@ -63,7 +63,11 @@ else
     }
     else
     {
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex);
+        if (simParams.MCTarget is null && options.UseMCMC)
+        {
+            throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
+        }
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
     }
 
     foreach (var sample in samples)

@@ -256,7 +256,7 @@ public class FileIO
         {
             throw new Exception($"File {filePath} should be a tsv or csv.");
         }
-        string separator = (fileFormat == "tsv") ? "\t" : ",";
+        string separator = fileFormat == "tsv" ? "\t" : ",";
         if (!File.Exists(fileFullPath))
         {
             throw new Exception($"File {fileFullPath} does not exist");

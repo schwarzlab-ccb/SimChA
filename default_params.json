@@ -1,5 +1,5 @@
 {
-	"Seed": 1415156012,
+	"Seed": -1,
 	"Sex": "Both",
 	"EventCount": 75,
 	"EventDist": "Exponential",
@@ -134,6 +134,10 @@
 	  "ThetaFitness": 10,
 	  "SwapEventP": 1,
 	  "ThresholdFit": 1E-08
+	},
+	"MCTarget": {
+		"Mean": 1,
+		"Dist": "Exponential"
 	}
   }
   
