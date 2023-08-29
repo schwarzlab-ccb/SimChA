@@ -108,6 +108,72 @@ def calc_CNs(dataset):
     df.columns = ["major", "minor", "hap_a", "hap_b"]
     return df
 
+def get_seg_lengths(data, include_cn_normal = True):
+    sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
+    all_seg_length = []
+    for _, id in enumerate(sample_ids):
+        sample = data[data["sample_id"] == id]
+        sample_seg_length = []
+        for _, row in sample.iterrows():
+            if row["cn_a"] == 1 and row["cn_b"] == 1 and not include_cn_normal:
+                continue
+            seg_length = row["end"] - row["start"]
+            sample_seg_length.append(seg_length)
+        all_seg_length.append(np.array(sample_seg_length).mean())
+    return all_seg_length
+
+def get_changepoints(data):
+    sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
+    all_changepoints = []
+    for _, id in enumerate(sample_ids):
+        sample = data[data["sample_id"] == id]
+        for chr in chromosome_names:
+            chr_changepoints = []
+            segs = sample[sample["chrom"] == chr]
+            last_seg = 2
+            for index, seg in segs.iterrows():
+                this_seg = seg["cn_a"]+seg["cn_b"]
+                chr_changepoints.append(abs(this_seg - last_seg))
+                lastSeg = this_seg
+            all_changepoints += chr_changepoints
+    return all_changepoints
+
+def get_BP_per_chromosome(data):
+    sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
+    all_chr_bins = []
+    for _, id in enumerate(sample_ids):
+        sample = data[data["sample_id"] == id]
+        for _, chr in enumerate(chromosome_names):
+            segs = sample[sample["chrom"] == chr]
+            all_chr_bins.append(len(segs)-1)
+    return all_chr_bins
+
+def get_BP_per_10MB(data):
+    SIZE = 10000000
+    sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
+    all_chr_bins = []
+    for _, id in enumerate(sample_ids):
+        sample = data[data["sample_id"] == id]
+        for _, chr in enumerate(chromosome_names): 
+            segs = sample[sample["chrom"] == chr]
+            intervals = np.arange(0, hg19_chr_lengths[chr]+SIZE, SIZE)
+            bins = [0 for _ in range(len(intervals)-1)]
+            for _, seg in segs.iterrows():
+                # To which bin does the start of the segment belong?
+                [start_index,end_index] = np.searchsorted(intervals, [seg["start"], seg["end"]])
+                bins[start_index - 1] += 1
+                if (start_index != end_index):
+                    bins[end_index - 1] += 1
+            bins = [val - 1 if val >= 1 else val for val in bins]
+            all_chr_bins += bins
+    return all_chr_bins
+
+def calc_hallmarks(dataset):
+    hallmarks = [get_seg_lengths(dataset), get_changepoints(dataset), get_BP_per_chromosome(dataset), get_BP_per_10MB(dataset)]
+    df = pd.DataFrame(hallmarks).T
+    df.columns = ["seg_lengths", "changepoints", "bps_per_chromosome", "bps_per_10MB"]
+    return df
+
 
 # https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh37
 hg19_chr_lengths = {
