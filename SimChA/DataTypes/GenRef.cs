@@ -12,6 +12,9 @@ public class GenRef
     public int ChrCount { get; }
     private Region[] XYGenome { get; }
     private Region[] XXGenome { get; }
+    
+    private long XYLinLen { get; }
+    private long XXLinLen { get; }
     private long XYGenomeLen { get; }
     private long XXGenomeLen { get; }
     private List<string> XYChrs { get; }
@@ -27,8 +30,8 @@ public class GenRef
     public Region[] GetGenotype(bool sexXX)
         => sexXX ? XXGenome : XYGenome;
     
-    public long GetGenomeLen(bool sexXX)
-        => sexXX ? XXGenomeLen : XYGenomeLen;
+    public long GetGenomeLen(bool sexXX, bool diploid = true)
+        => diploid ? (sexXX ? XXGenomeLen : XYGenomeLen) : (sexXX ? XXLinLen : XYLinLen);
     
     public IEnumerable<string> ChrIDsForSex(bool sexXX)
         => sexXX ? XXChrs : XYChrs;
@@ -55,6 +58,8 @@ public class GenRef
         var haplotypeTwoM = CreateHaplotype(false, false, useSNV);
         XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToArray();
         XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToArray();
+        XYLinLen = XYChrs.Select(c => (long) chrLengths[c]).Sum();
+        XXLinLen = XXChrs.Select(c => (long) chrLengths[c]).Sum();
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
         GeneLists = geneList;

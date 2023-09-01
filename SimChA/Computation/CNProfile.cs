@@ -11,7 +11,7 @@ public abstract class CNProfile
         => 2.0 * kar.GenomeLen() / genRef.GetGenomeLen(kar.SexXX);
     
     public static double CalcCoverage(Karyotype kar, GenRef genRef) 
-    =>  (genRef.GetGenomeLen(kar.SexXX) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.SexXX);
+    =>  (genRef.GetGenomeLen(kar.SexXX, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.SexXX,false);
     
     public static CloneStat GetCloneStats(Sample sample, CloneIn clone, GenRef genRef, FitnessParams fParams, Dictionary<int, Karyotype> karMap)
     {
