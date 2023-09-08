@@ -285,9 +285,11 @@ hg38_chr_cum_starts = {
     'chrY': 3031042417
  }
 
-hg19_genome_length = 3095677412
+hg19_genome_xy_length = 3095677412
+hg19_genome_xx_length = 3036303846
 hg19_autosome_length = 2881033286
-hg38_genome_length = 3088269832
+hg38_genome_xy_length = 3088269832
+hg38_genome_xx_length = 3031042417
 hg38_autosome_length = 2875001522
 
 # Define a function to convert a row to a list
