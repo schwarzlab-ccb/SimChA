@@ -92,7 +92,7 @@ workflow {
         def beta = Channel.from(params.TsgOg).take(max_params)
         def gamma = Channel.from(params.Essentiality).take(max_params)
         def fit_param_comb = alpha
-            .combine(alpha)
+            .combine(beta)
             .combine(gamma)
         SimChA_Fit(params_file.text, fit_param_comb)
     }

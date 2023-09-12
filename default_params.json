@@ -1,7 +1,7 @@
 {
 	"Seed": -1,
 	"Sex": "Both",
-	"EventCount": 75,
+	"EventCount": 72,
 	"EventDist": "Exponential",
 	"Fitness": {
 	  "Stress": 1,
@@ -14,13 +14,13 @@
 		"Events": [
 		  {
 			"Type": "ChromDeletion",
-			"Prob": 0.5,
+			"Prob": 1,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "ChromDuplication",
-			"Prob": 0.5,
+			"Prob": 1,
 			"Size": 0,
 			"Frag": 0
 		  },
@@ -140,4 +140,3 @@
 		"Dist": "Exponential"
 	}
   }
-  
