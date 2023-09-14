@@ -109,6 +109,58 @@ def plot_scatter_CNs(data, use_hg19=True, output="../out"):
 
     fig.savefig(f"{output}/scatter_CNs.png", dpi=150, bbox_inches="tight")
 
+def plot_scatter_CNs():
+    datasets = {"PCAWG":"../out/PCAWG/", "PCAWG, Filtered, 95%": "../out/PCAWG_filtered_95_pc", "PCAWG, Filtered, 99%":"../out/PCAWG_filtered_99_pc"}#, "Neutral": "../out", "Fitness-Driven": "../mcmc_complex"}
+    ls = ["-", "-.", "--"]
+    # Initialize the cumulative start position variable
+    hg19_chr_cum_starts, hg38_chr_cum_starts = genome_length_init()
+
+    x_pos = 0
+    for chrom, length in hg19_chr_lengths.items():
+        # Update the x position for the next chromosome
+        x_pos += length
+     
+    fig, ax = plt.subplots(1, figsize=(32, 9))
+    for i, key in enumerate(datasets.keys()):
+        data = datasets[key]
+        cns = pd.read_csv(join(data,"copynumbers.tsv"), index_col=0, sep="\t")
+        cns['cn'] = cns['cn_a'] + cns['cn_b']
+        # list of unique indices in cns
+        samples = cns.index.unique()
+        positions = {}
+        step_size = 1000000
+        for sample in samples:
+            positions[sample] = sample_to_CNs(cns.loc[sample, :], step_size, hg19_chr_cum_starts, hg38_chr_cum_starts) 
+        df_CNs = pd.DataFrame(positions)
+
+        # Set the y-ax[0]is limits
+        ax.set_ylim(0.4, 3.5)
+
+        ax.plot(df_CNs.index, df_CNs.mean(axis=1), label=key, linewidth=1.5, ls = ls[i])
+
+        # Set the x-ax[0]is limits to match the total genome length
+        ax.set_xlim(0, x_pos)
+
+        if i == 0:
+            # plot a line at y=2
+            ax.plot(df_CNs.index, [2] * len(df_CNs.index), color="black", linewidth=1, alpha=0.7, ls=":")
+    
+    # Set the x-ax[0]is ticks to be at the middle of each chromosome
+    ax.set_xticks([hg19_chr_cum_starts[chrom] + (length / 2) for chrom, length in hg19_chr_lengths.items()])
+    # set tick labels to be chromosome names
+    ax.set_xticklabels(list(hg19_chr_cum_starts.keys()))
+    ax.legend()
+
+    ax.set_xlabel("Chromosome")
+    ax.set_ylabel("Copy number")
+    ax.set_title("Copy number variation")
+
+
+    fig.savefig(f"./scatter_CNs.svg", dpi=300, bbox_inches="tight")
+    
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot the average scatter CN plots for a given dataset')
@@ -117,6 +169,9 @@ if __name__ == "__main__":
     parser.add_argument('-O', "--output", type=str, default=".", help='The folder to output the plots to')
     args = parser.parse_args()
 
-    plot_scatter_CNs(args.input, args.use_hg19, args.output)
+    plot_scatter_CNs()
+    #plot_scatter_CNs(args.input, args.use_hg19, args.output)
+
+
 
 
