@@ -295,9 +295,12 @@ hg38_chr_cum_starts = {
 hg19_genome_xy_length = 3095677412
 hg19_genome_xx_length = 3036303846
 hg19_autosome_length = 2881033286
+hg19_genome_length = hg19_genome_xy_length
+
 hg38_genome_xy_length = 3088269832
 hg38_genome_xx_length = 3031042417
 hg38_autosome_length = 2875001522
+hg38_genome_length = hg38_genome_xy_length
 
 # Define a function to convert a row to a list
 def row_to_list(row, column, step_size):
