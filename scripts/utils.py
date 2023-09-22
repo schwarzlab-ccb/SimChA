@@ -163,20 +163,16 @@ def get_BP_per_chromosome(data):
 def get_BP_per_bin_size(data, bin_size=10_000_000):
     sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
     all_chr_bins = []
-    for _, id in enumerate(sample_ids):
+    # Loop over the samples
+    for i, id in enumerate(sample_ids):
         sample = data[data["sample_id"] == id]
+        # Loop over the chromosomes
         for _, chr in enumerate(chromosome_names): 
             segs = sample[sample["chrom"] == chr]
             intervals = np.arange(0, hg19_chr_lengths[chr]+bin_size, bin_size)
-            bins = [0 for _ in range(len(intervals)-1)]
-            for _, seg in segs.iterrows():
-                # To which bin does the start of the segment belong?
-                [start_index,end_index] = np.searchsorted(intervals, [seg["start"], seg["end"]])
-                bins[start_index - 1] += 1
-                if (start_index != end_index):
-                    bins[end_index - 1] += 1
-            bins = [val - 1 if val >= 1 else val for val in bins]
-            all_chr_bins += bins
+            # Just want the counts of all the end points
+            res = np.histogram(segs['end'].iloc[:-1], bins=intervals)[0]
+            all_chr_bins.extend(res)
     return all_chr_bins
 
 def calc_hallmarks(dataset):
