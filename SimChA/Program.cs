@@ -59,7 +59,7 @@ else
         }
         if (execMode == ExecMode.Bootstrap)
         {
-            var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile);
+            var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
             samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, fitnessList);
         }
         else
