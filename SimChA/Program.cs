@@ -17,17 +17,7 @@ cmdOptions.WithNotParsed(o =>
 var options = cmdOptions.Value;
 var execMode = options.ExecMode;
 
-SimParams simParams;
-if (options.ConfigFile != "")
-{
-    simParams = FileIO.ReadSimParams(options.ConfigFile);
-}
-else
-{
-    int seed = new Random().Next();
-    var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, fitness);
-}
+SimParams simParams = FileIO.ReadSimParams(options.ConfigFile);
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
