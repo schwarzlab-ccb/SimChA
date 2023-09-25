@@ -272,7 +272,7 @@ public class FileIO
         }
     }
 
-    public static List<double> ReadFitnesses(string filePath)
+    public static List<double> ReadFitnesses(string filePath, FitnessParams fitnessParams)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
@@ -282,7 +282,7 @@ public class FileIO
         try
         {
             var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseFitnesses(fitnessFile);
+            return Parsers.ParseFitnesses(fitnessFile, fitnessParams);
         }
         catch (Exception e)
         {

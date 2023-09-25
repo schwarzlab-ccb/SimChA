@@ -222,14 +222,20 @@ public static class Parsers
         return cloneFitness;
     }
 
-    public static List<double> ParseFitnesses(TextReader fitnessStream)
+    public static List<double> ParseFitnesses(TextReader fitnessStream, FitnessParams fParams)
     {
         var fitnessList = new List<double>();
         string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
-        fitnessList.Add(double.Parse(firstLine, CultureInfo.InvariantCulture.NumberFormat));
+        // Continue past the header
         while (fitnessStream.ReadLine() is { } line)
         {
-            fitnessList.Add(double.Parse(line, CultureInfo.InvariantCulture.NumberFormat));
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat)*fParams.Stress;
+            var tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
+            var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
+            double tsgogTerm = (og + tsg) * fParams.TsgOg;
+            double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
+            fitnessList.Add(1.0 + stressTerm + tsgogTerm + essTerm);
         }
         return fitnessList;
     }

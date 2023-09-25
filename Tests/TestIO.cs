@@ -156,21 +156,6 @@ public class TestIO
     }
 
     [Test]
-    public void TestReadBootstrapFile()
-    {
-        const string fitnessStr = "1.2\n" +
-                                  "1.44\n" +
-                                  "1.728\n" +
-                                  "1.728";
-        var fitnesses = Parsers.ParseFitnesses(new StringReader(fitnessStr));
-        Assert.AreEqual(4, fitnesses.Count);
-        Assert.AreEqual(1.2, fitnesses[0], double.Epsilon * 10);
-        Assert.AreEqual(1.44, fitnesses[1], double.Epsilon * 10);
-        Assert.AreEqual(1.728, fitnesses[2], double.Epsilon * 10);
-        Assert.AreEqual(1.728, fitnesses[3], double.Epsilon * 10);
-    }
-
-    [Test]
     public void TestParseCNAProfiles()
     {
         const string Profiles = @"sample_id	chrom	start	end	cn_a	cn_b
