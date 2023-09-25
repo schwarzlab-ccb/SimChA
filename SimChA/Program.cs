@@ -57,12 +57,19 @@ else
         {
             throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
         }
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+        if (execMode == ExecMode.Bootstrap)
+        {
+            var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, fitnessList);
+        }
+        else
+        {
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+        }
     }
 
     foreach (var sample in samples)
     {
-        // Monte Carlo sampling of copy-number altering events
         if (options.UseMCMC)
         {
             if (simParams.MCParams == null)

@@ -46,10 +46,6 @@ public class CmdOptions
             {
                 return ExecMode.Tree;
             }
-            if (Repeats > 1)
-            {
-                return ExecMode.Repeats;
-            }
             if (CNProfiles != "")
             {
                 return ExecMode.Profiles;
