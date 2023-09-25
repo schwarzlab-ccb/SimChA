@@ -108,33 +108,45 @@ def calc_CNs(dataset):
     df.columns = ["major", "minor", "hap_a", "hap_b"]
     return df
 
-def get_seg_lengths(data, include_cn_normal = True):
+# Get the segment lengths for a dataset (only non-diploid segments by default)
+def get_seg_lengths(data, include_cn_normal = False, include_loh = False):
     sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
-    all_seg_length = []
+    all_seg_lengths = []
     for _, id in enumerate(sample_ids):
         sample = data[data["sample_id"] == id]
-        sample_seg_length = []
         for _, row in sample.iterrows():
             if row["cn_a"] == 1 and row["cn_b"] == 1 and not include_cn_normal:
                 continue
-            seg_length = row["end"] - row["start"]
-            sample_seg_length.append(seg_length)
-        all_seg_length.append(np.array(sample_seg_length).mean())
-    return all_seg_length
+            elif row["cn_a"] != 1 and row["cn_a"]+row["cn_b"] == 2 and not include_loh:
+                continue
+            all_seg_lengths.append(row["end"] - row["start"])
+    return all_seg_lengths
 
-def get_changepoints(data):
+# Get the changepoint values for a dataset
+def get_changepoints(data, include_cn_normal = False, include_loh = False):
     sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
     all_changepoints = []
+    data["cn"] = data["cn_a"] + data["cn_b"]
     for _, id in enumerate(sample_ids):
         sample = data[data["sample_id"] == id]
         for chr in chromosome_names:
             chr_changepoints = []
             segs = sample[sample["chrom"] == chr]
             last_seg = 2
-            for index, seg in segs.iterrows():
-                this_seg = seg["cn_a"]+seg["cn_b"]
+            for _, seg in segs.iterrows():
+                # By default we don't count diploid segments
+                if seg["cn"] == 2:
+                    # Update this segment
+                    last_seg = 2
+                    # Ordinary diploid segment
+                    if seg["cn_a"] == 1 and seg["cn_b"] == 1 and not include_cn_normal:
+                        continue
+                    # LOH segments, only need to check if the the copy number of a is not 1
+                    elif seg["cn_a"] != 1 and not include_loh:
+                        continue
+                this_seg = seg["cn"]
                 chr_changepoints.append(abs(this_seg - last_seg))
-                lastSeg = this_seg
+                last_seg = this_seg
             all_changepoints += chr_changepoints
     return all_changepoints
 
@@ -148,24 +160,19 @@ def get_BP_per_chromosome(data):
             all_chr_bins.append(len(segs)-1)
     return all_chr_bins
 
-def get_BP_per_10MB(data):
-    SIZE = 10000000
+def get_BP_per_bin_size(data, bin_size=10_000_000):
     sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
     all_chr_bins = []
-    for _, id in enumerate(sample_ids):
+    # Loop over the samples
+    for i, id in enumerate(sample_ids):
         sample = data[data["sample_id"] == id]
+        # Loop over the chromosomes
         for _, chr in enumerate(chromosome_names): 
             segs = sample[sample["chrom"] == chr]
-            intervals = np.arange(0, hg19_chr_lengths[chr]+SIZE, SIZE)
-            bins = [0 for _ in range(len(intervals)-1)]
-            for _, seg in segs.iterrows():
-                # To which bin does the start of the segment belong?
-                [start_index,end_index] = np.searchsorted(intervals, [seg["start"], seg["end"]])
-                bins[start_index - 1] += 1
-                if (start_index != end_index):
-                    bins[end_index - 1] += 1
-            bins = [val - 1 if val >= 1 else val for val in bins]
-            all_chr_bins += bins
+            intervals = np.arange(0, hg19_chr_lengths[chr]+bin_size, bin_size)
+            # Just want the counts of all the end points
+            res = np.histogram(segs['end'].iloc[:-1], bins=intervals)[0]
+            all_chr_bins.extend(res)
     return all_chr_bins
 
 def calc_hallmarks(dataset):
@@ -288,9 +295,12 @@ hg38_chr_cum_starts = {
 hg19_genome_xy_length = 3095677412
 hg19_genome_xx_length = 3036303846
 hg19_autosome_length = 2881033286
+hg19_genome_length = hg19_genome_xy_length
+
 hg38_genome_xy_length = 3088269832
 hg38_genome_xx_length = 3031042417
 hg38_autosome_length = 2875001522
+hg38_genome_length = hg38_genome_xy_length
 
 # Define a function to convert a row to a list
 def row_to_list(row, column, step_size):
@@ -325,3 +335,50 @@ def samples_to_SNPs(cns, column='cn', step_size=1_000_000):
         positions[sample] = sample_to_SNPs(cns.loc[sample, :], column, step_size)
     df_CNs = pd.DataFrame(positions)
     return df_CNs
+
+def homozygous_row_to_list(row, step_size=1_000_000):
+    # initialize output
+    result = []
+    start = row['start'] + hg19_chr_cum_starts[row['chrom']]
+    if start % step_size != 0:
+        start = start - (start%step_size) + step_size
+    end = row['end'] + hg19_chr_cum_starts[row['chrom']]
+    # Loop over each position between start and end, divisible by step
+    for pos in range(start, end, step_size):
+        homozygous_del = row['homozygous_del']
+        result.append((pos, homozygous_del))
+    return result
+
+def sample_to_homozygous_spots(sample, step_size=1_000_000):
+    rows = sample.apply(lambda x: homozygous_row_to_list(x, step_size), axis=1)
+    filtered = rows[rows.apply(lambda x: len(x) > 0)]
+    return pd.Series(dict(np.concatenate(filtered.values)))
+
+def get_homozygous_deletion_locations(df, step_size=1_000_000):
+    df['cn'] = df['cn_a'] + df['cn_b']
+    # 1 = homozygously deleted region, 0 otherwise
+    df['homozygous_del'] = (df['cn'] == 0).astype(int)
+    # Ignore sex chromosomes
+    df = df[(df['chrom'] != 'chrX') & (df['chrom'] != 'chrY')]
+    samples = df.index.unique()
+    positions = {}
+    for sample in samples:
+        positions[sample] = sample_to_homozygous_spots(df.loc[sample, :], step_size)
+    df_dels = pd.DataFrame(positions)
+    return df_dels
+
+def homozygous_length_distribution(df, bin_size=1_000_000):
+    df["cn"] = df["cn_a"] + df["cn_b"]
+    sample_ids = df["sample_id"].unique()
+    hist = []
+    for id in sample_ids:
+        sample = df[df["sample_id"] == id]
+        for _, row in sample.iterrows():
+            # Skip segments that are not homozygously deleted or are sex chromosomes
+            if row["cn"] != 0 or row['chrom'] in ["chrX", "chrY"]:
+                continue
+            if row["cn_a"] == 0 and row["cn_b"] == 0:
+                length = (row["end"] - row["start"])/bin_size
+                hist.append(length)
+    return hist
+
