@@ -191,8 +191,7 @@ public static class Parsers
         const string distanceKey = "Distance";
         const string fitnessKey = "Fitness";
 
-        string? firstLine = cloneStream.ReadLine();
-        if (firstLine == null) throw new Exception("CloneIn file is empty.");
+        string? firstLine = cloneStream.ReadLine() ?? throw new Exception("CloneIn file is empty.");
         var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
         var columns = new Dictionary<string, int> { { idKey, -1 }, { parentIDKey, -1 }, { distanceKey, -1 } };
         if (parseFitness)
@@ -221,6 +220,18 @@ public static class Parsers
             cloneFitness.Add(clone);
         }
         return cloneFitness;
+    }
+
+    public static List<double> ParseFitnesses(TextReader fitnessStream)
+    {
+        var fitnessList = new List<double>();
+        string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
+        fitnessList.Add(double.Parse(firstLine, CultureInfo.InvariantCulture.NumberFormat));
+        while (fitnessStream.ReadLine() is { } line)
+        {
+            fitnessList.Add(double.Parse(line, CultureInfo.InvariantCulture.NumberFormat));
+        }
+        return fitnessList;
     }
 
     public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ParseChromosomes(string text)

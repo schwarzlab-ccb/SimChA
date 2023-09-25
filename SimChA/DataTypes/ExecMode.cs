@@ -8,5 +8,6 @@ public enum ExecMode
     Tree,
     Repeats,
     Profiles,
-    ParseGenContents
+    ParseGenContents,
+    Bootstrap
 }

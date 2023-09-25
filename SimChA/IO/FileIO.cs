@@ -272,6 +272,24 @@ public class FileIO
         }
     }
 
+    public static List<double> ReadFitnesses(string filePath)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var fitnessFile = new StreamReader(fileFullPath);
+            return Parsers.ParseFitnesses(fitnessFile);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
     public static Dictionary<string, StringBuilder> ReadFasta(List<string> allChrs, string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, GENOME_FASTA));

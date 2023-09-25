@@ -36,6 +36,8 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
 
+    [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
+    public string BootstrapFile { get; set; }
     public ExecMode ExecMode
     {
         get
@@ -44,13 +46,13 @@ public class CmdOptions
             {
                 return ExecMode.Tree;
             }
-            if (Repeats > 1)
-            {
-                return ExecMode.Repeats;
-            }
             if (CNProfiles != "")
             {
                 return ExecMode.Profiles;
+            }
+            if (BootstrapFile != "")
+            {
+                return ExecMode.Bootstrap;
             }
             if (UseVariants || WriteFasta)
             {
