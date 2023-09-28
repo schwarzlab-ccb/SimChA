@@ -3,6 +3,8 @@ import re
 import numpy as np
 import pandas as pd
 import json
+from collections import defaultdict
+
 
 from os.path import join
 
@@ -303,56 +305,56 @@ hg38_autosome_length = 2875001522
 hg38_genome_length = hg38_genome_xy_length
 
 # Define a function to convert a row to a list
-def row_to_list(row, column, step_size):
+def row_to_list(row, column, step_size=1_000_000):
     # Initialize an empty list
     res = []
-
     start = row['start'] + hg19_chr_cum_starts[row['chrom']]
+    # Round start to the nearest bin
     if start % step_size != 0:
         start = start - (start % step_size) + step_size
     end = row['end'] + hg19_chr_cum_starts[row['chrom']]
+    # The rounding can cause the start to now be greater than the end
+    # in which case, it is a single bin
+    if start > end:
+        return [(start, row[column])]
 
     # Loop over each position between start and end, divisible by step
     for pos in range(start, end, step_size):
         cn = row[column]
         res.append((pos, cn))
-
     # Return the list
     return res
 
 
-def sample_to_SNPs(sample, column, step_size):
+def sample_to_SNPs(sample, bins, column, step_size=1_000_000):
+    count = {b : 0 for _, b in enumerate(bins)}
     rows = sample.apply(lambda x: row_to_list(x, column, step_size), axis=1)
     filtered = rows[rows.apply(lambda x: len(x) > 0)]
-    return pd.Series(dict(np.concatenate(filtered.values)))
+    for items in filtered.values:
+        for pos, cn in items:
+            count[pos] += cn
+    return pd.Series(count)
 
 
 def samples_to_SNPs(cns, column='cn', step_size=1_000_000):
     # list of unique indices in cns
     samples = cns.index.unique()
     positions = {}
+    max_bin = np.ceil(hg19_autosome_length/step_size) * step_size
+    bins = np.arange(step_size, max_bin+step_size, step_size)
     for sample in samples:
-        positions[sample] = sample_to_SNPs(cns.loc[sample, :], column, step_size)
+        positions[sample] = sample_to_SNPs(cns.loc[sample, :], bins, column, step_size)
     df_CNs = pd.DataFrame(positions)
     return df_CNs
 
-def homozygous_row_to_list(row, step_size=1_000_000):
-    # initialize output
-    result = []
-    start = row['start'] + hg19_chr_cum_starts[row['chrom']]
-    if start % step_size != 0:
-        start = start - (start%step_size) + step_size
-    end = row['end'] + hg19_chr_cum_starts[row['chrom']]
-    # Loop over each position between start and end, divisible by step
-    for pos in range(start, end, step_size):
-        homozygous_del = row['homozygous_del']
-        result.append((pos, homozygous_del))
-    return result
-
-def sample_to_homozygous_spots(sample, step_size=1_000_000):
-    rows = sample.apply(lambda x: homozygous_row_to_list(x, step_size), axis=1)
+def sample_to_homozygous_spots(sample, bins, step_size=1_000_000):
+    count = {b : 0 for _, b in enumerate(bins)}
+    rows = sample.apply(lambda x: row_to_list(x, 'homozygous_del', step_size), axis=1)
     filtered = rows[rows.apply(lambda x: len(x) > 0)]
-    return pd.Series(dict(np.concatenate(filtered.values)))
+    for items in filtered.values:
+        for pos, cn in items:
+            count[pos] += cn
+    return pd.Series(count)
 
 def get_homozygous_deletion_locations(df, step_size=1_000_000):
     df['cn'] = df['cn_a'] + df['cn_b']
@@ -362,8 +364,10 @@ def get_homozygous_deletion_locations(df, step_size=1_000_000):
     df = df[(df['chrom'] != 'chrX') & (df['chrom'] != 'chrY')]
     samples = df.index.unique()
     positions = {}
+    max_bin = np.ceil(hg19_autosome_length/step_size) * step_size
+    bins = np.arange(step_size, max_bin+step_size, step_size)
     for sample in samples:
-        positions[sample] = sample_to_homozygous_spots(df.loc[sample, :], step_size)
+        positions[sample] = sample_to_homozygous_spots(df.loc[sample, :], bins, step_size)
     df_dels = pd.DataFrame(positions)
     return df_dels
 
