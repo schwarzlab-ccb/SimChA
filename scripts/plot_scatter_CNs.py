@@ -6,60 +6,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from os.path import join
-from utils import load_dataset, hg19_chr_lengths, chromosome_colors, chromosome_names, hg38_chr_lengths
-
-# Define a function to convert a row to a list
-def row_to_list(row, hg19_chr_cum_starts, hg38_chr_cum_starts, step_size=1000000):
-    # Initialize an empty list
-    res = []
-    
-    start = row['start'] + hg19_chr_cum_starts[row['chrom']]
-    if start % step_size != 0:
-        start = start - (start % step_size) + step_size
-    end = row['end'] + hg19_chr_cum_starts[row['chrom']]
-
-    # Loop over each position between start and end, divisible by step
-    for pos in range(start, end, step_size):
-        cn = row['cn']
-        res.append((pos, cn))
-    
-    # Return the list
-    return res
-
-def sample_to_CNs(sample, step_size, hg19_chr_cum_starts, hg38_chr_cum_starts):
-    rows = sample.apply(lambda x: row_to_list(x, hg19_chr_cum_starts, hg38_chr_cum_starts, step_size), axis=1)
-    filtered = rows[rows.apply(lambda x: len(x) > 0)]
-    return pd.Series(dict(np.concatenate(filtered.values)))
-
-def genome_length_init():
-    # Initialize the cumulative start position variable
-    cum_start = 0
-    hg19_chr_cum_starts = {}
-    # Loop over each chromosome in the chromosome lengths dictionary
-    for chrom, length in hg19_chr_lengths.items():
-        hg19_chr_cum_starts[chrom] = cum_start
-        cum_start += length
-    cum_start = 0
-    hg38_chr_cum_starts = {}
-    # Loop over each chromosome in the chromosome lengths dictionary
-    for chrom, length in hg38_chr_lengths.items():
-        hg38_chr_cum_starts[chrom] = cum_start
-        cum_start += length    
-
-    # total length of the genome
-    return hg19_chr_cum_starts, hg38_chr_cum_starts
+from utils import load_dataset, hg19_chr_lengths, chromosome_colors, chromosome_names, hg38_chr_lengths, samples_to_SNPs, hg19_chr_cum_starts
 
 def plot_scatter_CNs(data, use_hg19=True, output="../out"):
-    # Initialize the cumulative start position variable
-    hg19_chr_cum_starts, hg38_chr_cum_starts = genome_length_init() 
     cns = pd.read_csv(join(data,"copynumbers.tsv"), index_col=0, sep="\t")
     cns['cn'] = cns['cn_a'] + cns['cn_b']
     # list of unique indices in cns
     samples = cns.index.unique()
     positions = {}
-    step_size = 1000000
+    step_size = 10_000_000
     for sample in samples:
-        positions[sample] = sample_to_CNs(cns.loc[sample, :], step_size, hg19_chr_cum_starts, hg38_chr_cum_starts) 
+        positions[sample] = sample_to_CNs(cns.loc[sample, :], step_size) 
     df_CNs = pd.DataFrame(positions)
 
     # print(df_CNs)
@@ -110,10 +67,8 @@ def plot_scatter_CNs(data, use_hg19=True, output="../out"):
     fig.savefig(f"{output}/scatter_CNs.png", dpi=150, bbox_inches="tight")
 
 def plot_scatter_CNs():
-    datasets = {"PCAWG":"../out/PCAWG/", "PCAWG, Filtered, 95%": "../out/PCAWG_filtered_95_pc", "PCAWG, Filtered, 99%":"../out/PCAWG_filtered_99_pc"}#, "Neutral": "../out", "Fitness-Driven": "../mcmc_complex"}
-    ls = ["-", "-.", "--"]
-    # Initialize the cumulative start position variable
-    hg19_chr_cum_starts, hg38_chr_cum_starts = genome_length_init()
+    datasets = {"PCAWG":"../out/PCAWG_filtered_95_pc/"}#, "Stick-Break":"../out/simulated_stick_break/", "Limited Stick-Break": "../out/simulated_stick_break_limited/"}
+    ls = ["-", "-.", "--", ":"]
 
     x_pos = 0
     for chrom, length in hg19_chr_lengths.items():
@@ -123,16 +78,10 @@ def plot_scatter_CNs():
     fig, ax = plt.subplots(1, figsize=(32, 9))
     for i, key in enumerate(datasets.keys()):
         data = datasets[key]
-        cns = pd.read_csv(join(data,"copynumbers.tsv"), index_col=0, sep="\t")
+        cns = pd.read_csv(join(data,"copynumbers.tsv"), index_col = 0, sep="\t")
         cns['cn'] = cns['cn_a'] + cns['cn_b']
-        # list of unique indices in cns
-        samples = cns.index.unique()
-        positions = {}
-        step_size = 1000000
-        for sample in samples:
-            positions[sample] = sample_to_CNs(cns.loc[sample, :], step_size, hg19_chr_cum_starts, hg38_chr_cum_starts) 
-        df_CNs = pd.DataFrame(positions)
-
+        step_size = 1_000_000
+        df_CNs = samples_to_SNPs(cns, 'cn', step_size, includeSexChromosomes=True)
         # Set the y-ax[0]is limits
         ax.set_ylim(0.4, 3.5)
 
@@ -151,12 +100,12 @@ def plot_scatter_CNs():
     ax.set_xticklabels(list(hg19_chr_cum_starts.keys()))
     ax.legend()
 
-    ax.set_xlabel("Chromosome")
-    ax.set_ylabel("Copy number")
-    ax.set_title("Copy number variation")
+    ax.set_xlabel("Genomic position (1MB bins)")
+    ax.set_ylabel("Mean copy-number")
+    ax.set_title("Mean Copy-Number Profile of PCAWG Dataset")
 
 
-    fig.savefig(f"./scatter_CNs.svg", dpi=300, bbox_inches="tight")
+    fig.savefig(f"./scatter_CNs_pcawg.png", dpi=300, bbox_inches="tight")
     
 
 
