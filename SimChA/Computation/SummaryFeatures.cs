@@ -21,7 +21,6 @@ public static class SummaryFeatures
         var segLengths = new List<long>();
         foreach (var cnProfile in GetCopyNumberProfiles(genRef, kars))
         {
-            var kar = cnProfile.Key;
             var cnList = cnProfile.Value;
             // Drop the sex chromosomes
             if (!includeSexChromosomes)
@@ -41,9 +40,46 @@ public static class SummaryFeatures
         return segLengths;
     }
 
-    public static Dictionary<string, List<long>> GetChangepoints(GenRef genRef, IList<Karyotype> kars)
+    public static List<int> GetChangepoints(GenRef genRef, IList<Karyotype> kars, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
-        var changepointDict = genRef.AllChrs.ToDictionary(chr => chr, chr => new List<long>());
-        return changepointDict;
+        var changepointList = new List<int>();
+
+        foreach (var cnProfile in GetCopyNumberProfiles(genRef, kars))
+        {
+            var cnList = cnProfile.Value;
+            // Changepoint counts the step up or down between adjacent segments.
+            // Left-most segment of copy-number profile uses a dummy diploid segment as its benchmark
+            var leftSegmentCN = 2;
+            var lastChr = "chr1";
+            foreach (var cn in cnList)
+            {
+                var thisChr = cn.Segment.ChrNo;
+                if (thisChr != lastChr)
+                {
+                    leftSegmentCN = 2;
+                    lastChr = thisChr;
+                }
+                if (!includeSexChromosomes && (thisChr == "chrX" || thisChr == "chrY"))
+                {
+                    continue;
+                }
+                var thisSegmentCN = cn.CNH1 + cn.CNH2;
+                // By default, diploid segments are not counted
+                if (thisSegmentCN == 2)
+                {
+                    if (!includeCNNormal && cn.CNH1 == 1 && cn.CNH2 == 1)
+                    {
+                        continue;
+                    }
+                    if (!includeLOH && (cn.CNH1 == 0 || cn.CNH2 == 0))
+                    {
+                        continue;
+                    }
+                }
+                changepointList.Add(Math.Abs(leftSegmentCN - thisSegmentCN));
+                leftSegmentCN = thisSegmentCN;
+            }
+        }
+        return changepointList;
     }
 }

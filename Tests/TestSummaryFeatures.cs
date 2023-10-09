@@ -52,4 +52,32 @@ public class TestSummaryFeatures
         segs = SummaryFeatures.GetSegLengths(_genRef, new List<Karyotype> {karA, karB});
         Assert.AreEqual(1, segs.Count);
     }
+
+    [Test]
+    public void TestDefaultChangepoints()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var changepoints = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karXX});
+        Assert.AreEqual(0, changepoints.Count);
+        // Count the CN-normal segments
+        changepoints = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karXX}, true);
+        // Only autosomes are counted
+        Assert.AreEqual(22, changepoints.Count);
+    }
+
+    [Test]
+    public void TestChangepoints()
+    {
+        var karA = new Karyotype(_genRef, true);
+        var karB = new Karyotype(_genRef, true);
+        karA.ApplyInternalDeletion(0, 1000, 2000);
+        karB.ApplyInternalDuplication(0, 2000, 3000);
+        var segs = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karA, karB});
+        Assert.AreEqual(2, segs.Count);
+        // Copy-neutral LOH segments are not counted
+        karA.ApplyInternalDuplication(23, 1000, 2000);
+        segs = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karA, karB});
+        Assert.AreEqual(1, segs.Count);
+    }
+
 }
