@@ -72,16 +72,15 @@ public static class CopyNumbers
     public static Dictionary<string, List<long>> GetSegPoints(GenRef genRef, IList<Karyotype> kars) 
         => genRef.AllChrs.ToDictionary(chr => chr, chr => GetSegPoints(genRef, chr, kars));
 
-    public static List<long> GetSegLengths(GenRef genRef, string chrNo, IList<Karyotype> kars)
-    {
-        var segLengthList = new HashSet<long>();
-        foreach (var kar in kars)
-        {
-            var segLength = kar.FindRegionsOfChr(chrNo).Select(r => r.End - r.Start);
-            segLengthList.UnionWith(segLength);
-        }
-        return segLengthList.OrderBy(val => val).ToList();
-    }
     public static Dictionary<string, List<long>> GetSegLengths(GenRef genRef, IList<Karyotype> kars)
-        => genRef.AllChrs.ToDictionary(chr => chr, chr => GetSegLengths(genRef, chr, kars));
+    {
+        var segLengthDict = genRef.AllChrs.ToDictionary(chr => chr, 
+            chr => kars.SelectMany(kar => kar.FindRegionsOfChr(chr)).Select(r => r.End - r.Start).ToList());
+        
+        foreach (var key in segLengthDict.Keys)
+        {
+            segLengthDict[key] = segLengthDict[key].OrderBy(val => val).ToList();
+        }
+        return segLengthDict;
+    }
 }
