@@ -103,4 +103,21 @@ public class TestSummaryFeatures
         Assert.AreEqual(2, segs[1]);
     }
 
+    [Test]
+    public void TestGetMinMajCNs()
+    {
+        var kar = new Karyotype(_genRef, true);
+        kar.ApplyInternalDeletion(0, 1000, 2000);
+        var cnList = CopyNumbers.CalcCopyNumbers(_genRef, kar, true).ToList();
+        var minCNs = SummaryFeatures.GetMinMajCNs(cnList, false);
+        // First chromosome
+        Assert.AreEqual(1, minCNs[0]);
+        Assert.AreEqual(0, minCNs[1]);
+        Assert.AreEqual(1, minCNs[2]);
+        var majCNs = SummaryFeatures.GetMinMajCNs(cnList, true);
+        Assert.AreEqual(1, majCNs[0]);
+        Assert.AreEqual(1, majCNs[1]);
+        Assert.AreEqual(1, majCNs[2]);
+    }
+
 }

@@ -16,6 +16,9 @@ public static class SummaryFeatures
         return cnProfiles;
     }
 
+    public static List<int> GetMinMajCNs(List<CopyNumber> cnList, bool isMajor)
+        => cnList.Select(cn => isMajor ? Math.Max(cn.CNH1,cn.CNH2) : Math.Min(cn.CNH1, cn.CNH2)).ToList();
+
     public static List<long> GetSegLengths(GenRef genRef, IList<Karyotype> kars, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<long>();
