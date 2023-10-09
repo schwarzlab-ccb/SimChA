@@ -1,0 +1,55 @@
+// Created by Cody Duncan, 2023, codybstrange93@gmail.com
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
+using SimChA.DataTypes;
+using SimChA.Simulation;
+using SimChA.Computation;
+using SimChA.EventData;
+using SimChA.IO;
+
+namespace Tests;
+
+[TestFixture]
+public class TestSummaryFeatures
+{
+    private GenRef _genRef;
+    private Karyotype _kar;
+    private Random _rnd;
+    
+    [SetUp]
+    public void Setup()
+    {
+        _genRef = FileIO.GetGenRef(TestIO.HG_19_PATH);
+        _rnd = new Random(0);
+    }
+
+    [Test]
+    public void TestDefaultSegLengths()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var segLengths = SummaryFeatures.GetSegLengths(_genRef, new List<Karyotype> {karXX});
+        Assert.AreEqual(0, segLengths.Count);
+        // Count the CN-normal segments
+        segLengths = SummaryFeatures.GetSegLengths(_genRef, new List<Karyotype> {karXX}, true);
+        // Only autosomes are counted
+        Assert.AreEqual(22, segLengths.Count);
+    }
+
+    [Test]
+    public void TestSegLengths()
+    {
+        var karA = new Karyotype(_genRef, true);
+        var karB = new Karyotype(_genRef, true);
+        karA.ApplyInternalDeletion(0, 1000, 2000);
+        karB.ApplyInternalDuplication(0, 2000, 3000);
+        var segs = SummaryFeatures.GetSegLengths(_genRef, new List<Karyotype> {karA, karB});
+        Assert.AreEqual(2, segs.Count);
+        // Copy-neutral LOH segments are not counted
+        karA.ApplyInternalDuplication(23, 1000, 2000);
+        segs = SummaryFeatures.GetSegLengths(_genRef, new List<Karyotype> {karA, karB});
+        Assert.AreEqual(1, segs.Count);
+    }
+}

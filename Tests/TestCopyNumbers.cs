@@ -73,39 +73,6 @@ public class TestCopyNumbers
             Assert.AreEqual(_genRef.ChrLengths[seg.Key], seg.Value.Last());
         }   
     }
-
-    [Test]
-    public void TestDefaultSegLengths()
-    {
-        var karXX = new Karyotype(_genRef, true);
-        var karXY = new Karyotype(_genRef, false);
-        var segs = CopyNumbers.GetSegLengths(_genRef, new List<Karyotype> {karXX, karXY});
-        foreach (var seg in segs)
-        {
-            Assert.AreEqual(_genRef.ChrLengths[seg.Key], seg.Value.First());
-        }
-    }
-
-    [Test]
-    public void TestSegLengths()
-    {
-        var karA = new Karyotype(_genRef, true);
-        var karB = new Karyotype(_genRef, true);
-        karA.ApplyInternalDeletion(0, 1000, 2000);
-        karB.ApplyInternalDuplication(0, 2000, 3000);
-        var segs = CopyNumbers.GetSegLengths(_genRef, new List<Karyotype> {karA, karB});
-        // The duplicated and deleted region lengths for haplotype A
-        Assert.AreEqual(1000, segs["chr1"][0]);
-        Assert.AreEqual(1000, segs["chr1"][1]);
-        // Undisturbed beginning section of karB, haplotype A
-        Assert.AreEqual(2000, segs["chr1"][2]);
-        // Rest of haplotype A for karA and karB
-        Assert.AreEqual(_genRef.ChrLengths["chr1"]-2000, segs["chr1"][3]);
-        Assert.AreEqual(_genRef.ChrLengths["chr1"]-2000, segs["chr1"][4]);
-        // Haplotype B for the two different karyotypes
-        Assert.AreEqual(_genRef.ChrLengths["chr1"], segs["chr1"][5]);
-        Assert.AreEqual(_genRef.ChrLengths["chr1"], segs["chr1"][6]);
-    }
     
     [Test]
     public void TestCutSegPoints()
