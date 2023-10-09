@@ -19,13 +19,12 @@ public static class SummaryFeatures
     public static List<int> GetMinMajCNs(List<CopyNumber> cnList, bool isMajor)
         => cnList.Select(cn => isMajor ? Math.Max(cn.CNH1,cn.CNH2) : Math.Min(cn.CNH1, cn.CNH2)).ToList();
 
-    public static List<long> GetSegLengths(GenRef genRef, IList<Karyotype> kars, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static List<long> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<long>();
-        foreach (var cnProfile in GetCopyNumberProfiles(genRef, kars))
+        foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
-            // Drop the sex chromosomes
             if (!includeSexChromosomes)
             {
                 cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
@@ -43,11 +42,11 @@ public static class SummaryFeatures
         return segLengths;
     }
 
-    public static List<int> GetChangepoints(GenRef genRef, IList<Karyotype> kars, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static List<int> GetChangepoints(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var changepointList = new List<int>();
 
-        foreach (var cnProfile in GetCopyNumberProfiles(genRef, kars))
+        foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
             // Changepoint counts the step up or down between adjacent segments.
@@ -86,10 +85,10 @@ public static class SummaryFeatures
         return changepointList;
     }
 
-    public static List<long> GetBreakpointsPerChromosome(GenRef genRef, IList<Karyotype> kars, bool includeSexChromosomes = false)
+    public static List<long> GetBreakpointsPerChromosome(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
     {
         var breakpoints = new List<long>();
-        foreach (var cnProfile in GetCopyNumberProfiles(genRef, kars))
+        foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
             var lastChr = null as string;

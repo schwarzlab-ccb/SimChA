@@ -15,9 +15,9 @@ public class TestOptimization
     {
         var a = new List<double>() { 0, 1, 3 };
         var b = new List<double>() { 1, 2, 1 };
-        var aCDF = StatisticMeasures.GetCDF(a);
+        var aCDF = StatisticMeasures<double>.GetCDF(a);
         Assert.AreEqual(.25, aCDF[1], double.Epsilon);
         Assert.AreEqual(1, aCDF[2], double.Epsilon);
-        var dist = StatisticMeasures.WassersteinDistance(a, b);
+        var dist = StatisticMeasures<double>.WassersteinDistance(a, b);
     }
 }

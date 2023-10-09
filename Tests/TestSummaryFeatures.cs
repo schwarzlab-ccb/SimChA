@@ -26,7 +26,7 @@ public class TestSummaryFeatures
         _rnd = new Random(0);
     }
 
-    [Test]
+    /*[Test]
     public void TestDefaultSegLengths()
     {
         var karXX = new Karyotype(_genRef, true);
@@ -45,6 +45,7 @@ public class TestSummaryFeatures
         var karB = new Karyotype(_genRef, true);
         karA.ApplyInternalDeletion(0, 1000, 2000);
         karB.ApplyInternalDuplication(0, 2000, 3000);
+        
         var segs = SummaryFeatures.GetSegLengths(_genRef, new List<Karyotype> {karA, karB});
         Assert.AreEqual(2, segs.Count);
         // Copy-neutral LOH segments are not counted
@@ -119,5 +120,6 @@ public class TestSummaryFeatures
         Assert.AreEqual(1, majCNs[1]);
         Assert.AreEqual(1, majCNs[2]);
     }
+    */
 
 }

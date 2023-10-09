@@ -2,12 +2,12 @@
 
 namespace SimChA.Optimization;
 
-public class StatisticMeasures
+public class StatisticMeasures<T> where T:IConvertible
 {
     // The first Wasserstein Distance is obtained by calculating CDFs for both lists
     // and then the integral of the absolute difference between the CDFs.
     // https://arxiv.org/abs/1509.02237
-    public static double WassersteinDistance(List<double> A, List<double> B)
+    public static double WassersteinDistance(List<T> A, List<T> B)
     {
         // Calculate CDFs
         var cdfA = GetCDF(A);
@@ -22,14 +22,15 @@ public class StatisticMeasures
         return distance / A.Count;
     }
 
-    public static List<double> GetCDF(List<double> list)
+
+    public static List<double> GetCDF(List<T> list)
     {
         var cdf = new List<double>();
-        double sum = list.Sum();
+        double sum = list.Sum(x => Convert.ToDouble(x));
         double cumulative = 0;
-        foreach (double item in list)
+        foreach (var item in list)
         {
-            cumulative += item / sum;
+            cumulative += Convert.ToDouble(item) / sum;
             cdf.Add(cumulative);
         }
         return cdf;
