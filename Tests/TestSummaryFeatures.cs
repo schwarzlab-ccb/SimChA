@@ -80,4 +80,27 @@ public class TestSummaryFeatures
         Assert.AreEqual(1, segs.Count);
     }
 
+    [Test]
+    public void TestDefaultBreakpointsPerChromosome()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var breakpoints = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, new List<Karyotype> {karXX});
+        Assert.AreEqual(0, breakpoints.Count);
+    }
+
+    [Test]
+    public void TestBreakpointsPerChromosome()
+    {
+        var karA = new Karyotype(_genRef, true);
+        var karB = new Karyotype(_genRef, true);
+        karA.ApplyInternalDeletion(0, 1000, 2000);
+        karB.ApplyInternalDuplication(0, 2000, 3000);
+        var segs = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, new List<Karyotype> {karA, karB});
+        // Two chromosomes have breakpoints: karA H1, and karB H1
+        Assert.AreEqual(2, segs.Count);
+        // Each chromosome has two breakpoints
+        Assert.AreEqual(2, segs[0]);
+        Assert.AreEqual(2, segs[1]);
+    }
+
 }

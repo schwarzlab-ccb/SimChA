@@ -50,7 +50,7 @@ public static class SummaryFeatures
             // Changepoint counts the step up or down between adjacent segments.
             // Left-most segment of copy-number profile uses a dummy diploid segment as its benchmark
             var leftSegmentCN = 2;
-            var lastChr = "chr1";
+            var lastChr = null as string;
             foreach (var cn in cnList)
             {
                 var thisChr = cn.Segment.ChrNo;
@@ -81,5 +81,34 @@ public static class SummaryFeatures
             }
         }
         return changepointList;
+    }
+
+    public static List<long> GetBreakpointsPerChromosome(GenRef genRef, IList<Karyotype> kars, bool includeSexChromosomes = false)
+    {
+        var breakpoints = new List<long>();
+        foreach (var cnProfile in GetCopyNumberProfiles(genRef, kars))
+        {
+            var cnList = cnProfile.Value;
+            var lastChr = null as string;
+            var breakpointCount = 0;
+            foreach (var cn in cnList)
+            {
+                var thisChr = cn.Segment.ChrNo;
+                if (thisChr != lastChr)
+                {
+                    lastChr = thisChr;
+                    if (breakpointCount > 0)
+                    {
+                        breakpoints.Add(breakpointCount);
+                    }
+                    breakpointCount = 0;
+                }
+                else
+                {
+                    breakpointCount += 1;
+                }
+            }
+        }
+        return breakpoints;
     }
 }
