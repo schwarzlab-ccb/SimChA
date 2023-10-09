@@ -73,6 +73,18 @@ public class TestCopyNumbers
             Assert.AreEqual(_genRef.ChrLengths[seg.Key], seg.Value.Last());
         }   
     }
+
+    [Test]
+    public void TestDefaultSegLengths()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var karXY = new Karyotype(_genRef, false);
+        var segs = CopyNumbers.GetSegLengths(_genRef, new List<Karyotype> {karXX, karXY});
+        foreach (var seg in segs)
+        {
+            Assert.AreEqual(_genRef.ChrLengths[seg.Key], seg.Value.First());
+        }
+    }
     
     [Test]
     public void TestCutSegPoints()
