@@ -4,6 +4,7 @@ using CommandLine;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
+using SimChA.Optimization;
 using SimChA.Simulation;
 
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -28,6 +29,17 @@ files.WriteSimParams(simParams);
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
+if (execMode == ExecMode.Optimization)
+{
+    Console.WriteLine("Optimization model -------- ");
+    Console.WriteLine("Reading observed data:");
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+    var observedSamples = Simulator.SamplesFromProfiles(profiles);
+    var optimizer = new Optimizer(genRef, observedSamples);
+    Console.WriteLine("Generating Simulated Data");
+    optimizer.GenerateSimulatedData(simParams, rnd, options.Repeats);
+    
+}
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");

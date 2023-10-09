@@ -1,6 +1,7 @@
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
+using SimChA.IO;
 namespace SimChA.Optimization;
 
 public class Optimizer
@@ -22,6 +23,23 @@ public class Optimizer
         ObservedSegLengths = SummaryFeatures.GetSegLengths(ObservedCNPs);
         ObservedChangepoints = SummaryFeatures.GetChangepoints(ObservedCNPs);
         ObservedBreakpoints = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
+    }
+
+    public void GenerateSimulatedData(SimParams simParams, Random rnd, int repeats)
+    {
+        if (simParams.Signatures is null || simParams.Signatures.Count == 0)
+        {
+            throw new Exception("No signatures were provided.");
+        }
+        Validators.ValidateSignatures(simParams.Signatures);
+
+        var samples = Converters.MakeSamples(rnd, repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+        var simulator = new Simulator(rnd, GenRef);
+        foreach (var sample in samples)
+        {
+            simulator.SampleEvents(sample);
+        }
+        SetSimulatedDistribution(samples);
     }
 
     public void SetSimulatedDistribution(List<Sample> simulatedData)

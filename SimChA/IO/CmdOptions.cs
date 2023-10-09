@@ -38,10 +38,18 @@ public class CmdOptions
 
     [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
     public string BootstrapFile { get; set; }
+
+    [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
+    public bool PerformOptimization { get; set; }
+
     public ExecMode ExecMode
     {
         get
         {
+            if (PerformOptimization)
+            {
+                return ExecMode.Optimization;
+            }
             if (CloneTreeFile != "")
             {
                 return ExecMode.Tree;

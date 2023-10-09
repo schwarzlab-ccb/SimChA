@@ -9,5 +9,6 @@ public enum ExecMode
     Repeats,
     Profiles,
     ParseGenContents,
-    Bootstrap
+    Bootstrap,
+    Optimization
 }
