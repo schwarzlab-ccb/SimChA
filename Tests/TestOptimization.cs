@@ -20,6 +20,7 @@ public class TestOptimization
         Assert.AreEqual(.25, aCDF[1], double.Epsilon);
         Assert.AreEqual(1, aCDF[2], double.Epsilon);
         var dist = StatisticMeasures.WassersteinDistance(a, b);
+        Assert.AreEqual(0.25, dist, double.Epsilon);
     }
 
     [Test]
@@ -47,5 +48,7 @@ public class TestOptimization
         Assert.AreEqual(2.0/3, aCDF[1], double.Epsilon);
         var bCDF = StatisticMeasures.GetCDF(bHist);
         Assert.AreEqual(1.0/3, bCDF[0], double.Epsilon);
+        var dist = StatisticMeasures.WassersteinDistance(aHist, bHist);
+        Assert.AreEqual(1.0/6, dist, double.Epsilon);
     }
 }

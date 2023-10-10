@@ -34,7 +34,7 @@ public class Optimizer
         
         double segDist = StatisticMeasures.WassersteinDistance(dataHistogram, simulatedHistogram);
 
-        return 0;
+        return segDist;
     }
 
     public void GenerateSimulatedData(SimParams simParams, Random rnd, int repeats)
