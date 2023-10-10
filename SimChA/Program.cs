@@ -38,6 +38,11 @@ if (execMode == ExecMode.Optimization)
     var optimizer = new Optimizer(genRef, observedSamples);
     Console.WriteLine("Generating Simulated Data");
     optimizer.GenerateSimulatedData(simParams, rnd, options.Repeats);
+
+    watch.Stop();
+    Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
+
+    return 0;
     
 }
 if (execMode == ExecMode.Profiles)

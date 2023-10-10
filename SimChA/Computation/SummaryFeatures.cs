@@ -1,27 +1,19 @@
 using SimChA.DataTypes;
 using SimChA.Simulation;
+using MathNet.Numerics.Statistics;
+using SimChA.Optimization;
 namespace SimChA.Computation;
 
 public static class SummaryFeatures
 {
-    // Get the copy-number profiles of the clones in the sample
-    public static Dictionary<Karyotype, List<CopyNumber>> GetCopyNumberProfiles(GenRef genRef, IList<Karyotype> kars)
-    {
-        var cnProfiles = new Dictionary<Karyotype, List<CopyNumber>>();
-        foreach (var kar in kars)
-        {
-            var cnList = CopyNumbers.CalcCopyNumbers(genRef, kar, kar.SexXX).ToList();
-            cnProfiles.Add(kar, cnList);
-        }
-        return cnProfiles;
-    }
-
     public static List<int> GetMinMajCNs(List<CopyNumber> cnList, bool isMajor)
         => cnList.Select(cn => isMajor ? Math.Max(cn.CNH1,cn.CNH2) : Math.Min(cn.CNH1, cn.CNH2)).ToList();
 
-    public static List<long> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static (List<double> segList, long min, long max) GetSegLengthInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
-        var segLengths = new List<long>();
+        var segLengths = new List<double>();
+        long minSeg = 1_000_000_000;
+        long maxSeg = 0;
         foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
@@ -37,9 +29,19 @@ public static class SummaryFeatures
             {
                 cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
             }
-            segLengths.AddRange(cnList.Select(cn => cn.Segment.Length));
+            var minInList = cnList.Min(cn => cn.Segment.Length);
+            if ( minInList < minSeg)
+            {
+                minSeg = minInList;
+            }
+            var maxInList = cnList.Max(cn => cn.Segment.Length);
+            if (maxInList > maxSeg)
+            {
+                maxSeg = maxInList;
+            }
+            segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
         }
-        return segLengths;
+        return (segLengths, minSeg, maxSeg);
     }
 
     public static List<int> GetChangepoints(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)

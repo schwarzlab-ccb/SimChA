@@ -2,27 +2,39 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.IO;
+using MathNet.Numerics.Statistics;
 namespace SimChA.Optimization;
 
 public class Optimizer
 {   
     public Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
-    public List<long> ObservedSegLengths { get; }
-    public List<int> ObservedChangepoints { get; }
-    public List<long> ObservedBreakpoints { get; }
-
     public Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
-    public List<long> SimulatedSegLengths { get; set;}
-    public List<int> SimulatedChangepoints { get; set;}
-    public List<long> SimulatedBreakpoints { get; set;}
     GenRef GenRef { get; }
     public Optimizer(GenRef genRef, List<Sample> observedData)
     {
         GenRef = genRef;
         ObservedCNPs = GetCNPs(GenRef, observedData);
-        ObservedSegLengths = SummaryFeatures.GetSegLengths(ObservedCNPs);
-        ObservedChangepoints = SummaryFeatures.GetChangepoints(ObservedCNPs);
-        ObservedBreakpoints = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
+        //ObservedSegLengths = SummaryFeatures.GetSegLengths(ObservedCNPs);
+    }
+
+    public void Optimize()
+    {
+        return;
+    }
+
+    public double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simulatedCNPs)
+    {
+        var dataSegLengthInfo = SummaryFeatures.GetSegLengthInfo(ObservedCNPs);
+        var simulatedSegLengthInfo = SummaryFeatures.GetSegLengthInfo(simulatedCNPs);
+        var histogramMax = Math.Max(dataSegLengthInfo.max, simulatedSegLengthInfo.max);
+        var histogramMin = Math.Min(dataSegLengthInfo.min, simulatedSegLengthInfo.min);
+        var histogramBins = 100;
+        var dataHistogram = new Histogram(dataSegLengthInfo.segList, histogramBins, histogramMin, histogramMax);
+        var simulatedHistogram = new Histogram(simulatedSegLengthInfo.segList, histogramBins, histogramMin, histogramMax);
+        
+        double segDist = StatisticMeasures.WassersteinDistance(dataHistogram, simulatedHistogram);
+
+        return 0;
     }
 
     public void GenerateSimulatedData(SimParams simParams, Random rnd, int repeats)
@@ -40,22 +52,26 @@ public class Optimizer
             simulator.SampleEvents(sample);
         }
         SetSimulatedDistribution(samples);
+
+        double distance = GetTotalDistance();
+        Console.WriteLine($"Distance: {distance}");
+        return;
     }
 
     public void SetSimulatedDistribution(List<Sample> simulatedData)
     {
         SimulatedCNPs = GetCNPs(GenRef, simulatedData);
-        SimulatedSegLengths = SummaryFeatures.GetSegLengths(SimulatedCNPs);
-        SimulatedChangepoints = SummaryFeatures.GetChangepoints(SimulatedCNPs);
-        SimulatedBreakpoints = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
+        //SimulatedSegLengths = SummaryFeatures.GetSegLengths(SimulatedCNPs);
+        //SimulatedChangepoints = SummaryFeatures.GetChangepoints(SimulatedCNPs);
+        //SimulatedBreakpoints = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
     }
 
     public double GetTotalDistance()
     {
-        var segDist = StatisticMeasures<long>.WassersteinDistance(ObservedSegLengths, SimulatedSegLengths);
-        var cpDist = StatisticMeasures<int>.WassersteinDistance(ObservedChangepoints, SimulatedChangepoints);
-        var bpDist = StatisticMeasures<long>.WassersteinDistance(ObservedBreakpoints, SimulatedBreakpoints);
-        return segDist + cpDist + bpDist;
+        //var segDist = StatisticMeasures<long>.WassersteinDistance(ObservedSegLengths, SimulatedSegLengths);
+        //var cpDist = StatisticMeasures<int>.WassersteinDistance(ObservedChangepoints, SimulatedChangepoints);
+        //var bpDist = StatisticMeasures<long>.WassersteinDistance(ObservedBreakpoints, SimulatedBreakpoints);
+        return 0;//segDist*segDist + cpDist*cpDist + bpDist*bpDist;
     }
 
 
