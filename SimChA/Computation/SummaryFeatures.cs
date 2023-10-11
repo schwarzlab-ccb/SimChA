@@ -9,11 +9,9 @@ public static class SummaryFeatures
     public static List<int> GetMinMajCNs(List<CopyNumber> cnList, bool isMajor)
         => cnList.Select(cn => isMajor ? Math.Max(cn.CNH1,cn.CNH2) : Math.Min(cn.CNH1, cn.CNH2)).ToList();
 
-    public static (List<double> segList, long min, long max) GetSegLengthInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<double>();
-        long minSeg = 1_000_000_000;
-        long maxSeg = 0;
         foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
@@ -29,25 +27,15 @@ public static class SummaryFeatures
             {
                 cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
             }
-            var minInList = cnList.Min(cn => cn.Segment.Length);
-            if ( minInList < minSeg)
-            {
-                minSeg = minInList;
-            }
-            var maxInList = cnList.Max(cn => cn.Segment.Length);
-            if (maxInList > maxSeg)
-            {
-                maxSeg = maxInList;
-            }
             segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
         }
-        return (segLengths, minSeg, maxSeg);
+        return segLengths;
     }
 
-    public static List<int> GetChangepoints(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static (List<double> values, int max) GetChangepointInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
-        var changepointList = new List<int>();
-
+        var changepointList = new List<double>();
+        var maxChange = 0;
         foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
@@ -80,16 +68,22 @@ public static class SummaryFeatures
                         continue;
                     }
                 }
-                changepointList.Add(Math.Abs(leftSegmentCN - thisSegmentCN));
+                var change = Math.Abs(leftSegmentCN - thisSegmentCN);
+                if (change > maxChange)
+                {
+                    maxChange = change;
+                }
+                changepointList.Add(change);
                 leftSegmentCN = thisSegmentCN;
             }
         }
-        return changepointList;
+        return (changepointList, maxChange);
     }
 
-    public static List<long> GetBreakpointsPerChromosome(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
+    public static (List<double> values, int max) GetBreakpointsPerChromosome(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
     {
-        var breakpoints = new List<long>();
+        var breakpoints = new List<double>();
+        var maxBP = 0;
         foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
@@ -100,11 +94,15 @@ public static class SummaryFeatures
                 var thisChr = cn.Segment.ChrNo;
                 if (thisChr != lastChr)
                 {
-                    lastChr = thisChr;
-                    if (breakpointCount > 0)
+                    if (lastChr != null)
                     {
+                        if (breakpointCount > maxBP)
+                        {
+                            maxBP = breakpointCount;
+                        }
                         breakpoints.Add(breakpointCount);
                     }
+                    lastChr = thisChr;
                     breakpointCount = 0;
                 }
                 else
@@ -113,6 +111,6 @@ public static class SummaryFeatures
                 }
             }
         }
-        return breakpoints;
+        return (breakpoints, maxBP);
     }
 }

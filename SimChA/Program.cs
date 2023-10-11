@@ -37,7 +37,7 @@ if (execMode == ExecMode.Optimization)
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
     var optimizer = new Optimizer(genRef, observedSamples);
     Console.WriteLine("Generating Simulated Data");
-    optimizer.GenerateSimulatedData(simParams, rnd, options.Repeats);
+    optimizer.Optimize(simParams, rnd, options.Repeats);
 
     watch.Stop();
     Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");

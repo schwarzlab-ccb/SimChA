@@ -17,27 +17,16 @@ public class Optimizer
         //ObservedSegLengths = SummaryFeatures.GetSegLengths(ObservedCNPs);
     }
 
-    public void Optimize()
+    public void Optimize(SimParams simParams, Random rnd, int repeats)
     {
+        GenerateSimulatedCNPs(simParams, rnd, repeats);
+        var segDist = GetSegLengthDistance();
+        var cpDist = GetChangepointDistance();
+        var bpDist = GetBreakpointDistance();
+        Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}");
         return;
     }
-
-    public double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simulatedCNPs)
-    {
-        var dataSegLengthInfo = SummaryFeatures.GetSegLengthInfo(ObservedCNPs);
-        var simulatedSegLengthInfo = SummaryFeatures.GetSegLengthInfo(simulatedCNPs);
-        var histogramMax = Math.Max(dataSegLengthInfo.max, simulatedSegLengthInfo.max);
-        var histogramMin = Math.Min(dataSegLengthInfo.min, simulatedSegLengthInfo.min);
-        var histogramBins = 100;
-        var dataHistogram = new Histogram(dataSegLengthInfo.segList, histogramBins, histogramMin, histogramMax);
-        var simulatedHistogram = new Histogram(simulatedSegLengthInfo.segList, histogramBins, histogramMin, histogramMax);
-        
-        double segDist = StatisticMeasures.WassersteinDistance(dataHistogram, simulatedHistogram);
-
-        return segDist;
-    }
-
-    public void GenerateSimulatedData(SimParams simParams, Random rnd, int repeats)
+    public void GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
     {
         if (simParams.Signatures is null || simParams.Signatures.Count == 0)
         {
@@ -51,12 +40,46 @@ public class Optimizer
         {
             simulator.SampleEvents(sample);
         }
-        SetSimulatedDistribution(samples);
-
-        double distance = GetTotalDistance();
-        Console.WriteLine($"Distance: {distance}");
-        return;
+        SimulatedCNPs = GetCNPs(GenRef, samples);
     }
+    public double GetSegLengthDistance()
+    {
+        var dataSegList = SummaryFeatures.GetSegLengths(ObservedCNPs);
+        var simSegList = SummaryFeatures.GetSegLengths(SimulatedCNPs);
+        var histMax = GenRef.ChrLengths["chr1"];
+        var histMin = 0;
+        var histBins = 1000;
+        return CalculateDistance(dataSegList, simSegList, histBins, histMin, histMax);
+    }
+
+    public double CalculateDistance(List<double> data, List<double> sim, int bins, int min, int max)
+    {
+        var dataHist = new Histogram(data, bins, min, max);
+        var simHist  = new Histogram(sim, bins, min, max);
+        return StatisticMeasures.WassersteinDistance(dataHist, simHist);
+    }
+
+    public double GetChangepointDistance()
+    {
+        var dataChangeInfo = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
+        var simChangeInfo  = SummaryFeatures.GetChangepointInfo(SimulatedCNPs);
+        var histMax = Math.Max(dataChangeInfo.max, simChangeInfo.max);
+        var histMin = 0;
+        var histBins = 50;
+        return CalculateDistance(dataChangeInfo.values, simChangeInfo.values, histBins, histMin, histMax);
+
+    }
+
+    public double GetBreakpointDistance()
+    {
+        var dataBPInfo = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
+        var simBPInfo  = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
+        var histMax = Math.Max(dataBPInfo.max, simBPInfo.max);
+        var histMin = 0;
+        var histBins = 50;
+        return CalculateDistance(dataBPInfo.values, simBPInfo.values, histBins, histMin, histMax);
+    }
+
 
     public void SetSimulatedDistribution(List<Sample> simulatedData)
     {
