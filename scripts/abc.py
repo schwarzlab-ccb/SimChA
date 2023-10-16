@@ -23,7 +23,9 @@ def update_params_file(params):
     with open(file_path, 'r', encoding='utf-8') as json_file:
         configs = json.load(json_file)
 
-    configs["Signatures"]["CNs"]["Events"]["ChromDeletion"]["Prob"]        = params["w_chrom_del"]
+    config["EventCount"] = params["n_events"]
+
+    """configs["Signatures"]["CNs"]["Events"]["ChromDeletion"]["Prob"]        = params["w_chrom_del"]
     configs["Signatures"]["CNs"]["Events"]["ChromDuplication"]["Prob"]     = params["w_chrom_dup"]
     configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Prob"]  = params["w_int_dup"]
     configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Prob"]     = params["w_int_del"]
@@ -36,7 +38,7 @@ def update_params_file(params):
     configs["Signatures"]["CNs"]["Events"]["InternalInversion"]["Size"]   = params["l_int_inv"]*100_000
     configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Size"]    = params["l_int_del"]*100_000
     configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Size"] = params["l_int_dup"]*100_000
-    configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Size"] = params["l_inv_dup"]*100_000
+    configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Size"] = params["l_inv_dup"]*100_000"""
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
     # Return the path to the config file
@@ -68,8 +70,8 @@ if __name__ == "__main__":
     # Uniform prior distributions for the various different properties of the simple events
     # We can also remove the number of events if we want
     prior = Distribution(
-            n_events    = RV("uniform", 30, 150),
-            w_chrom_del = RV("uniform", 1, 10), 
+            n_events    = RV("uniform", 30, 150)
+            """w_chrom_del = RV("uniform", 1, 10), 
             w_chrom_dup = RV("uniform", 1, 10), 
             w_int_dup   = RV("uniform", 1, 100),
             w_int_del   = RV("uniform", 1, 100),
@@ -82,17 +84,33 @@ if __name__ == "__main__":
             l_int_dup   = RV("uniform", 1, 50),
             l_int_del   = RV("uniform", 1, 50),
             l_int_inv   = RV("uniform", 1, 50),
-            l_inv_dup   = RV("uniform", 1, 50)
+            l_inv_dup   = RV("uniform", 1, 50)"""
             )
 
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
 
-    abc = ABCSMC(model, prior, distance_function=distance, population_size = 250)
+    abc = ABCSMC(model, prior, distance_function=distance, population_size = 5)
     # ABC-SMC output is a SQL database
-    db_path = f"{pwd}"
+    db_path = out_dir
+    abc.new("sqlite:///"+db_path, observed_data)
 
-    history = abc.new(pyabc.create_sqlite_db_id(), observed_data)
-    history = abc.run(minimum_epsilon = 0.1, max_nr_populations = 10)
+    history = abc.run(minimum_epsilon = 0.1, max_nr_populations = 1)
+
+    fig, ax = plt.subplots()
+    for t in range(history.max_t + 1):
+        df, w = history.get_distribution(t=t)
+        pyabc.visualization.plot_kde_1d(
+            df,
+            w,
+            xmin=30,
+            xmax=150,
+            x="n_events",
+            xname=r"Event Count",
+            ax=ax,
+            label=f"PDF t={t}",
+        )
+    ax.legend()
+    plt.savefig(f"{out_dir}/posterior_generations.png")
 
 
