@@ -17,7 +17,7 @@ public class Optimizer
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
-    public void Optimize(SimParams simParams, Random rnd, int repeats)
+    public double Optimize(SimParams simParams, Random rnd, int repeats)
     {
         SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
         var segDist = GetSegLengthDistance();
@@ -25,9 +25,9 @@ public class Optimizer
         var bpDist = GetBreakpointDistance();
         var majDist = GetMajMinCNDistance(true);
         var minDist = GetMajMinCNDistance(false);
-        Console.WriteLine();
-        Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}, maj CNs: {majDist}, min CNs {minDist}");
-        return;
+        //Console.WriteLine();
+        //Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}, maj CNs: {majDist}, min CNs {minDist}");        
+        return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
     }
     public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
     {
@@ -52,7 +52,7 @@ public class Optimizer
         var simSegList = SummaryFeatures.GetSegLengths(SimulatedCNPs);
         var histMax = GenRef.ChrLengths["chr1"];
         var histMin = 0;
-        var histBins = 500;
+        var histBins = 200;
         return CalculateDistance(dataSegList, simSegList, histBins, histMin, histMax);
     }
 

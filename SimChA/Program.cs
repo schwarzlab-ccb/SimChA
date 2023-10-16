@@ -37,11 +37,12 @@ if (execMode == ExecMode.Optimization)
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
     var optimizer = new Optimizer(genRef, observedSamples);
     Console.WriteLine("Generating Simulated Data");
-    optimizer.Optimize(simParams, rnd, options.Repeats);
+    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats);
 
     watch.Stop();
-    Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-
+    //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
+    Console.WriteLine();
+    Console.WriteLine($"Total distance: {totalDist}");
     return 0;
     
 }
