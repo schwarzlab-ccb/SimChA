@@ -23,7 +23,10 @@ public class Optimizer
         var segDist = GetSegLengthDistance();
         var cpDist = GetChangepointDistance();
         var bpDist = GetBreakpointDistance();
-        Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}");
+        var majDist = GetMajMinCNDistance(true);
+        var minDist = GetMajMinCNDistance(false);
+        Console.WriteLine();
+        Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}, maj CNs: {majDist}, min CNs {minDist}");
         return;
     }
     public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
@@ -55,26 +58,36 @@ public class Optimizer
 
     public double GetChangepointDistance()
     {
-        var dataChangeInfo = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
-        var simChangeInfo  = SummaryFeatures.GetChangepointInfo(SimulatedCNPs);
-        var histMax = Math.Max(dataChangeInfo.max, simChangeInfo.max);
+        var (obsValues, obsMax) = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
+        var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(SimulatedCNPs);
+        var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;
-        return CalculateDistance(dataChangeInfo.values, simChangeInfo.values, histBins, histMin, histMax);
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
 
     }
 
     public double GetBreakpointDistance()
     {
-        var dataBPInfo = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
-        var simBPInfo  = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
-        var histMax = Math.Max(dataBPInfo.max, simBPInfo.max);
+        var (obsValues, obsMax) = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
+        var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
+        var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;
-        return CalculateDistance(dataBPInfo.values, simBPInfo.values, histBins, histMin, histMax);
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
-    public double CalculateDistance(List<double> data, List<double> sim, int bins, int min, int max)
+    public double GetMajMinCNDistance(bool getMajor)
+    {
+        var (obsValues, obsMax) = SummaryFeatures.GetMajMinCNs(ObservedCNPs, getMajor);
+        var (simValues, simMax) = SummaryFeatures.GetMajMinCNs(SimulatedCNPs, getMajor);
+        var histMax = Math.Max(obsMax, simMax);
+        var histMin = 0;
+        var histBins = 50;
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
+    }
+
+    public double CalculateDistance(List<double> data, List<double> sim, int bins, int min, double max)
     {
         var dataHist = new Histogram(data, bins, min, max);
         var simHist  = new Histogram(sim, bins, min, max);

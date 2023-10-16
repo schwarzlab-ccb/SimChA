@@ -6,9 +6,24 @@ namespace SimChA.Computation;
 
 public static class SummaryFeatures
 {
-    public static List<int> GetMinMajCNs(List<CopyNumber> cnList, bool isMajor)
-        => cnList.Select(cn => isMajor ? Math.Max(cn.CNH1,cn.CNH2) : Math.Min(cn.CNH1, cn.CNH2)).ToList();
+    public static double GetSampleMajMinCN(List<CopyNumber> cnList, bool getMajor)
+        => cnList.Select(cn => getMajor 
+                        ? Math.Max(cn.CNH1,cn.CNH2)
+                        : Math.Min(cn.CNH1, cn.CNH2) ).ToList().Average();
 
+    public static (List<double> values, double max) GetMajMinCNs(Dictionary<string, List<CopyNumber>> cnProfiles, bool getMajor)
+    {
+        var cns = new List<double> ();
+        var max = 0.0;
+        foreach (var cnProfile in cnProfiles)
+        {
+            var cnList = cnProfile.Value;
+            var mean = GetSampleMajMinCN(cnList, getMajor);
+            cns.Add(mean);
+            if (mean > max) max = mean;
+        }
+        return (cns, max);
+    }
     public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<double>();
