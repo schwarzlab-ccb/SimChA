@@ -14,19 +14,19 @@ public class Optimizer
     {
         GenRef = genRef;
         ObservedCNPs = GetCNPs(GenRef, observedData);
-        //ObservedSegLengths = SummaryFeatures.GetSegLengths(ObservedCNPs);
+        SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
     public void Optimize(SimParams simParams, Random rnd, int repeats)
     {
-        GenerateSimulatedCNPs(simParams, rnd, repeats);
+        SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
         var segDist = GetSegLengthDistance();
         var cpDist = GetChangepointDistance();
         var bpDist = GetBreakpointDistance();
         Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}");
         return;
     }
-    public void GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
+    public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
     {
         if (simParams.Signatures is null || simParams.Signatures.Count == 0)
         {
@@ -40,23 +40,17 @@ public class Optimizer
         {
             simulator.SampleEvents(sample);
         }
-        SimulatedCNPs = GetCNPs(GenRef, samples);
+        return GetCNPs(GenRef, samples);
     }
+
     public double GetSegLengthDistance()
     {
         var dataSegList = SummaryFeatures.GetSegLengths(ObservedCNPs);
         var simSegList = SummaryFeatures.GetSegLengths(SimulatedCNPs);
         var histMax = GenRef.ChrLengths["chr1"];
         var histMin = 0;
-        var histBins = 1000;
+        var histBins = 500;
         return CalculateDistance(dataSegList, simSegList, histBins, histMin, histMax);
-    }
-
-    public double CalculateDistance(List<double> data, List<double> sim, int bins, int min, int max)
-    {
-        var dataHist = new Histogram(data, bins, min, max);
-        var simHist  = new Histogram(sim, bins, min, max);
-        return StatisticMeasures.WassersteinDistance(dataHist, simHist);
     }
 
     public double GetChangepointDistance()
@@ -80,16 +74,11 @@ public class Optimizer
         return CalculateDistance(dataBPInfo.values, simBPInfo.values, histBins, histMin, histMax);
     }
 
-
-    public void SetSimulatedDistribution(List<Sample> simulatedData)
-        => SimulatedCNPs = GetCNPs(GenRef, simulatedData);
-
-    public double GetTotalDistance()
+    public double CalculateDistance(List<double> data, List<double> sim, int bins, int min, int max)
     {
-        //var segDist = StatisticMeasures<long>.WassersteinDistance(ObservedSegLengths, SimulatedSegLengths);
-        //var cpDist = StatisticMeasures<int>.WassersteinDistance(ObservedChangepoints, SimulatedChangepoints);
-        //var bpDist = StatisticMeasures<long>.WassersteinDistance(ObservedBreakpoints, SimulatedBreakpoints);
-        return 0;//segDist*segDist + cpDist*cpDist + bpDist*bpDist;
+        var dataHist = new Histogram(data, bins, min, max);
+        var simHist  = new Histogram(sim, bins, min, max);
+        return StatisticMeasures.WassersteinDistance(dataHist, simHist);
     }
 
 
