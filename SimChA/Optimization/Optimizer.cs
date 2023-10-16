@@ -82,12 +82,7 @@ public class Optimizer
 
 
     public void SetSimulatedDistribution(List<Sample> simulatedData)
-    {
-        SimulatedCNPs = GetCNPs(GenRef, simulatedData);
-        //SimulatedSegLengths = SummaryFeatures.GetSegLengths(SimulatedCNPs);
-        //SimulatedChangepoints = SummaryFeatures.GetChangepoints(SimulatedCNPs);
-        //SimulatedBreakpoints = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
-    }
+        => SimulatedCNPs = GetCNPs(GenRef, simulatedData);
 
     public double GetTotalDistance()
     {
