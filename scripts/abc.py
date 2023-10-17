@@ -48,7 +48,7 @@ def update_params_file(params):
 def run_simcha(params):
     param_file_path = update_params_file(params)
 
-    cmd = ["dotnet", "run", "--project",  "SimChA", "-C", f"{param_file_path}" "-R", "2000", "-O", f"abc_results", "--optimization", "-D", "data/hg19_1000", "-P", "profiles.tsv"]
+    cmd = ["dotnet", "run", "--project",  "SimChA", "-C", f"{param_file_path}" "-R", "2000", "-O", f"abc_results", "--optimization", "-D", "data/hg19_1000", "-P", "pcawg_filtered_95_pc.tsv"]
     output = subprocess.check_output(cmd, universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
