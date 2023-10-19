@@ -7,18 +7,20 @@ import platform
 import datetime as dt
 import json
 import matplotlib.pyplot as plt
-from pyabc import ABCSMC, RV, Distribution, settings, visualization
+from pyabc import ABCSMC, RV, Distribution, settings, visualization, sampler
 from pyabc.populationstrategy import ConstantPopulationSize
+import pyabc
 
 settings.set_figure_params('pyabc')
 
 def update_params_file(params):
     # Create the temporary parameter file
-    foldername = f"{int(dt.datetime.now().timestamp())}"
+    foldername = "_".join(str(p) for p in params.values())
     path = f"{pwd}/temp/{foldername}"
     subprocess.run([f"mkdir -p {path}"], shell = True)
     subprocess.run([f"cp simple_params.json {path}"], shell = True)
-
+    # Create the output subdirectory
+    subprocess.run([f"mkdir -p {path}/out"], shell=True)
     file_path = f"{path}/simple_params.json"
 
     # Update the parameter file
@@ -44,13 +46,13 @@ def update_params_file(params):
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
     # Return the path to the config file
-    return file_path
+    return path
 
 
 def run_simcha(params):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --project SimChA -C {param_file_path} -R 2000 -O abc_results --optimization -D data/hg19_1000 -P simcha_notebooks/data/pcawg_filtered_95_pc.tsv"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R 2000 -O {param_file_path}/out --optimization -D data/hg19_1000 -P pcawg_filtered_95_pc.tsv"
     output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
@@ -92,15 +94,39 @@ if __name__ == "__main__":
             l_inv_dup   = RV("uniform", 1, 50)
             )"""
 
+    transition = pyabc.AggregatedTransition(
+	mapping={
+		'n_events': pyabc.DiscreteJumpTransition(domain=event_count_values, p_stay=0.7)
+		}
+	)
+    # Transitions for the other parameters:
+    """
+	'w_chrom_del' : pyabc.MultivariateNormalTransition(),
+	'w_chrom_dup' : pyabc.MultivariateNormalTransition(),
+	'w_int_dup'   : pyabc.MultivariateNormalTransition(),
+	'w_int_del'   : pyabc.MultivariateNormalTransition(),
+	'w_inv_dup'   : pyabc.MultivariateNormalTransition(),
+	'w_int_inv'   : pyabc.MultivariateNormalTransition(),
+	'w_bfb'       : pyabc.MultivariateNormalTransition(),
+	'w_tail_del'  : pyabc.MultivariateNormalTransition(),
+	'w_wgd'       : pyabc.MultivariateNormalTransition(),
+	'l_int_del'   : pyabc.MultivariateNormalTransition(),
+	'l_int_dup'   : pyabc.MultivariateNormalTransition(),
+	'l_int_inv'   : pyabc.MultivariateNormalTransition(),
+	'l_inv_dup'   : pyabc.MultivariateNormalTransition()
+	
+	
+    """
+
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
-
-    abc = ABCSMC(model, prior, distance_function=distance, population_size = 5)
+    sampler = sampler.MulticoreEvalParallelSampler(n_procs=8)
+    abc = ABCSMC(model, prior, distance_function=distance, transitions=transition, population_size = 500, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
     abc.new("sqlite:///"+db_path, observed_data)
 
-    history = abc.run(minimum_epsilon = 0.1, max_nr_populations = 1)
+    history = abc.run(minimum_epsilon = 0.05, max_nr_populations = 10)
 
     fig, ax = plt.subplots()
     for t in range(history.max_t + 1):
