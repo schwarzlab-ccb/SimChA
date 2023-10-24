@@ -94,7 +94,6 @@ def plot_karyotype(data, sample_name, dpi=150):
     fig, ax = plt.subplots()
     # set figure to full hd, tight layout
     fig.set_size_inches(1920 / dpi, 1080 / dpi)
-    fig.tight_layout(pad=1.3, rect=(0.02, 0.0, 0.94, 0.1))    
 
     # Set the y-axis labels
     ax.set_yticks([i for i in range(sample_count)])
@@ -135,8 +134,9 @@ if __name__ == "__main__":
     parser.add_argument("-I", "--input", default="karyotypes.tsv", help="The file with the karyotype data.")
     parser.add_argument("-S", "--sample", default="sample_1", help="Sample ID")
     parser.add_argument("-O", "--output", default="karyotype.png", help="Output file path")
+    parser.add_argument("--dpi", default=150, help="Output file path", type=int)
     args = parser.parse_args()
 
     data, sample_name = get_data(args.input, args.sample)
-    plot_karyotype(data, sample_name, dpi=150)    
-    plt.savefig(args.output, dpi=150)
+    plot_karyotype(data, sample_name, dpi=args.dpi)    
+    plt.savefig(args.output, dpi=args.dpi)
