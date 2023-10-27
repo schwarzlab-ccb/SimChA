@@ -142,4 +142,12 @@ public static class SummaryFeatures
 
         return (fraction, fraction.Max());
     }
+
+    public static (List<double> values, double max) GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfile)
+    {
+        var meanCN = new List<double>();
+        var max = 0;
+
+        return (meanCN, max);
+    }
 }
