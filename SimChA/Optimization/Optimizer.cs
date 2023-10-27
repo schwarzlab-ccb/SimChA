@@ -20,6 +20,11 @@ public class Optimizer
     public double Optimize(SimParams simParams, Random rnd, int repeats)
     {
         SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
+        return GetEventDistance();
+    }
+
+    public double GetEventDistance()
+    {
         var segDist = GetSegLengthDistance();
         var cpDist = GetChangepointDistance();
         var bpDist = GetBreakpointDistance();
@@ -29,6 +34,7 @@ public class Optimizer
         //Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}, maj CNs: {majDist}, min CNs {minDist}");        
         return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
     }
+
     public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
     {
         if (simParams.Signatures is null || simParams.Signatures.Count == 0)
