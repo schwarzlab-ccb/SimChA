@@ -48,12 +48,12 @@ public class Optimizer
 
     public double GetSegLengthDistance()
     {
-        var dataSegList = SummaryFeatures.GetSegLengths(ObservedCNPs);
-        var simSegList = SummaryFeatures.GetSegLengths(SimulatedCNPs);
-        var histMax = GenRef.ChrLengths["chr1"];
+        var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs);
+        var (simValues, simMax) = SummaryFeatures.GetSegLengths(SimulatedCNPs);
+        var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 200;
-        return CalculateDistance(dataSegList, simSegList, histBins, histMin, histMax);
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
     public double GetChangepointDistance()
@@ -87,11 +87,21 @@ public class Optimizer
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
-    public double CalculateDistance(List<double> data, List<double> sim, int bins, int min, double max)
+    public static double CalculateDistance(List<double> data, List<double> sim, int bins, int min, double max)
     {
         var dataHist = new Histogram(data, bins, min, max);
         var simHist  = new Histogram(sim, bins, min, max);
         return StatisticMeasures.WassersteinDistance(dataHist, simHist);
+    }
+
+    public double GetHomozygousDeletionDistance()
+    {
+        var (obsValues, obsMax) = SummaryFeatures.GetHomozygousDeletionFraction(ObservedCNPs, GenRef.AutosomeLen);
+        var (simValues, simMax)  = SummaryFeatures.GetHomozygousDeletionFraction(SimulatedCNPs, GenRef.AutosomeLen);
+        var histMax = Math.Max(obsMax, simMax);
+        var histMin = 0;
+        var histBins = 50;
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
 

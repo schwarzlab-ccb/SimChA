@@ -24,7 +24,7 @@ public static class SummaryFeatures
         }
         return (cns, max);
     }
-    public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static (List<double>, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -44,7 +44,7 @@ public static class SummaryFeatures
             }
             segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
         }
-        return segLengths;
+        return (segLengths, segLengths.Max());
     }
 
     public static (List<double> values, int max) GetChangepointInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
@@ -127,5 +127,19 @@ public static class SummaryFeatures
             }
         }
         return (breakpoints, maxBP);
+    }
+
+    public static (List<double> values, double max) GetHomozygousDeletionFraction(Dictionary<string, List<CopyNumber>> cnProfiles, long autosomeLength)
+    {
+        var fraction = new List<double>();
+        foreach (var cnProfile in cnProfiles)
+        {
+            var homozygDelList = cnProfile.Value.Where(cn => cn.CNH1 + cn.CNH2 == 0 
+                                                            && cn.Segment.ChrNo != "chrX" 
+                                                            && cn.Segment.ChrNo != "chrY").ToList();
+            fraction.AddRange(homozygDelList.Select(cn => (double) cn.Segment.Length/autosomeLength));
+        }
+
+        return (fraction, fraction.Max());
     }
 }
