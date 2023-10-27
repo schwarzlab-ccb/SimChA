@@ -31,13 +31,18 @@ watch.Start();
 List<Sample> samples;
 if (execMode == ExecMode.Optimization)
 {
+     if (cmdOptions.Value.OptimizationType != "events" && cmdOptions.Value.OptimizationType != "fitness")
+    {
+        throw new Exception("Error: Unrecognized optimization string. Please choose from: 'events' or 'fitness'.");
+    }
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
     var optimizer = new Optimizer(genRef, observedSamples);
     Console.WriteLine("Generating Simulated Data");
-    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats);
+    var optimizeEvents = true && cmdOptions.Value.OptimizationType == "events";
+    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats, optimizeEvents);
 
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");

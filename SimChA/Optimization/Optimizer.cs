@@ -17,10 +17,11 @@ public class Optimizer
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
-    public double Optimize(SimParams simParams, Random rnd, int repeats)
+    public double Optimize(SimParams simParams, Random rnd, int repeats, bool optimizeEvents = true)
     {
         SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
-        return GetEventDistance();
+
+        return optimizeEvents ? GetEventDistance() : GetFitnessDistance();
     }
 
     public double GetEventDistance()
@@ -29,10 +30,17 @@ public class Optimizer
         var cpDist = GetChangepointDistance();
         var bpDist = GetBreakpointDistance();
         var majDist = GetMajMinCNDistance(true);
-        var minDist = GetMajMinCNDistance(false);
-        //Console.WriteLine();
-        //Console.WriteLine($"Seg Length WD: {segDist}; Changepoint WD: {cpDist}; BP per chr WD: {bpDist}, maj CNs: {majDist}, min CNs {minDist}");        
-        return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
+        var minDist = GetMajMinCNDistance(false);      
+        //return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
+        return (segDist + cpDist + bpDist + majDist + minDist)/5.0;
+    }
+
+    public double GetFitnessDistance()
+    {
+        var hdDist = GetHomozygousDeletionDistance();
+        
+
+        return (hdDist);
     }
 
     public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
