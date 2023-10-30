@@ -139,15 +139,21 @@ public static class SummaryFeatures
                                                             && cn.Segment.ChrNo != "chrY").ToList();
             fraction.AddRange(homozygDelList.Select(cn => (double) cn.Segment.Length/autosomeLength));
         }
-
         return (fraction, fraction.Max());
     }
 
-    public static (List<double> values, double max) GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, List<long>> chromosomeBins)
+    public static List<double> GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles)
     {
         var meanCN = new List<double>();
-        var max = 0;
+        // Number of segments - assumes we already have binned copy-number profiles
+        var cnLength = cnProfiles.First().Value.Count;
 
-        return (meanCN, max);
+        for (int i = 0; i < cnLength; i++)
+        {
+            var mean = cnProfiles.Where(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2 >= 0)
+                                 .Average(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2);
+            meanCN.Add(mean);
+        }
+        return meanCN;
     }
 }

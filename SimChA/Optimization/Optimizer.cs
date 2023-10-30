@@ -8,7 +8,9 @@ namespace SimChA.Optimization;
 public class Optimizer
 {   
     public Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
+    public Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
     public Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
+    public Dictionary<string, List<CopyNumber>> SimulatedCNPs1MB { get; set;}
     private GenRef GenRef { get; }
     private bool OptimizeEvents { get; }
     private Dictionary<string, List<long>> ChromosomeBins;
@@ -20,8 +22,10 @@ public class Optimizer
         if (!OptimizeEvents)
         {
             SetChromosomeBins();
+            ObservedCNPs1MB = GetCNPs(observedData, true);
         }
         ObservedCNPs = GetCNPs(observedData);
+        
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
@@ -46,9 +50,10 @@ public class Optimizer
     public double GetFitnessDistance()
     {
         var hdDist = GetHomozygousDeletionDistance();
+        var meanCNDist = GetMeanCopyNumberAlongGenomeDistance();
         
 
-        return (hdDist);
+        return (hdDist+meanCNDist)/2;
     }
 
     private void SetChromosomeBins()
@@ -56,16 +61,17 @@ public class Optimizer
         var binSize = 1_000_000;
         foreach (var chrom in GenRef.AllChrs)
         {
-            int nFullBins = GenRef.ChrLengths[chrom] / binSize;
-            int remainder = GenRef.ChrLengths[chrom] % binSize;
+            var nFullBins = GenRef.ChrLengths[chrom] / binSize;
+            var remainder = GenRef.ChrLengths[chrom] % binSize;
             // Adjusting the first and last bins
             var endBinSize = (long)(0.5 + remainder / 2.0);
-            var binList = new List<long>{0, endBinSize};
+            var offset = remainder - 2*endBinSize;
+            var binList = new List<long>{0};
             for (int i = 0; i < nFullBins; i++)
             {
-                binList.Add(binSize+endBinSize);
+                binList.Add(i*binSize+endBinSize);
             }
-            binList.Add(endBinSize);
+            binList.Add(binList.Last()+endBinSize+offset-1);
             ChromosomeBins[chrom] = binList;
         }
     }
@@ -84,15 +90,21 @@ public class Optimizer
         {
             simulator.SampleEvents(sample);
         }
+        if (!OptimizeEvents)
+        {
+            SimulatedCNPs1MB = GetCNPs(samples, true);
+        }
         return GetCNPs(samples);
     }
 
     public double GetMeanCopyNumberAlongGenomeDistance()
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs, ChromosomeBins);
-        var (simValues, simMax) = SummaryFeatures.GetMeanCopyNumberAlongGenome(SimulatedCNPs, ChromosomeBins);
-
-        return 0;
+        // Do we worry about the slightly smaller bins from the fact that the genome 
+        // is not completely divisible by 1MB?
+        var obsValues = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs1MB);
+        var simValues = SummaryFeatures.GetMeanCopyNumberAlongGenome(SimulatedCNPs1MB);
+        
+        return StatisticMeasures.WassersteinDistance(obsValues, simValues);
     }
 
     public double GetSegLengthDistance()
@@ -154,16 +166,16 @@ public class Optimizer
     }
 
 
-    public Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
+    public Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples, bool binsOf1MB = false)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
-                var cnp = OptimizeEvents 
+                var cnp = !binsOf1MB
                     ? CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList()
-                    : CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, sample.Kars[clone.CloneId].SexXX).ToList();
+                    : CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, sample.Kars[clone.CloneId].SexXX, true).ToList();
                 cnps[sample.SampleId] = cnp;
             }
         }
