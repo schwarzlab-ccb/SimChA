@@ -130,7 +130,7 @@
 	},
 	"MCParams": {
 	  "NumSamplesMin": 100,
-	  "NumSamplesTotal": 5000,
+	  "NumSamplesTotal": 2500,
 	  "ThetaFitness": 10,
 	  "SwapEventP": 1,
 	  "ThresholdFit": 1E-08

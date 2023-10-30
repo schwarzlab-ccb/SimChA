@@ -20,10 +20,10 @@ def update_params_file(params):
     
     path = f"{pwd}/temp/{foldername}"
     subprocess.run([f"mkdir -p {path}"], shell = True)
-    subprocess.run([f"cp simple_params.json {path}"], shell = True)
+    subprocess.run([f"cp fitted_params.json {path}"], shell = True)
     # Create the output subdirectory
     subprocess.run([f"mkdir -p {path}/out"], shell=True)
-    file_path = f"{path}/simple_params.json"
+    file_path = f"{path}/fitted_params.json"
 
     # Update the parameter file
     with open(file_path, 'r', encoding='utf-8') as json_file:
@@ -40,7 +40,7 @@ def update_params_file(params):
 def run_simcha(params):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R 250 -O {param_file_path}/out --optimization -D data/hg19_1000 -M -P pcawg_filtered_95_pc.tsv"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/fitted_params.json -R 250 -O {param_file_path}/out --optimization -D data/hg19_1000 -M -P pcawg_filtered_95_pc.tsv"
     output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
@@ -61,28 +61,28 @@ def distance(x,y):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     #parser.add_argument('-R', "--repeats", type=int, default=500, help="Number of SimChA simulated samples to generate for each pyABC sample")
-    parser.add_argument('-N', "--name",type=str, default="", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
+    parser.add_argument('-N', "--name",type=str, default="results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
     parser.add_argument("-C", "--nCPUs", type=int, default=16, help="Number of cpus to use")
 
     args = parser.parse_args()
 
 
     pwd = os.getcwd()
-    out_dir = "fitness_abc_results"#+args.name
+    out_dir = "fitness_abc_"+args.name()
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-    # Uniform prior distributions for the various different properties of the simple events
-    # We can also remove the number of events if we want
-    event_count_values = np.arange(30,151)
-    event_count_prob   = [1/len(event_count_values)]*len(event_count_values)
-
-    # Using symmetric concentration parameters as an example
-    prior = Distribution(abc=RV("dirichlet", [1, 1, 1])
+    # Using symmetric concentration parameters for the Dirichlet distribution.
+    # We use a Dirichlet distribution so that a, b, c sum to 1 and the sampling takes this
+    # into account.
+    # To help the sampling, we will use the benchmark values obtained from
+    # the SimChA simulations without fitness
+    initial_guess = np.array([0]) 
+    prior = Distribution(abc=RV("dirichlet", [1, 1, 1]))
 
     # SimChA calculates the distance between simulated and observation, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.nCPUs())
-    abc = ABCSMC(model, prior, distance_function=distance, transitions=transition, population_size = 100, sampler = sampler)
+    abc = ABCSMC(model, prior, distance_function=distance, population_size = 100, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
     abc.new("sqlite:///"+db_path, observed_data)
