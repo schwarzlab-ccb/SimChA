@@ -50,10 +50,10 @@ public class Optimizer
     public double GetFitnessDistance()
     {
         var hdDist = GetHomozygousDeletionDistance();
-        var meanCNDist = GetMeanCopyNumberAlongGenomeDistance();
-        
+        var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance();
+        var meanCN = GetMeanCopyNumberDistance();
 
-        return (hdDist+meanCNDist)/2;
+        return (hdDist+meanCNAcrossGenomeDist+meanCN)/3;
     }
 
     private void SetChromosomeBins()
@@ -101,10 +101,21 @@ public class Optimizer
     {
         // Do we worry about the slightly smaller bins from the fact that the genome 
         // is not completely divisible by 1MB?
-        var obsValues = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs1MB);
-        var simValues = SummaryFeatures.GetMeanCopyNumberAlongGenome(SimulatedCNPs1MB);
+        // What about the segments that are partially in the binned region?
+        var obsCounts = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs1MB);
+        var simCounts = SummaryFeatures.GetMeanCopyNumberAlongGenome(SimulatedCNPs1MB);
         
-        return StatisticMeasures.WassersteinDistance(obsValues, simValues);
+        return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
+    }
+
+    public double GetMeanCopyNumberDistance()
+    {
+        var obsValues = ObservedCNPs.SelectMany(cnp => cnp.Value)
+                        .Where(cn => cn.CNH1 + cn.CNH2 >= 0)
+                        .Select(cn => (double)cn.CNH1 + cn.CNH2).Average();
+        var simValues = SimulatedCNPs.SelectMany(cnp => cnp.Value)
+                        .Select(cn => (double)cn.CNH1 + cn.CNH2).Average();
+        return Math.Abs(obsValues - simValues);
     }
 
     public double GetSegLengthDistance()
