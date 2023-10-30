@@ -10,6 +10,8 @@ public class Optimizer
     public Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
     public Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
     GenRef GenRef { get; }
+
+    private Dictionary<string, List<long>> ChromosomeBins;
     public Optimizer(GenRef genRef, List<Sample> observedData)
     {
         GenRef = genRef;
@@ -20,6 +22,11 @@ public class Optimizer
     public double Optimize(SimParams simParams, Random rnd, int repeats, bool optimizeEvents = true)
     {
         SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
+
+        if (!optimizeEvents)
+        {
+            SetChromosomeBins();
+        }
 
         return optimizeEvents ? GetEventDistance() : GetFitnessDistance();
     }
@@ -41,6 +48,25 @@ public class Optimizer
         
 
         return (hdDist);
+    }
+
+    private void SetChromosomeBins()
+    {
+        var binSize = 1_000_000;
+        foreach (var chrom in GenRef.AllChrs)
+        {
+            int nFullBins = GenRef.ChrLengths[chrom] / binSize;
+            int remainder = GenRef.ChrLengths[chrom] % binSize;
+            // Adjusting the first and last bins
+            var endBinSize = (long)(0.5 + remainder / 2.0);
+            var binList = new List<long>{endBinSize};
+            for (int i = 0; i < nFullBins; i++)
+            {
+                binList.Add(binSize+endBinSize);
+            }
+            binList.Add(endBinSize);
+            ChromosomeBins[chrom] = binList;
+        }
     }
 
     public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
@@ -119,7 +145,7 @@ public class Optimizer
     }
 
 
-    public Dictionary<string, List<CopyNumber>> GetCNPs(GenRef genRef, List<Sample> samples)
+    public static Dictionary<string, List<CopyNumber>> GetCNPs(GenRef genRef, List<Sample> samples)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
         foreach (var sample in samples)
