@@ -33,7 +33,7 @@ public static class CopyNumbers
             {
                 int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInside(r));
                 int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInside(r));
-		int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
+		        int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
             	var cn = new CopyNumber(seg, cnh1, cnh2, nSNVs);
                 result.Add(cn);
             }

@@ -39,10 +39,10 @@ if (execMode == ExecMode.Optimization)
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    var optimizer = new Optimizer(genRef, observedSamples);
-    Console.WriteLine("Generating Simulated Data");
     var optimizeEvents = true && cmdOptions.Value.OptimizationType == "events";
-    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats, optimizeEvents);
+    var optimizer = new Optimizer(genRef, observedSamples, optimizeEvents);
+    Console.WriteLine("Generating Simulated Data");
+    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats);
 
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");

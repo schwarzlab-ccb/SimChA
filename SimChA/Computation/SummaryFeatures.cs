@@ -143,7 +143,7 @@ public static class SummaryFeatures
         return (fraction, fraction.Max());
     }
 
-    public static (List<double> values, double max) GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfile)
+    public static (List<double> values, double max) GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, List<long>> chromosomeBins)
     {
         var meanCN = new List<double>();
         var max = 0;

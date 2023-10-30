@@ -9,26 +9,27 @@ public class Optimizer
 {   
     public Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
     public Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
-    GenRef GenRef { get; }
-
+    private GenRef GenRef { get; }
+    private bool OptimizeEvents { get; }
     private Dictionary<string, List<long>> ChromosomeBins;
-    public Optimizer(GenRef genRef, List<Sample> observedData)
+    public Optimizer(GenRef genRef, List<Sample> observedData, bool optimizeEvents = true)
     {
         GenRef = genRef;
-        ObservedCNPs = GetCNPs(GenRef, observedData);
-        SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
-    }
-
-    public double Optimize(SimParams simParams, Random rnd, int repeats, bool optimizeEvents = true)
-    {
-        SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
-
-        if (!optimizeEvents)
+        ChromosomeBins = new Dictionary<string, List<long>>();
+        OptimizeEvents = optimizeEvents;
+        if (!OptimizeEvents)
         {
             SetChromosomeBins();
         }
+        ObservedCNPs = GetCNPs(observedData);
+        SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
+    }
 
-        return optimizeEvents ? GetEventDistance() : GetFitnessDistance();
+    public double Optimize(SimParams simParams, Random rnd, int repeats)
+    {
+        SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
+
+        return OptimizeEvents ? GetEventDistance() : GetFitnessDistance();
     }
 
     public double GetEventDistance()
@@ -59,7 +60,7 @@ public class Optimizer
             int remainder = GenRef.ChrLengths[chrom] % binSize;
             // Adjusting the first and last bins
             var endBinSize = (long)(0.5 + remainder / 2.0);
-            var binList = new List<long>{endBinSize};
+            var binList = new List<long>{0, endBinSize};
             for (int i = 0; i < nFullBins; i++)
             {
                 binList.Add(binSize+endBinSize);
@@ -83,7 +84,15 @@ public class Optimizer
         {
             simulator.SampleEvents(sample);
         }
-        return GetCNPs(GenRef, samples);
+        return GetCNPs(samples);
+    }
+
+    public double GetMeanCopyNumberAlongGenomeDistance()
+    {
+        var (obsValues, obsMax) = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs, ChromosomeBins);
+        var (simValues, simMax) = SummaryFeatures.GetMeanCopyNumberAlongGenome(SimulatedCNPs, ChromosomeBins);
+
+        return 0;
     }
 
     public double GetSegLengthDistance()
@@ -145,14 +154,16 @@ public class Optimizer
     }
 
 
-    public static Dictionary<string, List<CopyNumber>> GetCNPs(GenRef genRef, List<Sample> samples)
+    public Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
-                var cnp = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList();
+                var cnp = OptimizeEvents 
+                    ? CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList()
+                    : CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, sample.Kars[clone.CloneId].SexXX).ToList();
                 cnps[sample.SampleId] = cnp;
             }
         }
