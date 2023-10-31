@@ -53,7 +53,7 @@ public class Optimizer
         var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance();
         var meanCN = GetMeanCopyNumberDistance();
 
-        return (hdDist+meanCNAcrossGenomeDist+meanCN)/3;
+        return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
     }
 
     private void SetChromosomeBins()
