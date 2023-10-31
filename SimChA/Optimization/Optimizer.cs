@@ -44,7 +44,7 @@ public class Optimizer
         var majDist = GetMajMinCNDistance(true);
         var minDist = GetMajMinCNDistance(false);      
         //return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
-        return (segDist + cpDist + bpDist + majDist + minDist)/5.0;
+        return (segDist + cpDist + bpDist + majDist + minDist)/5;
     }
 
     public double GetFitnessDistance()

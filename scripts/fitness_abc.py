@@ -61,9 +61,9 @@ def distance(x,y):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     #parser.add_argument('-R', "--repeats", type=int, default=500, help="Number of SimChA simulated samples to generate for each pyABC sample")
-    parser.add_argument('-N', "--name",type=str, default="results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
-    parser.add_argument("-C", "--nCPUs", type=int, default=16, help="Number of cpus to use")
-
+    parser.add_argument('-n', "--name",type=str, default="results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
+    parser.add_argument("-c", "--nCPUs", type=int, default=16, help="Number of cpus to use")
+    parser.add_argument("-w", "--weight", type=float, default=1, help="Total weight associated with the initial guess for the fitness parameters. Higher weight means lower variance, i.e. sample closer to initial guesses.")
     args = parser.parse_args()
 
 
@@ -76,8 +76,8 @@ if __name__ == "__main__":
     # into account.
     # To help the sampling, we will use the benchmark values obtained from
     # the SimChA simulations without fitness
-    initial_guess = np.array([0]) 
-    prior = Distribution(abc=RV("dirichlet", [1, 1, 1]))
+    initial_guess = np.array([0.961888, 0.035504, 0.002608]) * args.weight() 
+    prior = Distribution(abc=RV("dirichlet", initial_guess ))
 
     # SimChA calculates the distance between simulated and observation, so we don't need an observed distance
     observed_data = {"distance": 0.0}
