@@ -29,27 +29,35 @@ files.WriteSimParams(simParams);
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
-if (execMode == ExecMode.Optimization)
+if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEvents)
 {
-     if (cmdOptions.Value.OptimizationType != "events" && cmdOptions.Value.OptimizationType != "fitness")
-    {
-        throw new Exception("Error: Unrecognized optimization string. Please choose from: 'events' or 'fitness'.");
-    }
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    var optimizeEvents = true && cmdOptions.Value.OptimizationType == "events";
-    var optimizer = new Optimizer(genRef, observedSamples, optimizeEvents);
-    Console.WriteLine("Generating Simulated Data");
-    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats);
-
+    double totalDist = 0.0;
+    if (execMode == ExecMode.OptimizeEvents)
+    {
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
+        Console.WriteLine("Generating Simulated Data");
+        totalDist = optimizer.Optimize();
+    }
+    else if (execMode == ExecMode.OptimizeFitness)
+    {
+        if (options.BootstrapFile == "")
+        {
+            throw new Exception("Error: No bootstrap file provided. Cannot perform fitness optimization.");
+        }
+        var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, fitnessList);
+        Console.WriteLine("Generating Simulated Data");
+        totalDist = optimizer.Optimize();
+    }
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
     Console.WriteLine();
     Console.WriteLine($"Total distance: {totalDist}");
     return 0;
-    
 }
 if (execMode == ExecMode.Profiles)
 {

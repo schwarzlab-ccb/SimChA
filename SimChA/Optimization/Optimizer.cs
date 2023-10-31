@@ -7,36 +7,30 @@ namespace SimChA.Optimization;
 
 public class Optimizer
 {   
-    public Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
-    public Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
-    public Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
-    public Dictionary<string, List<CopyNumber>> SimulatedCNPs1MB { get; set;}
-    private GenRef GenRef { get; }
-    private bool OptimizeEvents { get; }
-    private Dictionary<string, List<long>> ChromosomeBins;
-    public Optimizer(GenRef genRef, List<Sample> observedData, bool optimizeEvents = true)
+    private Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
+    private Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
+    protected GenRef GenRef { get; }
+    protected readonly Random Rnd;
+    protected readonly int Repeats;
+    protected readonly SimParams SimParams;
+    
+    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData)
     {
+        SimParams = simParams;
+        Rnd = rnd;
+        Repeats = repeats;
         GenRef = genRef;
-        ChromosomeBins = new Dictionary<string, List<long>>();
-        OptimizeEvents = optimizeEvents;
-        if (!OptimizeEvents)
-        {
-            SetChromosomeBins();
-            ObservedCNPs1MB = GetCNPs(observedData, true);
-        }
         ObservedCNPs = GetCNPs(observedData);
-        
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
-    public double Optimize(SimParams simParams, Random rnd, int repeats)
+    public virtual double Optimize()
     {
-        SimulatedCNPs = GenerateSimulatedCNPs(simParams, rnd, repeats);
-
-        return OptimizeEvents ? GetEventDistance() : GetFitnessDistance();
+        GenerateSimulatedCNPs();
+        return GetEventDistance();
     }
 
-    public double GetEventDistance()
+    private double GetEventDistance()
     {
         var segDist = GetSegLengthDistance();
         var cpDist = GetChangepointDistance();
@@ -46,79 +40,29 @@ public class Optimizer
         //return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
         return (segDist + cpDist + bpDist + majDist + minDist)/5;
     }
-
-    public double GetFitnessDistance()
+    private List<Sample> GenerateSimulatedData()
     {
-        var hdDist = GetHomozygousDeletionDistance();
-        var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance();
-        var meanCN = GetMeanCopyNumberDistance();
-
-        return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
-    }
-
-    private void SetChromosomeBins()
-    {
-        var binSize = 1_000_000;
-        foreach (var chrom in GenRef.AllChrs)
-        {
-            var nFullBins = GenRef.ChrLengths[chrom] / binSize;
-            var remainder = GenRef.ChrLengths[chrom] % binSize;
-            // Adjusting the first and last bins
-            var endBinSize = (long)(0.5 + remainder / 2.0);
-            var offset = remainder - 2*endBinSize;
-            var binList = new List<long>{0};
-            for (int i = 0; i < nFullBins; i++)
-            {
-                binList.Add(i*binSize+endBinSize);
-            }
-            binList.Add(binList.Last()+endBinSize+offset-1);
-            ChromosomeBins[chrom] = binList;
-        }
-    }
-
-    public Dictionary<string, List<CopyNumber>> GenerateSimulatedCNPs(SimParams simParams, Random rnd, int repeats)
-    {
-        if (simParams.Signatures is null || simParams.Signatures.Count == 0)
+        if (SimParams.Signatures is null || SimParams.Signatures.Count == 0)
         {
             throw new Exception("No signatures were provided.");
         }
-        Validators.ValidateSignatures(simParams.Signatures);
+        Validators.ValidateSignatures(SimParams.Signatures);
 
-        var samples = Converters.MakeSamples(rnd, repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
-        var simulator = new Simulator(rnd, GenRef);
+        var samples = Converters.MakeSamples(Rnd, Repeats, SimParams.EventCount, SimParams.EventDist, SimParams.Signatures, SimParams.Sex, SimParams.MCTarget);
+        var simulator = new Simulator(Rnd, GenRef);
         foreach (var sample in samples)
         {
             simulator.SampleEvents(sample);
         }
-        if (!OptimizeEvents)
-        {
-            SimulatedCNPs1MB = GetCNPs(samples, true);
-        }
-        return GetCNPs(samples);
+        return samples;
     }
-
-    public double GetMeanCopyNumberAlongGenomeDistance()
+    private void GenerateSimulatedCNPs()
     {
-        // Do we worry about the slightly smaller bins from the fact that the genome 
-        // is not completely divisible by 1MB?
-        // What about the segments that are partially in the binned region?
-        var obsCounts = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs1MB);
-        var simCounts = SummaryFeatures.GetMeanCopyNumberAlongGenome(SimulatedCNPs1MB);
-        
-        return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
+        var samples = GenerateSimulatedData();
+        SimulatedCNPs = GetCNPs(samples);
+        return;
     }
-
-    public double GetMeanCopyNumberDistance()
-    {
-        var obsValues = ObservedCNPs.SelectMany(cnp => cnp.Value)
-                        .Where(cn => cn.CNH1 + cn.CNH2 >= 0)
-                        .Select(cn => (double)cn.CNH1 + cn.CNH2).Average();
-        var simValues = SimulatedCNPs.SelectMany(cnp => cnp.Value)
-                        .Select(cn => (double)cn.CNH1 + cn.CNH2).Average();
-        return Math.Abs(obsValues - simValues);
-    }
-
-    public double GetSegLengthDistance()
+    private double GetSegLengthDistance()
     {
         var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs);
         var (simValues, simMax) = SummaryFeatures.GetSegLengths(SimulatedCNPs);
@@ -128,7 +72,7 @@ public class Optimizer
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
-    public double GetChangepointDistance()
+    private double GetChangepointDistance()
     {
         var (obsValues, obsMax) = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
         var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(SimulatedCNPs);
@@ -136,10 +80,8 @@ public class Optimizer
         var histMin = 0;
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-
     }
-
-    public double GetBreakpointDistance()
+    private double GetBreakpointDistance()
     {
         var (obsValues, obsMax) = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
         var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
@@ -148,8 +90,7 @@ public class Optimizer
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-
-    public double GetMajMinCNDistance(bool getMajor)
+    private double GetMajMinCNDistance(bool getMajor)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetMajMinCNs(ObservedCNPs, getMajor);
         var (simValues, simMax) = SummaryFeatures.GetMajMinCNs(SimulatedCNPs, getMajor);
@@ -158,35 +99,20 @@ public class Optimizer
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-
-    public static double CalculateDistance(List<double> data, List<double> sim, int bins, int min, double max)
+    protected static double CalculateDistance(List<double> data, List<double> sim, int bins, int min, double max)
     {
         var dataHist = new Histogram(data, bins, min, max);
         var simHist  = new Histogram(sim, bins, min, max);
         return StatisticMeasures.WassersteinDistance(dataHist, simHist);
     }
-
-    public double GetHomozygousDeletionDistance()
-    {
-        var (obsValues, obsMax) = SummaryFeatures.GetHomozygousDeletionFraction(ObservedCNPs, GenRef.AutosomeLen);
-        var (simValues, simMax)  = SummaryFeatures.GetHomozygousDeletionFraction(SimulatedCNPs, GenRef.AutosomeLen);
-        var histMax = Math.Max(obsMax, simMax);
-        var histMin = 0;
-        var histBins = 50;
-        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
-
-
-    public Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples, bool binsOf1MB = false)
+    private Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
-                var cnp = !binsOf1MB
-                    ? CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList()
-                    : CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, sample.Kars[clone.CloneId].SexXX, true).ToList();
+                var cnp = CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList();
                 cnps[sample.SampleId] = cnp;
             }
         }

@@ -46,9 +46,13 @@ public class CmdOptions
     {
         get
         {
-            if (OptimizationType != "")
+            if (OptimizationType == "events")
             {
-                return ExecMode.Optimization;
+                return ExecMode.OptimizeEvents;
+            }
+            if (OptimizationType == "fitness")
+            {
+                return ExecMode.OptimizeFitness;
             }
             if (CloneTreeFile != "")
             {
