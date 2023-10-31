@@ -16,6 +16,7 @@ import pyabc
 # genes list (here: data/hg19_1000)
 # params file (here: ./fitted_params.json)
 # Samples already run through SimChA to calculate their fitness components (here: out/PCAWG/clones.tsv)
+# Copy-number profiles (here: pcawg_filtered_95_pc.tsv)
 
 settings.set_figure_params('pyabc')
 
@@ -46,7 +47,7 @@ def update_params_file(params):
 def run_simcha(params):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/fitted_params.json -R 250 -O {param_file_path}/out --optimization fitness -D data/hg19_1000 -M -B out/PCAWG/clones.tsv"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/fitted_params.json -R 250 -O {param_file_path}/out --optimization fitness -D data/hg19_1000 -M -B out/PCAWG/clones.tsv -P pcawg_filtered_95_pc.tsv"
     output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
