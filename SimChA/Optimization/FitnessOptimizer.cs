@@ -126,7 +126,7 @@ public class FitnessOptimizer : Optimizer
             {
                 var cnp = !binsOf1MB
                     ? CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList()
-                    : CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, sample.Kars[clone.CloneId].SexXX, true).ToList();
+                    : CopyNumbers.CalcBinnedCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, true).ToList();
                 cnps[sample.SampleId] = cnp;
             }
         }
