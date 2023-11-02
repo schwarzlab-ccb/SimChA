@@ -38,10 +38,14 @@ public class FitnessOptimizer : Optimizer
         {
             throw new Exception("No signatures were provided.");
         }
+        if (SimParams.MCParams is null)
+        {
+            throw new Exception("No MC parameters were provided.");
+        }
         Validators.ValidateSignatures(SimParams.Signatures);
 
         var samples = Converters.MakeSamples(Rnd, Repeats, SimParams.EventCount, SimParams.EventDist, SimParams.Signatures, SimParams.Sex, FitnessList);
-        var simulator = new Simulator(Rnd, GenRef);
+        var simulator = new MCSimulator(Rnd, GenRef, SimParams.Fitness, SimParams.MCParams);
         foreach (var sample in samples)
         {
             simulator.SampleEvents(sample);
