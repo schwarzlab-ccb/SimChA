@@ -55,7 +55,7 @@ public class CmdOptions
             }
             if (OptimizationType != "")
             {
-                if (OptimizationType != "events" || OptimizationType != "fitness")
+                if (OptimizationType != "events" && OptimizationType != "fitness")
                 {
                     throw new ArgumentException("optimization must be either 'events' or 'fitness'");
                 }
