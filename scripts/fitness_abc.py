@@ -99,12 +99,12 @@ if __name__ == "__main__":
 
     # We use a wrapper function so that we can run SimChA with the relevant inputs and we only need to change them here
     def model_wrapper(params):
-        return {"distance": run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats())}
+        return {"distance": run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats)}
 
 
 
     pwd = os.getcwd()
-    out_dir = "fitness_abc_"+args.name()
+    out_dir = "fitness_abc_"+args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
     # Using symmetric concentration parameters for the Dirichlet distribution.
@@ -112,12 +112,12 @@ if __name__ == "__main__":
     # into account.
     # To help the sampling, we will use the benchmark values obtained from
     # the SimChA simulations without fitness
-    initial_guess = np.array([0.961888, 0.035504, 0.002608]) * args.weight() 
+    initial_guess = np.array([0.961888, 0.035504, 0.002608]) * args.weight 
     prior = Distribution(abc=RV("dirichlet", initial_guess ))
 
     # SimChA calculates the distance between simulated and observation, so we don't need an observed distance
     observed_data = {"distance": 0.0}
-    sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.nCPUs())
+    sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.nCPUs)
     abc = ABCSMC(model_wrapper, prior, distance_function=distance, population_size = 100, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
