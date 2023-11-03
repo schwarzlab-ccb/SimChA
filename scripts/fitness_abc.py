@@ -57,9 +57,6 @@ def run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, rep
     # Return the distance SimChA calculated
     return float(last_line.split(":")[1].strip())
 
-def model(params):
-    return {"distance": run_simcha(params)}
-
 def distance(x,y):
     return abs(x["distance"] - y["distance"])
     
@@ -102,7 +99,7 @@ if __name__ == "__main__":
 
     # We use a wrapper function so that we can run SimChA with the relevant inputs and we only need to change them here
     def model_wrapper(params):
-        return run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats())
+        return {"distance": run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats())}
 
 
 
