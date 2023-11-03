@@ -22,8 +22,8 @@ public class FileIO
     // output
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
+    private const string BINNED_COPYNUMBERS_FILENAME = "binned_CNs.tsv";
     private const string CONSISTENT_CNS_FILENAME = "consistent_CNs.tsv";
-    private const string SNVCOPYNUMBERS_FILENAME = "snv_copynumbers.tsv";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
@@ -94,6 +94,18 @@ public class FileIO
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
+        }
+    }
+
+    public void WriteCopyNumbers(Dictionary<string, List<CopyNumber>> cnProfiles)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), BINNED_COPYNUMBERS_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\tn_snvs");
+        foreach (var cnProfile in cnProfiles)
+        {
+            outputFile.WriteLine(CopyNumbers.ToTSV(cnProfile.Value, cnProfile.Key, false));
         }
     }
 
@@ -374,6 +386,24 @@ public class FileIO
                 pro.Value.GlueNeighbours();
             }
             return profiles;
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
+    public static Dictionary<string, List<CopyNumber>> ReadProfiles(string cnaProfile)
+    {
+        string fileFullPath = Path.GetFullPath(cnaProfile);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var cnaFile = new StreamReader(fileFullPath);
+            return Parsers.ParseCNAProfile(cnaFile);
         }
         catch (Exception e)
         {

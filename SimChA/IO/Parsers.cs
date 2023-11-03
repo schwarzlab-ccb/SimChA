@@ -33,6 +33,37 @@ public static class Parsers
         return res;
     }
 
+    // Expected format is the binned linear genome:
+    // and there is a header and the columns contain:
+    // SampleID, Chr, Start, End, CN hap1, CN hap2
+    // Simpler version of the parser that does not calculate missing regions and does have to create karyotypes
+    public static Dictionary<string, List<CopyNumber>> ParseCNAProfile(TextReader cnaFile)
+    {
+        Dictionary<string, List<CopyNumber>> result = new();
+        cnaFile.ReadLine(); // Skip header
+        while (cnaFile.ReadLine() is {} line)
+        {
+            string[] lineSplit = line.Split('\t');
+            string sample = lineSplit[0];
+
+            // Parse the line
+            string chrNo = lineSplit[1];
+            int start = int.Parse(lineSplit[2]) - 1;
+            int end = int.Parse(lineSplit[3]);
+            bool cnAFound = int.TryParse(lineSplit[4], out int cnA);
+            
+            bool cnBFound = int.TryParse(lineSplit[4], out int cnB);
+            var cn = new CopyNumber(new GenRange(start, end, chrNo), cnAFound ? cnA : -1, cnBFound ? cnB : -1, 0);
+            
+            if (!result.ContainsKey(sample))
+            {
+                result[sample] = new List<CopyNumber>();
+            }
+            result[sample].Add(cn);
+        }
+        return result;
+    }
+
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,

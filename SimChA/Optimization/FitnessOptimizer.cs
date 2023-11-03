@@ -13,14 +13,14 @@ public class FitnessOptimizer : Optimizer
     private Dictionary<string, List<CopyNumber>> SimulatedCNPs1MB { get; set;}
     protected readonly Dictionary<string, List<long>> ChromosomeBins;
     private readonly List<double> FitnessList;
+    private Binner Binner;
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, List<Sample> observedData, List<double> fitnessList) 
-        : base(simParams, rnd, repeats, genRef,observedData)
+        GenRef genRef, List<Sample> observedData, string binnedSamples, List<double> fitnessList) 
+        : base(simParams, rnd, repeats, genRef, observedData)
     {
         FitnessList = fitnessList;
-        ChromosomeBins = new Dictionary<string, List<long>>();
-        SetChromosomeBins();
-        ObservedCNPs1MB = GetCNPs(observedData, true);
+        Binner = new Binner(GenRef);
+        ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
         ObservedCNPs    = GetCNPs(observedData);
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
         SimulatedCNPs1MB = new Dictionary<string, List<CopyNumber>>();
@@ -56,7 +56,7 @@ public class FitnessOptimizer : Optimizer
     {
         var samples = GenerateSimulatedData();
         SimulatedCNPs = GetCNPs(samples);
-        SimulatedCNPs1MB = GetCNPs(samples, true);
+        SimulatedCNPs1MB = Binner.GetBinnedCNProfiles(samples);
         return;
     }
 
@@ -67,26 +67,6 @@ public class FitnessOptimizer : Optimizer
         var meanCN = GetMeanCopyNumberDistance();
 
         return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
-    }
-
-    private void SetChromosomeBins()
-    {
-        var binSize = 1_000_000;
-        foreach (var chrom in GenRef.AllChrs)
-        {
-            var nFullBins = GenRef.ChrLengths[chrom] / binSize;
-            var remainder = GenRef.ChrLengths[chrom] % binSize;
-            // Adjusting the first and last bins
-            var endBinSize = (long)(0.5 + remainder / 2.0);
-            var offset = remainder - 2*endBinSize;
-            var binList = new List<long>{0};
-            for (int i = 0; i < nFullBins; i++)
-            {
-                binList.Add(i*binSize+endBinSize);
-            }
-            binList.Add(binList.Last()+endBinSize+offset-1);
-            ChromosomeBins[chrom] = binList;
-        }
     }
 
     private double GetMeanCopyNumberAlongGenomeDistance()
@@ -118,22 +98,5 @@ public class FitnessOptimizer : Optimizer
         var histMin = 0;
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
-
-
-    private Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples, bool binsOf1MB = false)
-    {
-        var cnps = new Dictionary<string, List<CopyNumber>>();
-        foreach (var sample in samples)
-        {
-            foreach (var clone in sample.Clones)
-            {
-                var cnp = !binsOf1MB
-                    ? CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList()
-                    : CopyNumbers.CalcBinnedCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, true).ToList();
-                cnps[sample.SampleId] = cnp;
-            }
-        }
-        return cnps;
     }
 }

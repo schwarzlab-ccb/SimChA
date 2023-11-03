@@ -3,6 +3,7 @@ using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.IO;
 using MathNet.Numerics.Statistics;
+using System.Diagnostics;
 namespace SimChA.Optimization;
 
 public class Optimizer
@@ -13,6 +14,7 @@ public class Optimizer
     protected readonly Random Rnd;
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
+    private ProcessStartInfo PYABC {get;}
     
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData)
     {
@@ -22,6 +24,14 @@ public class Optimizer
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
+        PYABC = new ProcessStartInfo
+        {
+            FileName = "python",
+            Arguments = "scripts/trial_abc.py",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
     }
 
     public virtual double Optimize()
@@ -105,7 +115,7 @@ public class Optimizer
         var simHist  = new Histogram(sim, bins, min, max);
         return StatisticMeasures.WassersteinDistance(dataHist, simHist);
     }
-    private Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
+    protected Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
         foreach (var sample in samples)

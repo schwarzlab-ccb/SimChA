@@ -11,5 +11,6 @@ public enum ExecMode
     ParseGenContents,
     Bootstrap,
     OptimizeEvents,
-    OptimizeFitness
+    OptimizeFitness,
+    BinSamples
 }
