@@ -63,14 +63,10 @@ def run_simcha(params, genes_path, cohort_path, repeats):
     # Delete the temporary folder and files
     subprocess.run([f"rm -rf {param_file_path}"], shell=True)
     # Return the distance SimChA calculated
-    return float(last_line.split(":")[1].strip())
-
-def model(params):
-    return {"distance": run_simcha(params)}
+    return float(last_line.split(":")[1].strip()
 
 def distance(x,y):
     return abs(x["distance"] - y["distance"])
-    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
