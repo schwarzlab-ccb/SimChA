@@ -51,10 +51,10 @@ def update_params_file(params):
     return path
 
 
-def run_simcha(params):
+def run_simcha(params, genes_path, cohort_path, repeats):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R 2100 -O {param_file_path}/out --optimization events -D data/hg19_1000 -P pcawg_filtered_95_pc.tsv"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
     output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
@@ -76,12 +76,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     #parser.add_argument('-R', "--repeats", type=int, default=500, help="Number of SimChA simulated samples to generate for each pyABC sample")
     parser.add_argument('-N', "--name",type=str, default="", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
-
+    parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples to generate for each SimChA run")
     args = parser.parse_args()
 
 
+    cohort_path = "data/pcawg_filtered_95_pc.tsv"
+    genes_path = "data/hg19_1000"
+
+    def model_wrapper(params):
+        return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats)}
+
+
     pwd = os.getcwd()
-    out_dir = "events_abc_results"#+args.name
+    out_dir = "events_abc_results"
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
     # Uniform prior distributions for the various different properties of the simple events
@@ -134,7 +141,7 @@ if __name__ == "__main__":
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=16)
-    abc = ABCSMC(model, prior, distance_function=distance, transitions=transition, population_size = 100, sampler = sampler)
+    abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 100, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
     abc.new("sqlite:///"+db_path, observed_data)
