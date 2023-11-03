@@ -43,9 +43,6 @@ def update_params_file(params):
     # Return the path to the config file
     return path
 
-def wrapper_for_simcha(params):
-
-
 def run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, repeats):
     param_file_path = update_params_file(params)
 
