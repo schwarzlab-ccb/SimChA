@@ -102,7 +102,6 @@ if __name__ == "__main__":
         return {"distance": run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats)}
 
 
-
     pwd = os.getcwd()
     out_dir = "fitness_abc_"+args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
