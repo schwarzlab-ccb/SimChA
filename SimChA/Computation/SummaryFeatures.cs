@@ -150,7 +150,6 @@ public static class SummaryFeatures
 
         for (int i = 0; i < cnLength; i++)
         {
-            var seg = cnProfiles.First().Value[3053];
             // TODO: What do we do with bins that are just empty?
             var filtered = cnProfiles.Where(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2 >= 0);
             var mean = filtered.Any() ? filtered.Average(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2) : 0.0;
