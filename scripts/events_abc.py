@@ -34,6 +34,7 @@ def update_params_file(params):
     """configs["Signatures"]["CNs"]["Events"]["ChromDeletion"]["Prob"]        = params["w_chrom_del"]
     configs["Signatures"]["CNs"]["Events"]["ChromDuplication"]["Prob"]     = params["w_chrom_dup"]
     configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Prob"]  = params["w_int_dup"]
+    configs["Signatures"]["CNs"]["Events"]["Translocation"]["Prob"]        = params["w_transloc"]
     configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Prob"]     = params["w_int_del"]
     configs["Signatures"]["CNs"]["Events"]["InternalInversion"]["Prob"]    = params["w_int_inv"]
     configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Prob"]  = params["w_inv_dup"]
@@ -44,7 +45,8 @@ def update_params_file(params):
     configs["Signatures"]["CNs"]["Events"]["InternalInversion"]["Size"]   = int(params["l_int_inv"]*100_000)
     configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Size"]    = int(params["l_int_del"]*100_000)
     configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Size"] = int(params["l_int_dup"]*100_000)
-    configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Size"] = int(params["l_inv_dup"]*100_000)"""
+    configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Size"] = int(params["l_inv_dup"]*100_000)
+    configs["Signatures"]["CNs"]["Events"]["Translocation"]["Size"] = int(params["l_transloc"]*100_000)"""
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
     # Return the path to the config file
@@ -103,11 +105,13 @@ if __name__ == "__main__":
             w_bfb       = RV("uniform", 1, 10),
             w_tail_del  = RV("uniform", 1, 10),
             w_wgd       = RV("uniform", 0.01, 0.1),
+            w_transloc  = RV("uniform", 1, 25),
             # Lengths are in units of 100kb
             l_int_dup   = RV("uniform", 1, 50),
             l_int_del   = RV("uniform", 1, 50),
             l_int_inv   = RV("uniform", 1, 50),
-            l_inv_dup   = RV("uniform", 1, 50)
+            l_inv_dup   = RV("uniform", 1, 50),
+            l_transloc  = RV("uniform", 1, 50)
             )"""
 
     transition = pyabc.AggregatedTransition(
@@ -126,10 +130,12 @@ if __name__ == "__main__":
 	'w_bfb'       : pyabc.MultivariateNormalTransition(),
 	'w_tail_del'  : pyabc.MultivariateNormalTransition(),
 	'w_wgd'       : pyabc.MultivariateNormalTransition(),
+    'w_transloc'  : pyabc.MultivariateNormalTransition(),
 	'l_int_del'   : pyabc.MultivariateNormalTransition(),
 	'l_int_dup'   : pyabc.MultivariateNormalTransition(),
 	'l_int_inv'   : pyabc.MultivariateNormalTransition(),
-	'l_inv_dup'   : pyabc.MultivariateNormalTransition()
+	'l_inv_dup'   : pyabc.MultivariateNormalTransition(),
+    'l_transloc'  : pyabc.MultivariateNormalTransition()
 	
 	
     """
