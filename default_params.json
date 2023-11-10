@@ -4,9 +4,9 @@
 	"EventCount": 72,
 	"EventDist": "Exponential",
 	"Fitness": {
-	  "Stress": 1,
-	  "TsgOg": 0.01,
-	  "Essentiality": 0.1
+	  "Stress": 0.93,
+	  "TsgOg": 0.05,
+	  "TotalStrength": 100
 	},
 	"Signatures": {
 	  "CNs": {
@@ -51,13 +51,13 @@
 		  {
 			"Type": "BreakageFusionBridge",
 			"Prob": 4,
-			"Size": 10000000,
+			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "TailDeletion",
 			"Prob": 4,
-			"Size": 10000000,
+			"Size": 0,
 			"Frag": 0
 		  },
 		  {

@@ -266,7 +266,7 @@ public static class Parsers
             var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
             double tsgogTerm = (og + tsg) * fParams.TsgOg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
-            fitnessList.Add(1.0 + stressTerm + tsgogTerm + essTerm);
+            fitnessList.Add(1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength);
         }
         return fitnessList;
     }

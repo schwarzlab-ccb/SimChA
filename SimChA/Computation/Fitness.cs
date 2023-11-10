@@ -16,12 +16,13 @@ public static class Fitness
         var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
         
-        double stressTerm = StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen());
+        double stressTerm = StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen())*fParams.Stress;
         double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.SexXX);
         double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.SexXX);
-        double essTerm = EssTerm(genRef, essCNs, karyotype.SexXX);
+        double tsgogTerm = (ogTerm - tsgTerm)*fParams.TsgOg;
+        double essTerm = EssTerm(genRef, essCNs, karyotype.SexXX)*fParams.Essentiality;
         
-        return 1 + fParams.Stress*stressTerm + fParams.TsgOg*(ogTerm - tsgTerm) + fParams.Essentiality*essTerm;
+        return 1 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
     }
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
