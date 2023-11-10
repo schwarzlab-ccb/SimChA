@@ -37,6 +37,7 @@ def update_params_file(params):
         configs = json.load(json_file)
     
     configs["Fitness"]["Stress"], configs["Fitness"]["TsgOg"], configs["Fitness"]["Essentiality"] = params["abc"]
+    configs["Fitness"]["TotalStrength"] = params["w_strength"]
 
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -111,8 +112,9 @@ if __name__ == "__main__":
     # into account.
     # To help the sampling, we will use the benchmark values obtained from
     # the SimChA simulations without fitness
+    # TODO: insert the correct parameters once we have the event parameters
     initial_guess = np.array([0.961888, 0.035504, 0.002608]) * args.weight 
-    prior = Distribution(abc=RV("dirichlet", initial_guess ))
+    prior = Distribution(abc=RV("dirichlet", initial_guess ), w_strength = RV("uniform", 0, 25))
 
     # SimChA calculates the distance between simulated and observation, so we don't need an observed distance
     observed_data = {"distance": 0.0}
