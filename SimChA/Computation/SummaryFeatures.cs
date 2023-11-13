@@ -158,11 +158,10 @@ public static class SummaryFeatures
         return meanCN;
     }
 
-    public static (List<double> values, double max) GetPloidy(Dictionary<string, List<CopyNumber>> cnProfiles)
+    public static (List<double> values, double max) GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict)
     {
-        var fraction = new List<double>();
-
-        return (fraction, fraction.Max());
+        var ploidies = cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key])).ToList();
+        return (ploidies, ploidies.Max());
     }
 
     public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)

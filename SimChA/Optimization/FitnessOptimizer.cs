@@ -10,6 +10,9 @@ public class FitnessOptimizer : Optimizer
     private Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
     private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
     private Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
+
+    private Dictionary<string, bool> IsFemaleObservedDict {get; set;} 
+    private Dictionary<string, bool> IsFemaleSimulatedDict {get; set;}
     private Dictionary<string, List<CopyNumber>> SimulatedCNPs1MB { get; set;}
     private readonly List<double> FitnessList;
     private readonly Binner Binner;
@@ -19,10 +22,14 @@ public class FitnessOptimizer : Optimizer
     {
         FitnessList = fitnessList;
         Binner = new Binner(GenRef);
+
         ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
         ObservedCNPs    = GetCNPs(observedData);
+        IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
+
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
         SimulatedCNPs1MB = new Dictionary<string, List<CopyNumber>>();
+        IsFemaleSimulatedDict = new Dictionary<string, bool>();
     }
 
     public override double Optimize()
@@ -56,6 +63,7 @@ public class FitnessOptimizer : Optimizer
         var samples = GenerateSimulatedData();
         SimulatedCNPs = GetCNPs(samples);
         SimulatedCNPs1MB = Binner.GetBinnedCNProfiles(samples);
+        IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         return;
     }
 
@@ -63,7 +71,7 @@ public class FitnessOptimizer : Optimizer
     {
         var hdDist = GetHomozygousDeletionDistance();
         var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance();
-        var meanCN = GetAverageAneuploidyDistance();
+        var meanCN = GetPloidyDistance();
 
         return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
     }
@@ -79,14 +87,14 @@ public class FitnessOptimizer : Optimizer
         return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
     }
 
-    private double GetAverageAneuploidyDistance()
+    private double GetPloidyDistance()
     {
-        var obsValues = ObservedCNPs.SelectMany(cnp => cnp.Value)
-                        .Where(cn => cn.CNH1 + cn.CNH2 >= 0)
-                        .Select(cn => (double)cn.CNH1 + cn.CNH2).Average();
-        var simValues = SimulatedCNPs.SelectMany(cnp => cnp.Value)
-                        .Select(cn => (double)cn.CNH1 + cn.CNH2).Average();
-        return Math.Abs(obsValues - simValues);
+        var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict);
+        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, SimulatedCNPs, IsFemaleSimulatedDict);
+        var histMax = Math.Max(obsMax, simMax);
+        var histMin = 0;
+        var histBins = 50;
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
     private double GetHomozygousDeletionDistance()
