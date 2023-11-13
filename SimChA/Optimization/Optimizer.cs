@@ -14,7 +14,6 @@ public class Optimizer
     protected readonly Random Rnd;
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
-    private ProcessStartInfo PYABC {get;}
     
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData)
     {
@@ -24,14 +23,6 @@ public class Optimizer
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
-        PYABC = new ProcessStartInfo
-        {
-            FileName = "python",
-            Arguments = "scripts/trial_abc.py",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
     }
 
     public virtual double Optimize()
@@ -46,8 +37,7 @@ public class Optimizer
         var cpDist = GetChangepointDistance();
         var bpDist = GetBreakpointDistance();
         var majDist = GetMajMinCNDistance(true);
-        var minDist = GetMajMinCNDistance(false);      
-        //return Math.Sqrt(segDist*segDist + cpDist*cpDist + bpDist*bpDist + majDist*majDist + minDist*minDist);
+        var minDist = GetMajMinCNDistance(false);
         return (segDist + cpDist + bpDist + majDist + minDist)/5;
     }
     private List<Sample> GenerateSimulatedData()

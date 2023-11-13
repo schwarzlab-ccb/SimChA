@@ -11,9 +11,8 @@ public class FitnessOptimizer : Optimizer
     private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
     private Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
     private Dictionary<string, List<CopyNumber>> SimulatedCNPs1MB { get; set;}
-    protected readonly Dictionary<string, List<long>> ChromosomeBins;
     private readonly List<double> FitnessList;
-    private Binner Binner;
+    private readonly Binner Binner;
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
         GenRef genRef, List<Sample> observedData, string binnedSamples, List<double> fitnessList) 
         : base(simParams, rnd, repeats, genRef, observedData)
