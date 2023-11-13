@@ -157,4 +157,77 @@ public static class SummaryFeatures
         }
         return meanCN;
     }
+
+    public static (List<double> values, double max) GetPloidy(Dictionary<string, List<CopyNumber>> cnProfiles)
+    {
+        var fraction = new List<double>();
+
+        return (fraction, fraction.Max());
+    }
+
+    public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
+    {
+        var matrix = new Dictionary<string, Dictionary<string, double>>();
+        foreach (var chr in chrs)
+        {
+            var chrSpecificCN = new Dictionary<string, double>();
+            foreach (var cnProfile in cnProfiles)
+            {
+                var chrCNPs = cnProfile.Value.Where(cn => cn.Segment.ChrNo == chr && cn.CNH1 + cn.CNH2 > 0).ToList();
+                var val = 0.0;
+                if (chrCNPs.Any())
+                {
+                    var weightedLen = chrCNPs.Select(cn => (cn.CNH1 + cn.CNH2)*cn.Segment.Length).Sum();
+                    val = weightedLen / chrCNPs.Select(cn => cn.Segment.Length).Sum();
+                }
+                chrSpecificCN.Add(cnProfile.Key, val);
+            }
+            matrix.Add(chr, chrSpecificCN);
+        }
+        return matrix;
+    }
+
+    public static double GetMKV(Dictionary<string, Dictionary<string, double>> chrCNMatrix)
+    {
+        // Mean Karyotypic Variance is the variance of individual chromosomes across all samples
+        // then averages across all chromosomes
+        var chrVar = new Dictionary <string, double> ();
+        foreach (var chr in chrCNMatrix.Keys)
+        {
+            var chrVals = chrCNMatrix[chr].Values;
+            chrVar.Add(chr, chrVals.Variance());
+        }
+        return chrVar.Values.Average();
+    }
+
+    private static Dictionary<string, Dictionary<string, double>> TransposeChrCNMatrix( Dictionary<string, Dictionary<string, double>> chrCNMatrix)
+    {
+        var transposed = new Dictionary<string, Dictionary<string, double>>();
+        foreach (var firstKey in chrCNMatrix.Keys)
+        {
+             foreach (var pair in chrCNMatrix[firstKey])
+            {
+                var secondKey = pair.Key;
+                var value = pair.Value;
+                if (!transposed.ContainsKey(secondKey))
+                {
+                    transposed[secondKey] = new Dictionary<string, double>();
+                }
+                transposed[secondKey][firstKey] = value;
+            }
+        }
+        return transposed;
+    }
+    
+    public static double GetAverageAneuploidy(Dictionary<string, Dictionary<string, double>> chrCNMatrix)
+    {
+        var matrix = TransposeChrCNMatrix(chrCNMatrix);
+        var sampleVar = new Dictionary<string, double>();
+        foreach (var sample in matrix.Keys)
+        {
+            var sampleVals = matrix[sample].Values;
+            sampleVar.Add(sample, sampleVals.Variance());
+        }
+        return sampleVar.Values.Average();
+    }
 }

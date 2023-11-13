@@ -63,7 +63,7 @@ public class FitnessOptimizer : Optimizer
     {
         var hdDist = GetHomozygousDeletionDistance();
         var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance();
-        var meanCN = GetMeanCopyNumberDistance();
+        var meanCN = GetAverageAneuploidyDistance();
 
         return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
     }
@@ -79,7 +79,7 @@ public class FitnessOptimizer : Optimizer
         return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
     }
 
-    private double GetMeanCopyNumberDistance()
+    private double GetAverageAneuploidyDistance()
     {
         var obsValues = ObservedCNPs.SelectMany(cnp => cnp.Value)
                         .Where(cn => cn.CNH1 + cn.CNH2 >= 0)

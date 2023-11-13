@@ -20,6 +20,7 @@ public class GenRef
     private List<string> XYChrs { get; }
     private List<string> XXChrs { get; }
     public List<string> AllChrs { get; }
+    public List<string> Autosomes { get; }
     
     public string YChrName { get; }
     
@@ -64,8 +65,8 @@ public class GenRef
         XXLinLen = XXChrs.Select(c => (long) chrLengths[c]).Sum();
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
-        var autosomes = chrSex.Where(pair => pair.Value != SexEnum.Male && pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
-        AutosomeLen = autosomes.Select(c => (long) chrLengths[c]).Sum();
+        Autosomes = chrSex.Where(pair => pair.Value != SexEnum.Male && pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
+        AutosomeLen = Autosomes.Select(c => (long) chrLengths[c]).Sum();
         GeneLists = geneList;
         GenContentsDict = genContentsDict;
     }
