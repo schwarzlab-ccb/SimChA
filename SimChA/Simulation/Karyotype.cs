@@ -69,7 +69,7 @@ public class Karyotype
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
     public IList<GenRange> GetMissingOfChr(string chrNo)
-        => _missingRanges[chrNo];
+        => _missingRanges.ContainsKey(chrNo) ? _missingRanges[chrNo] : new List<GenRange>();
 
     public static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;

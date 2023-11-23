@@ -68,6 +68,8 @@ public static class Parsers
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
     // however it works so don't refactor unless needed
+    // NOTE: This also requires the copy-number profiles to be sorted in numerical order (i.e. chr1, chr2, ...),
+    // It will not work if the chromosomes are in alphabetical order (i.e. chr1, chr10, chr11, ...)
     public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
