@@ -5,17 +5,24 @@ namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, bool isFemale, bool keepMissing = false) 
-        => genRef.ChrIDsForSex(isFemale)
-            .SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, bool isFemale)
+    {
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
+    } 
     
     public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool isFemale, bool keepMissing = false) 
-        => genRef.ChrIDsForSex(isFemale)
-            .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+    {
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+    }
+            
 
     public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool keepMissing = false)
-        => genRef.AllChrs
-            .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+    {
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+    }
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, string chrNo, bool keepMissing = false)
     {
         var regionList = curRegs.ToList();

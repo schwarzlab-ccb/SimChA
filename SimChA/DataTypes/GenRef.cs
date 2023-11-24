@@ -16,12 +16,13 @@ public class GenRef
     
     private long XYLinLen { get; }
     private long XXLinLen { get; }
+    private long AutosomeLinLen { get; }
     private long XYGenomeLen { get; }
     private long XXGenomeLen { get; }
     private List<string> XYChrs { get; }
     private List<string> XXChrs { get; }
     public List<string> AllChrs { get; }
-    public List<string> AutosomeChrs { get; }
+    private List<string> AutosomeChrs { get; }
     
     public string YChrName { get; }
     
@@ -36,7 +37,7 @@ public class GenRef
     {
         if (!IncludeSexChromosomes)
         {
-            return AutosomeLen;
+            return diploid ? AutosomeLen : AutosomeLinLen;
         }
         else 
         {
@@ -45,7 +46,10 @@ public class GenRef
     }
     
     public IEnumerable<string> ChrIDsForSex(bool sexXX)
-        => IncludeSexChromosomes ? (sexXX ? XXChrs : XYChrs) : AutosomeChrs;
+        => sexXX ? XXChrs : XYChrs;
+    
+    public IEnumerable<string> ChrIDsForAutosomes()
+        => AutosomeChrs;
     
     public long AutosomeLen {get;}
     public bool IncludeSexChromosomes { get; }
@@ -78,10 +82,11 @@ public class GenRef
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
         AutosomeChrs = chrSex.Where(pair => pair.Value != SexEnum.Male && pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
-        AutosomeLen = AutosomeChrs.Select(c => (long) chrLengths[c]).Sum();
+        AutosomeLinLen = AutosomeChrs.Select(c => (long) chrLengths[c]).Sum();
         var autohaplotypeOne = CreateAutosomeHaplotype(true, useSNV);
         var autohaplotypeTwo = CreateAutosomeHaplotype(false, useSNV);
         Autosomes = autohaplotypeOne.Concat(autohaplotypeTwo).ToArray();
+        AutosomeLen = Autosomes.Sum(r => r.Length);
         GeneLists = geneList;
         GenContentsDict = genContentsDict;
     }
