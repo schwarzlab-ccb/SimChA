@@ -30,10 +30,6 @@ public class TestSimulator
         _kar = new Karyotype(_genRef, true);
     }
     
-    // Taken the MakeGene method from TestFitness
-    private static Gene MakeGene(string chrNo, double deltaFitness)
-        => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
-    
     [Test]
     public void TestPotential()
     {
