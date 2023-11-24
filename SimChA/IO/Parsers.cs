@@ -74,7 +74,9 @@ public static class Parsers
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        var present = genRef.AllChrs.ToDictionary(c => c, _ => false);
+        var present = genRef.IncludeSexChromosomes
+                    ? genRef.AllChrs.ToDictionary(c => c, _ => false)
+                    : genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false);
         string lastSample = "";
         string lastChr = genRef.AllChrs.First();
         long lastPos = 0L;
@@ -188,7 +190,10 @@ public static class Parsers
 
         // Add the last sample
         var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
-        result[lastSample] = new Karyotype(newRegs, missingRanges, !present[genRef.YChrName]);
+        var kar = genRef.IncludeSexChromosomes 
+                ? new Karyotype(newRegs, missingRanges, !present[genRef.YChrName])
+                : new Karyotype(newRegs, missingRanges, false);
+        result[lastSample] = kar;
         return result;
     }
 
