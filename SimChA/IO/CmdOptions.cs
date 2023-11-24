@@ -45,6 +45,9 @@ public class CmdOptions
     public bool BinSamples { get; set; }
     [Option("binned-samples", Required = false, Default = "", HelpText = "Path to the binned data")]
     public string BinnedSamples { get; set; }
+    [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
+    public bool AutosomesOnly { get; set; }
+
     public ExecMode ExecMode
     {
         get

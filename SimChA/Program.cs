@@ -23,7 +23,8 @@ SimParams simParams = FileIO.ReadSimParams(options.ConfigFile);
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
 bool parseGenContents = execMode == ExecMode.ParseGenContents;
-var genRef = FileIO.GetGenRef(options.DataFolder, parseGenContents);
+var includeSexChromosomes = !options.AutosomesOnly;
+var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
