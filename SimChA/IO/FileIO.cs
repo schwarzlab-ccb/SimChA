@@ -430,13 +430,13 @@ public class FileIO
         }
     }
 
-    public static GenRef GetGenRef(string dataFolder, bool useVariants = false)
+    public static GenRef GetGenRef(string dataFolder, bool includeSexChromosomes = true, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
         var geneLists = ReadGeneLists(dataFolder, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, geneLists, genContentsDict);
+        return new GenRef(refName, chrLengths, chrSex, geneLists, includeSexChromosomes, genContentsDict);
     }
 }

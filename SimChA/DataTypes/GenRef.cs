@@ -12,6 +12,7 @@ public class GenRef
     public int ChrCount { get; }
     private Region[] XYGenome { get; }
     private Region[] XXGenome { get; }
+    private Region[] Autosomes { get; }
     
     private long XYLinLen { get; }
     private long XXLinLen { get; }
@@ -20,7 +21,7 @@ public class GenRef
     private List<string> XYChrs { get; }
     private List<string> XXChrs { get; }
     public List<string> AllChrs { get; }
-    public List<string> Autosomes { get; }
+    public List<string> AutosomeChrs { get; }
     
     public string YChrName { get; }
     
@@ -29,25 +30,36 @@ public class GenRef
     public Dictionary<string, StringBuilder>? GenContentsDict { get; set;}
 
     public Region[] GetGenotype(bool sexXX)
-        => sexXX ? XXGenome : XYGenome;
+        => IncludeSexChromosomes ? (sexXX ? XXGenome : XYGenome) : Autosomes;
     
     public long GetGenomeLen(bool sexXX, bool diploid = true)
-        => diploid ? (sexXX ? XXGenomeLen : XYGenomeLen) : (sexXX ? XXLinLen : XYLinLen);
+    {
+        if (!IncludeSexChromosomes)
+        {
+            return AutosomeLen;
+        }
+        else 
+        {
+            return diploid ? (sexXX ? XXGenomeLen : XYGenomeLen) : (sexXX ? XXLinLen : XYLinLen);
+        }
+    }
     
     public IEnumerable<string> ChrIDsForSex(bool sexXX)
-        => sexXX ? XXChrs : XYChrs;
+        => IncludeSexChromosomes ? (sexXX ? XXChrs : XYChrs) : AutosomeChrs;
     
     public long AutosomeLen {get;}
+    public bool IncludeSexChromosomes { get; }
 
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
 
     public GenRef(string name, Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex, 
-        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, Dictionary<string, StringBuilder>? genContentsDict = null)
+        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, bool includeSexChromosomes, Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         AutosomeCount = chrSex.Count(x => x.Value == SexEnum.Both);
+        IncludeSexChromosomes = includeSexChromosomes;
         ChrCount = AutosomeCount * 2 + (chrSex.Count - AutosomeCount);
         XYChrs = chrSex.Select(pair => pair.Key).ToList();
         XXChrs = chrSex.Where(pair => pair.Value != SexEnum.Male).Select(pair => pair.Key).ToList();
@@ -65,8 +77,11 @@ public class GenRef
         XXLinLen = XXChrs.Select(c => (long) chrLengths[c]).Sum();
         XYGenomeLen = XYGenome.Sum(r => r.Length);
         XXGenomeLen = XXGenome.Sum(r => r.Length);
-        Autosomes = chrSex.Where(pair => pair.Value != SexEnum.Male && pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
-        AutosomeLen = Autosomes.Select(c => (long) chrLengths[c]).Sum();
+        AutosomeChrs = chrSex.Where(pair => pair.Value != SexEnum.Male && pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
+        AutosomeLen = AutosomeChrs.Select(c => (long) chrLengths[c]).Sum();
+        var autohaplotypeOne = CreateAutosomeHaplotype(true, useSNV);
+        var autohaplotypeTwo = CreateAutosomeHaplotype(false, useSNV);
+        Autosomes = autohaplotypeOne.Concat(autohaplotypeTwo).ToArray();
         GeneLists = geneList;
         GenContentsDict = genContentsDict;
     }
@@ -81,5 +96,10 @@ public class GenRef
             isFirstHaplotype | isFemale ? ChrSex[x] == SexEnum.Female : ChrSex[x] == SexEnum.Male);
         var all = nonGender.Concat(sexChr);
         return all.Select(num => GetRegion(num, isFirstHaplotype, useSNV));
+    }
+    private IEnumerable<Region> CreateAutosomeHaplotype(bool isFirstHaplotype, bool useSNV = false)
+    {
+        var autosomes = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
+        return autosomes.Select(num => GetRegion(num, isFirstHaplotype, useSNV));
     }
 }
