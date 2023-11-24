@@ -23,7 +23,7 @@ public class TestSimulator
     public void Setup()
     {
         _rnd = new Random(0);
-        _fitness = new FitnessParams(1, 1, 1);
+        _fitness = new FitnessParams(0.9, 0.05, 2);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
