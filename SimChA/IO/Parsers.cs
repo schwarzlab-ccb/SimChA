@@ -106,8 +106,10 @@ public static class Parsers
                         regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
-                    bool sexXX = !present[genRef.YChrName];
-                    result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
+                    var thisKar = genRef.IncludeSexChromosomes 
+                            ? new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, !present[genRef.YChrName])
+                            : new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, false);
+                    result[lastSample] = thisKar;
                 }
                 // Reset
                 regionsA.Clear();
@@ -128,8 +130,8 @@ public static class Parsers
                 present[chrNo] = true;
                 int start = int.Parse(lineSplit[2]) - 1;
                 int end = int.Parse(lineSplit[3]);
-                int cnA = int.Parse(lineSplit[4]);
-                int cnB = int.Parse(lineSplit[5]);
+                int majorCN = int.Parse(lineSplit[4]);
+                int minorCN = int.Parse(lineSplit[5]);
 
                 // Check for missing ranges
                 if (chrNo == lastChr)
@@ -157,11 +159,11 @@ public static class Parsers
                 lastPos = end;
 
                 // Add the new regions
-                for (int i = 0; i < cnA; i++)
+                for (int i = 0; i < majorCN; i++)
                 {
                     regionsA.Add(new Region(start, end, chrNo, true));
                 }
-                for (int i = 0; i < cnB; i++)
+                for (int i = 0; i < minorCN; i++)
                 {
                     regionsB.Add(new Region(start, end, chrNo, false));
                 }
