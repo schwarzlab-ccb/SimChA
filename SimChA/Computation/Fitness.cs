@@ -52,17 +52,20 @@ public static class Fitness
     {
         if (chrNo == genRef.YChrName)
         {
-            return genRef.IncludeSexChromosomes ? (sexXX ? 0 : 1) : 0;
+            return sexXX ? 0 : 1;
         }
         if (chrNo == genRef.XChrName)
         {
-            return genRef.IncludeSexChromosomes ? (sexXX ? 2 : 1) : 0;
+            return sexXX ? 2 : 1;
         }
         return 2;
     }
 
     public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
-        => geneCNs.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness));
+    {
+        var genesList = genRef.IncludeSexChromosomes ? geneCNs : geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
+        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness));
+    }
 
     public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, bool sexXX)
     {
