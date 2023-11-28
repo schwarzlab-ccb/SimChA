@@ -1,12 +1,12 @@
 {
 	"Seed": -1,
 	"Sex": "Both",
-	"EventCount": 72,
+	"EventCount": 95,
 	"EventDist": "Exponential",
 	"Fitness": {
-	  "Stress": 0.93,
-	  "TsgOg": 0.05,
-    "Essentiality": 0.05,
+	  "Stress": 0.92,
+	  "TsgOg": 0.01,
+    "Essentiality": 0.03,
 	  "TotalStrength": 1
 	},
 	"Signatures": {
@@ -15,38 +15,38 @@
 		"Events": [
 		  {
 			"Type": "ChromDeletion",
-			"Prob": 1,
+			"Prob": 8,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "ChromDuplication",
-			"Prob": 1,
+			"Prob": 12,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDuplication",
-			"Prob": 8,
-			"Size": 2000000,
+			"Prob": 30,
+			"Size": 1000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDeletion",
-			"Prob": 8,
-			"Size": 2000000,
+			"Prob": 22,
+			"Size": 220000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalInversion",
-			"Prob": 8,
-			"Size": 2000000,
+			"Prob": 0,
+			"Size": 2800000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InvertedDuplication",
-			"Prob": 10,
-			"Size": 2000000,
+			"Prob": 30,
+			"Size": 1000000,
 			"Frag": 0
 		  },
 		  {
@@ -63,7 +63,7 @@
 		  },
 		  {
 			"Type": "Translocation",
-			"Prob": 2,
+			"Prob": 5,
 			"Size": 10000000,
 			"Frag": 0
 		  },
@@ -118,11 +118,11 @@
 		]
 	  },
 	  "SNVs": {
-		"Prob": 0,
+		"Prob": 100,
 		"Events": [
 		  {
 			"Type": "SNV",
-			"Prob": 100,
+			"Prob": 1,
 			"Size": 0,
 			"Frag": 0
 		  }
@@ -131,7 +131,7 @@
 	},
 	"MCParams": {
 	  "NumSamplesMin": 100,
-	  "NumSamplesTotal": 2500,
+	  "NumSamplesTotal": 5000,
 	  "ThetaFitness": 10,
 	  "SwapEventP": 1,
 	  "ThresholdFit": 1E-08

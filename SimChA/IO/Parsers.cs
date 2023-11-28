@@ -50,10 +50,12 @@ public static class Parsers
             string chrNo = lineSplit[1];
             int start = int.Parse(lineSplit[2]) - 1;
             int end = int.Parse(lineSplit[3]);
-            bool cnAFound = int.TryParse(lineSplit[4], out int cnA);
+            bool majorCNFound = int.TryParse(lineSplit[4], out int majorCN);
             
-            bool cnBFound = int.TryParse(lineSplit[4], out int cnB);
-            var cn = new CopyNumber(new GenRange(start, end, chrNo), cnAFound ? cnA : -1, cnBFound ? cnB : -1, 0);
+            bool minorCNFound = int.TryParse(lineSplit[4], out int minorCN);
+            var cn = new CopyNumber(new GenRange(start, end, chrNo), 
+                                    majorCNFound ? majorCN : -1, 
+                                    minorCNFound ? minorCN : -1, 0);
             
             if (!result.ContainsKey(sample))
             {

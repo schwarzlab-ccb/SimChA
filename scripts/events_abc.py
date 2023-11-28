@@ -8,6 +8,7 @@ from datetime import datetime
 import json
 import matplotlib.pyplot as plt
 from pyabc import ABCSMC, RV, Distribution, settings, visualization, sampler
+from pyabc.visualization import plot_kde_matrix
 from pyabc.populationstrategy import ConstantPopulationSize
 import pyabc
 
@@ -28,8 +29,7 @@ def update_params_file(params):
         configs = json.load(json_file)
 
     configs["EventCount"] = int(params["n_events"])
-
-    """configs["Signatures"]["CNs"]["Events"]["ChromDeletion"]["Prob"]        = params["w_chrom_del"]
+    configs["Signatures"]["CNs"]["Events"]["ChromDeletion"]["Prob"]        = params["w_chrom_del"]
     configs["Signatures"]["CNs"]["Events"]["ChromDuplication"]["Prob"]     = params["w_chrom_dup"]
     configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Prob"]  = params["w_int_dup"]
     configs["Signatures"]["CNs"]["Events"]["Translocation"]["Prob"]        = params["w_transloc"]
@@ -44,7 +44,7 @@ def update_params_file(params):
     configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Size"]    = int(params["l_int_del"]*100_000)
     configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Size"] = int(params["l_int_dup"]*100_000)
     configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Size"] = int(params["l_inv_dup"]*100_000)
-    configs["Signatures"]["CNs"]["Events"]["Translocation"]["Size"] = int(params["l_transloc"]*100_000)"""
+    configs["Signatures"]["CNs"]["Events"]["Translocation"]["Size"] = int(params["l_transloc"]*100_000)
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
     # Return the path to the config file
@@ -54,7 +54,7 @@ def update_params_file(params):
 def run_simcha(params, genes_path, cohort_path, repeats):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path} --autosomes-only"
     output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
@@ -89,55 +89,68 @@ if __name__ == "__main__":
 
     # Uniform prior distributions for the various different properties of the simple events
     # We can also remove the number of events if we want
+    # Event count is an integer so it has to be handled slightly differently
     event_count_values = np.arange(30,151)
     event_count_prob   = [1/len(event_count_values)]*len(event_count_values)
 
+    limits = dict(
+            w_chrom_del = (1, 11),
+            w_chrom_dup = (1, 11),
+            w_int_dup   = (1, 101),
+            w_int_del   = (1, 101),
+            w_int_inv   = (1, 101),
+            w_inv_dup   = (1, 101),
+            w_bfb       = (1, 11),
+            w_tail_del  = (1, 11),
+            w_wgd       = (0.01, 0.11),
+            w_transloc  = (1, 26),
+            l_int_dup   = (1, 51), 
+            l_inv_dup   = (1, 51),
+            l_int_del   = (1, 51),
+            l_int_inv   = (1, 51),
+            l_transloc  = (1, 101))
 
-    prior = Distribution(n_events    = RV("rv_discrete", values=(event_count_values, event_count_prob)))
-    """w_chrom_del = RV("uniform", 1, 10), 
-            w_chrom_dup = RV("uniform", 1, 10), 
-            w_int_dup   = RV("uniform", 1, 100),
-            w_int_del   = RV("uniform", 1, 100),
-            w_inv_dup   = RV("uniform", 1, 100),
-            w_int_inv   = RV("uniform", 1, 100),
-            w_bfb       = RV("uniform", 1, 10),
-            w_tail_del  = RV("uniform", 1, 10),
-            w_wgd       = RV("uniform", 0.01, 0.1),
-            w_transloc  = RV("uniform", 1, 25),
-            # Lengths are in units of 100kb
-            l_int_dup   = RV("uniform", 1, 50),
-            l_int_del   = RV("uniform", 1, 50),
-            l_int_inv   = RV("uniform", 1, 50),
-            l_inv_dup   = RV("uniform", 1, 50),
-            l_transloc  = RV("uniform", 1, 50)
-            )"""
+
+    prior = Distribution(n_events    = RV("rv_discrete", values=(event_count_values, event_count_prob)),
+                         **{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
+    """w_chrom_del = RV("uniform", 1, 10),
+    w_chrom_dup = RV("uniform", 1, 10), 
+    w_int_dup   = RV("uniform", 1, 100),
+    w_int_del   = RV("uniform", 1, 100),
+    w_inv_dup   = RV("uniform", 1, 100),
+    w_int_inv   = RV("uniform", 1, 100),
+    w_bfb       = RV("uniform", 1, 10),
+    w_tail_del  = RV("uniform", 1, 10),
+    w_wgd       = RV("uniform", 0.01, 0.1),
+    w_transloc  = RV("uniform", 1, 25),
+    # Lengths are in units of 100kb
+    l_int_dup   = RV("uniform", 1, 50),
+    l_int_del   = RV("uniform", 1, 50),
+    l_int_inv   = RV("uniform", 1, 50),
+    l_inv_dup   = RV("uniform", 1, 50),
+    l_transloc  = RV("uniform", 1, 50))"""
+    limits[n_events] = (30, 150)
 
     transition = pyabc.AggregatedTransition(
 	mapping={
 		'n_events': pyabc.DiscreteJumpTransition(domain=event_count_values, p_stay=0.7)
-		}
-	)
-    # Transitions for the other parameters:
-    """
-	'w_chrom_del' : pyabc.MultivariateNormalTransition(),
-	'w_chrom_dup' : pyabc.MultivariateNormalTransition(),
-	'w_int_dup'   : pyabc.MultivariateNormalTransition(),
-	'w_int_del'   : pyabc.MultivariateNormalTransition(),
-	'w_inv_dup'   : pyabc.MultivariateNormalTransition(),
-	'w_int_inv'   : pyabc.MultivariateNormalTransition(),
-	'w_bfb'       : pyabc.MultivariateNormalTransition(),
-	'w_tail_del'  : pyabc.MultivariateNormalTransition(),
-	'w_wgd'       : pyabc.MultivariateNormalTransition(),
-    'w_transloc'  : pyabc.MultivariateNormalTransition(),
-	'l_int_del'   : pyabc.MultivariateNormalTransition(),
-	'l_int_dup'   : pyabc.MultivariateNormalTransition(),
-	'l_int_inv'   : pyabc.MultivariateNormalTransition(),
-	'l_inv_dup'   : pyabc.MultivariateNormalTransition(),
-    'l_transloc'  : pyabc.MultivariateNormalTransition()
+        'w_chrom_del' : pyabc.MultivariateNormalTransition(),
+        'w_chrom_dup' : pyabc.MultivariateNormalTransition(),
+        'w_int_dup'   : pyabc.MultivariateNormalTransition(),
+        'w_int_del'   : pyabc.MultivariateNormalTransition(),
+        'w_inv_dup'   : pyabc.MultivariateNormalTransition(),
+        'w_int_inv'   : pyabc.MultivariateNormalTransition(),
+        'w_bfb'       : pyabc.MultivariateNormalTransition(),
+        'w_tail_del'  : pyabc.MultivariateNormalTransition(),
+        'w_wgd'       : pyabc.MultivariateNormalTransition(),
+        'w_transloc'  : pyabc.MultivariateNormalTransition(),
+        'l_int_del'   : pyabc.MultivariateNormalTransition(),
+        'l_int_dup'   : pyabc.MultivariateNormalTransition(),
+        'l_int_inv'   : pyabc.MultivariateNormalTransition(),
+        'l_inv_dup'   : pyabc.MultivariateNormalTransition(),
+        'l_transloc'  : pyabc.MultivariateNormalTransition()
+        })	
 	
-	
-    """
-
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=16)
@@ -162,6 +175,8 @@ if __name__ == "__main__":
             label=f"PDF t={t}",
         )
     ax.legend()
-    plt.savefig(f"{out_dir}/posterior_generations.png")
+    plt.savefig(f"{out_dir}/posterior_event_count.png")
+    df, w = history.get_distributions(m=0)
+    plot_kde_matrix(df, w, limits=limits)
 
 

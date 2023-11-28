@@ -43,8 +43,6 @@ public static class Fitness
     public static double Linear(double x)
         => x;
 
-    // Represents the limitation of space in the nucleus - more contigs ==> more stress
-    // TODO: This needs to be validated
     public static double StressTerm(long refBaseCount, long baseCount)
         => 1 - baseCount / (double) refBaseCount;
 
