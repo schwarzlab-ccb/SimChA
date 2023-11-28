@@ -4,7 +4,7 @@ import numpy as np
 import os
 import argparse
 import platform
-import datetime as dt
+from datetime import datetime
 import json
 import matplotlib.pyplot as plt
 from pyabc import ABCSMC, RV, Distribution, settings, visualization, sampler
@@ -15,9 +15,7 @@ settings.set_figure_params('pyabc')
 
 def update_params_file(params):
     # Create the temporary parameter file
-    
-    foldername = f"{int(dt.datetime.now().timestamp())}_"+"_".join(str(p) for p in params.values())
-    
+    foldername = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-2]}_"+"_".join(str(p) for p in params.values()) 
     path = f"{pwd}/temp/{foldername}"
     subprocess.run([f"mkdir -p {path}"], shell = True)
     subprocess.run([f"cp simple_params.json {path}"], shell = True)
@@ -65,7 +63,7 @@ def run_simcha(params, genes_path, cohort_path, repeats):
     # Delete the temporary folder and files
     subprocess.run([f"rm -rf {param_file_path}"], shell=True)
     # Return the distance SimChA calculated
-    return float(last_line.split(":")[1].strip()
+    return float(last_line.split(":")[1].strip())
 
 def distance(x,y):
     return abs(x["distance"] - y["distance"])
