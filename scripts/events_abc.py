@@ -16,7 +16,7 @@ settings.set_figure_params('pyabc')
 
 def update_params_file(params):
     # Create the temporary parameter file
-    foldername = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-2]}_"+"_".join(str(p) for p in params.values()) 
+    foldername = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-5]}"#+"_".join(str(p) for p in params.values()) 
     path = f"{pwd}/temp/{foldername}"
     subprocess.run([f"mkdir -p {path}"], shell = True)
     subprocess.run([f"cp simple_params.json {path}"], shell = True)
@@ -29,22 +29,34 @@ def update_params_file(params):
         configs = json.load(json_file)
 
     configs["EventCount"] = int(params["n_events"])
-    configs["Signatures"]["CNs"]["Events"]["ChromDeletion"]["Prob"]        = params["w_chrom_del"]
-    configs["Signatures"]["CNs"]["Events"]["ChromDuplication"]["Prob"]     = params["w_chrom_dup"]
-    configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Prob"]  = params["w_int_dup"]
-    configs["Signatures"]["CNs"]["Events"]["Translocation"]["Prob"]        = params["w_transloc"]
-    configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Prob"]     = params["w_int_del"]
-    configs["Signatures"]["CNs"]["Events"]["InternalInversion"]["Prob"]    = params["w_int_inv"]
-    configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Prob"]  = params["w_inv_dup"]
-    configs["Signatures"]["CNs"]["Events"]["BreakageFusionBridge"]["Prob"] = params["w_bfb"]
-    configs["Signatures"]["CNs"]["Events"]["TailDeletion"]["Prob"]         = params["w_tail_del"]
-    configs["Signatures"]["CNs"]["Events"]["WholeGenomeDoubling"]["Prob"]  = params["w_wgd"]
+    # Events are unfortunately an array in the parameters file
     # The length-scales have to be rounded to integer status 
-    configs["Signatures"]["CNs"]["Events"]["InternalInversion"]["Size"]   = int(params["l_int_inv"]*100_000)
-    configs["Signatures"]["CNs"]["Events"]["InternalDeletion"]["Size"]    = int(params["l_int_del"]*100_000)
-    configs["Signatures"]["CNs"]["Events"]["InternalDuplication"]["Size"] = int(params["l_int_dup"]*100_000)
-    configs["Signatures"]["CNs"]["Events"]["InvertedDuplication"]["Size"] = int(params["l_inv_dup"]*100_000)
-    configs["Signatures"]["CNs"]["Events"]["Translocation"]["Size"] = int(params["l_transloc"]*100_000)
+    # ChromDeletion
+    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = float(params["w_chrom_del"])
+    # ChromDuplication
+    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = float(params["w_chrom_dup"])
+    # InternalDuplication
+    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = float(params["w_int_dup"])
+    configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
+    # InternalDeletion
+    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = float(params["w_int_del"])
+    configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
+    # InternalInversion
+    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = float(params["w_int_inv"])
+    configs["Signatures"]["CNs"]["Events"][4]["Size"] = int(params["l_int_inv"]*100_000)
+    # InvertedDuplication
+    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = float(params["w_inv_dup"])
+    configs["Signatures"]["CNs"]["Events"][5]["Size"] = int(params["l_inv_dup"]*100_000)
+    # BreakageFusionBridge    
+    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = float(params["w_bfb"])
+    # TailDeletion
+    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = float(params["w_tail_del"])
+    # Translocation
+    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = float(params["w_transloc"])
+    configs["Signatures"]["CNs"]["Events"][8]["Size"] = int(params["l_transloc"]*100_000)
+    # Whole-Genome Doubling
+    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["w_wgd"])
+    
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
     # Return the path to the config file
@@ -129,32 +141,33 @@ if __name__ == "__main__":
     l_int_inv   = RV("uniform", 1, 50),
     l_inv_dup   = RV("uniform", 1, 50),
     l_transloc  = RV("uniform", 1, 50))"""
-    limits[n_events] = (30, 150)
+    event_limit = dict(n_events = (30, 150))
+    limits.update(event_limit)
 
     transition = pyabc.AggregatedTransition(
 	mapping={
-		'n_events': pyabc.DiscreteJumpTransition(domain=event_count_values, p_stay=0.7)
-        'w_chrom_del' : pyabc.MultivariateNormalTransition(),
-        'w_chrom_dup' : pyabc.MultivariateNormalTransition(),
-        'w_int_dup'   : pyabc.MultivariateNormalTransition(),
-        'w_int_del'   : pyabc.MultivariateNormalTransition(),
-        'w_inv_dup'   : pyabc.MultivariateNormalTransition(),
-        'w_int_inv'   : pyabc.MultivariateNormalTransition(),
-        'w_bfb'       : pyabc.MultivariateNormalTransition(),
-        'w_tail_del'  : pyabc.MultivariateNormalTransition(),
-        'w_wgd'       : pyabc.MultivariateNormalTransition(),
-        'w_transloc'  : pyabc.MultivariateNormalTransition(),
-        'l_int_del'   : pyabc.MultivariateNormalTransition(),
-        'l_int_dup'   : pyabc.MultivariateNormalTransition(),
-        'l_int_inv'   : pyabc.MultivariateNormalTransition(),
-        'l_inv_dup'   : pyabc.MultivariateNormalTransition(),
-        'l_transloc'  : pyabc.MultivariateNormalTransition()
-        })	
+		'n_events': pyabc.DiscreteJumpTransition(domain=event_count_values, p_stay=0.7),
+		'w_chrom_del' : pyabc.MultivariateNormalTransition(),
+		'w_chrom_dup' : pyabc.MultivariateNormalTransition(),
+		'w_int_dup'   : pyabc.MultivariateNormalTransition(),
+		'w_int_del'   : pyabc.MultivariateNormalTransition(),
+		'w_inv_dup'   : pyabc.MultivariateNormalTransition(),
+		'w_int_inv'   : pyabc.MultivariateNormalTransition(),
+		'w_bfb'       : pyabc.MultivariateNormalTransition(),
+		'w_tail_del'  : pyabc.MultivariateNormalTransition(),
+		'w_wgd'       : pyabc.MultivariateNormalTransition(),
+		'w_transloc'  : pyabc.MultivariateNormalTransition(),
+		'l_int_del'   : pyabc.MultivariateNormalTransition(),
+		'l_int_dup'   : pyabc.MultivariateNormalTransition(),
+		'l_int_inv'   : pyabc.MultivariateNormalTransition(),
+		'l_inv_dup'   : pyabc.MultivariateNormalTransition(),
+		'l_transloc'  : pyabc.MultivariateNormalTransition()
+		})	
 	
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=16)
-    abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 100, sampler = sampler)
+    abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 150, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
     abc.new("sqlite:///"+db_path, observed_data)
@@ -177,6 +190,7 @@ if __name__ == "__main__":
     ax.legend()
     plt.savefig(f"{out_dir}/posterior_event_count.png")
     df, w = history.get_distributions(m=0)
-    plot_kde_matrix(df, w, limits=limits)
-
+    ax = plot_kde_matrix(df, w, limits=limits)
+    fig = ax.get_figure()
+    fig.savefig(f"{out_dir}/kde_matrix.png", dpi=300, bbox_inches="tight")
 
