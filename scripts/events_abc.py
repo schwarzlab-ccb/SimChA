@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
 import numpy as np
-import random as r
 import os
 import argparse
 import platform
