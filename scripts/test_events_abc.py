@@ -125,16 +125,16 @@ if __name__ == "__main__":
 
     # Uniform prior distributions for the various different properties of the simple events
     limits = dict(
-            w_chrom_del = (1, 11),
-            w_chrom_dup = (1, 11),
+            w_chrom_del = (1, 21),
+            w_chrom_dup = (1, 21),
             w_int_dup   = (1, 101),
             w_int_del   = (1, 101),
             w_int_inv   = (1, 101),
             w_inv_dup   = (1, 101),
             w_bfb       = (1, 11),
             w_tail_del  = (1, 11),
-            w_wgd       = (0.01, 0.11),
-            w_transloc  = (1, 26),
+            w_wgd       = (0.01, 0.21),
+            w_transloc  = (1, 51),
             l_int_dup   = (1, 51), 
             l_inv_dup   = (1, 51),
             l_int_del   = (1, 51),

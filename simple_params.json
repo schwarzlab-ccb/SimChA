@@ -118,7 +118,7 @@
 		]
 	  },
 	  "SNVs": {
-		"Prob": 100,
+		"Prob": 0,
 		"Events": [
 		  {
 			"Type": "SNV",
