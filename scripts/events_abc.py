@@ -86,8 +86,9 @@ def distance(x,y):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     #parser.add_argument('-R', "--repeats", type=int, default=500, help="Number of SimChA simulated samples to generate for each pyABC sample")
-    parser.add_argument('-N', "--name",type=str, default="", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
+    parser.add_argument('-N', "--name",type=str, default="events_abc_results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
     parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples to generate for each SimChA run")
+    parser.add_argument('--n_procs', type=int, default = 8, help="Number of parallel threads that pyABC will use")
     args = parser.parse_args()
 
 
@@ -102,7 +103,7 @@ if __name__ == "__main__":
 
 
     pwd = os.getcwd()
-    out_dir = "events_abc_results"
+    out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
     # Uniform prior distributions for the various different properties of the simple events
@@ -172,7 +173,7 @@ if __name__ == "__main__":
 	
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
-    sampler = sampler.MulticoreEvalParallelSampler(n_procs=16)
+    sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.n_procs)
     abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 150, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
