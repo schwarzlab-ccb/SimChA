@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples/repeats to generate for each SimChA run")
     parser.add_argument('--n_procs', type=int, default = 8, help="Number of parallel threads that pyABC will use")
     parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
-    parser.add_argumetn("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
+    parser.add_argument("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
     parser.add_argument("--min_eps", type=float, default=0.01, help="Minimum acceptance threshold before ending the ABC Sampling prematurely")
     args = parser.parse_args()
 
