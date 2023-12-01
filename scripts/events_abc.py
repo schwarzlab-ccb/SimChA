@@ -195,7 +195,7 @@ if __name__ == "__main__":
         )
     ax.legend()
     plt.savefig(f"{out_dir}/posterior_event_count.png")
-    df, w = history.get_distributions(m=0)
+    df, w = history.get_distribution(m=0)
     ax = plot_kde_matrix(df, w, limits=limits)
     fig = ax.get_figure()
     fig.savefig(f"{out_dir}/kde_matrix.png", dpi=300, bbox_inches="tight")
