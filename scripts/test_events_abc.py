@@ -106,7 +106,7 @@ if __name__ == "__main__":
     genes_path = "data/hg19_1000"
 
     # Build the program once at the beginning in case any changes have been made to SimChA
-    subprocess.run(["dotnet build"], shell=True)
+    subprocess.run(["dotnet build SimChA"], shell=True)
 
     # Set up the necessary components for the ground truth
     param_file = f"{pwd}/simple_params.json"

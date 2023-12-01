@@ -99,7 +99,7 @@ if __name__ == "__main__":
     genes_path = "data/hg19_1000"
 
     # Build the program once for the corresponding thread
-    subprocess.run(["dotnet build"], shell=True)
+    subprocess.run(["dotnet build SimChA"], shell=True)
     
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
