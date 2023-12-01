@@ -80,6 +80,7 @@ def run_simcha(params, genes_path, cohort_path, repeats):
     # Return the distance SimChA calculated
     return float(last_line.split(":")[1].strip())
 
+# Distance function required by pyABC, but note that SimChA does the actual calculation, and the observed data is set to distance 0.
 def distance(x,y):
     return abs(x["distance"] - y["distance"])
 
@@ -128,26 +129,11 @@ if __name__ == "__main__":
             l_int_del   = (1, 51),
             l_int_inv   = (1, 51),
             l_transloc  = (1, 101))
-
+    # The length scale of events in is 100kb.
 
     prior = Distribution(n_events    = RV("rv_discrete", values=(event_count_values, event_count_prob)),
                          **{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
-    """w_chrom_del = RV("uniform", 1, 10),
-    w_chrom_dup = RV("uniform", 1, 10), 
-    w_int_dup   = RV("uniform", 1, 100),
-    w_int_del   = RV("uniform", 1, 100),
-    w_inv_dup   = RV("uniform", 1, 100),
-    w_int_inv   = RV("uniform", 1, 100),
-    w_bfb       = RV("uniform", 1, 10),
-    w_tail_del  = RV("uniform", 1, 10),
-    w_wgd       = RV("uniform", 0.01, 0.1),
-    w_transloc  = RV("uniform", 1, 25),
-    # Lengths are in units of 100kb
-    l_int_dup   = RV("uniform", 1, 50),
-    l_int_del   = RV("uniform", 1, 50),
-    l_int_inv   = RV("uniform", 1, 50),
-    l_inv_dup   = RV("uniform", 1, 50),
-    l_transloc  = RV("uniform", 1, 50))"""
+    
     event_limit = dict(n_events = (30, 150))
     limits.update(event_limit)
 
@@ -174,7 +160,7 @@ if __name__ == "__main__":
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.n_procs)
-    abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 150, sampler = sampler)
+    abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 300, sampler = sampler)
     # ABC-SMC output is a SQL database
     db_path = f"{out_dir}/test.db"
     abc.new("sqlite:///"+db_path, observed_data)
