@@ -104,7 +104,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     genes_path = "data/hg19_1000"
-
+    pwd = os.getcwd()
+    
     # Build the program once at the beginning in case any changes have been made to SimChA
     subprocess.run(["dotnet build SimChA"], shell=True)
 
@@ -112,7 +113,7 @@ if __name__ == "__main__":
     param_file = f"{pwd}/simple_params.json"
     cohort_dir_path = "out/ground_truth"
     # Generate the simulated data as the ground truth
-    generate_cohort(param_file, genes_path, cohort_dir_path, repeats)
+    generate_cohort(param_file, genes_path, cohort_dir_path, args.repeats)
     cohort_path = "out/ground_truth/copynumbers.tsv"
 
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
@@ -120,7 +121,6 @@ if __name__ == "__main__":
         return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats)}
     
     # Create the output directory for the final plots as well as the SQL database
-    pwd = os.getcwd()
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
