@@ -29,7 +29,6 @@ def update_params_file(params):
     with open(file_path, 'r', encoding='utf-8') as json_file:
         configs = json.load(json_file)
 
-    configs["EventCount"] = int(params["n_events"])
     # Events are unfortunately an array in the parameters file
     # Also round the weights to the nearest 3 decimal places
     ndp = 3
@@ -88,8 +87,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     #parser.add_argument('-R', "--repeats", type=int, default=500, help="Number of SimChA simulated samples to generate for each pyABC sample")
     parser.add_argument('-N', "--name",type=str, default="events_abc_results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
-    parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples to generate for each SimChA run")
+    parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples/repeats to generate for each SimChA run")
     parser.add_argument('--n_procs', type=int, default = 8, help="Number of parallel threads that pyABC will use")
+    parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
+    parser.add_argumetn("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
+    parser.add_argument("--min_eps", type=float, default=0.01, help="Minimum acceptance threshold before ending the ABC Sampling prematurely")
     args = parser.parse_args()
 
 
@@ -99,20 +101,16 @@ if __name__ == "__main__":
     # Build the program once for the corresponding thread
     subprocess.run(["dotnet build"], shell=True)
     
+    # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
         return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats)}
-
-
+    
+    # Create the output directory for the final plots as well as the SQL database
     pwd = os.getcwd()
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
     # Uniform prior distributions for the various different properties of the simple events
-    # We can also remove the number of events if we want
-    # Event count is an integer so it has to be handled slightly differently
-    event_count_values = np.arange(30,151)
-    event_count_prob   = [1/len(event_count_values)]*len(event_count_values)
-
     limits = dict(
             w_chrom_del = (1, 11),
             w_chrom_dup = (1, 11),
@@ -130,52 +128,30 @@ if __name__ == "__main__":
             l_int_inv   = (1, 51),
             l_transloc  = (1, 101))
     # The length scale of events in is 100kb.
-
-    prior = Distribution(n_events    = RV("rv_discrete", values=(event_count_values, event_count_prob)),
-                         **{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
+    # Priors are simply a uniform distribution between their two limits
+    prior = Distribution(**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
     
-    event_limit = dict(n_events = (30, 150))
-    limits.update(event_limit)
-
-    transition = pyabc.AggregatedTransition(
-	mapping={
-		'n_events': pyabc.DiscreteJumpTransition(domain=event_count_values, p_stay=0.7),
-		'w_chrom_del' : pyabc.MultivariateNormalTransition(),
-		'w_chrom_dup' : pyabc.MultivariateNormalTransition(),
-		'w_int_dup'   : pyabc.MultivariateNormalTransition(),
-		'w_int_del'   : pyabc.MultivariateNormalTransition(),
-		'w_inv_dup'   : pyabc.MultivariateNormalTransition(),
-		'w_int_inv'   : pyabc.MultivariateNormalTransition(),
-		'w_bfb'       : pyabc.MultivariateNormalTransition(),
-		'w_tail_del'  : pyabc.MultivariateNormalTransition(),
-		'w_wgd'       : pyabc.MultivariateNormalTransition(),
-		'w_transloc'  : pyabc.MultivariateNormalTransition(),
-		'l_int_del'   : pyabc.MultivariateNormalTransition(),
-		'l_int_dup'   : pyabc.MultivariateNormalTransition(),
-		'l_int_inv'   : pyabc.MultivariateNormalTransition(),
-		'l_inv_dup'   : pyabc.MultivariateNormalTransition(),
-		'l_transloc'  : pyabc.MultivariateNormalTransition()
-		})	
-	
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.n_procs)
-    abc = ABCSMC(model_wrapper, prior, distance_function=distance, transitions=transition, population_size = 300, sampler = sampler)
+    abc = ABCSMC(model_wrapper, prior, distance_function=distance, population_size = args.n_pop, sampler = sampler)
     # ABC-SMC output is a SQL database
-    db_path = f"{out_dir}/test.db"
+    db_path = f"{out_dir}/parameters.db"
     abc.new("sqlite:///"+db_path, observed_data)
-
-    history = abc.run(minimum_epsilon = 0.01, max_nr_populations = 10)
-
+    
+    # Main part of the ABC Sampling
+    history = abc.run(minimum_epsilon = args.min_eps, max_nr_populations = args.max_gen)
+    
+    # ID 
     fig, ax = plt.subplots()
     for t in range(history.max_t + 1):
         df, w = history.get_distribution(t=t)
         visualization.plot_kde_1d(
             df,
             w,
-            xmin=30,
-            xmax=150,
-            x="n_events",
+            xmin=0.01,
+            xmax=0.11,
+            x="w_wgd",
             xname=r"Event Count",
             ax=ax,
             label=f"PDF t={t}",
