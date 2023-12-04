@@ -34,33 +34,34 @@ def update_params_file(params):
 
     # Events are unfortunately an array in the parameters file
     # Also round the weights to the nearest 3 decimal places
-    ndp = 3
+    ndp = 8
+    event_weights = params["event_weights"]
     # The length-scales have to be rounded to integer status 
     # ChromDeletion
-    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(event_weights[0]), ndp)
     # ChromDuplication
-    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["w_chrom_dup"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(event_weights[1]), ndp)
     # InternalDuplication
-    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["w_int_dup"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(event_weights[2]), ndp)
     configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
     # InternalDeletion
-    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["w_int_del"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(event_weights[3]), ndp)
     configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
     # InternalInversion
-    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(params["w_int_inv"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(event_weights[4]), ndp)
     configs["Signatures"]["CNs"]["Events"][4]["Size"] = int(params["l_int_inv"]*100_000)
     # InvertedDuplication
-    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(params["w_inv_dup"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(event_weights[5]), ndp)
     configs["Signatures"]["CNs"]["Events"][5]["Size"] = int(params["l_inv_dup"]*100_000)
     # BreakageFusionBridge    
-    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["w_bfb"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(event_weights[6]), ndp)
     # TailDeletion
-    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["w_tail_del"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(event_weights[7]), ndp)
     # Translocation
-    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(params["w_transloc"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(event_weights[8]), ndp)
     configs["Signatures"]["CNs"]["Events"][8]["Size"] = int(params["l_transloc"]*100_000)
     # Whole-Genome Doubling
-    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["w_wgd"])
+    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(event_weights[9])
     
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -124,26 +125,24 @@ if __name__ == "__main__":
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-    # Uniform prior distributions for the various different properties of the simple events
+    # The event weights are normalized in SimChA, so pyABC needs to sample from a Dirichlet distribution
+    # to give meaningful results. Assume the uniform over simplex
+    alpha_params = np.array([1 for _ in range(10)])
+    
+    # The length parameters are not Dirichlet-distributed 
     limits = dict(
-            w_chrom_del = (1, 21),
-            w_chrom_dup = (1, 21),
-            w_int_dup   = (1, 101),
-            w_int_del   = (1, 101),
-            w_int_inv   = (1, 101),
-            w_inv_dup   = (1, 101),
-            w_bfb       = (1, 11),
-            w_tail_del  = (1, 11),
-            w_wgd       = (0.01, 0.21),
-            w_transloc  = (1, 51),
-            l_int_dup   = (1, 51), 
-            l_inv_dup   = (1, 51),
-            l_int_del   = (1, 51),
-            l_int_inv   = (1, 51),
+            l_int_dup   = (1, 101), 
+            l_inv_dup   = (1, 101),
+            l_int_del   = (1, 101),
+            l_int_inv   = (1, 101),
             l_transloc  = (1, 101))
+    # Set the priors
+    prior = Distribution(event_weights=RV("dirichlet", alpha_params), 
+			**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
+    # Uniform prior distributions for the various different properties of the simple events
     # The length scale of events in is 100kb.
     # Priors are simply a uniform distribution between their two limits
-    prior = Distribution(**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
+    #prior = Distribution(**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
     
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
@@ -163,10 +162,10 @@ if __name__ == "__main__":
         visualization.plot_kde_1d(
             df,
             w,
-            xmin=0.01,
-            xmax=0.11,
-            x="w_wgd",
-            xname=r"Event Count",
+            xmin=0,
+            xmax=0.5,
+            x="event_weights"[9],
+            xname=r"WGD weight",
             ax=ax,
             label=f"PDF t={t}",
         )
