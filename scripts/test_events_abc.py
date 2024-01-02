@@ -184,9 +184,9 @@ if __name__ == "__main__":
             df,
             w,
             xmin=0,
-            xmax=0.5,
-            x="event_weights"[9],
-            xname=r"WGD weight",
+            xmax=1,
+            x="transloc",
+            xname=r"translocation weight",
             ax=ax,
             label=f"PDF t={t}",
         )
