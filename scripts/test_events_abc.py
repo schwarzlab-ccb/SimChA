@@ -31,37 +31,50 @@ def update_params_file(params):
     # Update the parameter file
     with open(file_path, 'r', encoding='utf-8') as json_file:
         configs = json.load(json_file)
+    
+    # Event weights have to be turned into Dirichlet-variables
+    # Set the weight for WGD to be quite small. May need to see how varying this changes the results
+    w_wgd       = 0.005
+    weight_sum = params["chrom_del"] + params["chrom_dup"] + params["int_dup"] + params["int_del"] + params["int_inv"] + params["inv_dup"] + params["bfb"] + params["tail_del"] + params["transloc"] + w_wgd
+    w_chrom_del = params["chrom_del"] / weight_sum
+    w_chrom_dup = params["chrom_dup"] / weight_sum
+    w_int_dup   = params["int_dup"] / weight_sum
+    w_int_del   = params["int_del"] / weight_sum
+    w_int_inv   = params["int_inv"] / weight_sum
+    w_inv_dup   = params["inv_dup"] / weight_sum
+    w_bfb       = params["bfb"] / weight_sum
+    w_tail_del  = params["tail_del"] / weight_sum
+    w_transloc  = params["transloc"] / weight_sum
+    w_wgd /= weight_sum
 
-    # Events are unfortunately an array in the parameters file
-    # Also round the weights to the nearest 3 decimal places
+    # Also round the event parameters to the nearest number of decimal places
     ndp = 8
-    event_weights = params["event_weights"][0]
     # The length-scales have to be rounded to integer status 
     # ChromDeletion
-    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(event_weights[0]), ndp)
+    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(w_chrom_del), ndp)
     # ChromDuplication
-    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(event_weights[1]), ndp)
+    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(w_chrom_dup), ndp)
     # InternalDuplication
-    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(event_weights[2]), ndp)
+    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(w_int_dup), ndp)
     configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
     # InternalDeletion
-    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(event_weights[3]), ndp)
+    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(w_int_del), ndp)
     configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
     # InternalInversion
-    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(event_weights[4]), ndp)
+    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(w_int_inv), ndp)
     configs["Signatures"]["CNs"]["Events"][4]["Size"] = int(params["l_int_inv"]*100_000)
     # InvertedDuplication
-    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(event_weights[5]), ndp)
+    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(w_inv_dup), ndp)
     configs["Signatures"]["CNs"]["Events"][5]["Size"] = int(params["l_inv_dup"]*100_000)
     # BreakageFusionBridge    
-    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(event_weights[6]), ndp)
+    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(w_bfb), ndp)
     # TailDeletion
-    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(event_weights[7]), ndp)
+    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(w_tail_del), ndp)
     # Translocation
-    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(event_weights[8]), ndp)
+    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(w_transloc), ndp)
     configs["Signatures"]["CNs"]["Events"][8]["Size"] = int(params["l_transloc"]*100_000)
     # Whole-Genome Doubling
-    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(event_weights[9])
+    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(w_wgd)
     
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -97,14 +110,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     #parser.add_argument('-R', "--repeats", type=int, default=500, help="Number of SimChA simulated samples to generate for each pyABC sample")
     parser.add_argument('-N', "--name",type=str, default="test_events_abc_results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
-    parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples/repeats to generate for each SimChA run")
+    parser.add_argument("-R", "--repeats", type=int, default=2000, help="Number of samples/repeats to generate for each SimChA run")
     parser.add_argument('--n_procs', type=int, default = 8, help="Number of parallel threads that pyABC will use")
     parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
     parser.add_argument("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
     parser.add_argument("--min_eps", type=float, default=0.01, help="Minimum acceptance threshold before ending the ABC Sampling prematurely")
+    parser.add_argument("-G", "--genes_path", default="data/hg19_1000", help="Path to the genes list to be used.")
     args = parser.parse_args()
 
-    genes_path = "data/hg19_1000"
+    genes_path = args.genes_path
     pwd = os.getcwd()
     
     # Build the program once at the beginning in case any changes have been made to SimChA
@@ -125,19 +139,26 @@ if __name__ == "__main__":
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-    # The event weights are normalized in SimChA, so pyABC needs to sample from a Dirichlet distribution
-    # to give meaningful results. Assume the uniform over simplex
-    alpha_params = np.array([1 for _ in range(10)])
-    
-    # The length parameters are not Dirichlet-distributed 
+    # The length parameters are not Dirichlet-distributed, and are in units of 100kb 
     limits = dict(
-            l_int_dup   = (1, 101), 
-            l_inv_dup   = (1, 101),
-            l_int_del   = (1, 101),
-            l_int_inv   = (1, 101),
-            l_transloc  = (1, 101))
+            l_int_dup   = (1, 100), 
+            l_inv_dup   = (1, 100),
+            l_int_del   = (1, 100),
+            l_int_inv   = (1, 100),
+            l_transloc  = (1, 100))
     # Set the priors
-    prior = Distribution(event_weights=RV("dirichlet", alpha_params), 
+
+    # The event weights are normalized in SimChA, so pyABC needs to sample from a Dirichlet distribution
+    # to give meaningful results. Assume the uniform over simplex. WGD is set inside of the simulator function
+    prior = Distribution(chrom_del = pyabc.RV("uniform", 0, 1),
+                         chrom_dup = pyabc.RV("uniform", 0, 1),
+                         int_dup   = pyabc.RV("uniform", 0, 1),
+                         int_del   = pyabc.RV("uniform", 0, 1),
+                         int_inv   = pyabc.RV("uniform", 0, 1),
+                         inv_dup   = pyabc.RV("uniform", 0, 1),
+                         bfb       = pyabc.RV("uniform", 0, 1),
+                         tail_del  = pyabc.RV("uniform", 0, 1),
+                         transloc  = pyabc.RV("uniform", 0, 1),
 			**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
     # Uniform prior distributions for the various different properties of the simple events
     # The length scale of events in is 100kb.
