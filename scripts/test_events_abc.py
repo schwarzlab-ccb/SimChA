@@ -35,7 +35,7 @@ def update_params_file(params):
     # Event weights have to be turned into Dirichlet-variables
     # Set the weight for WGD to be quite small. May need to see how varying this changes the results
     w_wgd       = 0.005
-    weight_sum = params["chrom_del"] + params["chrom_dup"] + params["int_dup"] + params["int_del"] + params["int_inv"] + params["inv_dup"] + params["bfb"] + params["tail_del"] + params["transloc"] + w_wgd
+    weight_sum  = params["chrom_del"] + params["chrom_dup"] + params["int_dup"] + params["int_del"] + params["int_inv"] + params["inv_dup"] + params["bfb"] + params["tail_del"] + params["transloc"] + w_wgd
     w_chrom_del = params["chrom_del"] / weight_sum
     w_chrom_dup = params["chrom_dup"] / weight_sum
     w_int_dup   = params["int_dup"] / weight_sum
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                          bfb       = pyabc.RV("uniform", 0, 1),
                          tail_del  = pyabc.RV("uniform", 0, 1),
                          transloc  = pyabc.RV("uniform", 0, 1),
-			**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
+			             **{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
     # Uniform prior distributions for the various different properties of the simple events
     # The length scale of events in is 100kb.
     # Priors are simply a uniform distribution between their two limits
