@@ -41,9 +41,16 @@ def update_params_file(params):
     # Update the parameter file
     with open(file_path, 'r', encoding='utf-8') as json_file:
         configs = json.load(json_file)
-    
-    configs["Fitness"]["Stress"], configs["Fitness"]["TsgOg"], configs["Fitness"]["Essentiality"] = params["abc"]
-    configs["Fitness"]["TotalStrength"] = params["w_strength"]
+
+    # The stress, TSG/OG, and essentiality weights sum to 1, so we have to give the essentiality
+    # score a default then normalize the three
+    gamma = 0.1
+    fitness_sum = float(params["alpha"]) + float(params["beta"]) + gamma
+
+    configs["Fitness"]["Stress"] = float(params["alpha"]) / fitness_sum
+    configs["Fitness"]["TsgOg"]  = float(params["beta"]) / fitness_sum
+    configs["Fitness"]["Essentiality"] = gamma / fitness_sum
+    configs["Fitness"]["TotalStrength"] = float(params["w_strength"])
 
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -54,13 +61,13 @@ def run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, rep
     param_file_path = update_params_file(params)
 
     cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/fitted_params.json -R {repeats} -O {param_file_path}/out --optimization fitness -D {genes_path} -M -B {bootstrap_path} -P {cohort_path} --binned-samples {binned_path} --autosomes-only"
-    output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
+    output = subprocess.check_output([cmd], universal_newlines = True, shell = True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
     last_line = output.strip().split("\n")[-1]
 
     # Delete the temporary folder and files
-    subprocess.run([f"rm -rf {param_file_path}"], shell=True)
+    subprocess.run([f"rm -rf {param_file_path}"], shell = True)
     # Return the distance SimChA calculated
     return float(last_line.split(":")[1].strip())
 
@@ -73,7 +80,7 @@ def check_inputs(in_path, genes_path, cohort_path):
     binned_file = "binned_CNs.tsv"
 
     if !os.path.isdir(in_path):
-        subprocess.run([f"mkdir -p in_path"], shell=True)
+        subprocess.run([f"mkdir -p in_path"], shell = True)
     # bootstrap file needed for sampling the fitnesses of the mcmc produces clones
     if !os.path.isfile(os.path.join(in_path, clones_file)):
         cmd = f"dotnet run --no-build --project SimChA -P {cohort_path} -O {in_path} -D {genes_path}"
@@ -94,15 +101,17 @@ if __name__ == "__main__":
     parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
     parser.add_argument("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
     parser.add_argument("--min_eps", type=float, default=0.01, help="Minimum acceptance threshold before ending the ABC Sampling prematurely")
+    parser.add_argument("-G", "--genes_path", default="data/hg19_1000", help="Path to the genes list to be used.")
+    parser.add_argument("-D", "--data_path", default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
     args = parser.parse_args()
 
     # Build the program once at the beginning
-    subprocess.run(["dotnet build SimChA"])
+    subprocess.run(["dotnet build SimChA"], shell = True)
     
     # Initialize the input required for the fitness sampling.
     # These inputs are run-agnostic, so we just set it up once at the beginning
-    cohort_path = "data/pcawg_filtered_95_pc.tsv"
-    genes_path = "data/hg19_1000"
+    cohort_path = args.data_path
+    genes_path = args.genes_path
     inputs_path = "fitness_in"
     check_inputs(inputs_path, genes_path, cohort_path)
 
@@ -118,15 +127,9 @@ if __name__ == "__main__":
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-    # Using symmetric concentration parameters for the Dirichlet distribution.
-    # We use a Dirichlet distribution so that a, b, c sum to 1 and the sampling takes this
-    # into account.
-    # To help the sampling, we will use the benchmark values obtained from
-    # the SimChA simulations without fitness
-    # TODO: insert the correct parameters once we have the event parameters
-    initial_guess = np.array([0.961888, 0.035504, 0.002608]) * args.weight 
-    prior = Distribution(abc=RV("dirichlet", initial_guess ), w_strength = RV("uniform", 0, 25))
-
+    # The fitness parameters (a, b, and c) are Dirichlet-distributed, so we keep c fixed
+    # and normalize to 1 in the function "update_params_file"
+    prior = Distribution(alpha=RV("uniform", 0, 1), beta=RV("uniform", 0, 1), w_strength = RV("uniform", 0, 1))
     # SimChA calculates the distance between simulated and observation, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.n_procs)
