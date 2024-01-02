@@ -35,7 +35,7 @@ def update_params_file(params):
     # Events are unfortunately an array in the parameters file
     # Also round the weights to the nearest 3 decimal places
     ndp = 8
-    event_weights = params["event_weights"]
+    event_weights = params["event_weights"][0]
     # The length-scales have to be rounded to integer status 
     # ChromDeletion
     configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(event_weights[0]), ndp)
