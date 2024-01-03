@@ -82,10 +82,12 @@ def update_params_file(params):
     return path
 
 
-def run_simcha(params, genes_path, cohort_path, repeats):
+def run_simcha(params, genes_path, cohort_path, repeats, all_chromosomes):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path} --autosomes-only"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
+    if not all_chromosomes:
+        cmd += " --autosomes_only"
     output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
@@ -100,6 +102,12 @@ def run_simcha(params, genes_path, cohort_path, repeats):
 def distance(x,y):
     return abs(x["distance"] - y["distance"])
 
+# Function to generate the ground-truth SimChA simulated dataset
+def generate_cohort(param_file, genes_path, out_path, repeats):
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file} -R {repeats} -O {out_path} -D {genes_path}"
+    subprocess.run([cmd], shell=True)
+    return
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     parser.add_argument('-N', "--name",type=str, default="events_abc_results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
@@ -108,23 +116,34 @@ if __name__ == "__main__":
     parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
     parser.add_argument("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
     parser.add_argument("--min_eps", type=float, default=0.01, help="Minimum acceptance threshold before ending the ABC Sampling prematurely")
-    parser.add_argument("-G", "--genes_path", default="data/hg19_1000", help="Path to the genes list to be used.")
-    parser.add_argument("-D", "--data_path", default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
+    parser.add_argument("-G", "--genes_path", type=str, default="data/hg19_1000", help="Path to the genes list to be used.")
+    parser.add_argument("-D", "--data_path", type=str, default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
+    parser.add_argument("-T", "--test", action="store_true", help="Flag to use SimChA-generated data as the ground-truth rather than real data samples.")
+    parser.add_argument("-P", "--param_file", type=str, default="simple_params.json", help="Parameter file used in the case of SimChA-generated ground truth.")
+    parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
     args = parser.parse_args()
 
-
-    cohort_path = args.data_path
     genes_path = args.genes_path
-
+    pwd = os.getcwd()
     # Build the program once for the corresponding thread
     subprocess.run(["dotnet build SimChA"], shell = True)
+
+    # If we use SimChA-generated data as the ground-truth, we first have to generate that data
+    param_file = os.path.join(pwd, args.param_file)
+    if args.test:
+        cohort_dir_path = "out/ground_truth"
+        # Generate the simulated data
+        generate_cohort(param_file, genes_path, cohort_dir_path, args.repeats)
+        cohort_path = "out/ground_truth/copynumbers.tsv"
+    else:
+        cohort_path = args.data_path
+
     
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
-        return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats)}
+        return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats, args.all_chromosomes)}
     
     # Create the output directory for the final plots as well as the SQL database
-    pwd = os.getcwd()
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
