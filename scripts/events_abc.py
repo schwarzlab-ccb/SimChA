@@ -81,16 +81,19 @@ def update_params_file(params):
     # Return the path to the config file
     return path
 
-
+# Main function of the pyABC sampling (usually called the 'model')
 def run_simcha(params, genes_path, cohort_path, repeats, all_chromosomes):
+    # Given a sampled set of parameters, update the input config file of SimChA
     param_file_path = update_params_file(params)
-
+    
+    # Run command for SimChA
     cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
     if not all_chromosomes:
         cmd += " --autosomes_only"
-    output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
+
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
+    output = subprocess.check_output([cmd], universal_newlines=True, shell=True)
     last_line = output.strip().split("\n")[-1]
 
     # Delete the temporary folder and files
@@ -111,7 +114,7 @@ def generate_cohort(param_file, genes_path, out_path, repeats):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     parser.add_argument('-N', "--name",type=str, default="events_abc_results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
-    parser.add_argument("-r", "--repeats", type=int, default=2000, help="Number of samples/repeats to generate for each SimChA run")
+    parser.add_argument("-R", "--repeats", type=int, default=2000, help="Number of samples/repeats to generate for each SimChA run")
     parser.add_argument('--n_procs', type=int, default = 8, help="Number of parallel threads that pyABC will use")
     parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
     parser.add_argument("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
@@ -125,7 +128,7 @@ if __name__ == "__main__":
 
     genes_path = args.genes_path
     pwd = os.getcwd()
-    # Build the program once for the corresponding thread
+    # Build the program once for the corresponding thread, in case any changes have been made to SimChA
     subprocess.run(["dotnet build SimChA"], shell = True)
 
     # If we use SimChA-generated data as the ground-truth, we first have to generate that data
@@ -137,7 +140,6 @@ if __name__ == "__main__":
         cohort_path = "out/ground_truth/copynumbers.tsv"
     else:
         cohort_path = args.data_path
-
     
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
