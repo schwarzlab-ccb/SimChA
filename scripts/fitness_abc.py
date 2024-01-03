@@ -57,13 +57,16 @@ def update_params_file(params):
     # Return the path to the config file
     return path
 
-def run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, repeats):
+def run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, repeats, all_chromosomes):
     param_file_path = update_params_file(params)
 
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/fitted_params.json -R {repeats} -O {param_file_path}/out --optimization fitness -D {genes_path} -M -B {bootstrap_path} -P {cohort_path} --binned-samples {binned_path} --autosomes-only"
-    output = subprocess.check_output([cmd], universal_newlines = True, shell = True)
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/fitted_params.json -R {repeats} -O {param_file_path}/out --optimization fitness -D {genes_path} -M -B {bootstrap_path} -P {cohort_path} --binned-samples {binned_path}"
+    if not all_chromosomes:
+        cmd += " --autosomes_only"
+
     # SimChA produces as its output the Euclidean sum of Wasserstein distances for each of the 
     # characteristic features of cancer genomes, printing the double to the command 
+    output = subprocess.check_output([cmd], universal_newlines = True, shell = True)
     last_line = output.strip().split("\n")[-1]
 
     # Delete the temporary folder and files
@@ -85,11 +88,10 @@ def check_inputs(in_path, genes_path, cohort_path):
     if !os.path.isfile(os.path.join(in_path, clones_file)):
         cmd = f"dotnet run --no-build --project SimChA -P {cohort_path} -O {in_path} -D {genes_path}"
         subprocess.run([cmd], shell = True)
-
+    # To avoid having to generate the binned copy-number profiles for each run of SimChA, we do it once here if the file does not exist.
     if !os.path.isfile(os.path.join(in_path, binned_file)):
         cmd = f"dotnet run --no-build --project SimChA -P {cohort_path} -O {in_path} --bin-samples"
         subprocess.run([cmd], shell = True)
-      
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
@@ -101,8 +103,9 @@ if __name__ == "__main__":
     parser.add_argument("--n_pop", type=int, default=150, help="Population size, i.e. number of accepted samples (particles) to move on to new generation")
     parser.add_argument("--max_gen", type=int, default=10, help="Maximum number of generations to consider")
     parser.add_argument("--min_eps", type=float, default=0.01, help="Minimum acceptance threshold before ending the ABC Sampling prematurely")
-    parser.add_argument("-G", "--genes_path", default="data/hg19_1000", help="Path to the genes list to be used.")
-    parser.add_argument("-D", "--data_path", default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
+    parser.add_argument("-G", "--genes_path", type=str, default="data/hg19_1000", help="Path to the genes list to be used.")
+    parser.add_argument("-D", "--data_path", type=str, default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
+    parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
     args = parser.parse_args()
 
     # Build the program once at the beginning
@@ -120,7 +123,7 @@ if __name__ == "__main__":
 
     # We use a wrapper function so that we can run SimChA with the relevant inputs and we only need to change them here
     def model_wrapper(params):
-        return {"distance": run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats)}
+        return {"distance": run_simcha(params, genes_path, cohort_path, bootstrap_path, binned_path, args.repeats, args.all_chromosomes)}
 
 
     pwd = os.getcwd()
@@ -129,7 +132,7 @@ if __name__ == "__main__":
 
     # The fitness parameters (a, b, and c) are Dirichlet-distributed, so we keep c fixed
     # and normalize to 1 in the function "update_params_file"
-    prior = Distribution(alpha=RV("uniform", 0, 1), beta=RV("uniform", 0, 1), w_strength = RV("uniform", 0, 1))
+    prior = Distribution(alpha=RV("uniform", 0, 1), beta=RV("uniform", 0, 1), w_strength = RV("uniform", 0.01, 25))
     # SimChA calculates the distance between simulated and observation, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.n_procs)
