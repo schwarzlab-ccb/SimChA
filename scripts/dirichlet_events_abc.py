@@ -13,54 +13,73 @@ from pyabc.visualization import plot_kde_matrix
 from pyabc.populationstrategy import ConstantPopulationSize
 import pyabc
 
+###########################
+#
 # This python program is designed to perform parameter inference of the simple
 # event parameters in SimChA using the python module pyABC.
+# Note that this uses a pseudo-Dirichlet restriction on the event weights
+#
+########@##################
 
 settings.set_figure_params('pyabc')
 
-def update_params_file(param_file, params):
+def update_params_file(params):
     # Create the temporary parameter file with a random parameter selected as the suffix
     foldername = f"{uuid.uuid4()}" 
     path = f"{pwd}/temp/{foldername}"
     subprocess.run([f"mkdir -p {path}"], shell = True)
-    subprocess.run([f"cp {param_file} {path}"], shell = True)
+    subprocess.run([f"cp simple_params.json {path}"], shell = True)
     # Create the output subdirectory
     subprocess.run([f"mkdir -p {path}/out"], shell=True)
-    file_path = f"{path}/{param_file}"
+    file_path = f"{path}/simple_params.json"
 
     # Update the parameter file
     with open(file_path, 'r', encoding='utf-8') as json_file:
         configs = json.load(json_file)
 
-    # Events are unfortunately an array in the parameters file
+    # Event weights have to be turned into Dirichlet-variables
+    # Set the weight for WGD to be quite small. May need to see how varying this changes the results
+    w_wgd       = 0.005
+    weight_sum  = params["chrom_del"] + params["chrom_dup"] + params["int_dup"] + params["int_del"] + params["int_inv"] + params["inv_dup"] + params["bfb"] + params["tail_del"] + params["transloc"] + w_wgd
+    w_chrom_del = params["chrom_del"] / weight_sum
+    w_chrom_dup = params["chrom_dup"] / weight_sum
+    w_int_dup   = params["int_dup"] / weight_sum
+    w_int_del   = params["int_del"] / weight_sum
+    w_int_inv   = params["int_inv"] / weight_sum
+    w_inv_dup   = params["inv_dup"] / weight_sum
+    w_bfb       = params["bfb"] / weight_sum
+    w_tail_del  = params["tail_del"] / weight_sum
+    w_transloc  = params["transloc"] / weight_sum
+    w_wgd /= weight_sum
+
     # Also round the weights to the nearest 3 decimal places
-    ndp = 3
+    ndp = 8
     # The length-scales have to be rounded to integer status 
     # ChromDeletion
-    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(w_chrom_del), ndp)
     # ChromDuplication
-    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["w_chrom_dup"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(w_chrom_dup), ndp)
     # InternalDuplication
-    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["w_int_dup"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(w_int_dup), ndp)
     configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
     # InternalDeletion
-    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["w_int_del"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(w_int_del), ndp)
     configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
     # InternalInversion
-    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(params["w_int_inv"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(w_int_inv), ndp)
     configs["Signatures"]["CNs"]["Events"][4]["Size"] = int(params["l_int_inv"]*100_000)
     # InvertedDuplication
-    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(params["w_inv_dup"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(w_inv_dup), ndp)
     configs["Signatures"]["CNs"]["Events"][5]["Size"] = int(params["l_inv_dup"]*100_000)
     # BreakageFusionBridge    
-    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["w_bfb"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(w_bfb), ndp)
     # TailDeletion
-    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["w_tail_del"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(w_tail_del), ndp)
     # Translocation
-    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(params["w_transloc"]), ndp)
+    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(w_transloc), ndp)
     configs["Signatures"]["CNs"]["Events"][8]["Size"] = int(params["l_transloc"]*100_000)
     # Whole-Genome Doubling
-    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["w_wgd"])
+    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(w_wgd)
     
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -68,12 +87,12 @@ def update_params_file(param_file, params):
     return path
 
 # Main function of the pyABC sampling (usually called the 'model')
-def run_simcha(params, param_file, genes_path, cohort_path, repeats, all_chromosomes):
+def run_simcha(params, genes_path, cohort_path, repeats, all_chromosomes):
     # Given a sampled set of parameters, update the input config file of SimChA
-    param_file_path = update_params_file(param_file, params)
+    param_file_path = update_params_file(params)
     
     # Run command for SimChA
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/{param_file} -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
     if not all_chromosomes:
         cmd += " --autosomes-only"
 
@@ -108,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument("-G", "--genes_path", type=str, default="data/hg19_1000", help="Path to the genes list to be used.")
     parser.add_argument("-D", "--data_path", type=str, default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
     parser.add_argument("-T", "--test", action="store_true", help="Flag to use SimChA-generated data as the ground-truth rather than real data samples.")
-    parser.add_argument("-P", "--param_file", type=str, default="default_params.json", help="Parameter file used by SimChA.")
+    parser.add_argument("-P", "--param_file", type=str, default="simple_params.json", help="Parameter file used in the case of SimChA-generated ground truth.")
     parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
     args = parser.parse_args()
 
@@ -118,7 +137,7 @@ if __name__ == "__main__":
     subprocess.run(["dotnet build SimChA"], shell = True)
 
     # If we use SimChA-generated data as the ground-truth, we first have to generate that data
-    param_file = args.param_file
+    param_file = os.path.join(pwd, args.param_file)
     if args.test:
         cohort_dir_path = "out/ground_truth"
         # Generate the simulated data
@@ -129,30 +148,28 @@ if __name__ == "__main__":
     
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
-        return {"distance": run_simcha(params, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes)}
+        return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats, args.all_chromosomes)}
     
     # Create the output directory for the final plots as well as the SQL database
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-     # Uniform prior distributions for the various different properties of the simple events
+    # Uniform prior distributions for the various different properties of the simple events
     limits = dict(
-            w_chrom_del = (1, 20),
-            w_chrom_dup = (1, 20),
-            w_int_dup   = (1, 100),
-            w_int_del   = (1, 100),
-            w_int_inv   = (1, 100),
-            w_inv_dup   = (1, 100),
-            w_bfb       = (1, 20),
-            w_tail_del  = (1, 20),
-            w_wgd       = (0, 0.2),
-            w_transloc  = (1, 20),
+            w_chrom_del = (0, 1),
+            w_chrom_dup = (0, 1),
+            w_int_dup   = (0, 1),
+            w_int_del   = (0, 1),
+            w_int_inv   = (0, 1),
+            w_inv_dup   = (0, 1),
+            w_bfb       = (0, 1),
+            w_tail_del  = (0, 1),
+            w_transloc  = (0, 1),
             l_int_dup   = (1, 100), 
             l_inv_dup   = (1, 100),
             l_int_del   = (1, 100),
             l_int_inv   = (1, 100),
             l_transloc  = (1, 100))
-
     # The length scale of events in is 100kb.
     # Priors are simply a uniform distribution between their two limits
     prior = Distribution(**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
@@ -176,8 +193,8 @@ if __name__ == "__main__":
             df,
             w,
             xmin=0,
-            xmax=0.2,
-            x="w_wgd",
+            xmax=1,
+            x="w_transloc",
             xname=r"Translocation event weight",
             ax=ax,
             label=f"PDF t={t}",
