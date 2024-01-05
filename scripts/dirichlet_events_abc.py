@@ -23,15 +23,15 @@ import pyabc
 
 settings.set_figure_params('pyabc')
 
-def update_params_file(params):
+def update_params_file(param_file, params):
     # Create the temporary parameter file with a random parameter selected as the suffix
     foldername = f"{uuid.uuid4()}" 
     path = f"{pwd}/temp/{foldername}"
     subprocess.run([f"mkdir -p {path}"], shell = True)
-    subprocess.run([f"cp simple_params.json {path}"], shell = True)
+    subprocess.run([f"cp {param_file} {path}"], shell = True)
     # Create the output subdirectory
     subprocess.run([f"mkdir -p {path}/out"], shell=True)
-    file_path = f"{path}/simple_params.json"
+    file_path = f"{path}/{param_file}"
 
     # Update the parameter file
     with open(file_path, 'r', encoding='utf-8') as json_file:
@@ -41,55 +41,56 @@ def update_params_file(params):
     # Set the weight for WGD to be quite small. May need to see how varying this changes the results
     w_wgd       = 0.005
     weight_sum  = params["chrom_del"] + params["chrom_dup"] + params["int_dup"] + params["int_del"] + params["int_inv"] + params["inv_dup"] + params["bfb"] + params["tail_del"] + params["transloc"] + w_wgd
-    w_chrom_del = params["chrom_del"] / weight_sum
-    w_chrom_dup = params["chrom_dup"] / weight_sum
-    w_int_dup   = params["int_dup"] / weight_sum
-    w_int_del   = params["int_del"] / weight_sum
-    w_int_inv   = params["int_inv"] / weight_sum
-    w_inv_dup   = params["inv_dup"] / weight_sum
-    w_bfb       = params["bfb"] / weight_sum
-    w_tail_del  = params["tail_del"] / weight_sum
-    w_transloc  = params["transloc"] / weight_sum
-    w_wgd /= weight_sum
+    # The parameters need to actually be updated in pyABC
+    params["chrom_del"] /= weight_sum
+    params["chrom_dup"] /= weight_sum
+    params["int_dup"]   /= weight_sum
+    params["int_del"]   /= weight_sum
+    params["int_inv"]   /= weight_sum
+    params["inv_dup"]   /= weight_sum
+    params["bfb"]       /= weight_sum
+    params["tail_del"]  /= weight_sum
+    params["transloc"]  /= weight_sum
+    params["wgd"] = w_wgd / weight_sum
 
     # Also round the weights to the nearest 3 decimal places
     ndp = 8
     # The length-scales have to be rounded to integer status 
     # ChromDeletion
-    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(w_chrom_del), ndp)
+    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["chrom_del"]), ndp)
     # ChromDuplication
-    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(w_chrom_dup), ndp)
+    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["chrom_dup"]), ndp)
     # InternalDuplication
-    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(w_int_dup), ndp)
+    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["int_dup"]), ndp)
     configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
     # InternalDeletion
-    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(w_int_del), ndp)
+    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["int_del"]), ndp)
     configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
     # InternalInversion
-    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(w_int_inv), ndp)
+    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(params["int_inv"]), ndp)
     configs["Signatures"]["CNs"]["Events"][4]["Size"] = int(params["l_int_inv"]*100_000)
     # InvertedDuplication
-    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(w_inv_dup), ndp)
+    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(params["inv_dup"]), ndp)
     configs["Signatures"]["CNs"]["Events"][5]["Size"] = int(params["l_inv_dup"]*100_000)
     # BreakageFusionBridge    
-    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(w_bfb), ndp)
+    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["bfb"]), ndp)
     # TailDeletion
-    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(w_tail_del), ndp)
+    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["tail_del"]), ndp)
     # Translocation
-    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(w_transloc), ndp)
+    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(params["transloc"]), ndp)
     configs["Signatures"]["CNs"]["Events"][8]["Size"] = int(params["l_transloc"]*100_000)
     # Whole-Genome Doubling
-    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(w_wgd)
+    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["wgd"])
     
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
     # Return the path to the config file
-    return path
+    return path, params
 
 # Main function of the pyABC sampling (usually called the 'model')
-def run_simcha(params, genes_path, cohort_path, repeats, all_chromosomes):
+def run_simcha(params, param_file, genes_path, cohort_path, repeats, all_chromosomes):
     # Given a sampled set of parameters, update the input config file of SimChA
-    param_file_path = update_params_file(params)
+    param_file_path, params = update_params_file(param_file, params)
     
     # Run command for SimChA
     cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/simple_params.json -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
@@ -127,7 +128,7 @@ if __name__ == "__main__":
     parser.add_argument("-G", "--genes_path", type=str, default="data/hg19_1000", help="Path to the genes list to be used.")
     parser.add_argument("-D", "--data_path", type=str, default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
     parser.add_argument("-T", "--test", action="store_true", help="Flag to use SimChA-generated data as the ground-truth rather than real data samples.")
-    parser.add_argument("-P", "--param_file", type=str, default="simple_params.json", help="Parameter file used in the case of SimChA-generated ground truth.")
+    parser.add_argument("-P", "--param_file", type=str, default="default_params.json", help="Parameter file used in the case of SimChA-generated ground truth.")
     parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
     args = parser.parse_args()
 
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     subprocess.run(["dotnet build SimChA"], shell = True)
 
     # If we use SimChA-generated data as the ground-truth, we first have to generate that data
-    param_file = os.path.join(pwd, args.param_file)
+    param_file = args.param_file
     if args.test:
         cohort_dir_path = "out/ground_truth"
         # Generate the simulated data
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
-        return {"distance": run_simcha(params, genes_path, cohort_path, args.repeats, args.all_chromosomes)}
+        return {"distance": run_simcha(params, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes)}
     
     # Create the output directory for the final plots as well as the SQL database
     out_dir = args.name
