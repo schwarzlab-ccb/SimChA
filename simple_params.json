@@ -4,9 +4,9 @@
 	"EventCount": 75,
 	"EventDist": "Exponential",
 	"Fitness": {
-	  "Stress": 0.92,
-	  "TsgOg": 0.01,
-    "Essentiality": 0.03,
+	  "Stress": 0.93,
+	  "TsgOg": 0.05,
+    "Essentiality": 0.05,
 	  "TotalStrength": 1
 	},
 	"Signatures": {
@@ -15,55 +15,55 @@
 		"Events": [
 		  {
 			"Type": "ChromDeletion",
-			"Prob": 8,
+			"Prob": 1,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "ChromDuplication",
-			"Prob": 12,
+			"Prob": 1,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDuplication",
-			"Prob": 30,
-			"Size": 1000000,
+			"Prob": 20,
+			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDeletion",
-			"Prob": 22,
-			"Size": 220000,
+			"Prob": 20,
+			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalInversion",
 			"Prob": 0,
-			"Size": 2800000,
+			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InvertedDuplication",
-			"Prob": 30,
-			"Size": 1000000,
+			"Prob": 0,
+			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "BreakageFusionBridge",
-			"Prob": 4,
+			"Prob": 5,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "TailDeletion",
-			"Prob": 4,
+			"Prob": 5,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "Translocation",
-			"Prob": 5,
+			"Prob": 0,
 			"Size": 10000000,
 			"Frag": 0
 		  },
@@ -122,7 +122,7 @@
 		"Events": [
 		  {
 			"Type": "SNV",
-			"Prob": 1,
+			"Prob": 100,
 			"Size": 0,
 			"Frag": 0
 		  }
@@ -131,7 +131,7 @@
 	},
 	"MCParams": {
 	  "NumSamplesMin": 100,
-	  "NumSamplesTotal": 5000,
+	  "NumSamplesTotal": 2500,
 	  "ThetaFitness": 10,
 	  "SwapEventP": 1,
 	  "ThresholdFit": 1E-08

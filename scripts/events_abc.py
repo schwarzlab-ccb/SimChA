@@ -101,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument("-G", "--genes_path", type=str, default="data/hg19_1000", help="Path to the genes list to be used.")
     parser.add_argument("-D", "--data_path", type=str, default="data/pcawg_filtered_95_pc.tsv", help="Path to the cancer cohort you want to match the fitness of.")
     parser.add_argument("-T", "--test", action="store_true", help="Flag to use SimChA-generated data as the ground-truth rather than real data samples.")
-    parser.add_argument("-P", "--param_file", type=str, default="default_params.json", help="Parameter file used by SimChA.")
+    parser.add_argument("-P", "--param_file", type=str, default="simple_params.json", help="Parameter file used by SimChA.")
     parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
     parser.add_argument("-W", "--event_weights", action="store_true", help="Infer the event weights rather than characteristic length scale of corresponding events.")
     args = parser.parse_args()
