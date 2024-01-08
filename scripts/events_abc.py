@@ -18,7 +18,7 @@ import pyabc
 
 settings.set_figure_params('pyabc')
 
-def update_params_file(param_file, params):
+def update_params_file(param_file, fit_event_weights, params):
     # Create the temporary parameter file with a random parameter selected as the suffix
     foldername = f"{uuid.uuid4()}" 
     path = f"{pwd}/temp/{foldername}"
@@ -31,36 +31,29 @@ def update_params_file(param_file, params):
     # Update the parameter file
     with open(file_path, 'r', encoding='utf-8') as json_file:
         configs = json.load(json_file)
-
-    # Events are unfortunately an array in the parameters file
+	
     # Also round the weights to the nearest 3 decimal places
     ndp = 3
-    # The length-scales have to be rounded to integer status 
-    # ChromDeletion
-    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
-    # ChromDuplication
-    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["w_chrom_dup"]), ndp)
-    # InternalDuplication
-    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["w_int_dup"]), ndp)
-    configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
-    # InternalDeletion
-    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["w_int_del"]), ndp)
-    configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
-    # InternalInversion
-    configs["Signatures"]["CNs"]["Events"][4]["Prob"] = round(float(params["w_int_inv"]), ndp)
-    configs["Signatures"]["CNs"]["Events"][4]["Size"] = int(params["l_int_inv"]*100_000)
-    # InvertedDuplication
-    configs["Signatures"]["CNs"]["Events"][5]["Prob"] = round(float(params["w_inv_dup"]), ndp)
-    configs["Signatures"]["CNs"]["Events"][5]["Size"] = int(params["l_inv_dup"]*100_000)
-    # BreakageFusionBridge    
-    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["w_bfb"]), ndp)
-    # TailDeletion
-    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["w_tail_del"]), ndp)
-    # Translocation
-    configs["Signatures"]["CNs"]["Events"][8]["Prob"] = round(float(params["w_transloc"]), ndp)
-    configs["Signatures"]["CNs"]["Events"][8]["Size"] = int(params["l_transloc"]*100_000)
-    # Whole-Genome Doubling
-    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["w_wgd"])
+    # Events are unfortunately an array in the parameters file
+    if event_weights:
+	    # ChromDeletion
+	    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
+	    # ChromDuplication
+	    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["w_chrom_dup"]), ndp)
+	    # InternalDuplication
+	    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["w_int_dup"]), ndp)
+	    # InternalDeletion
+	    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["w_int_del"]), ndp)
+	    # BreakageFusionBridge    
+	    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["w_bfb"]), ndp)
+	    # TailDeletion
+	    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["w_tail_del"]), ndp) 
+	    # Whole-Genome Doubling
+	    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["w_wgd"])
+    else:
+	    # The length-scales have to be rounded to integer status 
+	    configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
+	    configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
     
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -68,9 +61,9 @@ def update_params_file(param_file, params):
     return path
 
 # Main function of the pyABC sampling (usually called the 'model')
-def run_simcha(params, param_file, genes_path, cohort_path, repeats, all_chromosomes):
+def run_simcha(params, param_file, genes_path, cohort_path, repeats, all_chromosomes, fit_event_weights):
     # Given a sampled set of parameters, update the input config file of SimChA
-    param_file_path = update_params_file(param_file, params)
+    param_file_path = update_params_file(param_file, fit_event_weights, params)
     
     # Run command for SimChA
     cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/{param_file} -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
@@ -110,6 +103,7 @@ if __name__ == "__main__":
     parser.add_argument("-T", "--test", action="store_true", help="Flag to use SimChA-generated data as the ground-truth rather than real data samples.")
     parser.add_argument("-P", "--param_file", type=str, default="default_params.json", help="Parameter file used by SimChA.")
     parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
+    parser.add_argument("-W", "--event_weights", action="store_true", help="Infer the event weights rather than characteristic length scale of corresponding events.")
     args = parser.parse_args()
 
     genes_path = args.genes_path
@@ -129,29 +123,24 @@ if __name__ == "__main__":
     
     # Wrapper function for model so that we can run SimChA with the input dataset and any modified hyperparameters (like number of SimChA samples)
     def model_wrapper(params):
-        return {"distance": run_simcha(params, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes)}
+        return {"distance": run_simcha(params, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes, args.event_weights)}
     
     # Create the output directory for the final plots as well as the SQL database
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-     # Uniform prior distributions for the various different properties of the simple events
-    limits = dict(
-            w_chrom_del = (1, 20),
-            w_chrom_dup = (1, 20),
-            w_int_dup   = (1, 100),
-            w_int_del   = (1, 100),
-            w_int_inv   = (1, 100),
-            w_inv_dup   = (1, 100),
-            w_bfb       = (1, 20),
-            w_tail_del  = (1, 20),
-            w_wgd       = (0, 0.2),
-            w_transloc  = (1, 20),
-            l_int_dup   = (1, 100), 
-            l_inv_dup   = (1, 100),
-            l_int_del   = (1, 100),
-            l_int_inv   = (1, 100),
-            l_transloc  = (1, 100))
+    # Uniform prior distributions for the various different properties of the simple events
+    if args.event_weights:
+	limits = dict(
+		    w_chrom_del = (0, 5),
+		    w_chrom_dup = (0, 5),
+		    w_int_dup   = (0, 50),
+		    w_int_del   = (0, 50),
+		    w_bfb       = (0, 10),
+		    w_tail_del  = (0, 10),
+		    w_wgd       = (0, 0.1))
+    else:
+    	limits = dict(l_int_dup   = (1, 20), l_int_del   = (1, 20))
 
     # The length scale of events in is 100kb.
     # Priors are simply a uniform distribution between their two limits
@@ -178,7 +167,7 @@ if __name__ == "__main__":
             xmin=0,
             xmax=0.2,
             x="w_wgd",
-            xname=r"Translocation event weight",
+            xname=r"WGD event weight",
             ax=ax,
             label=f"PDF t={t}",
         )
