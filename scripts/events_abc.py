@@ -131,14 +131,7 @@ if __name__ == "__main__":
 
     # Uniform prior distributions for the various different properties of the simple events
     if args.event_weights:
-	limits = dict(
-		    w_chrom_del = (0, 5),
-		    w_chrom_dup = (0, 5),
-		    w_int_dup   = (0, 50),
-		    w_int_del   = (0, 50),
-		    w_bfb       = (0, 10),
-		    w_tail_del  = (0, 10),
-		    w_wgd       = (0, 0.1))
+    	limits = dict(w_chrom_del = (0, 5), w_chrom_dup = (0, 5), w_int_dup = (0, 50), w_int_del = (0, 50), w_bfb = (0, 10), w_tail_del = (0, 10), w_wgd = (0, 0.1))
     else:
     	limits = dict(l_int_dup   = (1, 20), l_int_del   = (1, 20))
 
