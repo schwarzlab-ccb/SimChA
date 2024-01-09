@@ -19,7 +19,6 @@ sim_params.json
 in*/
 
 # Notebooks
-notebooks*
 playground/*
 
 # Jupyter Notebooks

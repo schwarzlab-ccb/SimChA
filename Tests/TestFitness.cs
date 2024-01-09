@@ -119,7 +119,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, true);
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
     }

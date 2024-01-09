@@ -70,11 +70,8 @@ public class Simulator
         return eventPs.Select(
             e =>
             {
-                var newEventD = Sampling.GenerateCNEventData(Rnd, kar, e);
-                if (newEventD == null)
-                {
-                    throw new Exception("Failed to initialize event data.");
-                }
+                var newEventD = Sampling.GenerateCNEventData(Rnd, kar, e) 
+                                ?? throw new Exception("Failed to initialize event data.");
                 return newEventD;
             }
         ).ToList();

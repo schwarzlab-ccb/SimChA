@@ -24,7 +24,7 @@ public static class SummaryFeatures
         }
         return (cns, max);
     }
-    public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static (List<double>, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -44,7 +44,7 @@ public static class SummaryFeatures
             }
             segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
         }
-        return segLengths;
+        return (segLengths, segLengths.Max());
     }
 
     public static (List<double> values, int max) GetChangepointInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
@@ -127,5 +127,106 @@ public static class SummaryFeatures
             }
         }
         return (breakpoints, maxBP);
+    }
+
+    public static (List<double> values, double max) GetHomozygousDeletionFraction(Dictionary<string, List<CopyNumber>> cnProfiles, long autosomeLength)
+    {
+        var fraction = new List<double>();
+        foreach (var cnProfile in cnProfiles)
+        {
+            var homozygDelList = cnProfile.Value.Where(cn => cn.CNH1 + cn.CNH2 == 0 
+                                                            && cn.Segment.ChrNo != "chrX" 
+                                                            && cn.Segment.ChrNo != "chrY").ToList();
+            fraction.AddRange(homozygDelList.Select(cn => (double) cn.Segment.Length/autosomeLength));
+        }
+        return (fraction, fraction.Max());
+    }
+
+    public static List<double> GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles)
+    {
+        var meanCN = new List<double>();
+        // Number of segments - assumes we already have binned copy-number profiles
+        var cnLength = cnProfiles.First().Value.Count;
+
+        for (int i = 0; i < cnLength; i++)
+        {
+            // TODO: What do we do with bins that are just empty?
+            var filtered = cnProfiles.Where(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2 >= 0);
+            var mean = filtered.Any() ? filtered.Average(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2) : 0.0;
+            meanCN.Add(mean);
+        }
+        return meanCN;
+    }
+
+    public static (List<double> values, double max) GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict)
+    {
+        var ploidies = cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key])).ToList();
+        return (ploidies, ploidies.Max());
+    }
+
+    public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
+    {
+        var matrix = new Dictionary<string, Dictionary<string, double>>();
+        foreach (var chr in chrs)
+        {
+            var chrSpecificCN = new Dictionary<string, double>();
+            foreach (var cnProfile in cnProfiles)
+            {
+                var chrCNPs = cnProfile.Value.Where(cn => cn.Segment.ChrNo == chr && cn.CNH1 + cn.CNH2 > 0).ToList();
+                var val = 0.0;
+                if (chrCNPs.Any())
+                {
+                    var weightedLen = chrCNPs.Select(cn => (cn.CNH1 + cn.CNH2)*cn.Segment.Length).Sum();
+                    val = weightedLen / chrCNPs.Select(cn => cn.Segment.Length).Sum();
+                }
+                chrSpecificCN.Add(cnProfile.Key, val);
+            }
+            matrix.Add(chr, chrSpecificCN);
+        }
+        return matrix;
+    }
+
+    public static double GetMKV(Dictionary<string, Dictionary<string, double>> chrCNMatrix)
+    {
+        // Mean Karyotypic Variance is the variance of individual chromosomes across all samples
+        // then averages across all chromosomes
+        var chrVar = new Dictionary <string, double> ();
+        foreach (var chr in chrCNMatrix.Keys)
+        {
+            var chrVals = chrCNMatrix[chr].Values;
+            chrVar.Add(chr, chrVals.Variance());
+        }
+        return chrVar.Values.Average();
+    }
+
+    private static Dictionary<string, Dictionary<string, double>> TransposeChrCNMatrix( Dictionary<string, Dictionary<string, double>> chrCNMatrix)
+    {
+        var transposed = new Dictionary<string, Dictionary<string, double>>();
+        foreach (var firstKey in chrCNMatrix.Keys)
+        {
+             foreach (var pair in chrCNMatrix[firstKey])
+            {
+                var secondKey = pair.Key;
+                var value = pair.Value;
+                if (!transposed.ContainsKey(secondKey))
+                {
+                    transposed[secondKey] = new Dictionary<string, double>();
+                }
+                transposed[secondKey][firstKey] = value;
+            }
+        }
+        return transposed;
+    }
+    
+    public static double GetAverageAneuploidy(Dictionary<string, Dictionary<string, double>> chrCNMatrix)
+    {
+        var matrix = TransposeChrCNMatrix(chrCNMatrix);
+        var sampleVar = new Dictionary<string, double>();
+        foreach (var sample in matrix.Keys)
+        {
+            var sampleVals = matrix[sample].Values;
+            sampleVar.Add(sample, sampleVals.Variance());
+        }
+        return sampleVar.Values.Average();
     }
 }

@@ -10,5 +10,7 @@ public enum ExecMode
     Profiles,
     ParseGenContents,
     Bootstrap,
-    Optimization
+    OptimizeEvents,
+    OptimizeFitness,
+    BinSamples
 }

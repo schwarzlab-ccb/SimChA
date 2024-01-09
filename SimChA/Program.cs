@@ -23,28 +23,62 @@ SimParams simParams = FileIO.ReadSimParams(options.ConfigFile);
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
 bool parseGenContents = execMode == ExecMode.ParseGenContents;
-var genRef = FileIO.GetGenRef(options.DataFolder, parseGenContents);
+var includeSexChromosomes = !options.AutosomesOnly;
+var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
-if (execMode == ExecMode.Optimization)
+if (execMode == ExecMode.BinSamples)
+{
+    if (options.CNProfiles == "")
+    {
+        throw new Exception("Error: No CN profiles provided. Cannot bin samples.");
+    }
+    Console.WriteLine("Reading observed data:");
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+    var observedSamples = Simulator.SamplesFromProfiles(profiles);
+    var binner = new Binner(genRef);
+    Console.WriteLine("Binning samples:");
+    var binnedSamples = binner.GetBinnedCNProfiles(observedSamples);
+    Console.WriteLine("Writing binned samples:");
+    files.WriteCopyNumbers(binnedSamples);
+    return 0;
+}
+else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEvents)
 {
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    var optimizer = new Optimizer(genRef, observedSamples);
-    Console.WriteLine("Generating Simulated Data");
-    var totalDist = optimizer.Optimize(simParams, rnd, options.Repeats);
-
+    double totalDist = 0.0;
+    if (execMode == ExecMode.OptimizeEvents)
+    {
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
+        Console.WriteLine("Generating Simulated Data");
+        totalDist = optimizer.Optimize();
+    }
+    else if (execMode == ExecMode.OptimizeFitness)
+    {
+        if (options.BootstrapFile == "")
+        {
+            throw new Exception("Error: No bootstrap file provided. Cannot perform fitness optimization.");
+        }
+        if (options.BinnedSamples == "")
+        {
+            throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
+        }
+        var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
+        Console.WriteLine("Generating Simulated Data");
+        totalDist = optimizer.Optimize();
+    }
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
     Console.WriteLine();
     Console.WriteLine($"Total distance: {totalDist}");
     return 0;
-    
 }
 if (execMode == ExecMode.Profiles)
 {

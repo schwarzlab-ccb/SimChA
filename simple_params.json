@@ -27,43 +27,43 @@
 		  },
 		  {
 			"Type": "InternalDuplication",
-			"Prob": 8,
+			"Prob": 20,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDeletion",
-			"Prob": 8,
+			"Prob": 20,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalInversion",
-			"Prob": 8,
+			"Prob": 0,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InvertedDuplication",
-			"Prob": 10,
+			"Prob": 0,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "BreakageFusionBridge",
-			"Prob": 4,
+			"Prob": 5,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "TailDeletion",
-			"Prob": 4,
+			"Prob": 5,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "Translocation",
-			"Prob": 2,
+			"Prob": 0,
 			"Size": 10000000,
 			"Frag": 0
 		  },
