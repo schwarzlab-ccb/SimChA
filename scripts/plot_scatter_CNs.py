@@ -6,7 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from os.path import join
-from utils import load_dataset, hg19_chr_lengths, chromosome_colors, chromosome_names, hg38_chr_lengths, samples_to_SNPs, hg19_chr_cum_starts
+import sys
+sys.path.append('..')
+from pycna.utils.assembiles import hg19_chr_lengths, hg19_chr_cum_starts, chr_colors
 
 def plot_scatter_CNs(data, use_hg19=True, output="../out"):
     cns = pd.read_csv(join(data,"copynumbers.tsv"), index_col=0, sep="\t")
@@ -31,7 +33,7 @@ def plot_scatter_CNs(data, use_hg19=True, output="../out"):
     x_pos = 0
     for chrom, length in hg19_chr_lengths.items():
         # Get the color for the current chromosome
-        color = chromosome_colors[chrom]
+        color = chr_colors[chrom]
         
         # Add a rectangle to the plot with the appropriate color and width
         rect = Rectangle((x_pos, 0), length, max_cn, color=color, alpha=0.2)
