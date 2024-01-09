@@ -4,6 +4,7 @@ using CommandLine;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
+using SimChA.Optimization;
 using SimChA.Simulation;
 
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -17,27 +18,68 @@ cmdOptions.WithNotParsed(o =>
 var options = cmdOptions.Value;
 var execMode = options.ExecMode;
 
-SimParams simParams;
-if (options.ConfigFile != "")
-{
-    simParams = FileIO.ReadSimParams(options.ConfigFile);
-}
-else
-{
-    int seed = new Random().Next();
-    var fitness = new FitnessParams(1, 1, 1);
-    simParams = new SimParams(seed, SexEnum.Both, 1, Distribution.Uniform, fitness);
-}
+SimParams simParams = FileIO.ReadSimParams(options.ConfigFile);
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
 bool parseGenContents = execMode == ExecMode.ParseGenContents;
-var genRef = FileIO.GetGenRef(options.DataFolder, parseGenContents);
+var includeSexChromosomes = !options.AutosomesOnly;
+var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
 files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
+if (execMode == ExecMode.BinSamples)
+{
+    if (options.CNProfiles == "")
+    {
+        throw new Exception("Error: No CN profiles provided. Cannot bin samples.");
+    }
+    Console.WriteLine("Reading observed data:");
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+    var observedSamples = Simulator.SamplesFromProfiles(profiles);
+    var binner = new Binner(genRef);
+    Console.WriteLine("Binning samples:");
+    var binnedSamples = binner.GetBinnedCNProfiles(observedSamples);
+    Console.WriteLine("Writing binned samples:");
+    files.WriteCopyNumbers(binnedSamples);
+    return 0;
+}
+else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEvents)
+{
+    Console.WriteLine("Optimization model -------- ");
+    Console.WriteLine("Reading observed data:");
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+    var observedSamples = Simulator.SamplesFromProfiles(profiles);
+    double totalDist = 0.0;
+    if (execMode == ExecMode.OptimizeEvents)
+    {
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
+        Console.WriteLine("Generating Simulated Data");
+        totalDist = optimizer.Optimize();
+    }
+    else if (execMode == ExecMode.OptimizeFitness)
+    {
+        if (options.BootstrapFile == "")
+        {
+            throw new Exception("Error: No bootstrap file provided. Cannot perform fitness optimization.");
+        }
+        if (options.BinnedSamples == "")
+        {
+            throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
+        }
+        var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
+        Console.WriteLine("Generating Simulated Data");
+        totalDist = optimizer.Optimize();
+    }
+    watch.Stop();
+    //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
+    Console.WriteLine();
+    Console.WriteLine($"Total distance: {totalDist}");
+    return 0;
+}
 if (execMode == ExecMode.Profiles)
 {
     Console.WriteLine("Reading profiles:");
@@ -67,12 +109,19 @@ else
         {
             throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
         }
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+        if (execMode == ExecMode.Bootstrap)
+        {
+            var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, fitnessList);
+        }
+        else
+        {
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+        }
     }
 
     foreach (var sample in samples)
     {
-        // Monte Carlo sampling of copy-number altering events
         if (options.UseMCMC)
         {
             if (simParams.MCParams == null)

@@ -139,10 +139,7 @@ public class TestKaryotype
         }
         for (int i = 0; i < 4; i++)
         {
-            var eventP = new CNEventPars(CNEventType.BreakageFusionBridge, 1, 10_000_000);
-            var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventP);
-            Assert.NotNull(eventData);
-            eventData.ApplyEvent(_kar);
+            _kar.ApplyBFB(0, 1_000_000, true);
             Assert.AreEqual((int) Math.Pow(2, i+1), _kar.ToString().Split("~").Length);
         }
     }

@@ -33,6 +33,39 @@ public static class Parsers
         return res;
     }
 
+    // Expected format is the binned linear genome:
+    // and there is a header and the columns contain:
+    // SampleID, Chr, Start, End, CN hap1, CN hap2
+    // Simpler version of the parser that does not calculate missing regions and does have to create karyotypes
+    public static Dictionary<string, List<CopyNumber>> ParseCNAProfile(TextReader cnaFile)
+    {
+        Dictionary<string, List<CopyNumber>> result = new();
+        cnaFile.ReadLine(); // Skip header
+        while (cnaFile.ReadLine() is {} line)
+        {
+            string[] lineSplit = line.Split('\t');
+            string sample = lineSplit[0];
+
+            // Parse the line
+            string chrNo = lineSplit[1];
+            int start = int.Parse(lineSplit[2]) - 1;
+            int end = int.Parse(lineSplit[3]);
+            bool majorCNFound = int.TryParse(lineSplit[4], out int majorCN);
+            
+            bool minorCNFound = int.TryParse(lineSplit[4], out int minorCN);
+            var cn = new CopyNumber(new GenRange(start, end, chrNo), 
+                                    majorCNFound ? majorCN : -1, 
+                                    minorCNFound ? minorCN : -1, 0);
+            
+            if (!result.ContainsKey(sample))
+            {
+                result[sample] = new List<CopyNumber>();
+            }
+            result[sample].Add(cn);
+        }
+        return result;
+    }
+
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
@@ -43,7 +76,9 @@ public static class Parsers
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        var present = genRef.AllChrs.ToDictionary(c => c, _ => false);
+        var present = genRef.IncludeSexChromosomes
+                    ? genRef.AllChrs.ToDictionary(c => c, _ => false)
+                    : genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false);
         string lastSample = "";
         string lastChr = genRef.AllChrs.First();
         long lastPos = 0L;
@@ -73,8 +108,10 @@ public static class Parsers
                         regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
-                    bool sexXX = !present[genRef.YChrName];
-                    result[lastSample] = new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, sexXX);
+                    var thisKar = genRef.IncludeSexChromosomes 
+                            ? new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, !present[genRef.YChrName])
+                            : new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, false);
+                    result[lastSample] = thisKar;
                 }
                 // Reset
                 regionsA.Clear();
@@ -95,8 +132,8 @@ public static class Parsers
                 present[chrNo] = true;
                 int start = int.Parse(lineSplit[2]) - 1;
                 int end = int.Parse(lineSplit[3]);
-                int cnA = int.Parse(lineSplit[4]);
-                int cnB = int.Parse(lineSplit[5]);
+                int majorCN = int.Parse(lineSplit[4]);
+                int minorCN = int.Parse(lineSplit[5]);
 
                 // Check for missing ranges
                 if (chrNo == lastChr)
@@ -124,11 +161,11 @@ public static class Parsers
                 lastPos = end;
 
                 // Add the new regions
-                for (int i = 0; i < cnA; i++)
+                for (int i = 0; i < majorCN; i++)
                 {
                     regionsA.Add(new Region(start, end, chrNo, true));
                 }
-                for (int i = 0; i < cnB; i++)
+                for (int i = 0; i < minorCN; i++)
                 {
                     regionsB.Add(new Region(start, end, chrNo, false));
                 }
@@ -157,7 +194,10 @@ public static class Parsers
 
         // Add the last sample
         var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
-        result[lastSample] = new Karyotype(newRegs, missingRanges, !present[genRef.YChrName]);
+        var kar = genRef.IncludeSexChromosomes 
+                ? new Karyotype(newRegs, missingRanges, !present[genRef.YChrName])
+                : new Karyotype(newRegs, missingRanges, false);
+        result[lastSample] = kar;
         return result;
     }
 
@@ -191,8 +231,7 @@ public static class Parsers
         const string distanceKey = "Distance";
         const string fitnessKey = "Fitness";
 
-        string? firstLine = cloneStream.ReadLine();
-        if (firstLine == null) throw new Exception("CloneIn file is empty.");
+        string? firstLine = cloneStream.ReadLine() ?? throw new Exception("CloneIn file is empty.");
         var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
         var columns = new Dictionary<string, int> { { idKey, -1 }, { parentIDKey, -1 }, { distanceKey, -1 } };
         if (parseFitness)
@@ -221,6 +260,24 @@ public static class Parsers
             cloneFitness.Add(clone);
         }
         return cloneFitness;
+    }
+
+    public static List<double> ParseFitnesses(TextReader fitnessStream, FitnessParams fParams)
+    {
+        var fitnessList = new List<double>();
+        string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
+        // Continue past the header
+        while (fitnessStream.ReadLine() is { } line)
+        {
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat)*fParams.Stress;
+            var tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
+            var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
+            double tsgogTerm = (og + tsg) * fParams.TsgOg;
+            double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
+            fitnessList.Add(1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength);
+        }
+        return fitnessList;
     }
 
     public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ParseChromosomes(string text)

@@ -2,4 +2,19 @@
 
 namespace SimChA.DataTypes;
 
-public record FitnessParams(double Stress, double TsgOg, double Essentiality);
+public class FitnessParams
+{
+    public double Stress { get; }
+    public double TsgOg { get; }
+    public double Essentiality { get; }
+    public double TotalStrength { get; }
+
+    public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength)
+    {
+        var sum = stress + tsgOg + essentiality;
+        Stress = stress/sum;
+        TsgOg = tsgOg/sum;
+        Essentiality = 1.0 - Stress - TsgOg;
+        TotalStrength = totalStrength;
+    }
+}

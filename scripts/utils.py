@@ -3,6 +3,8 @@ import re
 import numpy as np
 import pandas as pd
 import json
+from collections import defaultdict
+
 
 from os.path import join
 
@@ -12,6 +14,8 @@ chromosome_names = [
     'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
     'chr22', 'chrX', 'chrY'
 ]
+
+autosome_names = chromosome_names[:-2]
 
 chromosome_colors = {
     'chr1': 'red',
@@ -303,56 +307,71 @@ hg38_autosome_length = 2875001522
 hg38_genome_length = hg38_genome_xy_length
 
 # Define a function to convert a row to a list
-def row_to_list(row, column, step_size):
+def row_to_list(row, bins, column):
     # Initialize an empty list
     res = []
-
-    start = row['start'] + hg19_chr_cum_starts[row['chrom']]
-    if start % step_size != 0:
-        start = start - (start % step_size) + step_size
-    end = row['end'] + hg19_chr_cum_starts[row['chrom']]
+    start_index = np.digitize(row['start']+hg19_chr_cum_starts[row['chrom']], bins)
+    start = bins[start_index]
+    #start = row['start'] + hg19_chr_cum_starts[row['chrom']]
+    # Round start to the nearest bin
+    #if start % step_size != 0:
+    #    start = start - (start % step_size) + step_size
+    end_index = np.digitize(row['end']+hg19_chr_cum_starts[row['chrom']]-1, bins)
+    end = bins[end_index]
+    # The rounding can cause the start to now be greater than the end
+    # in which case, it is a single bin
+    if start_index == end_index:
+        return [(start, row[column])]
 
     # Loop over each position between start and end, divisible by step
-    for pos in range(start, end, step_size):
+    for index in range(start_index, end_index+1):
         cn = row[column]
-        res.append((pos, cn))
-
+        res.append((bins[index], cn))
     # Return the list
     return res
 
+def chromosome_to_bins(chrom, step_size=1_000_000):
+    bins = np.arange(step_size, hg19_chr_lengths[chrom], step_size)
+    bins += hg19_chr_cum_starts[chrom] - 1
+    bins = np.append(bins, hg19_chr_lengths[chrom] + hg19_chr_cum_starts[chrom])
+    return bins
 
-def sample_to_SNPs(sample, column, step_size):
-    rows = sample.apply(lambda x: row_to_list(x, column, step_size), axis=1)
+def get_chromosome_bins(step_size=1_000_000, includeSexChromosomes=False):
+    bins = np.array([])
+    chroms = autosome_names if not includeSexChromosomes else chromosome_names
+    for chrom in chroms:
+        chr_bins = chromosome_to_bins(chrom, step_size=step_size)
+        bins = np.append(bins, chr_bins)
+    return bins
+
+def sample_to_SNPs(sample, bins, column):
+    count = {b : 0 for _, b in enumerate(bins)}
+    rows = sample.apply(lambda x: row_to_list(x, bins, column), axis=1)
     filtered = rows[rows.apply(lambda x: len(x) > 0)]
-    return pd.Series(dict(np.concatenate(filtered.values)))
+    for items in filtered.values:
+        for pos, cn in items:
+            count[pos] += cn
+    return pd.Series(count)
+    #return pd.Series(np.concatenate(filtered.values))
 
-
-def samples_to_SNPs(cns, column='cn', step_size=1_000_000):
+def samples_to_SNPs(cns, column='cn', step_size=1_000_000, includeSexChromosomes=False):
     # list of unique indices in cns
     samples = cns.index.unique()
     positions = {}
+    bins = get_chromosome_bins(step_size, includeSexChromosomes)
     for sample in samples:
-        positions[sample] = sample_to_SNPs(cns.loc[sample, :], column, step_size)
+        positions[sample] = sample_to_SNPs(cns.loc[sample, :], bins, column)
     df_CNs = pd.DataFrame(positions)
     return df_CNs
 
-def homozygous_row_to_list(row, step_size=1_000_000):
-    # initialize output
-    result = []
-    start = row['start'] + hg19_chr_cum_starts[row['chrom']]
-    if start % step_size != 0:
-        start = start - (start%step_size) + step_size
-    end = row['end'] + hg19_chr_cum_starts[row['chrom']]
-    # Loop over each position between start and end, divisible by step
-    for pos in range(start, end, step_size):
-        homozygous_del = row['homozygous_del']
-        result.append((pos, homozygous_del))
-    return result
-
-def sample_to_homozygous_spots(sample, step_size=1_000_000):
-    rows = sample.apply(lambda x: homozygous_row_to_list(x, step_size), axis=1)
+def sample_to_homozygous_spots(sample, bins):
+    count = {b : 0 for _, b in enumerate(bins)}
+    rows = sample.apply(lambda x: row_to_list(x, bins, 'homozygous_del'), axis=1)
     filtered = rows[rows.apply(lambda x: len(x) > 0)]
-    return pd.Series(dict(np.concatenate(filtered.values)))
+    for items in filtered.values:
+        for pos, cn in items:
+            count[pos] += cn
+    return pd.Series(count)
 
 def get_homozygous_deletion_locations(df, step_size=1_000_000):
     df['cn'] = df['cn_a'] + df['cn_b']
@@ -360,10 +379,16 @@ def get_homozygous_deletion_locations(df, step_size=1_000_000):
     df['homozygous_del'] = (df['cn'] == 0).astype(int)
     # Ignore sex chromosomes
     df = df[(df['chrom'] != 'chrX') & (df['chrom'] != 'chrY')]
+    #df.reset_index(inplace=True)
+    #df.set_index(['sample_id', 'chrom'], inplace=True)
     samples = df.index.unique()
     positions = {}
+    bins = get_chromosome_bins(step_size, includeSexChromosomes=False)
+    # Loop over the samples
     for sample in samples:
-        positions[sample] = sample_to_homozygous_spots(df.loc[sample, :], step_size)
+        # For each chromosome, count the number of homozygous deletions
+        positions[sample] = sample_to_homozygous_spots(df.loc[sample,:], bins)
+        #positions[sample] = sample_to_homozygous_spots(df.loc[sample, :], bins, step_size)
     df_dels = pd.DataFrame(positions)
     return df_dels
 
