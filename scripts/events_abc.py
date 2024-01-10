@@ -35,7 +35,7 @@ def update_params_file(param_file, fit_event_weights, params):
     # Also round the weights to the nearest 3 decimal places
     ndp = 3
     # Events are unfortunately an array in the parameters file
-    if event_weights:
+    if fit_event_weights:
 	    # ChromDeletion
 	    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
 	    # ChromDuplication
@@ -152,20 +152,12 @@ if __name__ == "__main__":
     
     # ID 
     fig, ax = plt.subplots()
-    for t in range(history.max_t + 1):
-        df, w = history.get_distribution(t=t)
-        visualization.plot_kde_1d(
-            df,
-            w,
-            xmin=0,
-            xmax=0.2,
-            x="w_wgd",
-            xname=r"WGD event weight",
-            ax=ax,
-            label=f"PDF t={t}",
-        )
-    ax.legend()
-    plt.savefig(f"{out_dir}/posterior_event_count.png")
+    if args.event_weights:
+        for t in range(history.max_t + 1):
+            df, w = history.get_distribution(t=t)
+            visualization.plot_kde_1d(df, w, xmin=0, xmax=0.2, x="w_wgd", xname=r"WGD event weight", ax=ax, label=f"PDF t={t}",)
+        ax.legend()
+        plt.savefig(f"{out_dir}/posterior_event_count.png")
     df, w = history.get_distribution(m=0, t=history.max_t)
     # the KDE matrix is an array of axes
     arr_ax = plot_kde_matrix(df, w, limits=limits)
