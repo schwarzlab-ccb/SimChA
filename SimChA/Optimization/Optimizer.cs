@@ -5,6 +5,7 @@ using SimChA.IO;
 using MathNet.Numerics.Statistics;
 using System.Diagnostics;
 namespace SimChA.Optimization;
+using SimChA.EventData;
 
 public class Optimizer
 {   
@@ -25,30 +26,87 @@ public class Optimizer
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
-    public virtual double Optimize()
+    public virtual SimParams Optimize()
+        => FindBestParams(5000, 0.01); // 1000 samples, 1% step size
+
+    private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
-        GenerateSimulatedCNPs();
-        return GetEventDistance();
+        var distance = GetEventDistance(cnps);
+        return distance;
     }
 
-    private double GetEventDistance()
+    private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams simParams)
     {
-        var segDist = GetSegLengthDistance();
-        var cpDist = GetChangepointDistance();
-        var bpDist = GetBreakpointDistance();
-        var majDist = GetMajMinCNDistance(true);
-        var minDist = GetMajMinCNDistance(false);
+        var samples = GenerateSimulatedData(simParams);
+        return GetCNPs(samples);
+    }
+
+    private SimParams FindBestParams(int numSamples, double stepFactor)
+    {
+        var currentParams = SimParams;
+        var currentCNPs = GenerateCNPs(currentParams);
+        var currentScore = GetScore(currentCNPs);
+        for (int i = 0; i < numSamples; i++)
+        {
+            var proposedParams = GetProposalParams(currentParams, stepFactor);
+            var proposedCNPs = GenerateCNPs(proposedParams);
+            var proposedScore = GetScore(proposedCNPs);
+            var delta = proposedScore - currentScore;
+            var prob = Math.Min(1, Math.Exp(-delta));
+            if (Rnd.NextDouble() < prob)
+            {
+                currentParams = proposedParams;
+                currentScore = proposedScore;
+            }
+        }
+        return currentParams;
+    }
+
+    private SimParams GetProposalParams(SimParams currentParams, double stepFactor)
+    {
+        if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
+        {
+            throw new Exception("Error in Optimizer. No signatures were provided.");
+        }
+        var events = currentParams.Signatures["CNs"].Events;
+        var index = Rnd.Next(events.Count);
+        // Modify the relative weight of the event
+        var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+        var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
+        while (Math.Abs(newProb - events[index].Prob) <= double.Epsilon)
+        {
+            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
+        }
+        // The other event parameters are multiplicatively modified (with the same relative factor)
+        var newFactor = (1 - newProb)/(1 - events[index].Prob);
+        var newEvents = events.Select(e => e with { Prob = e.Prob * newFactor }).ToList();
+        newEvents[index] = newEvents[index] with { Prob = newProb };
+        var newSignature = new Signature(1, newEvents);
+        return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
+    }
+
+
+    private double GetEventDistance(Dictionary<string, List<CopyNumber>> cnps)
+    {
+        var segDist = GetSegLengthDistance(cnps);
+        var cpDist = GetChangepointDistance(cnps);
+        var bpDist = GetBreakpointDistance(cnps);
+        var majDist = GetMajMinCNDistance(cnps, true);
+        var minDist = GetMajMinCNDistance(cnps, false);
         return (segDist + cpDist + bpDist + majDist + minDist)/5;
     }
-    private List<Sample> GenerateSimulatedData()
+
+    private List<Sample> GenerateSimulatedData(SimParams currentParams)
     {
-        if (SimParams.Signatures is null || SimParams.Signatures.Count == 0)
+        if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
         {
             throw new Exception("No signatures were provided.");
         }
-        Validators.ValidateSignatures(SimParams.Signatures);
+        Validators.ValidateSignatures(currentParams.Signatures);
 
-        var samples = Converters.MakeSamples(Rnd, Repeats, SimParams.EventCount, SimParams.EventDist, SimParams.Signatures, SimParams.Sex, SimParams.MCTarget);
+        var samples = Converters.MakeSamples(Rnd, Repeats, currentParams.EventCount, 
+            currentParams.EventDist, currentParams.Signatures, currentParams.Sex, currentParams.MCTarget);
         var simulator = new Simulator(Rnd, GenRef);
         foreach (var sample in samples)
         {
@@ -56,44 +114,38 @@ public class Optimizer
         }
         return samples;
     }
-    private void GenerateSimulatedCNPs()
-    {
-        var samples = GenerateSimulatedData();
-        SimulatedCNPs = GetCNPs(samples);
-        return;
-    }
-    private double GetSegLengthDistance()
+    private double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs);
-        var (simValues, simMax) = SummaryFeatures.GetSegLengths(SimulatedCNPs);
+        var (simValues, simMax) = SummaryFeatures.GetSegLengths(simCNPs);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 200;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
-    private double GetChangepointDistance()
+    private double GetChangepointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
-        var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(SimulatedCNPs);
+        var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(simCNPs);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    private double GetBreakpointDistance()
+    private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
-        var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(SimulatedCNPs);
+        var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(simCNPs);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    private double GetMajMinCNDistance(bool getMajor)
+    private double GetMajMinCNDistance(Dictionary<string, List<CopyNumber>> simCNPs, bool getMajor)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetMajMinCNs(ObservedCNPs, getMajor);
-        var (simValues, simMax) = SummaryFeatures.GetMajMinCNs(SimulatedCNPs, getMajor);
+        var (simValues, simMax) = SummaryFeatures.GetMajMinCNs(simCNPs, getMajor);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;

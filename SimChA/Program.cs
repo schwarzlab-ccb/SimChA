@@ -25,7 +25,6 @@ var files = new FileIO(options.OutputPath);
 bool parseGenContents = execMode == ExecMode.ParseGenContents;
 var includeSexChromosomes = !options.AutosomesOnly;
 var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
-files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
@@ -52,12 +51,12 @@ else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEv
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    double totalDist = 0.0;
     if (execMode == ExecMode.OptimizeEvents)
     {
         var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
         Console.WriteLine("Generating Simulated Data");
-        totalDist = optimizer.Optimize();
+        var outParams = optimizer.Optimize();
+        files.WriteSimParams(outParams);
     }
     else if (execMode == ExecMode.OptimizeFitness)
     {
@@ -72,12 +71,12 @@ else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEv
         var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
         var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
         Console.WriteLine("Generating Simulated Data");
-        totalDist = optimizer.Optimize();
+        var outParams = optimizer.Optimize();
+        files.WriteSimParams(outParams);
     }
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-    Console.WriteLine();
-    Console.WriteLine($"Total distance: {totalDist}");
+    Console.WriteLine("Optimization finished");
     return 0;
 }
 if (execMode == ExecMode.Profiles)
@@ -134,6 +133,7 @@ else
         simulator.SampleEvents(sample);
     }
 }
+files.WriteSimParams(simParams);
 
 Console.WriteLine("");
 
