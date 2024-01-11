@@ -43,7 +43,7 @@ public class Optimizer
 
     private SimParams FindBestParams(int numSamples, double stepFactor)
     {
-        var currentParams = SimParams;
+        var currentParams = GetProposalParams(SimParams, stepFactor);
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
         for (int i = 0; i < numSamples; i++)
@@ -69,6 +69,7 @@ public class Optimizer
             throw new Exception("Error in Optimizer. No signatures were provided.");
         }
         var events = currentParams.Signatures["CNs"].Events;
+        var totalWeight = events.Sum(e => e.Prob);
         var index = Rnd.Next(events.Count);
         // Modify the relative weight of the event
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
@@ -79,7 +80,7 @@ public class Optimizer
             newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
         }
         // The other event parameters are multiplicatively modified (with the same relative factor)
-        var newFactor = (1 - newProb)/(1 - events[index].Prob);
+        var newFactor = (totalWeight - newProb)/(totalWeight - events[index].Prob);
         var newEvents = events.Select(e => e with { Prob = e.Prob * newFactor }).ToList();
         newEvents[index] = newEvents[index] with { Prob = newProb };
         var newSignature = new Signature(1, newEvents);
