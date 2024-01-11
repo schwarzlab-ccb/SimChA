@@ -48,6 +48,7 @@ public class Optimizer
         var currentScore = GetScore(currentCNPs);
         for (int i = 0; i < numSamples; i++)
         {
+            Console.WriteLine($"Iteration {i+1} of {numSamples}");
             var proposedParams = GetProposalParams(currentParams, stepFactor);
             var proposedCNPs = GenerateCNPs(proposedParams);
             var proposedScore = GetScore(proposedCNPs);
