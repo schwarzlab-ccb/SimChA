@@ -55,7 +55,7 @@ else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEv
     {
         var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
         Console.WriteLine("Generating Simulated Data");
-        var outParams = optimizer.Optimize();
+        var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }
     else if (execMode == ExecMode.OptimizeFitness)
@@ -71,7 +71,7 @@ else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEv
         var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
         var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
         Console.WriteLine("Generating Simulated Data");
-        var outParams = optimizer.Optimize();
+        var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }
     watch.Stop();

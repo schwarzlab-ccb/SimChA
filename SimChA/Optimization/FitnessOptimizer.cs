@@ -28,7 +28,7 @@ public class FitnessOptimizer : Optimizer
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
     }
 
-    public override SimParams Optimize()
+    public override SimParams Optimize(FileIO files)
         => FindBestParams(5000, 0.01); // 1000 samples, 1% step size
 
     private double GetScore(List<Sample> samples)
