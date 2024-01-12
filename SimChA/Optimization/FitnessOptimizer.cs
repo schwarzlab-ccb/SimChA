@@ -29,7 +29,7 @@ public class FitnessOptimizer : Optimizer
     }
 
     public override SimParams Optimize(FileIO files)
-        => FindBestParams(5000, 0.01); // 1000 samples, 1% step size
+        => FindBestParams(files, 5000, 0.01); // 1000 samples, 1% step size
 
     private double GetScore(List<Sample> samples)
     {
@@ -39,7 +39,7 @@ public class FitnessOptimizer : Optimizer
         var distance = GetFitnessDistance(cnps, binnedCNPs, isFemaleDict);
         return distance;
     }
-    private SimParams FindBestParams(int numSamples, double stepFactor)
+    private SimParams FindBestParams(FileIO files, int numSamples, double stepFactor)
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
@@ -55,6 +55,7 @@ public class FitnessOptimizer : Optimizer
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
+                files.WriteSimParams(currentParams);
             }
         }
         return currentParams;
