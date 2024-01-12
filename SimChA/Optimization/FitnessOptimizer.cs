@@ -60,12 +60,6 @@ public class FitnessOptimizer : Optimizer
         }
         return currentParams;
     }
-    private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams simParams)
-    {
-        var samples = GenerateSimulatedData(simParams);
-        return GetCNPs(samples);
-    }
-
     private SimParams GetProposalParams(SimParams currentParams, double stepFactor)
     {
         if (currentParams.MCParams is null)
@@ -96,8 +90,10 @@ public class FitnessOptimizer : Optimizer
                 break;
         }
         double newWeight = oldWeight * (1 + sign * Rnd.NextDouble()* stepFactor);
-        while (Math.Abs(newWeight - oldWeight) <= double.Epsilon)
+        int nTries = 0;
+        while (Math.Abs(newWeight - oldWeight) <= double.Epsilon && nTries < 10)
         {
+            nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
             newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * stepFactor);
         }
