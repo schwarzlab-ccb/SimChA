@@ -26,8 +26,8 @@ public class Optimizer
         SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
     }
 
-    public virtual SimParams Optimize()
-        => FindBestParams(5000, 0.01); // 1000 samples, 1% step size
+    public virtual SimParams Optimize(FileIO files)
+        => FindBestParams(files, 5000, 0.01); // 1000 samples, 1% step size
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
@@ -41,7 +41,7 @@ public class Optimizer
         return GetCNPs(samples);
     }
 
-    private SimParams FindBestParams(int numSamples, double stepFactor)
+    private SimParams FindBestParams(FileIO files, int numSamples, double stepFactor)
     {
         var currentParams = GetProposalParams(SimParams, stepFactor);
         var currentCNPs = GenerateCNPs(currentParams);
@@ -58,6 +58,7 @@ public class Optimizer
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
+                files.WriteSimParams(currentParams);
             }
         }
         return currentParams;
