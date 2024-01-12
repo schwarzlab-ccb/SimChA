@@ -91,7 +91,7 @@ public class FitnessOptimizer : Optimizer
         }
         double newWeight = oldWeight * (1 + sign * Rnd.NextDouble()* stepFactor);
         int nTries = 0;
-        while (Math.Abs(newWeight - oldWeight) <= double.Epsilon && nTries < 10)
+        while (Math.Abs(newWeight - oldWeight)/oldWeight <= double.Epsilon && nTries < 10)
         {
             nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
