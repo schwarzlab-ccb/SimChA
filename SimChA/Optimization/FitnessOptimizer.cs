@@ -16,20 +16,21 @@ public class FitnessOptimizer : Optimizer
     private Dictionary<string, bool> IsFemaleObservedDict {get; set;} 
     private readonly List<double> FitnessList;
     private readonly Binner Binner;
+
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
         GenRef genRef, List<Sample> observedData, string binnedSamples, List<double> fitnessList) 
         : base(simParams, rnd, repeats, genRef, observedData)
     {
         FitnessList = fitnessList;
         Binner = new Binner(GenRef);
-
         ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
         ObservedCNPs    = GetCNPs(observedData);
+
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
     }
 
     public override SimParams Optimize(FileIO files)
-        => FindBestParams(files, 5000, 0.01); // 1000 samples, 1% step size
+        => FindBestParams(files);
 
     private double GetScore(List<Sample> samples)
     {
@@ -39,14 +40,14 @@ public class FitnessOptimizer : Optimizer
         var distance = GetFitnessDistance(cnps, binnedCNPs, isFemaleDict);
         return distance;
     }
-    private SimParams FindBestParams(FileIO files, int numSamples, double stepFactor)
+    private SimParams FindBestParams(FileIO files)
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
         var currentScore = GetScore(currentSamples);
-        for (int i = 0; i < numSamples; i++)
+        for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
-            var proposedParams = GetProposalParams(currentParams, stepFactor);
+            var proposedParams = GetProposalParams(currentParams);
             var proposedSamples = GenerateSimulatedData(proposedParams);
             var proposedScore = GetScore(proposedSamples);
             var delta = proposedScore - currentScore;
@@ -60,7 +61,7 @@ public class FitnessOptimizer : Optimizer
         }
         return currentParams;
     }
-    private SimParams GetProposalParams(SimParams currentParams, double stepFactor)
+    private SimParams GetProposalParams(SimParams currentParams)
     {
         if (currentParams.MCParams is null)
         {
@@ -89,13 +90,13 @@ public class FitnessOptimizer : Optimizer
                 oldWeight *= oldStrength;
                 break;
         }
-        double newWeight = oldWeight * (1 + sign * Rnd.NextDouble()* stepFactor);
+        double newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
         int nTries = 0;
         while (Math.Abs(newWeight - oldWeight)/oldWeight <= double.Epsilon && nTries < 10)
         {
             nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * stepFactor);
+            newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
         }
         // Stress, TSG/OG, and Essentiality must sum to 1, so if one changed, then
         // the others must change as well.

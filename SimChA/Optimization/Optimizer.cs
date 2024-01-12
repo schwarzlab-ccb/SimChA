@@ -10,11 +10,11 @@ using SimChA.EventData;
 public class Optimizer
 {   
     private Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
-    private Dictionary<string, List<CopyNumber>> SimulatedCNPs { get; set;}
     protected GenRef GenRef { get; }
     protected readonly Random Rnd;
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
+    protected readonly OptimizationParams OptimizationParams;
     
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData)
     {
@@ -23,11 +23,11 @@ public class Optimizer
         Repeats = repeats;
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
-        SimulatedCNPs = new Dictionary<string, List<CopyNumber>>();
+        OptimizationParams = simParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
     }
 
     public virtual SimParams Optimize(FileIO files)
-        => FindBestParams(files, 5000, 0.01); // 1000 samples, 1% step size
+        => FindBestParams(files);
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
@@ -41,15 +41,15 @@ public class Optimizer
         return GetCNPs(samples);
     }
 
-    private SimParams FindBestParams(FileIO files, int numSamples, double stepFactor)
+    private SimParams FindBestParams(FileIO files)
     {
-        var currentParams = GetProposalParams(SimParams, stepFactor);
+        var currentParams = SimParams;
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
-        for (int i = 0; i < numSamples; i++)
+        for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
-            Console.WriteLine($"Iteration {i+1} of {numSamples}");
-            var proposedParams = GetProposalParams(currentParams, stepFactor);
+            Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
+            var proposedParams = GetProposalParams(currentParams);
             var proposedCNPs = GenerateCNPs(proposedParams);
             var proposedScore = GetScore(proposedCNPs);
             var delta = proposedScore - currentScore;
@@ -64,7 +64,7 @@ public class Optimizer
         return currentParams;
     }
 
-    private SimParams GetProposalParams(SimParams currentParams, double stepFactor)
+    private SimParams GetProposalParams(SimParams currentParams)
     {
         if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
         {
@@ -75,13 +75,13 @@ public class Optimizer
         var index = Rnd.Next(events.Count);
         // Modify the relative weight of the event
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-        var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
+        var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
         int nTries = 0;
         while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < 10)
         {
             nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
+            newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
         }
         // The other event parameters are multiplicatively modified (with the same relative factor)
         var newFactor = (totalWeight - newProb)/(totalWeight - events[index].Prob);
