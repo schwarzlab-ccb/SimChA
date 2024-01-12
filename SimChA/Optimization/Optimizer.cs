@@ -75,8 +75,10 @@ public class Optimizer
         // Modify the relative weight of the event
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
         var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
-        while (Math.Abs(newProb - events[index].Prob) <= double.Epsilon)
+        int nTries = 0;
+        while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < 10)
         {
+            nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
             newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * stepFactor);
         }
