@@ -139,5 +139,10 @@
 	"MCTarget": {
 		"Mean": 1,
 		"Dist": "Exponential"
+	},
+	"OptimizationParams":{
+		"Mode": "Events",
+		"NumSamplesTotal": 5000,
+		"StepFactor": 0.01
 	}
   }

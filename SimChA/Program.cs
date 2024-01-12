@@ -45,20 +45,24 @@ if (execMode == ExecMode.BinSamples)
     files.WriteCopyNumbers(binnedSamples);
     return 0;
 }
-else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEvents)
+else if (execMode == ExecMode.RunOptimization)
 {
+    if (simParams.OptimizationParams is null)
+    {
+        throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
+    }
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    if (execMode == ExecMode.OptimizeEvents)
+    if (simParams.OptimizationParams.Mode == "Events")
     {
         var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
         Console.WriteLine("Generating Simulated Data");
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }
-    else if (execMode == ExecMode.OptimizeFitness)
+    else if (simParams.OptimizationParams.Mode == "Fitness")
     {
         if (options.BootstrapFile == "")
         {
@@ -73,6 +77,10 @@ else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEv
         Console.WriteLine("Generating Simulated Data");
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
+    }
+    else
+    {
+        throw new Exception("Error: Optimization mode not recognized. Please set OptimizationParams.Mode to either Events or Fitness.");
     }
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");

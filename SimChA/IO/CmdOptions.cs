@@ -39,8 +39,8 @@ public class CmdOptions
     [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
     public string BootstrapFile { get; set; }
 
-    [Option("optimization", Required = false, Default = "", HelpText = "Run the optimization model.")]
-    public string OptimizationType { get; set; }
+    [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
+    public bool RunOptimization { get; set; }
     [Option("bin-samples", Required = false, Default = false, HelpText = "Use SimChA to bin copy-number profiles into 1MB-sized bins")]
     public bool BinSamples { get; set; }
     [Option("binned-samples", Required = false, Default = "", HelpText = "Path to the binned data")]
@@ -56,13 +56,9 @@ public class CmdOptions
             {
                 return ExecMode.BinSamples;
             }
-            if (OptimizationType != "")
+            if (RunOptimization)
             {
-                if (OptimizationType != "events" && OptimizationType != "fitness")
-                {
-                    throw new ArgumentException("optimization must be either 'events' or 'fitness'");
-                }
-                return OptimizationType == "events" ? ExecMode.OptimizeEvents : ExecMode.OptimizeFitness;
+                return ExecMode.RunOptimization;
             }
             if (CloneTreeFile != "")
             {

@@ -5,7 +5,8 @@ namespace SimChA.DataTypes;
 
 
 public record OptimizationParams(
-    int NumSamplesMin, // Burn-in samples
+    //int NumSamplesMin, // Burn-in samples
+    string Mode, // "Events" or "Fitness"
     int NumSamplesTotal, // Number of true samples
     double StepFactor // Maximum percentage changewith each iteration
     );
