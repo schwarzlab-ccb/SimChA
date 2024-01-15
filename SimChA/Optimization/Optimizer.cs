@@ -43,7 +43,7 @@ public class Optimizer
 
     private SimParams FindBestParams(FileIO files)
     {
-        var currentParams = SimParams;
+        var currentParams = GetProposalParams(SimParams);
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
         int counter = 0;
@@ -73,7 +73,7 @@ public class Optimizer
         {
             throw new Exception("Error in Optimizer. No signatures were provided.");
         }
-        var events = currentParams.Signatures["CNs"].Events;
+        var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var totalWeight = events.Sum(e => e.Prob);
         // Choose an event to modify
         // We add an extra two possible indices to account for the InternalDuplication and
