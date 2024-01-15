@@ -72,23 +72,64 @@ public class Optimizer
         }
         var events = currentParams.Signatures["CNs"].Events;
         var totalWeight = events.Sum(e => e.Prob);
-        var index = Rnd.Next(events.Count);
-        // Modify the relative weight of the event
+        // Choose an event to modify
+        // We add an extra two possible indices to account for the InternalDuplication and
+        // InternalDeletion Length Parameters
+        var index = Rnd.Next(events.Count + 2);
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-        var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
-        int nTries = 0;
-        while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < 10)
+        var nTries = 0;
+        // Modify internal length scales
+        if (index >= events.Count)
         {
-            nTries++;
-            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+            long oldSize = 0;
+            if (index == events.Count)
+            {
+                var internalDel = events.Find(e => e.Type == CNEventType.InternalDeletion) ?? throw new Exception("Error in Optimizer. No internal deletion event found.");
+                // Get the actual index
+                index = events.IndexOf(internalDel);
+                oldSize = internalDel.Size;
+            }
+            else if (index == events.Count + 1)
+            {
+                var internalDup = events.Find(e => e.Type == CNEventType.InternalDuplication) ?? throw new Exception("Error in Optimizer. No internal duplication event found.");
+                index = events.IndexOf(internalDup);
+                oldSize = internalDup.Size;
+            }
+            else
+            {
+                throw new Exception("Error in Optimizer. Index out of range.");
+            }
+            // Modify the internal duplication/deletion length parameter
+            var newSize = (long) (oldSize * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
+            while (newSize < 0 && Math.Abs(newSize-oldSize)/oldSize <= double.Epsilon && nTries < OptimizationParams.MaxTries)
+            {
+                nTries++;
+                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+                newSize = (long) (oldSize * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
+            }
+            var newEvents = new List<CNEventPars>(events);
+            newEvents[index] = newEvents[index] with { Size = newSize };
+            var newSignature = new Signature(1, newEvents);
+            return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
         }
-        // The other event parameters are multiplicatively modified (with the same relative factor)
-        var newFactor = (totalWeight - newProb)/(totalWeight - events[index].Prob);
-        var newEvents = events.Select(e => e with { Prob = e.Prob * newFactor }).ToList();
-        newEvents[index] = newEvents[index] with { Prob = newProb };
-        var newSignature = new Signature(1, newEvents);
-        return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
+        else
+        {
+            // Modify the relative weight of the event
+            var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+
+            while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < OptimizationParams.MaxTries)
+            {
+                nTries++;
+                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+                newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+            }
+            // The other event parameters are multiplicatively modified (with the same relative factor)
+            var newFactor = (totalWeight - newProb)/(totalWeight - events[index].Prob);
+            var newEvents = events.Select(e => e with { Prob = e.Prob * newFactor }).ToList();
+            newEvents[index] = newEvents[index] with { Prob = newProb };
+            var newSignature = new Signature(1, newEvents);
+            return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
+        }
     }
 
 
