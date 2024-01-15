@@ -111,7 +111,7 @@ public class FileIO
 
     public void WriteSimParams(SimParams simParams, string? name = null)
     {
-        string filePath = (name != null) ? Path.Combine(Path.GetFullPath(OutFolder), $"{name}.json")
+        string filePath = (name != null) ? Path.Combine(Path.GetFullPath(OutFolder), name)
                                          : Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
         using var file = new StreamWriter(filePath);
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };

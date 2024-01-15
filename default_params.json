@@ -144,6 +144,7 @@
 		"Mode": "Events",
 		"NumSamplesTotal": 5000,
 		"StepFactor": 0.01,
-		"MaxTries": 10
+		"MaxTries": 10,
+		"WriteIntermediate": true
 	}
   }
