@@ -46,6 +46,7 @@ public class Optimizer
         var currentParams = SimParams;
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
+        int counter = 0;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
@@ -58,7 +59,8 @@ public class Optimizer
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
-                files.WriteSimParams(currentParams);
+                counter++;
+                files.WriteSimParams(currentParams, $"params_{counter}.json");
             }
         }
         return currentParams;
