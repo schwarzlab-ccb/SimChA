@@ -10,5 +10,6 @@ public record OptimizationParams(
     int NumSamplesTotal, // Number of true samples
     double StepFactor, // Maximum percentage changewith each iteration
     int MaxTries, // Maximum number of attempts at getting a new event parameter
-    bool WriteIntermediate // Write intermediate better-scoring parameter set to file
+    bool WriteIntermediate, // Write intermediate better-scoring parameter set to file
+    int WriteFrequency // How often to write intermediate parameter set to file
     );

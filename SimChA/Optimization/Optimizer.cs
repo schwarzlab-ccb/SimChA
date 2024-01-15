@@ -60,7 +60,7 @@ public class Optimizer
                 currentParams = proposedParams;
                 currentScore = proposedScore;
                 counter++;
-                if (OptimizationParams.WriteIntermediate)
+                if (OptimizationParams.WriteIntermediate && counter % OptimizationParams.WriteFrequency == 0)
                     files.WriteSimParams(currentParams, $"params_{counter}.json");
             }
         }
