@@ -8,8 +8,10 @@ from datetime import datetime
 import uuid
 import json
 
-def generate_cohort(param_file, genes_path, out_path, repeats):
+def generate_cohort(param_file, genes_path, out_path, repeats, all_chromomsomes):
     cmd = f"dotnet run --no-build --project SimChA -C {param_file} -R {repeats} -O {out_path} -D {genes_path}"
+    if not all_chromosomes:
+        cmd += " --autosomes-only"
     subprocess.run([cmd], shell=True)
     return
    
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     if args.test:
         cohort_dir_path = "out/ground_truth"
         # Generate the simulated data
-        generate_cohort(param_file, genes_path, cohort_dir_path, args.repeats)
+        generate_cohort(param_file, genes_path, cohort_dir_path, args.repeats, args.all_chromosomes)
         cohort_path = "out/ground_truth/copynumbers.tsv"
     else:
         cohort_path = args.data_path
