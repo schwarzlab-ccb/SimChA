@@ -21,49 +21,49 @@
 		  },
 		  {
 			"Type": "ChromDuplication",
-			"Prob": 1,
+			"Prob": 10,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDuplication",
-			"Prob": 8,
+			"Prob": 50,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDeletion",
-			"Prob": 8,
+			"Prob": 50,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalInversion",
-			"Prob": 8,
+			"Prob": 0,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InvertedDuplication",
-			"Prob": 10,
+			"Prob": 0,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "BreakageFusionBridge",
-			"Prob": 4,
+			"Prob": 20,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "TailDeletion",
-			"Prob": 4,
+			"Prob": 20,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "Translocation",
-			"Prob": 2,
+			"Prob": 0,
 			"Size": 10000000,
 			"Frag": 0
 		  },
@@ -146,6 +146,7 @@
 		"StepFactor": 0.01,
 		"MaxTries": 10,
 		"WriteIntermediate": true,
-    "WriteFrequency": 50
+    	"WriteFrequency": 50,
+		"AcceptanceFactor": 10
 	}
   }

@@ -23,7 +23,7 @@ public class Optimizer
         Repeats = repeats;
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
-        OptimizationParams = simParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
+        OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
     }
 
     public virtual SimParams Optimize(FileIO files)
@@ -31,13 +31,17 @@ public class Optimizer
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
-        var distance = GetEventDistance(cnps);
-        return distance;
+        var segDist = GetSegLengthDistance(cnps);
+        var cpDist = GetChangepointDistance(cnps);
+        var bpDist = GetBreakpointDistance(cnps);
+        var majDist = GetMajMinCNDistance(cnps, true);
+        var minDist = GetMajMinCNDistance(cnps, false);
+        return segDist;//(segDist + cpDist + bpDist + majDist + minDist)/5;
     }
 
-    private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams simParams)
+    private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
     {
-        var samples = GenerateSimulatedData(simParams);
+        var samples = GenerateSimulatedData(currentParams);
         return GetCNPs(samples);
     }
 
@@ -53,8 +57,12 @@ public class Optimizer
             var proposedParams = GetProposalParams(currentParams);
             var proposedCNPs = GenerateCNPs(proposedParams);
             var proposedScore = GetScore(proposedCNPs);
-            var delta = proposedScore - currentScore;
+            var delta = OptimizationParams.AcceptanceFactor*(proposedScore - currentScore)/currentScore;
             var prob = Math.Min(1, Math.Exp(-delta));
+            if (prob < 1)
+            {
+                Console.WriteLine("hello");
+            }
             if (Rnd.NextDouble() < prob)
             {
                 currentParams = proposedParams;
@@ -135,17 +143,6 @@ public class Optimizer
         }
     }
 
-
-    private double GetEventDistance(Dictionary<string, List<CopyNumber>> cnps)
-    {
-        var segDist = GetSegLengthDistance(cnps);
-        var cpDist = GetChangepointDistance(cnps);
-        var bpDist = GetBreakpointDistance(cnps);
-        var majDist = GetMajMinCNDistance(cnps, true);
-        var minDist = GetMajMinCNDistance(cnps, false);
-        return (segDist + cpDist + bpDist + majDist + minDist)/5;
-    }
-
     private List<Sample> GenerateSimulatedData(SimParams currentParams)
     {
         if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
@@ -179,7 +176,7 @@ public class Optimizer
         var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(simCNPs);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
-        var histBins = 50;
+        var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
