@@ -59,10 +59,6 @@ public class Optimizer
             var proposedScore = GetScore(proposedCNPs);
             var delta = OptimizationParams.AcceptanceFactor*(proposedScore - currentScore)/currentScore;
             var prob = Math.Min(1, Math.Exp(-delta));
-            if (prob < 1)
-            {
-                Console.WriteLine("hello");
-            }
             if (Rnd.NextDouble() < prob)
             {
                 currentParams = proposedParams;
