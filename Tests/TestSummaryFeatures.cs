@@ -128,19 +128,32 @@ public class TestSummaryFeatures
         var aneuploidy = SummaryFeatures.GetAverageAneuploidy(matrix);
         Assert.AreEqual(0, aneuploidy, double.Epsilon);
     }
-/*
+
     [Test]
     public void TestDefaultChangepoints()
     {
         var karXX = new Karyotype(_genRef, true);
-        var changepoints = SummaryFeatures.GetChangepointInfo(_genRef, new List<Karyotype> {karXX});
-        Assert.AreEqual(0, changepoints.Count);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var (values, max) = SummaryFeatures.GetChangepointInfo(cnps);
+        Assert.AreEqual(0, values.Count);
+        Assert.AreEqual(0, max);
         // Count the CN-normal segments
-        changepoints = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karXX}, true);
-        // Only autosomes are counted
-        Assert.AreEqual(22, changepoints.Count);
+        (values, max) = SummaryFeatures.GetChangepointInfo(cnps, true);
+        // Only cn-normal autosomes are counted
+        Assert.AreEqual(22, values.Count);
+        Assert.AreEqual(0, max);
+        // Count CN-normal and LoH autosomes
+        (values, max) = SummaryFeatures.GetChangepointInfo(cnps, true, true);
+        // Only cn-normal autosomes are counted
+        Assert.AreEqual(22, values.Count);
+        Assert.AreEqual(0, max);
+        // Count all chromosomes
+        (values, max) = SummaryFeatures.GetChangepointInfo(cnps, true, true, true);
+        // Only cn-normal autosomes are counted
+        Assert.AreEqual(23, values.Count);
+        Assert.AreEqual(0, max);
     }
-    
+    /*  
     [Test]
     public void TestChangepoints()
     {
