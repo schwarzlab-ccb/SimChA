@@ -24,7 +24,7 @@ public static class SummaryFeatures
         }
         return (cns, max);
     }
-    public static (List<double>, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static (List<double> segs, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var segLengths = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -44,7 +44,8 @@ public static class SummaryFeatures
             }
             segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
         }
-        return (segLengths, segLengths.Max());
+        var max = (segLengths.Count > 0) ? segLengths.Max() : 0;
+        return (segLengths, max);
     }
 
     public static (List<double> values, int max) GetChangepointInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
@@ -164,6 +165,7 @@ public static class SummaryFeatures
         return (ploidies, ploidies.Max());
     }
 
+    // Produces a matrix of copy-number values for each chromosome in each sample
     public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
     {
         var matrix = new Dictionary<string, Dictionary<string, double>>();
@@ -186,6 +188,11 @@ public static class SummaryFeatures
         return matrix;
     }
 
+    public static double GetMeanPloidy(Dictionary<string, Dictionary<string, double>> matrix)
+        => matrix.SelectMany(row => row.Value)
+                 .Select(col => col.Value)
+                 .DefaultIfEmpty(0)
+                 .Average();
     public static double GetMKV(Dictionary<string, Dictionary<string, double>> chrCNMatrix)
     {
         // Mean Karyotypic Variance is the variance of individual chromosomes across all samples
@@ -196,7 +203,8 @@ public static class SummaryFeatures
             var chrVals = chrCNMatrix[chr].Values;
             chrVar.Add(chr, chrVals.Variance());
         }
-        return chrVar.Values.Average();
+        // TODO: Normalize to the average ploidy of the cohort
+        return chrVar.Values.Average()/GetMeanPloidy(chrCNMatrix);
     }
 
     private static Dictionary<string, Dictionary<string, double>> TransposeChrCNMatrix( Dictionary<string, Dictionary<string, double>> chrCNMatrix)
