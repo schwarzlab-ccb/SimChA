@@ -177,6 +177,12 @@ public class TestSummaryFeatures
         Assert.AreEqual(1, values.Count);
         Assert.AreEqual(2, values[0]);
         Assert.AreEqual(2, max);
+        // Count the copy-neutral LoH segments (but not CN-normal)
+        (values, max) = SummaryFeatures.GetChangepointInfo(cnps, false, true);
+        Assert.AreEqual(2, values.Count);
+        Assert.AreEqual(0, values[0]);
+        Assert.AreEqual(2, values[1]);
+        Assert.AreEqual(2, max);
     }
     /*
     [Test]
