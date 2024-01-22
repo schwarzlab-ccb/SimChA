@@ -29,12 +29,22 @@ public class TestSummaryFeatures
         _chrs = new List<string> {_genRef.AllChrs[0], _genRef.AllChrs[1]};
         _kar = new Karyotype(_genRef, true);
     }
+    private Dictionary<string, List<CopyNumber>> GetCNPs(List<Karyotype> kars)
+    {
+        var cnps = new Dictionary<string, List<CopyNumber>>();
+        for(int i = 0; i < kars.Count; i++)
+        {
+            var kar = kars[i];
+            var cn = CopyNumbers.CalcCopyNumbers(_genRef, kar, kar.SexXX).ToList();
+            cnps.Add($"sample_{i+1}", cn);
+        }
+        return cnps;
+    }
+
     [Test]
     public void TestDefaultSegLengths()
     {
-        var karXX = new Karyotype(_genRef, true);
-        var cn = CopyNumbers.CalcCopyNumbers(_genRef, karXX, true).ToList();
-        var cnps = new Dictionary<string, List<CopyNumber>> {{"sample_1", cn}};
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
         var segLengths = SummaryFeatures.GetSegLengths(cnps);
         Assert.AreEqual(0, segLengths.segs.Count);
         // Count the CN-normal segments of autosomes
@@ -55,8 +65,7 @@ public class TestSummaryFeatures
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         // Gain 0-5000 on chr2
         karXX.ApplyInternalDuplication(1, 0, 5000);
-        var cn = CopyNumbers.CalcCopyNumbers(_genRef, karXX, true).ToList();
-        var cnps = new Dictionary<string, List<CopyNumber>> {{"sample_1", cn}};
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
         var (segs, max) = SummaryFeatures.GetSegLengths(cnps);
         Assert.AreEqual(2, segs.Count);
         Assert.AreEqual(1000, segs[0]);
@@ -69,14 +78,11 @@ public class TestSummaryFeatures
         var karXX = new Karyotype(_genRef, true);
         var karXY = new Karyotype(_genRef, true);
         karXX.ApplyWGD();
-        var cn = CopyNumbers.CalcCopyNumbers(_genRef, karXX, true).ToList();
-        var cnps = new Dictionary<string, List<CopyNumber>> {{"sample_1", cn}};
         for (int i = 0; i < 23; i++)
         {
             karXY.ApplyContigDeletion(i);
         }
-        cn = CopyNumbers.CalcCopyNumbers(_genRef, karXY, false).ToList();
-        cnps.Add("sample_2", cn);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var autosomes = _genRef.ChrIDsForAutosomes().ToList();
         var matrix = SummaryFeatures.GetChrCopyNumberMatrix(autosomes, cnps);
         // Outer index is chromosome ID
@@ -96,14 +102,11 @@ public class TestSummaryFeatures
         var karXX = new Karyotype(_genRef, true);
         var karXY = new Karyotype(_genRef, true);
         karXX.ApplyWGD();
-        var cn = CopyNumbers.CalcCopyNumbers(_genRef, karXX, true).ToList();
-        var cnps = new Dictionary<string, List<CopyNumber>> {{"sample_1", cn}};
         for (int i = 0; i < 23; i++)
         {
             karXY.ApplyContigDeletion(i);
         }
-        cn = CopyNumbers.CalcCopyNumbers(_genRef, karXY, false).ToList();
-        cnps.Add("sample_2", cn);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var autosomes = _genRef.ChrIDsForAutosomes().ToList();
         var matrix = SummaryFeatures.GetChrCopyNumberMatrix(autosomes, cnps);
         var mkv = SummaryFeatures.GetMKV(matrix);
@@ -115,32 +118,29 @@ public class TestSummaryFeatures
         var karXX = new Karyotype(_genRef, true);
         var karXY = new Karyotype(_genRef, true);
         karXX.ApplyWGD();
-        var cn = CopyNumbers.CalcCopyNumbers(_genRef, karXX, true).ToList();
-        var cnps = new Dictionary<string, List<CopyNumber>> {{"sample_1", cn}};
         for (int i = 0; i < 23; i++)
         {
             karXY.ApplyContigDeletion(i);
         }
-        cn = CopyNumbers.CalcCopyNumbers(_genRef, karXY, false).ToList();
-        cnps.Add("sample_2", cn);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var autosomes = _genRef.ChrIDsForAutosomes().ToList();
         var matrix = SummaryFeatures.GetChrCopyNumberMatrix(autosomes, cnps);
         var aneuploidy = SummaryFeatures.GetAverageAneuploidy(matrix);
         Assert.AreEqual(0, aneuploidy, double.Epsilon);
     }
-    /*
+/*
     [Test]
     public void TestDefaultChangepoints()
     {
         var karXX = new Karyotype(_genRef, true);
-        var changepoints = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karXX});
+        var changepoints = SummaryFeatures.GetChangepointInfo(_genRef, new List<Karyotype> {karXX});
         Assert.AreEqual(0, changepoints.Count);
         // Count the CN-normal segments
         changepoints = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karXX}, true);
         // Only autosomes are counted
         Assert.AreEqual(22, changepoints.Count);
     }
-
+    
     [Test]
     public void TestChangepoints()
     {
