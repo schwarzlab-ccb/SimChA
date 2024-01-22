@@ -184,15 +184,23 @@ public class TestSummaryFeatures
         Assert.AreEqual(2, values[1]);
         Assert.AreEqual(2, max);
     }
-    /*
+    
     [Test]
     public void TestDefaultBreakpointsPerChromosome()
     {
         var karXX = new Karyotype(_genRef, true);
-        var breakpoints = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, new List<Karyotype> {karXX});
-        Assert.AreEqual(0, breakpoints.Count);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(cnps);
+        // Check that there is an entry for each autosome
+        Assert.AreEqual(22, values.Count);
+        // Check that no breakpoints were found for any of the chromosomes
+        foreach(var val in values)
+        {
+            Assert.AreEqual(0, val);
+        }
+        Assert.AreEqual(0, max);
     }
-
+    /*
     [Test]
     public void TestBreakpointsPerChromosome()
     {
@@ -200,14 +208,17 @@ public class TestSummaryFeatures
         var karB = new Karyotype(_genRef, true);
         karA.ApplyInternalDeletion(0, 1000, 2000);
         karB.ApplyInternalDuplication(0, 2000, 3000);
-        var segs = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, new List<Karyotype> {karA, karB});
-        // Two chromosomes have breakpoints: karA H1, and karB H1
-        Assert.AreEqual(2, segs.Count);
-        // Each chromosome has two breakpoints
-        Assert.AreEqual(2, segs[0]);
-        Assert.AreEqual(2, segs[1]);
+        karB.ApplyInternalDuplication(0, 5000, 6000);
+        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
+        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(cnps);
+        // Since these are 
+        Assert.AreEqual(4, values[0]);
+        for (int i = 1; i < values.Count; i++)
+        {
+            Assert.AreEqual(0, values[i]);
+        }
     }
-
+    
     [Test]
     public void TestGetMinMajCNs()
     {
