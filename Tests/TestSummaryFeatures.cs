@@ -153,22 +153,32 @@ public class TestSummaryFeatures
         Assert.AreEqual(23, values.Count);
         Assert.AreEqual(0, max);
     }
-    /*  
+    
     [Test]
     public void TestChangepoints()
     {
         var karA = new Karyotype(_genRef, true);
         var karB = new Karyotype(_genRef, true);
         karA.ApplyInternalDeletion(0, 1000, 2000);
-        karB.ApplyInternalDuplication(0, 2000, 3000);
-        var segs = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karA, karB});
-        Assert.AreEqual(2, segs.Count);
+        karB.ApplyInternalDuplication(1, 2000, 3000);
+        karB.ApplyInternalDuplication(1, 2000, 3000);
+        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
+        var (values, max) = SummaryFeatures.GetChangepointInfo(cnps);
+        Assert.AreEqual(2, values.Count);
+        // The step-down on karA, chr1
+        Assert.AreEqual(1, values[0]);
+        // The step-up on karB, chr2
+        Assert.AreEqual(2, values[1]);
+        Assert.AreEqual(2, max);
         // Copy-neutral LOH segments are not counted
         karA.ApplyInternalDuplication(23, 1000, 2000);
-        segs = SummaryFeatures.GetChangepoints(_genRef, new List<Karyotype> {karA, karB});
-        Assert.AreEqual(1, segs.Count);
+        cnps = GetCNPs(new List<Karyotype> { karA, karB });
+        (values, max) = SummaryFeatures.GetChangepointInfo(cnps);
+        Assert.AreEqual(1, values.Count);
+        Assert.AreEqual(2, values[0]);
+        Assert.AreEqual(2, max);
     }
-
+    /*
     [Test]
     public void TestDefaultBreakpointsPerChromosome()
     {
