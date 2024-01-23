@@ -222,10 +222,42 @@ public class TestSummaryFeatures
         Assert.AreEqual(0, values["sample_2"].Count(x => x == 1));
     }
 
-    /*[Test]
-    public void TestDefault
-
     [Test]
+    public void TestBreakpoints()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Missing segment from the start
+        karXX.ApplyInternalDeletion(0, 0, 1000);
+        var cnps = GetCNPs(new List<Karyotype> { karXX});
+        var size = 10_000_000;
+        var (values, max) = SummaryFeatures.GetBreakpoints(_genRef, cnps, size);
+        Assert.AreEqual(1, values.Count);
+        Assert.AreEqual(300, values["sample_1"].Count);
+        // First bin should have a breakpoint
+        Assert.AreEqual(1, values["sample_1"][0]);
+        // All others are empty
+        for (int i = 1; i < 300; i++)
+        {
+            Assert.AreEqual(0, values["sample_1"][i]);
+        }
+        
+        // This time with a totally missing segment
+        karXX = new Karyotype(_genRef, true);
+        karXX.ApplyInternalDeletion(0, 1000, 2000);
+        cnps = GetCNPs(new List<Karyotype> { karXX});
+        (values, max) = SummaryFeatures.GetBreakpoints(_genRef, cnps, size);
+        Assert.AreEqual(1, values.Count);
+        Assert.AreEqual(300, values["sample_1"].Count);
+        // First bin should have two breakpoints (start and end of missing segment)
+        Assert.AreEqual(2, values["sample_1"][0]);
+        // All others are empty
+        for (int i = 1; i < 300; i++)
+        {
+            Assert.AreEqual(0, values["sample_1"][i]);
+        }
+    }
+
+    /*[Test]
     public void TestBreakpointsPerChromosome()
     {
         var karA = new Karyotype(_genRef, true);
