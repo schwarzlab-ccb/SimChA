@@ -200,6 +200,53 @@ public class TestSummaryFeatures
         }
         Assert.AreEqual(0, max);
     }
+    [Test]
+    public void TestDefaultMajMinCNs()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        // Major copy number
+        var (values, max) = SummaryFeatures.GetMajMinCNs(cnps, true);
+        // One sample
+        Assert.AreEqual(1, values.Count);
+        // Average is 1
+        Assert.AreEqual(1, values[0]);
+        // Maximum is 1
+        Assert.AreEqual(1, max);
+        // Minor copy number
+        (values, max) = SummaryFeatures.GetMajMinCNs(cnps, false);
+        Assert.AreEqual(1, values.Count);
+        Assert.AreEqual(1, values[0]);
+        Assert.AreEqual(1, max);
+    }
+    [Test]
+    public void TestMajMinCNs()
+    {
+        // Create a karyotype with 2 copies of chr1-h1, 
+        // 1 copy of chr1-h2, and 1 copy of chr2-h1
+        var karXX = new Karyotype(_genRef, true);
+        karXX.ApplyContigDuplication(0);
+        for (int i = 2; i < 46; i++)
+        {
+            if (i == 23)
+            {
+                continue;
+            }
+            karXX.ApplyContigDeletion(i);
+        }
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        // Major copy number
+        var (values, max) = SummaryFeatures.GetMajMinCNs(cnps, true);
+        Assert.AreEqual(1, values.Count);
+        // 2x chr1-h1, 1x chr2-h1
+        Assert.AreEqual(3.0/23, values[0], double.Epsilon);
+        Assert.AreEqual(3.0/23, max, double.Epsilon);
+        // Minor copy number
+        (values, max) = SummaryFeatures.GetMajMinCNs(cnps, false);
+        Assert.AreEqual(1, values.Count);
+        Assert.AreEqual(1.0/23, values[0], double.Epsilon);
+        Assert.AreEqual(1.0/23, max, double.Epsilon);
+    }
     /*
     [Test]
     public void TestBreakpointsPerChromosome()
@@ -217,23 +264,6 @@ public class TestSummaryFeatures
         {
             Assert.AreEqual(0, values[i]);
         }
-    }
-    
-    [Test]
-    public void TestGetMinMajCNs()
-    {
-        var kar = new Karyotype(_genRef, true);
-        kar.ApplyInternalDeletion(0, 1000, 2000);
-        var cnList = CopyNumbers.CalcCopyNumbers(_genRef, kar, true).ToList();
-        var minCNs = SummaryFeatures.GetMinMajCNs(cnList, false);
-        // First chromosome
-        Assert.AreEqual(1, minCNs[0]);
-        Assert.AreEqual(0, minCNs[1]);
-        Assert.AreEqual(1, minCNs[2]);
-        var majCNs = SummaryFeatures.GetMinMajCNs(cnList, true);
-        Assert.AreEqual(1, majCNs[0]);
-        Assert.AreEqual(1, majCNs[1]);
-        Assert.AreEqual(1, majCNs[2]);
     }
     */
 
