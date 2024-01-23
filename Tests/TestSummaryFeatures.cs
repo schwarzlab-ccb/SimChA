@@ -200,6 +200,48 @@ public class TestSummaryFeatures
         }
         Assert.AreEqual(0, max);
     }
+
+    [Test]
+    public void TestDefaultBreakpoints()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var karXY = new Karyotype(_genRef, false);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var size = 10_000_000;
+        var (values, max) = SummaryFeatures.GetBreakpoints(_genRef, cnps, size);
+        Assert.AreEqual(2, values.Count);
+        // The number of bins across the chromosome 
+        Assert.AreEqual(300, values["sample_1"].Count);
+        Assert.AreEqual(300, values["sample_2"].Count);
+        for (int i = 0; i < 300; i++)
+        {
+            Assert.AreEqual(0, values["sample_1"][i]);
+            Assert.AreEqual(0, values["sample_2"][i]);
+        }
+        Assert.AreEqual(0, values["sample_1"].Count(x => x == 1));
+        Assert.AreEqual(0, values["sample_2"].Count(x => x == 1));
+    }
+
+    /*[Test]
+    public void TestDefault
+
+    [Test]
+    public void TestBreakpointsPerChromosome()
+    {
+        var karA = new Karyotype(_genRef, true);
+        var karB = new Karyotype(_genRef, true);
+        karA.ApplyInternalDeletion(0, 1000, 2000);
+        karB.ApplyInternalDuplication(0, 2000, 3000);
+        karB.ApplyInternalDuplication(0, 5000, 6000);
+        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
+        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(cnps);
+        // Since these are 
+        Assert.AreEqual(4, values[0]);
+        for (int i = 1; i < values.Count; i++)
+        {
+            Assert.AreEqual(0, values[i]);
+        }
+    }*/
     [Test]
     public void TestDefaultMajMinCNs()
     {
@@ -247,24 +289,4 @@ public class TestSummaryFeatures
         Assert.AreEqual(1.0/23, values[0], double.Epsilon);
         Assert.AreEqual(1.0/23, max, double.Epsilon);
     }
-    /*
-    [Test]
-    public void TestBreakpointsPerChromosome()
-    {
-        var karA = new Karyotype(_genRef, true);
-        var karB = new Karyotype(_genRef, true);
-        karA.ApplyInternalDeletion(0, 1000, 2000);
-        karB.ApplyInternalDuplication(0, 2000, 3000);
-        karB.ApplyInternalDuplication(0, 5000, 6000);
-        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
-        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(cnps);
-        // Since these are 
-        Assert.AreEqual(4, values[0]);
-        for (int i = 1; i < values.Count; i++)
-        {
-            Assert.AreEqual(0, values[i]);
-        }
-    }
-    */
-
 }

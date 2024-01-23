@@ -96,6 +96,35 @@ public static class SummaryFeatures
         return (changepointList, maxChange);
     }
 
+    public static (Dictionary<string, List<int>> values, int max) GetBreakpoints(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, int SIZE = 10_000_000, bool includeSexChromosomes = false)
+    {
+        var breakpoints = new Dictionary<string, List<int>>();
+        var maxBP = 0;
+        var chrs = includeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
+        
+        foreach (var cnProfile in cnProfiles)
+        {
+            var cnList = cnProfile.Value;
+            var allBPs = new List<int>();
+            foreach (var chr in chrs)
+            {
+                var chrLen = genRef.ChrLengths[chr];
+                var chrSegs = cnList.Where(cn => cn.Segment.ChrNo == chr).ToList();
+                var intervals = Enumerable.Range(0, (int)((chrLen + SIZE) / (double)SIZE) );
+                var grouped = chrSegs.Where(cn => cn.Segment.End != chrLen) // Exclude endpoints of the chromosome
+                                     .GroupBy(cn => (int)(cn.Segment.End / SIZE))
+                                     .ToDictionary(g => g.Key, g => g.Count());
+
+                var binned = Enumerable.Range(0, intervals.Count())
+                                       .Select(i => grouped.ContainsKey(i) ? grouped[i] : 0)
+                                       .ToList();
+                allBPs.AddRange(binned);
+            }
+            breakpoints.Add(cnProfile.Key, allBPs);
+        }
+        return (breakpoints, maxBP);
+    }
+
     public static (List<double> values, int max) GetBreakpointsPerChromosome(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
     {
         var breakpoints = new List<double>();
