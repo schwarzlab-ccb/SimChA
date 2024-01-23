@@ -29,6 +29,7 @@ public class TestSummaryFeatures
         _chrs = new List<string> {_genRef.AllChrs[0], _genRef.AllChrs[1]};
         _kar = new Karyotype(_genRef, true);
     }
+    
     private Dictionary<string, List<CopyNumber>> GetCNPs(List<Karyotype> kars)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
@@ -57,6 +58,7 @@ public class TestSummaryFeatures
         segLengths = SummaryFeatures.GetSegLengths(cnps, true, true, true);
         Assert.AreEqual(23, segLengths.segs.Count);
     }
+
     [Test]
     public void TestSegLengths()
     {
@@ -72,6 +74,7 @@ public class TestSummaryFeatures
         Assert.AreEqual(5000, segs[1]);
         Assert.AreEqual(5000, max);
     }
+
     [Test]
     public void TestChrCNMatrix()
     {
@@ -96,6 +99,7 @@ public class TestSummaryFeatures
             Assert.AreEqual(1, matrix[chr]["sample_2"]);
         }
     }
+
     [Test]
     public void TestMKV()
     {
@@ -112,6 +116,7 @@ public class TestSummaryFeatures
         var mkv = SummaryFeatures.GetMKV(matrix);
         Assert.AreEqual(1.8, mkv, double.Epsilon);
     }
+
     [Test]
     public void TestAverageAneuploidy()
     {
@@ -200,7 +205,6 @@ public class TestSummaryFeatures
         }
         Assert.AreEqual(0, max);
     }
-
 
     [Test]
     public void TestBreakpointsPerChromosome()
@@ -292,23 +296,6 @@ public class TestSummaryFeatures
         }
     }
 
-    /*[Test]
-    public void TestBreakpointsPerChromosome()
-    {
-        var karA = new Karyotype(_genRef, true);
-        var karB = new Karyotype(_genRef, true);
-        karA.ApplyInternalDeletion(0, 1000, 2000);
-        karB.ApplyInternalDuplication(0, 2000, 3000);
-        karB.ApplyInternalDuplication(0, 5000, 6000);
-        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
-        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(cnps);
-        // Since these are 
-        Assert.AreEqual(4, values[0]);
-        for (int i = 1; i < values.Count; i++)
-        {
-            Assert.AreEqual(0, values[i]);
-        }
-    }*/
     [Test]
     public void TestDefaultMajMinCNs()
     {
@@ -328,6 +315,7 @@ public class TestSummaryFeatures
         Assert.AreEqual(1, values[0]);
         Assert.AreEqual(1, max);
     }
+
     [Test]
     public void TestMajMinCNs()
     {
