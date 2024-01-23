@@ -33,7 +33,7 @@ public class Optimizer
     {
         var segDist = GetSegLengthDistance(cnps);
         var cpDist = GetChangepointDistance(cnps);
-        var bpDist = GetBreakpointDistance(cnps);
+        //var bpDist = GetBreakpointDistance(cnps);
         var majDist = GetMajMinCNDistance(cnps, true);
         var minDist = GetMajMinCNDistance(cnps, false);
         var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
@@ -179,15 +179,15 @@ public class Optimizer
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    /*private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetBreakpointsPerChromosome(ObservedCNPs);
-        var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(simCNPs);
+        var (obsValues, obsMax) = SummaryFeatures.GetBreakpointsPerChromosome(GenRef, ObservedCNPs);
+        var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(GenRef, simCNPs);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
+    }*/
     private double GetMajMinCNDistance(Dictionary<string, List<CopyNumber>> simCNPs, bool getMajor)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetMajMinCNs(ObservedCNPs, getMajor);

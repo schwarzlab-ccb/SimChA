@@ -125,36 +125,25 @@ public static class SummaryFeatures
         return (breakpoints, maxBP);
     }
 
-    public static (List<double> values, int max) GetBreakpointsPerChromosome(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
+    public static (Dictionary<string, List<int>> values, int max) GetBreakpointsPerChromosome(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
     {
-        var breakpoints = new List<double>();
+        var breakpoints = new Dictionary<string, List<int>>();
         var maxBP = 0;
+        var chrs = includeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
         foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
-            var lastChr = null as string;
-            var breakpointCount = 0;
-            foreach (var cn in cnList)
+            var allBPs = new List<int>();
+            foreach (var chr in chrs)
             {
-                var thisChr = cn.Segment.ChrNo;
-                if (thisChr != lastChr)
-                {
-                    if (lastChr != null)
-                    {
-                        if (breakpointCount > maxBP)
-                        {
-                            maxBP = breakpointCount;
-                        }
-                        breakpoints.Add(breakpointCount);
-                    }
-                    lastChr = thisChr;
-                    breakpointCount = 0;
-                }
-                else
-                {
-                    breakpointCount += 1;
-                }
+                var chrLen = genRef.ChrLengths[chr];
+                var chrSegs = cnList.Where(cn => cn.Segment.ChrNo == chr).ToList();
+                // Exclude endpoint of the chromosome
+                var bps = chrSegs.Count(cn => cn.Segment.End != chrLen);
+                allBPs.Add(bps);
+                maxBP = bps > maxBP ? bps : maxBP;
             }
+            breakpoints.Add(cnProfile.Key, allBPs);
         }
         return (breakpoints, maxBP);
     }

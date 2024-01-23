@@ -190,15 +190,50 @@ public class TestSummaryFeatures
     {
         var karXX = new Karyotype(_genRef, true);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(cnps);
-        // Check that there is an entry for each autosome
-        Assert.AreEqual(22, values.Count);
+        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        // Check that only one sample was found
+        Assert.AreEqual(1, values.Count);
         // Check that no breakpoints were found for any of the chromosomes
-        foreach(var val in values)
+        foreach (var val in values["sample_1"])
         {
             Assert.AreEqual(0, val);
         }
         Assert.AreEqual(0, max);
+    }
+
+
+    [Test]
+    public void TestBreakpointsPerChromosome()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Missing segment from the start
+        karXX.ApplyInternalDeletion(0, 0, 1000);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        Assert.AreEqual(1, values.Count);
+        // Chromosome 1 should have 1 breakpoint from the deletion
+        Assert.AreEqual(1, values["sample_1"][0]);
+        // All others 0
+        var nChrs = values["sample_1"].Count;
+        for (int i = 1; i < nChrs; i++)
+        {
+            Assert.AreEqual(0, values["sample_1"][i]);
+        }
+
+        // Whole missing internal segment
+        karXX = new Karyotype(_genRef, true);
+        // Missing segment from the start
+        karXX.ApplyInternalDeletion(0, 1000, 2000);
+        cnps = GetCNPs(new List<Karyotype> { karXX });
+        (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        Assert.AreEqual(1, values.Count);
+        // Chromosome 1 should have 2 breakpoints from the deletion
+        Assert.AreEqual(2, values["sample_1"][0]);
+        // All others 0
+        for (int i = 1; i < nChrs; i++)
+        {
+            Assert.AreEqual(0, values["sample_1"][i]);
+        }
     }
 
     [Test]
