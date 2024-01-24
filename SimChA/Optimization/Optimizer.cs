@@ -31,16 +31,17 @@ public class Optimizer
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
-        var segDist = GetSegLengthDistance(cnps);
-        var cpDist = GetChangepointDistance(cnps);
-        //var bpDist = GetBreakpointDistance(cnps);
-        var majDist = GetMajMinCNDistance(cnps, true);
-        var minDist = GetMajMinCNDistance(cnps, false);
-        var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
-        var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
-        var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
+        //var segDist = GetSegLengthDistance(cnps);
+        //var cpDist = GetChangepointDistance(cnps);
+        var ploidyDist = 0.0;//GetPloidyDistance(cnps);
+        var bpDist = GetBreakpointDistance(cnps);
+        //var majDist = GetMajMinCNDistance(cnps, true);
+        //var minDist = GetMajMinCNDistance(cnps, false);
+        //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
+        //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
+        //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
 
-        return segDist + minDist;//(segDist + cpDist + bpDist + majDist + minDist)/5;
+        return bpDist + ploidyDist;
     }
 
     private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
@@ -179,15 +180,15 @@ public class Optimizer
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    /*private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetBreakpointsPerChromosome(GenRef, ObservedCNPs);
-        var (simValues, simMax)  = SummaryFeatures.GetBreakpointsPerChromosome(GenRef, simCNPs);
-        var histMax = Math.Max(obsMax, simMax);
+        var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs);
+        var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs);
+        var histMax = 22;//Math.Max(obsMax, simMax);
         var histMin = 0;
-        var histBins = 50;
+        var histBins = 22;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }*/
+    }
     private double GetMajMinCNDistance(Dictionary<string, List<CopyNumber>> simCNPs, bool getMajor)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetMajMinCNs(ObservedCNPs, getMajor);
