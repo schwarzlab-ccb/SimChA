@@ -29,7 +29,7 @@ public class TestSummaryFeatures
         _chrs = new List<string> {_genRef.AllChrs[0], _genRef.AllChrs[1]};
         _kar = new Karyotype(_genRef, true);
     }
-    
+
     private Dictionary<string, List<CopyNumber>> GetCNPs(List<Karyotype> kars)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
@@ -195,7 +195,7 @@ public class TestSummaryFeatures
     {
         var karXX = new Karyotype(_genRef, true);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
         // Check that only one sample was found
         Assert.AreEqual(1, values.Count);
         // Check that no breakpoints were found for any of the chromosomes
@@ -203,7 +203,6 @@ public class TestSummaryFeatures
         {
             Assert.AreEqual(0, val);
         }
-        Assert.AreEqual(0, max);
     }
 
     [Test]
@@ -213,7 +212,7 @@ public class TestSummaryFeatures
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 0, 1000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
         Assert.AreEqual(1, values.Count);
         // Chromosome 1 should have 1 breakpoint from the deletion
         Assert.AreEqual(1, values["sample_1"][0]);
@@ -229,7 +228,7 @@ public class TestSummaryFeatures
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         cnps = GetCNPs(new List<Karyotype> { karXX });
-        (values, max) = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        values= SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
         Assert.AreEqual(1, values.Count);
         // Chromosome 1 should have 2 breakpoints from the deletion
         Assert.AreEqual(2, values["sample_1"][0]);
@@ -241,13 +240,36 @@ public class TestSummaryFeatures
     }
 
     [Test]
+    public void TestGetBreakpointDistribution()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Create some breakpoints in one sample
+        // 2 breakpoints on chr1
+        karXX.ApplyInternalDeletion(0, 0, 1000);
+        // 4 breakpoints on chr2
+        karXX.ApplyInternalDuplication(1, 1000, 2000);
+        karXX.ApplyInternalDuplication(1, 5000, 6000);
+        var karXY = new Karyotype(_genRef, false);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var values = SummaryFeatures.GetBreakpointsDistribution(_genRef, cnps);
+        // One entry for each autosome
+        Assert.AreEqual(22, values.Count);
+        Assert.AreEqual(0.5, values[0], double.Epsilon);
+        Assert.AreEqual(2, values[1], double.Epsilon);
+        for (int i = 2; i < values.Count; i++)
+        {
+            Assert.AreEqual(0, values[i], double.Epsilon);
+        }
+    }
+
+    [Test]
     public void TestDefaultBreakpoints()
     {
         var karXX = new Karyotype(_genRef, true);
         var karXY = new Karyotype(_genRef, false);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var size = 10_000_000;
-        var (values, max) = SummaryFeatures.GetBreakpoints(_genRef, cnps, size);
+        var (values, max) = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, size);
         Assert.AreEqual(2, values.Count);
         // The number of bins across the chromosome 
         Assert.AreEqual(300, values["sample_1"].Count);
@@ -269,7 +291,7 @@ public class TestSummaryFeatures
         karXX.ApplyInternalDeletion(0, 0, 1000);
         var cnps = GetCNPs(new List<Karyotype> { karXX});
         var size = 10_000_000;
-        var (values, max) = SummaryFeatures.GetBreakpoints(_genRef, cnps, size);
+        var (values, max) = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, size);
         Assert.AreEqual(1, values.Count);
         Assert.AreEqual(300, values["sample_1"].Count);
         // First bin should have a breakpoint
@@ -284,7 +306,7 @@ public class TestSummaryFeatures
         karXX = new Karyotype(_genRef, true);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         cnps = GetCNPs(new List<Karyotype> { karXX});
-        (values, max) = SummaryFeatures.GetBreakpoints(_genRef, cnps, size);
+        (values, max) = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, size);
         Assert.AreEqual(1, values.Count);
         Assert.AreEqual(300, values["sample_1"].Count);
         // First bin should have two breakpoints (start and end of missing segment)
@@ -320,10 +342,10 @@ public class TestSummaryFeatures
     public void TestMajMinCNs()
     {
         // Create a karyotype with 2 copies of chr1-h1, 
-        // 1 copy of chr1-h2, and 1 copy of chr2-h1
+        // and no other chromosomes
         var karXX = new Karyotype(_genRef, true);
         karXX.ApplyContigDuplication(0);
-        for (int i = 2; i < 46; i++)
+        for (int i = 1; i < 46; i++)
         {
             if (i == 23)
             {
@@ -336,12 +358,16 @@ public class TestSummaryFeatures
         var (values, max) = SummaryFeatures.GetMajMinCNs(cnps, true);
         Assert.AreEqual(1, values.Count);
         // 2x chr1-h1, 1x chr2-h1
-        Assert.AreEqual(3.0/23, values[0], double.Epsilon);
-        Assert.AreEqual(3.0/23, max, double.Epsilon);
+        var chr1Length = _genRef.ChrLengths[_genRef.AllChrs[0]];
+        var haploidLength = _genRef.GetGenomeLen(karXX.SexXX,false);
+        var majFrac = 2.0*chr1Length/haploidLength;
+        Assert.AreEqual(majFrac, values[0], double.Epsilon);
+        Assert.AreEqual(majFrac, max, double.Epsilon);
         // Minor copy number
         (values, max) = SummaryFeatures.GetMajMinCNs(cnps, false);
+        var minFrac = chr1Length/(double)haploidLength;
         Assert.AreEqual(1, values.Count);
-        Assert.AreEqual(1.0/23, values[0], double.Epsilon);
-        Assert.AreEqual(1.0/23, max, double.Epsilon);
+        Assert.AreEqual(minFrac, values[0], double.Epsilon);
+        Assert.AreEqual(minFrac, max, double.Epsilon);
     }
 }

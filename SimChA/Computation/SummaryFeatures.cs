@@ -10,9 +10,9 @@ public static class SummaryFeatures
     {
         var weightedSum = cnList.Select(cn => cn.Segment.Length *
                                         (getMajor ? Math.Max(cn.CNH1, cn.CNH2)
-                                                  : Math.Min(cn.CNH1, cn.CNH2)) ).ToList().Average();
+                                                  : Math.Min(cn.CNH1, cn.CNH2)) ).ToList().Sum();
         var totalWeight = cnList.Select(cn => cn.Segment.Length).Sum();
-        return weightedSum / totalWeight;
+        return weightedSum / (double)totalWeight;
     }
     public static (List<double> values, double max) GetMajMinCNs(Dictionary<string, List<CopyNumber>> cnProfiles, bool getMajor)
     {
@@ -99,7 +99,7 @@ public static class SummaryFeatures
         return (changepointList, maxChange);
     }
 
-    public static (Dictionary<string, List<int>> values, int max) GetBreakpoints(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, int SIZE = 10_000_000, bool includeSexChromosomes = false)
+    public static (Dictionary<string, List<int>> values, int max) GetBreakpointsPerBin(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, int SIZE = 10_000_000, bool includeSexChromosomes = false)
     {
         var breakpoints = new Dictionary<string, List<int>>();
         var maxBP = 0;
@@ -128,10 +128,20 @@ public static class SummaryFeatures
         return (breakpoints, maxBP);
     }
 
-    public static (Dictionary<string, List<int>> values, int max) GetBreakpointsPerChromosome(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
+    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, int SIZE = 10_000_000, bool includeSexChromosomes = false)
+    {
+        var bps = GetBreakpointsPerChromosome(genRef, cnProfiles, includeSexChromosomes);
+        // Assuming all vectors of the breakpoints for each sample have the same length (they should be)
+        int listSize = bps.First().Value.Count;
+        List<double> averages = Enumerable.Range(0, listSize)
+            .Select(i => bps.Values.Select(list => list[i]).Average())
+            .ToList();
+        return averages;
+    }
+
+    public static Dictionary<string, List<int>> GetBreakpointsPerChromosome(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
     {
         var breakpoints = new Dictionary<string, List<int>>();
-        var maxBP = 0;
         var chrs = includeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
         foreach (var cnProfile in cnProfiles)
         {
@@ -144,11 +154,10 @@ public static class SummaryFeatures
                 // Exclude endpoint of the chromosome
                 var bps = chrSegs.Count(cn => cn.Segment.End != chrLen);
                 allBPs.Add(bps);
-                maxBP = bps > maxBP ? bps : maxBP;
             }
             breakpoints.Add(cnProfile.Key, allBPs);
         }
-        return (breakpoints, maxBP);
+        return breakpoints;
     }
 
     public static (List<double> values, double max) GetHomozygousDeletionFraction(Dictionary<string, List<CopyNumber>> cnProfiles, long autosomeLength)
@@ -225,8 +234,7 @@ public static class SummaryFeatures
             var chrVals = chrCNMatrix[chr].Values;
             chrVar.Add(chr, chrVals.Variance());
         }
-        // TODO: Normalize to the average ploidy of the cohort
-        return chrVar.Values.Average()/GetMeanPloidy(chrCNMatrix);
+        return chrVar.Values.Average() / GetMeanPloidy(chrCNMatrix);
     }
 
     private static Dictionary<string, Dictionary<string, double>> TransposeChrCNMatrix( Dictionary<string, Dictionary<string, double>> chrCNMatrix)
