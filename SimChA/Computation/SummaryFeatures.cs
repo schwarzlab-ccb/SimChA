@@ -7,10 +7,13 @@ namespace SimChA.Computation;
 public static class SummaryFeatures
 {
     public static double GetSampleMajMinCN(List<CopyNumber> cnList, bool getMajor)
-        => cnList.Select(cn => getMajor 
-                        ? Math.Max(cn.CNH1,cn.CNH2)
-                        : Math.Min(cn.CNH1, cn.CNH2) ).ToList().Average();
-
+    {
+        var weightedSum = cnList.Select(cn => cn.Segment.Length *
+                                        (getMajor ? Math.Max(cn.CNH1, cn.CNH2)
+                                                  : Math.Min(cn.CNH1, cn.CNH2)) ).ToList().Average();
+        var totalWeight = cnList.Select(cn => cn.Segment.Length).Sum();
+        return weightedSum / totalWeight;
+    }
     public static (List<double> values, double max) GetMajMinCNs(Dictionary<string, List<CopyNumber>> cnProfiles, bool getMajor)
     {
         var cns = new List<double> ();
@@ -211,6 +214,7 @@ public static class SummaryFeatures
                  .Select(col => col.Value)
                  .DefaultIfEmpty(0)
                  .Average();
+
     public static double GetMKV(Dictionary<string, Dictionary<string, double>> chrCNMatrix)
     {
         // Mean Karyotypic Variance is the variance of individual chromosomes across all samples
