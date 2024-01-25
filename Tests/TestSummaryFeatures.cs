@@ -377,4 +377,30 @@ public class TestSummaryFeatures
         Assert.AreEqual(minFrac, values[0], double.Epsilon);
         Assert.AreEqual(minFrac, max, double.Epsilon);
     }
+
+    [Test]
+    public void TestDefaultHomozygousDeletionFraction()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var values = SummaryFeatures.GetHomozygousDeletionFraction(_genRef, cnps);
+        // One sample
+        Assert.AreEqual(1, values.Count);
+        // No homozygous deletions
+        Assert.AreEqual(0, values[0], double.Epsilon);
+    }
+    [Test]
+    public void TestHomozygousDeletionFraction()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        karXX.ApplyContigDeletion(0);
+        karXX.ApplyContigDeletion(23);
+        var chr1Length = _genRef.ChrLengths[_genRef.AllChrs[0]];
+        var autosomeLen = _genRef.AutosomeLen;
+        var homoDelFrac = chr1Length/(double)autosomeLen;
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var values = SummaryFeatures.GetHomozygousDeletionFraction(_genRef, cnps);
+        Assert.AreEqual(1, values.Count);
+        Assert.AreEqual(homoDelFrac, values[0], double.Epsilon);
+    }
 }
