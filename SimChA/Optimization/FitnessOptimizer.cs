@@ -161,9 +161,9 @@ public class FitnessOptimizer : Optimizer
 
     private double GetHomozygousDeletionDistance(Dictionary<string, List<CopyNumber>> cnps)
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetHomozygousDeletionFraction(ObservedCNPs, GenRef.AutosomeLen);
-        var (simValues, simMax)  = SummaryFeatures.GetHomozygousDeletionFraction(cnps, GenRef.AutosomeLen);
-        var histMax = Math.Max(obsMax, simMax);
+        var obsValues = SummaryFeatures.GetHomozygousDeletionFraction(GenRef, ObservedCNPs);
+        var simValues  = SummaryFeatures.GetHomozygousDeletionFraction(GenRef, cnps);
+        var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);

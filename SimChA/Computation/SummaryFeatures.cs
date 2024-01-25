@@ -161,7 +161,7 @@ public static class SummaryFeatures
         return breakpoints;
     }
 
-    public static (List<double> values, double max) GetHomozygousDeletionFraction(Dictionary<string, List<CopyNumber>> cnProfiles, long autosomeLength)
+    public static List<double> GetHomozygousDeletionFraction(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles)
     {
         var fraction = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -169,9 +169,10 @@ public static class SummaryFeatures
             var homozygDelList = cnProfile.Value.Where(cn => cn.CNH1 + cn.CNH2 == 0 
                                                             && cn.Segment.ChrNo != "chrX" 
                                                             && cn.Segment.ChrNo != "chrY").ToList();
-            fraction.AddRange(homozygDelList.Select(cn => (double) cn.Segment.Length/autosomeLength));
+            var lenLost = homozygDelList.Select(cn => cn.Segment.Length).Sum();
+            fraction.Add(lenLost/(double)genRef.AutosomeLen);
         }
-        return (fraction, fraction.Max());
+        return fraction;
     }
 
     public static List<double> GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles)
