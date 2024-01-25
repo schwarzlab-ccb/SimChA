@@ -57,7 +57,7 @@ else if (execMode == ExecMode.RunOptimization)
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
     if (simParams.OptimizationParams.Mode == "Events")
     {
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes);
         Console.WriteLine("Generating Simulated Data");
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
@@ -73,7 +73,7 @@ else if (execMode == ExecMode.RunOptimization)
             throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
         }
         var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, options.BinnedSamples, fitnessList);
         Console.WriteLine("Generating Simulated Data");
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);

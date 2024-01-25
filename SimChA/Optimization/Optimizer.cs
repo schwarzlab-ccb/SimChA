@@ -17,8 +17,9 @@ public class Optimizer
     protected readonly OptimizationParams OptimizationParams;
     private Dictionary<string, bool> IsFemaleObservedDict {get; set;}
     private Dictionary<string, bool> IsFemaleSimulatedDict;
+    private bool IncludeSexChromosomes { get; }
     
-    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData)
+    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData, bool includeSexChromosomes)
     {
         SimParams = simParams;
         Rnd = rnd;
@@ -26,6 +27,7 @@ public class Optimizer
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
+        IncludeSexChromosomes = includeSexChromosomes;
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
     }
 
@@ -177,18 +179,8 @@ public class Optimizer
 
     private double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict);
-        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict);
-        var histMax = Math.Max(obsMax, simMax);
-        var histMin = 0;
-        var histBins = 100;
-        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
-
-    private double GetAutosomePloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
-    {
-        var (obsValues, obsMax) = SummaryFeatures.GetAutosomePloidy(GenRef, ObservedCNPs);
-        var (simValues, simMax) = SummaryFeatures.GetAutosomePloidy(GenRef, simCNPs);
+        var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes);
+        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 100;

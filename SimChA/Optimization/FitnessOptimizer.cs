@@ -18,15 +18,12 @@ public class FitnessOptimizer : Optimizer
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, List<Sample> observedData, string binnedSamples, List<double> fitnessList) 
-        : base(simParams, rnd, repeats, genRef, observedData)
+        GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, string binnedSamples, List<double> fitnessList) 
+        : base(simParams, rnd, repeats, genRef, observedData, includeSexChromosomes)
     {
         FitnessList = fitnessList;
         Binner = new Binner(GenRef);
         ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
-        ObservedCNPs    = GetCNPs(observedData);
-
-        IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
     }
 
     public override SimParams Optimize(FileIO files)

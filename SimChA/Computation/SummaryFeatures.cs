@@ -189,15 +189,11 @@ public static class SummaryFeatures
         return meanCN;
     }
 
-    public static (List<double> values, double max) GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict)
+    public static (List<double> values, double max) GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false)
     {
-        var ploidies = cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key])).ToList();
-        return (ploidies, ploidies.Max());
-    }
-
-    public static (List<double> values, double max) GetAutosomePloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
-    {
-        var ploidies = cnProfiles.Select(kvp => CopyNumbers.CalcAutosomePloidy(genRef, kvp.Value)).ToList();
+        var ploidies = includeSexChromosomes
+                        ? cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key])).ToList()
+                        : cnProfiles.Select(kvp => CopyNumbers.CalcAutosomePloidy(genRef, kvp.Value)).ToList();
         return (ploidies, ploidies.Max());
     }
 
