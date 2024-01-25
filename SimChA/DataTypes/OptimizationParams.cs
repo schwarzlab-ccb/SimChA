@@ -12,5 +12,7 @@ public record OptimizationParams(
     int MaxTries, // Maximum number of attempts at getting a new event parameter
     bool WriteIntermediate, // Write intermediate better-scoring parameter set to file
     int WriteFrequency, // How often to write intermediate parameter set to file
-    double AcceptanceFactor // Factor for accepting new parameter set
+    double AcceptanceFactor, // Factor for accepting new parameter set
+    bool BreakpointsPerChrom, // Whether to use breakpoints per chromosome or per genome
+    long BreakpointsBinSize // Size of bins for breakpoints if BreakpointsPerChrome is false
     );

@@ -18,6 +18,8 @@ public class Optimizer
     private Dictionary<string, bool> IsFemaleObservedDict {get; set;}
     private Dictionary<string, bool> IsFemaleSimulatedDict;
     private bool IncludeSexChromosomes { get; }
+    private bool BreakpointsPerChrom {get;}
+    private long BPBinSize {get;}
     
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData, bool includeSexChromosomes)
     {
@@ -27,8 +29,10 @@ public class Optimizer
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
-        IncludeSexChromosomes = includeSexChromosomes;
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
+        IncludeSexChromosomes = includeSexChromosomes;
+        BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
+        BPBinSize = OptimizationParams.BreakpointsBinSize;
     }
 
     public virtual SimParams Optimize(FileIO files)
@@ -94,7 +98,7 @@ public class Optimizer
         // We add an extra two possible indices to account for the InternalDuplication and
         // InternalDeletion Length Parameters
         var index = Rnd.Next(events.Count + 2);
-        var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+        var sign = 1;//Rnd.NextDouble() < 0.5 ? -1 : 1;
         var nTries = 0;
         // Modify internal length scales
         if (index >= events.Count)
@@ -122,7 +126,7 @@ public class Optimizer
             while (newSize < 0 && Math.Abs(newSize-oldSize)/oldSize <= double.Epsilon && nTries < OptimizationParams.MaxTries)
             {
                 nTries++;
-                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+                //sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
                 newSize = (long) (oldSize * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
             }
             var newEvents = new List<CNEventPars>(events);
@@ -138,7 +142,7 @@ public class Optimizer
             while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < OptimizationParams.MaxTries)
             {
                 nTries++;
-                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+                //sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
                 newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
             }
             // The other event parameters are multiplicatively modified (with the same relative factor)
@@ -198,8 +202,8 @@ public class Optimizer
     }
     private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes);
-        var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes);
+        var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
+        var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         var histMax = IncludeSexChromosomes ? 24 : 22;
         var histMin = 0;
         var histBins = histMax;

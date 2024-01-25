@@ -99,7 +99,7 @@ public static class SummaryFeatures
         return (changepointList, maxChange);
     }
 
-    public static Dictionary<string, List<int>> GetBreakpointsPerBin(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, int SIZE)
+    public static Dictionary<string, List<int>> GetBreakpointsPerBin(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, long SIZE)
     {
         var breakpoints = new Dictionary<string, List<int>>();
         var chrs = includeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
@@ -127,7 +127,7 @@ public static class SummaryFeatures
         return breakpoints;
     }
 
-    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, bool perChrom = true, int SIZE = 10_000_000)
+    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, bool perChrom = true, long SIZE = 10_000_000)
     {
         var bps = perChrom 
                     ? GetBreakpointsPerChromosome(genRef, cnProfiles, includeSexChromosomes)
