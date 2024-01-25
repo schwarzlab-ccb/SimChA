@@ -195,9 +195,12 @@ public class TestSummaryFeatures
     {
         var karXX = new Karyotype(_genRef, true);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        var includeSexChromosomes = false;
+        var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps, includeSexChromosomes);
         // Check that only one sample was found
         Assert.AreEqual(1, values.Count);
+        // Check that the number of chromosomes is correct
+        Assert.AreEqual(22, values["sample_1"].Count);
         // Check that no breakpoints were found for any of the chromosomes
         foreach (var val in values["sample_1"])
         {
@@ -212,7 +215,8 @@ public class TestSummaryFeatures
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 0, 1000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        var includeSexChromosomes = false;
+        var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps, includeSexChromosomes);
         Assert.AreEqual(1, values.Count);
         // Chromosome 1 should have 1 breakpoint from the deletion
         Assert.AreEqual(1, values["sample_1"][0]);
@@ -228,7 +232,7 @@ public class TestSummaryFeatures
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         cnps = GetCNPs(new List<Karyotype> { karXX });
-        values= SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps);
+        values= SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps, includeSexChromosomes);
         Assert.AreEqual(1, values.Count);
         // Chromosome 1 should have 2 breakpoints from the deletion
         Assert.AreEqual(2, values["sample_1"][0]);
@@ -270,7 +274,8 @@ public class TestSummaryFeatures
         var karXY = new Karyotype(_genRef, false);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var size = 10_000_000;
-        var (values, max) = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, size);
+        var includeSexChromosomes = false;
+        var values = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, includeSexChromosomes, size);
         Assert.AreEqual(2, values.Count);
         // The number of bins across the chromosome 
         Assert.AreEqual(300, values["sample_1"].Count);
@@ -292,7 +297,8 @@ public class TestSummaryFeatures
         karXX.ApplyInternalDeletion(0, 0, 1000);
         var cnps = GetCNPs(new List<Karyotype> { karXX});
         var size = 10_000_000;
-        var (values, max) = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, size);
+        var includeSexChromosomes = false;
+        var values = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, includeSexChromosomes, size);
         Assert.AreEqual(1, values.Count);
         Assert.AreEqual(300, values["sample_1"].Count);
         // First bin should have a breakpoint
@@ -307,7 +313,7 @@ public class TestSummaryFeatures
         karXX = new Karyotype(_genRef, true);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         cnps = GetCNPs(new List<Karyotype> { karXX});
-        (values, max) = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, size);
+        values = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, includeSexChromosomes, size);
         Assert.AreEqual(1, values.Count);
         Assert.AreEqual(300, values["sample_1"].Count);
         // First bin should have two breakpoints (start and end of missing segment)

@@ -99,10 +99,9 @@ public static class SummaryFeatures
         return (changepointList, maxChange);
     }
 
-    public static (Dictionary<string, List<int>> values, int max) GetBreakpointsPerBin(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, int SIZE = 10_000_000, bool includeSexChromosomes = false)
+    public static Dictionary<string, List<int>> GetBreakpointsPerBin(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, int SIZE)
     {
         var breakpoints = new Dictionary<string, List<int>>();
-        var maxBP = 0;
         var chrs = includeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
         
         foreach (var cnProfile in cnProfiles)
@@ -125,12 +124,14 @@ public static class SummaryFeatures
             }
             breakpoints.Add(cnProfile.Key, allBPs);
         }
-        return (breakpoints, maxBP);
+        return breakpoints;
     }
 
-    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, int SIZE = 10_000_000)
+    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, bool perChrom = true, int SIZE = 10_000_000)
     {
-        var bps = GetBreakpointsPerChromosome(genRef, cnProfiles, includeSexChromosomes);
+        var bps = perChrom 
+                    ? GetBreakpointsPerChromosome(genRef, cnProfiles, includeSexChromosomes)
+                    : GetBreakpointsPerBin(genRef, cnProfiles, includeSexChromosomes, SIZE);
         // Assuming all vectors of the breakpoints for each sample have the same length (they should be)
         int listSize = bps.First().Value.Count;
         List<double> averages = Enumerable.Range(0, listSize)
@@ -139,7 +140,7 @@ public static class SummaryFeatures
         return averages;
     }
 
-    public static Dictionary<string, List<int>> GetBreakpointsPerChromosome(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
+    public static Dictionary<string, List<int>> GetBreakpointsPerChromosome(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes)
     {
         var breakpoints = new Dictionary<string, List<int>>();
         var chrs = includeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
