@@ -15,6 +15,8 @@ public class Optimizer
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
     protected readonly OptimizationParams OptimizationParams;
+    private Dictionary<string, bool> IsFemaleObservedDict {get; set;}
+    private Dictionary<string, bool> IsFemaleSimulatedDict;
     
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData)
     {
@@ -23,6 +25,7 @@ public class Optimizer
         Repeats = repeats;
         GenRef = genRef;
         ObservedCNPs = GetCNPs(observedData);
+        IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
     }
 
@@ -47,6 +50,7 @@ public class Optimizer
     private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
     {
         var samples = GenerateSimulatedData(currentParams);
+        IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         return GetCNPs(samples);
     }
 
@@ -172,6 +176,16 @@ public class Optimizer
     }
 
     private double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    {
+        var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict);
+        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict);
+        var histMax = Math.Max(obsMax, simMax);
+        var histMin = 0;
+        var histBins = 100;
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
+    }
+
+    private double GetAutosomePloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetAutosomePloidy(GenRef, ObservedCNPs);
         var (simValues, simMax) = SummaryFeatures.GetAutosomePloidy(GenRef, simCNPs);
