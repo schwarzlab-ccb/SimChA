@@ -97,8 +97,9 @@ public class Optimizer
         // Choose an event to modify
         // We add an extra two possible indices to account for the InternalDuplication and
         // InternalDeletion Length Parameters
-        var index = Rnd.Next(events.Count + 2);
-        var sign = 1;//Rnd.NextDouble() < 0.5 ? -1 : 1;
+        var nParams = OptimizationParams.EventWeightsOnly ? events.Count : events.Count + 2;
+        var index = Rnd.Next(nParams);
+        var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
         var nTries = 0;
         // Modify internal length scales
         if (index >= events.Count)
@@ -126,7 +127,7 @@ public class Optimizer
             while (newSize < 0 && Math.Abs(newSize-oldSize)/oldSize <= double.Epsilon && nTries < OptimizationParams.MaxTries)
             {
                 nTries++;
-                //sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
                 newSize = (long) (oldSize * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
             }
             var newEvents = new List<CNEventPars>(events);
@@ -142,7 +143,7 @@ public class Optimizer
             while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < OptimizationParams.MaxTries)
             {
                 nTries++;
-                //sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
                 newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
             }
             // The other event parameters are multiplicatively modified (with the same relative factor)
