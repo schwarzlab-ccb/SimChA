@@ -128,7 +128,7 @@ public static class SummaryFeatures
         return (breakpoints, maxBP);
     }
 
-    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, int SIZE = 10_000_000, bool includeSexChromosomes = false)
+    public static List<double> GetBreakpointsDistribution(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes, int SIZE = 10_000_000)
     {
         var bps = GetBreakpointsPerChromosome(genRef, cnProfiles, includeSexChromosomes);
         // Assuming all vectors of the breakpoints for each sample have the same length (they should be)

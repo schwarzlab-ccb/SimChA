@@ -198,11 +198,11 @@ public class Optimizer
     }
     private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs);
-        var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs);
-        var histMax = 22;//Math.Max(obsMax, simMax);
+        var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes);
+        var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes);
+        var histMax = IncludeSexChromosomes ? 24 : 22;
         var histMin = 0;
-        var histBins = 22;
+        var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     private double GetMajMinCNDistance(Dictionary<string, List<CopyNumber>> simCNPs, bool getMajor)
