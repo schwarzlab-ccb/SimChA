@@ -251,7 +251,8 @@ public class TestSummaryFeatures
         karXX.ApplyInternalDuplication(1, 5000, 6000);
         var karXY = new Karyotype(_genRef, false);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var values = SummaryFeatures.GetBreakpointsDistribution(_genRef, cnps);
+        var includeSexChromosomes = false;
+        var values = SummaryFeatures.GetBreakpointsDistribution(_genRef, cnps, includeSexChromosomes);
         // One entry for each autosome
         Assert.AreEqual(22, values.Count);
         Assert.AreEqual(0.5, values[0], double.Epsilon);
