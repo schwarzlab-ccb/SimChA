@@ -195,6 +195,12 @@ public static class SummaryFeatures
         return (ploidies, ploidies.Max());
     }
 
+    public static (List<double> values, double max) GetAutosomePloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes = false)
+    {
+        var ploidies = cnProfiles.Select(kvp => CopyNumbers.CalcAutosomePloidy(genRef, kvp.Value)).ToList();
+        return (ploidies, ploidies.Max());
+    }
+
     // Produces a matrix of copy-number values for each chromosome in each sample
     public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
     {

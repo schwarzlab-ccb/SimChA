@@ -62,6 +62,13 @@ public static class CopyNumbers
         return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
     }
 
+    public static double CalcAutosomePloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers)
+    {
+        long totalLength = genRef.AutosomeLen / 2;
+        return copyNumbers.Where(cn => cn.Segment.ChrNo != genRef.XChrName && cn.Segment.ChrNo != genRef.YChrName)
+                          .Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
+    }
+
     private static string Header(bool withSample, bool isFirst)
         => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\tn_snvs\n" : "";
     
