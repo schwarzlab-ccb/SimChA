@@ -55,12 +55,21 @@ else if (execMode == ExecMode.RunOptimization)
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
+    Console.WriteLine("Generating Simulated Data");
     if (simParams.OptimizationParams.Mode == "Events")
     {
         var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes);
-        Console.WriteLine("Generating Simulated Data");
-        var outParams = optimizer.Optimize(files);
-        files.WriteSimParams(outParams);
+        if (simParams.OptimizationParams.UseABC)
+        {
+            var dist = optimizer.GetABCDistance();
+            Console.WriteLine($"ABC distance: {dist}");
+            return 0;
+        }
+        else
+        {
+            var outParams = optimizer.Optimize(files);
+            files.WriteSimParams(outParams);
+        }
     }
     else if (simParams.OptimizationParams.Mode == "Fitness")
     {
@@ -74,7 +83,6 @@ else if (execMode == ExecMode.RunOptimization)
         }
         var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
         var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, options.BinnedSamples, fitnessList);
-        Console.WriteLine("Generating Simulated Data");
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }

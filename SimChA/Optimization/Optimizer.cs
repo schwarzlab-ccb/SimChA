@@ -37,6 +37,12 @@ public class Optimizer
 
     public virtual SimParams Optimize(FileIO files)
         => FindBestParams(files);
+    
+    public double GetABCDistance()
+    {
+        var simCNPs = GenerateCNPs(SimParams);
+        return GetScore(simCNPs);
+    }
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
@@ -94,6 +100,11 @@ public class Optimizer
         }
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var totalWeight = events.Sum(e => e.Prob);
+        // Reset the seed if selected
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with {Seed = -1};
+        }
         // Choose an event to modify
         // We add an extra two possible indices to account for the InternalDuplication and
         // InternalDeletion Length Parameters

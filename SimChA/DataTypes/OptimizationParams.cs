@@ -15,5 +15,7 @@ public record OptimizationParams(
     double AcceptanceFactor, // Factor for accepting new parameter set
     bool BreakpointsPerChrom, // Whether to use breakpoints per chromosome or per genome
     long BreakpointsBinSize, // Size of bins for breakpoints if BreakpointsPerChrome is false
-    bool EventWeightsOnly // Whether to only optimize event weights. If false, optimize event lengths too
+    bool EventWeightsOnly, // Whether to only optimize event weights. If false, optimize event lengths too
+    bool ResetSeed, // Whether to reset the random seed for each proposed parameter set
+    bool UseABC // Whether to use Approximate Bayesian Computation
     );

@@ -146,9 +146,11 @@
 		"StepFactor": 0.01,
 		"MaxTries": 10,
 		"WriteIntermediate": true,
-    	"WriteFrequency": 50,
+    "WriteFrequency": 50,
 		"AcceptanceFactor": 10,
 		"BreakpointsPerChrom": true,
-		"BreakpointsBinSize": 10000000
+		"BreakpointsBinSize": 10000000,
+		"EventWeightsOnly": true,
+    "UseABC": true
 	}
   }
