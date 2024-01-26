@@ -7,7 +7,7 @@ from os.path import join
 
 import sys 
 sys.path.append('..')
-from pycna.utils.assembiles import chr_names, aut_names, hg19_chr_lengths, hg19_chr_cum_starts
+from pycna.utils.assemblies import chr_names, aut_names, hg19_chr_lengths, hg19_chr_cum_starts
 
 
 def format_chromosomes_int(chroms):
