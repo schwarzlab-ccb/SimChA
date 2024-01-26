@@ -66,7 +66,7 @@ def run_simcha(params, param_file, genes_path, cohort_path, repeats, all_chromos
     param_file_path = update_params_file(param_file, fit_event_weights, params)
     
     # Run command for SimChA
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/{param_file} -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/{param_file} -R {repeats} -O {param_file_path}/out --optimization -D {genes_path} -P {cohort_path}"
     if not all_chromosomes:
         cmd += " --autosomes-only"
 
