@@ -22,6 +22,10 @@ public static class SummaryFeatures
         {
             var cnList = cnProfile.Value;
             var mean = GetSampleMajMinCN(cnList, getMajor);
+            if (mean > 10.0)
+            {
+                continue;
+            }
             cns.Add(mean);
             if (mean > max) max = mean;
         }
