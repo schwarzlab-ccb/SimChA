@@ -10,10 +10,8 @@ using System.Reflection;
 
 public class FitnessOptimizer : Optimizer
 {   
-    private Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
     private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
 
-    private Dictionary<string, bool> IsFemaleObservedDict {get; set;} 
     private readonly List<double> FitnessList;
     private readonly Binner Binner;
 
@@ -39,9 +37,12 @@ public class FitnessOptimizer : Optimizer
     }
     private SimParams FindBestParams(FileIO files)
     {
-        var currentParams = SimParams;
+        var currentParams = GetProposalParams(SimParams);
         var currentSamples = GenerateSimulatedData(currentParams);
         var currentScore = GetScore(currentSamples);
+        var bestParams = currentParams;
+        var bestScore = currentScore;
+        var counter = 0;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
             var proposedParams = GetProposalParams(currentParams);
@@ -53,10 +54,20 @@ public class FitnessOptimizer : Optimizer
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
-                files.WriteSimParams(currentParams);
+            }
+            if (proposedScore < bestScore)
+            {
+                bestParams = proposedParams;
+                bestScore = proposedScore;
+                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                counter++;
+            }
+             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
+            {
+                files.WriteSimParams(currentParams, $"params_{i}.json");
             }
         }
-        return currentParams;
+        return bestParams;
     }
     private SimParams GetProposalParams(SimParams currentParams)
     {

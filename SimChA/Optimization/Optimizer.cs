@@ -9,13 +9,13 @@ using SimChA.EventData;
 
 public class Optimizer
 {   
-    private Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
+    protected Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
     protected GenRef GenRef { get; }
     protected readonly Random Rnd;
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
     protected readonly OptimizationParams OptimizationParams;
-    private Dictionary<string, bool> IsFemaleObservedDict {get; set;}
+    protected Dictionary<string, bool> IsFemaleObservedDict {get; set;}
     private Dictionary<string, bool> IsFemaleSimulatedDict;
     private bool IncludeSexChromosomes { get; }
     private bool BreakpointsPerChrom {get;}
