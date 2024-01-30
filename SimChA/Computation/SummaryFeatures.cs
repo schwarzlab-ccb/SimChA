@@ -55,6 +55,29 @@ public static class SummaryFeatures
         return (segLengths, max);
     }
 
+    public static List<double> GetMeanSegLength(Dictionary<string, List<CopyNumber>> cnps, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    {
+        var meanSegLengths = new List<double>();
+        foreach (var cnProfile in cnps)
+        {
+            var cnList = cnProfile.Value;
+            if (!includeSexChromosomes)
+            {
+                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+            }
+            if (!includeCNNormal)
+            {
+                cnList = cnList.Where(cn => !(cn.CNH1 == 1 && cn.CNH2 == 1)).ToList();
+            }
+            if (!includeLOH)
+            {
+                cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
+            }
+            meanSegLengths.Add(cnList.Select(cn => (double) cn.Segment.Length).DefaultIfEmpty(0).Average());
+        }
+        return meanSegLengths;
+    }
+
     public static (List<double> values, int max) GetChangepointInfo(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
     {
         var changepointList = new List<double>();
