@@ -71,7 +71,8 @@ public class Optimizer
         var currentParams = GetProposalParams(SimParams);
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
-        int counter = 0;
+        var bestParams = currentParams;
+        var bestScore = currentScore;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
@@ -84,12 +85,19 @@ public class Optimizer
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
-                counter++;
+            }
+            if (proposedScore < bestScore)
+            {
+                bestParams = proposedParams;
+                bestScore = proposedScore;
             }
             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
-                    files.WriteSimParams(currentParams, $"params_{i}.json");
+            {
+                files.WriteSimParams(currentParams, $"params_{i}.json");
+                files.WriteSimParams(bestParams, $"best_params_{i}.json");
+            }
         }
-        return currentParams;
+        return bestParams;
     }
 
     private SimParams GetProposalParams(SimParams currentParams)
