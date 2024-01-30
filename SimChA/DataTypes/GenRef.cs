@@ -16,7 +16,7 @@ public class GenRef
     
     private long XYLinLen { get; }
     private long XXLinLen { get; }
-    private long AutosomeLinLen { get; }
+    public long AutosomeLinLen { get; }
     private long XYGenomeLen { get; }
     private long XXGenomeLen { get; }
     private List<string> XYChrs { get; }

@@ -42,6 +42,33 @@ public class TestSummaryFeatures
         return cnps;
     }
 
+
+    [Test]
+    public void TestDefaultMeanSegLength()
+    {
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
+        var meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps);
+        // One genome returned with 0 average segment length
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(0, meanSegLengths[0]);
+        // Count the CN-normal segments of autosomes
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(_genRef.AutosomeLinLen/22.0, meanSegLengths[0]);
+        // Count the CN-normal segments and LoH segments of autosomes
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(_genRef.AutosomeLinLen/22.0, meanSegLengths[0]);
+        // Count the CN-normal segments & LoH segments of all chromosomes
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(_genRef.GetGenomeLen(true, false)/23.0, meanSegLengths[0]);
+        // Mean segment length weighted by copy-number
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(_genRef.GetGenomeLen(true, false)/23.0, meanSegLengths[0]);
+    }
+
     [Test]
     public void TestDefaultSegLengths()
     {
