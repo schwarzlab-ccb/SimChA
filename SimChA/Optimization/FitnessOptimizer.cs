@@ -31,8 +31,8 @@ public class FitnessOptimizer : Optimizer
     {
         var cnps = GetCNPs(samples);
         var binnedCNPs = Binner.GetBinnedCNProfiles(samples);
-        var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
-        var distance = GetFitnessDistance(cnps, binnedCNPs, isFemaleDict);
+        IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
+        var distance = GetFitnessDistance(cnps, binnedCNPs);
         return distance;
     }
     private SimParams FindBestParams(FileIO files)
@@ -140,11 +140,11 @@ public class FitnessOptimizer : Optimizer
         return samples;
     }
 
-    public double GetFitnessDistance(Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, List<CopyNumber>> binnedCNPs, Dictionary<string, bool> isFemaleDict)
+    public double GetFitnessDistance(Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, List<CopyNumber>> binnedCNPs)
     {
         var hdDist = GetHomozygousDeletionDistance(cnps);
         var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance(binnedCNPs);
-        var meanCN = GetPloidyDistance(cnps, isFemaleDict);
+        var meanCN = GetPloidyDistance(cnps);
 
         return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
     }
@@ -160,10 +160,10 @@ public class FitnessOptimizer : Optimizer
         return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
     }
 
-    private double GetPloidyDistance(Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, bool> isFemaleDict)
+    private double GetPloidyDistance(Dictionary<string, List<CopyNumber>> cnps)
     {
         var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict);
-        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, cnps, isFemaleDict);
+        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, cnps, IsFemaleSimulatedDict);
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;

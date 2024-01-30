@@ -16,7 +16,7 @@ public class Optimizer
     protected readonly SimParams SimParams;
     protected readonly OptimizationParams OptimizationParams;
     protected Dictionary<string, bool> IsFemaleObservedDict {get; set;}
-    private Dictionary<string, bool> IsFemaleSimulatedDict;
+    protected Dictionary<string, bool> IsFemaleSimulatedDict;
     private bool IncludeSexChromosomes { get; }
     private bool BreakpointsPerChrom {get;}
     private long BPBinSize {get;}
