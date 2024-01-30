@@ -50,13 +50,13 @@ public class Optimizer
         //var cpDist = GetChangepointDistance(cnps);
         var ploidyDist = GetPloidyDistance(cnps);
         var bpDist = GetBreakpointDistance(cnps);
-        var majDist = GetMajMinCNDistance(cnps, true);
-        var minDist = GetMajMinCNDistance(cnps, false);
+        //var majDist = GetMajMinCNDistance(cnps, true);
+        //var minDist = GetMajMinCNDistance(cnps, false);
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
 
-        return bpDist*bpDist + ploidyDist*ploidyDist + majDist*majDist + minDist*minDist;
+        return bpDist*bpDist + ploidyDist*ploidyDist;
     }
 
     private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)

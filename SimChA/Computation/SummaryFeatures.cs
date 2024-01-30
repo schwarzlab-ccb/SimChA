@@ -49,13 +49,16 @@ public static class SummaryFeatures
             {
                 cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
             }
+
+            var weightedSum = cnList.Select(cn => cn.Segment.Length * (cn.CNH1 + cn.CNH2) ).ToList().Sum();
+            var totalWeight = cnList.Select(cn => cn.Segment.Length).Sum();
             segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
         }
         var max = (segLengths.Count > 0) ? segLengths.Max() : 0;
         return (segLengths, max);
     }
 
-    public static List<double> GetMeanSegLength(Dictionary<string, List<CopyNumber>> cnps, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false)
+    public static List<double> GetMeanSegLength(Dictionary<string, List<CopyNumber>> cnps, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
     {
         var meanSegLengths = new List<double>();
         foreach (var cnProfile in cnps)
@@ -73,7 +76,17 @@ public static class SummaryFeatures
             {
                 cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
             }
-            meanSegLengths.Add(cnList.Select(cn => (double) cn.Segment.Length).DefaultIfEmpty(0).Average());
+            // Weighted means to account for copy-number of the segment
+            if (weighted)
+            {
+                var lengths = cnList.SelectMany(cn => Enumerable.Repeat((double)cn.Segment.Length, cn.CNH1 + cn.CNH2));
+                meanSegLengths.Add(lengths.DefaultIfEmpty(0).Average());
+            }
+            else
+            {
+                meanSegLengths.Add(cnList.Select(cn => (double) cn.Segment.Length).DefaultIfEmpty(0).Average());
+            }
+            
         }
         return meanSegLengths;
     }
