@@ -70,6 +70,52 @@ public class TestSummaryFeatures
     }
 
     [Test]
+    public void TestMeanSegLength()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // make the genome haploid, except 4 copies of chr1-h1, and 2 copies of chr2-h1
+        for (int i = 0; i < 3; i++)
+        {
+            karXX.ApplyContigDuplication(0);
+        }
+        karXX.ApplyContigDuplication(1);
+        karXX.ApplyContigDeletion(24);
+        for (int i = 2; i < 23; i++)
+        {
+            karXX.ApplyContigDeletion(i);
+        }
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps);
+        // One genome returned with 0 average segment length
+        Assert.AreEqual(1, meanSegLengths.Count);
+        // chr2 should be missing since it is an LOH region 
+        // (should also be missing from numerator in average, i.e. 21 instead of 22)
+        double expectedLen = _genRef.AutosomeLinLen - _genRef.ChrLengths[_genRef.AllChrs[1]];
+        Assert.AreEqual(expectedLen/21.0, meanSegLengths[0]);
+        // Count the CN-normal segments of autosomes
+        // Same situation as above, i.e. chr2 is missing
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(expectedLen/21.0, meanSegLengths[0], double.Epsilon);
+        // Count the CN-normal segments and LoH segments of autosomes
+        // Chr2 now counted
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(_genRef.AutosomeLinLen/22.0, meanSegLengths[0], double.Epsilon);
+        // Count the CN-normal segments & LoH segments of all chromosomes
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        Assert.AreEqual(_genRef.GetGenomeLen(true, false)/23.0, meanSegLengths[0], double.Epsilon);
+        // Count the mean segment length weighted by copy-number
+        meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true, true);
+        Assert.AreEqual(1, meanSegLengths.Count);
+        // There are 5 copies of chr1, 2 copies of chr2, and one copy of all other chromosomes (including chrX)
+        // i.e. 28 'chromosomes' in total
+        expectedLen = _genRef.GetGenomeLen(true, false) + 4.0*_genRef.ChrLengths[_genRef.AllChrs[0]] + _genRef.ChrLengths[_genRef.AllChrs[1]];
+        Assert.AreEqual(expectedLen/28.0, meanSegLengths[0], double.Epsilon);
+    }
+
+    [Test]
     public void TestDefaultSegLengths()
     {
         var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
