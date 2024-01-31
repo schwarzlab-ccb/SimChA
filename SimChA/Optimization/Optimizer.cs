@@ -46,6 +46,7 @@ public class Optimizer
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
+        var segDist = GetMeanSegDistance(cnps);
         //var segDist = GetSegLengthDistance(cnps);
         //var cpDist = GetChangepointDistance(cnps);
         var ploidyDist = GetPloidyDistance(cnps);
@@ -56,7 +57,7 @@ public class Optimizer
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
 
-        return bpDist*bpDist + ploidyDist*ploidyDist;
+        return bpDist*bpDist + ploidyDist*ploidyDist + segDist*segDist;
     }
 
     private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
@@ -100,6 +101,12 @@ public class Optimizer
             }
         }
         return bestParams;
+    }
+
+    private SimParams GetProposalParams2(SimParams currentParams)
+    {
+
+        return currentParams;
     }
 
     private SimParams GetProposalParams(SimParams currentParams)
@@ -200,6 +207,16 @@ public class Optimizer
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 200;
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
+    }
+
+    private double GetMeanSegDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    {
+        var obsValues = SummaryFeatures.GetMeanSegLength(ObservedCNPs);
+        var simValues = SummaryFeatures.GetMeanSegLength(simCNPs);
+        var histMax = Math.Max(obsValues.Max(), simValues.Max());
+        var histMin = 0;
+        var histBins = 100;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
