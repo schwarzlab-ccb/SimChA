@@ -154,6 +154,6 @@
 		"UsePloidy" : true,
 		"UseBreakpoints" : true,
 		"BreakpointsPerChrom": true,
-		"BreakpointsBinSize": 10000000,
+		"BreakpointsBinSize": 10000000
 	}
   }
