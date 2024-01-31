@@ -33,6 +33,10 @@ public class Optimizer
         IncludeSexChromosomes = includeSexChromosomes;
         BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
         BPBinSize = OptimizationParams.BreakpointsBinSize;
+        if (SimParams.Signatures is null || SimParams.Signatures.Count == 0)
+        {
+            throw new Exception("Error in Optimizer. No signatures were provided.");
+        }
     }
 
     public virtual SimParams Optimize(FileIO files)
@@ -117,12 +121,30 @@ public class Optimizer
         return currentParams;
     }
 
+    private SimParams GetAllNewParams(SimParams currentParams)
+    {
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with {Seed = -1};
+        }
+        var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
+        var targetWeight = events.Sum(e => e.Prob);
+        var newProbs = new List<double>();
+        foreach (var ev in events)
+        {
+            var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            var weight = ev.Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+            newProbs.Add(weight);
+        }
+        var currentTotal = newProbs.Sum();
+        newProbs  = newProbs.Select(x => x / currentTotal * targetWeight).ToList();
+        var newEvents = events.Select((e, i) => e with { Prob = newProbs[i] }).ToList();
+        var newSignature = new Signature(1, newEvents);
+        return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
+    }
+
     private SimParams GetProposalParams(SimParams currentParams)
     {
-        if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
-        {
-            throw new Exception("Error in Optimizer. No signatures were provided.");
-        }
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var totalWeight = events.Sum(e => e.Prob);
         // Reset the seed if selected
