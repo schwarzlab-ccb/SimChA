@@ -13,9 +13,12 @@ public record OptimizationParams(
     bool WriteIntermediate, // Write intermediate better-scoring parameter set to file
     int WriteFrequency, // How often to write intermediate parameter set to file
     double AcceptanceFactor, // Factor for accepting new parameter set
-    bool BreakpointsPerChrom, // Whether to use breakpoints per chromosome or per genome
-    long BreakpointsBinSize, // Size of bins for breakpoints if BreakpointsPerChrome is false
     bool EventWeightsOnly, // Whether to only optimize event weights. If false, optimize event lengths too
     bool ResetSeed, // Whether to reset the random seed for each proposed parameter set
-    bool UseABC // Whether to use Approximate Bayesian Computation
+    bool UseABC, // Whether to use Approximate Bayesian Computation
+    bool UseMeanSeg, // Whether to use mean segment length in optimization distance
+    bool UsePloidy, // Whether to use ploidy in optimization distance
+    bool UseBreakpoints, // Whether to use breakpoints in optimization distance
+    bool BreakpointsPerChrom, // If using breakpoints, count per chromosome or per genome
+    long BreakpointsBinSize // Size of bins for breakpoints if BreakpointsPerChrome is false
     );

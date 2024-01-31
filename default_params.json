@@ -146,11 +146,14 @@
 		"StepFactor": 0.01,
 		"MaxTries": 10,
 		"WriteIntermediate": true,
-    "WriteFrequency": 50,
+    	"WriteFrequency": 50,
 		"AcceptanceFactor": 10,
+		"EventWeightsOnly": true,
+    	"UseABC": true,
+		"UseMeanSeg": true,
+		"UsePloidy" : true,
+		"UseBreakpoints" : true,
 		"BreakpointsPerChrom": true,
 		"BreakpointsBinSize": 10000000,
-		"EventWeightsOnly": true,
-    "UseABC": true
 	}
   }

@@ -46,18 +46,26 @@ public class Optimizer
 
     private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
-        var segDist = GetMeanSegDistance(cnps);
-        //var segDist = GetSegLengthDistance(cnps);
-        //var cpDist = GetChangepointDistance(cnps);
-        var ploidyDist = GetPloidyDistance(cnps);
-        var bpDist = GetBreakpointDistance(cnps);
-        //var majDist = GetMajMinCNDistance(cnps, true);
-        //var minDist = GetMajMinCNDistance(cnps, false);
+        var totalDist = 0.0;
+        if (OptimizationParams.UseMeanSeg)
+        {
+            var segDist = GetMeanSegDistance(cnps);
+            totalDist += segDist*segDist;
+        }
+        if (OptimizationParams.UsePloidy)
+        {
+            var ploidyDist = GetPloidyDistance(cnps);
+            totalDist += ploidyDist*ploidyDist;
+        }
+        if (OptimizationParams.UseBreakpoints)
+        {
+            var bpDist = GetBreakpointDistance(cnps);
+            totalDist += bpDist*bpDist;
+        }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
-
-        return bpDist*bpDist + ploidyDist*ploidyDist + segDist*segDist;
+        return totalDist;
     }
 
     private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
