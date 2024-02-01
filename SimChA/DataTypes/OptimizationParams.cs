@@ -21,6 +21,6 @@ public record OptimizationParams(
     bool UseBreakpoints, // Whether to use breakpoints in optimization distance
     bool BreakpointsPerChrom, // If using breakpoints, count per chromosome or per genome
     long BreakpointsBinSize, // Size of bins for breakpoints if BreakpointsPerChrome is false
-    int ParamVariationMode // Mode to vary parameters. 0 = vary all parameters, 
-    // 1 = vary a pair of event weights (or a pair of ), 2 = vary only one event at a time
+    int ParamVariationMode // How many parameters to vary at each step. 
+    // 0 = vary all, 1 = vary one, 2 = vary two
     );
