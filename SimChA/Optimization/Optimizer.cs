@@ -139,6 +139,21 @@ public class Optimizer
         var currentTotal = newProbs.Sum();
         newProbs  = newProbs.Select(x => x / currentTotal * targetWeight).ToList();
         var newEvents = events.Select((e, i) => e with { Prob = newProbs[i] }).ToList();
+
+        if (!OptimizationParams.EventWeightsOnly)
+        {
+            var internalDel = events.Find(e => e.Type == CNEventType.InternalDeletion) ?? throw new Exception("Error in Optimizer. No internal deletion event found.");
+            var index = events.IndexOf(internalDel);
+            var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            var newSize = (long) (internalDel.Size * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
+            newEvents[index] = newEvents[index] with { Size = newSize };
+
+            var internalDup = events.Find(e => e.Type == CNEventType.InternalDuplication) ?? throw new Exception("Error in Optimizer. No internal duplication event found.");
+            index = events.IndexOf(internalDup);
+            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            newSize = (long) (internalDup.Size * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
+            newEvents[index] = newEvents[index] with { Size = newSize };
+        }
         var newSignature = new Signature(1, newEvents);
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
