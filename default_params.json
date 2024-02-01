@@ -149,11 +149,13 @@
     	"WriteFrequency": 50,
 		"AcceptanceFactor": 10,
 		"EventWeightsOnly": true,
+		"ParamVariationMode": 0,
     	"UseABC": true,
 		"UseMeanSeg": true,
 		"UsePloidy" : true,
 		"UseBreakpoints" : true,
 		"BreakpointsPerChrom": true,
-		"BreakpointsBinSize": 10000000
+		"BreakpointsBinSize": 10000000,
+		"ResetSeed": true
 	}
   }
