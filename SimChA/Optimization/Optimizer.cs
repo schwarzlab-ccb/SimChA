@@ -121,6 +121,30 @@ public class Optimizer
         return currentParams;
     }
 
+    private double GetNewWeight(double oldProb)
+    {
+        var nTries = 0;
+        var newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
+        while (Math.Abs(newProb - oldProb)/oldProb <= double.Epsilon && nTries < OptimizationParams.MaxTries)
+        {
+            nTries++;
+            newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
+        }
+        return newProb;
+    }
+
+    private long GetNewSize(long oldSize)
+    {
+        var nTries = 0;
+        var newSize = (long) (oldSize * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor));
+        while (newSize <= 0 && Math.Abs(newSize-oldSize)/oldSize <= double.Epsilon && nTries < OptimizationParams.MaxTries)
+        {
+            nTries++;
+            newSize = (long) (oldSize * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor));
+        }
+        return newSize;
+    }
+    
     private SimParams GetAllNewParams(SimParams currentParams)
     {
         if (OptimizationParams.ResetSeed)
@@ -132,8 +156,7 @@ public class Optimizer
         var newProbs = new List<double>();
         foreach (var ev in events)
         {
-            var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            var weight = ev.Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+            var weight = GetNewWeight(ev.Prob);
             newProbs.Add(weight);
         }
         var currentTotal = newProbs.Sum();
@@ -144,15 +167,11 @@ public class Optimizer
         {
             var internalDel = events.Find(e => e.Type == CNEventType.InternalDeletion) ?? throw new Exception("Error in Optimizer. No internal deletion event found.");
             var index = events.IndexOf(internalDel);
-            var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            var newSize = (long) (internalDel.Size * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
-            newEvents[index] = newEvents[index] with { Size = newSize };
+            newEvents[index] = newEvents[index] with { Size = GetNewSize(internalDel.Size) };
 
             var internalDup = events.Find(e => e.Type == CNEventType.InternalDuplication) ?? throw new Exception("Error in Optimizer. No internal duplication event found.");
             index = events.IndexOf(internalDup);
-            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newSize = (long) (internalDup.Size * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
-            newEvents[index] = newEvents[index] with { Size = newSize };
+            newEvents[index] = newEvents[index] with { Size = GetNewSize(internalDup.Size) };
         }
         var newSignature = new Signature(1, newEvents);
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
@@ -173,7 +192,6 @@ public class Optimizer
         var nParams = OptimizationParams.EventWeightsOnly ? events.Count : events.Count + 2;
         var index = Rnd.Next(nParams);
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-        var nTries = 0;
         // Modify internal length scales
         if (index >= events.Count)
         {
@@ -196,13 +214,7 @@ public class Optimizer
                 throw new Exception("Error in Optimizer. Index out of range.");
             }
             // Modify the internal duplication/deletion length parameter
-            var newSize = (long) (oldSize * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
-            while (newSize < 0 && Math.Abs(newSize-oldSize)/oldSize <= double.Epsilon && nTries < OptimizationParams.MaxTries)
-            {
-                nTries++;
-                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-                newSize = (long) (oldSize * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor));
-            }
+            var newSize = GetNewSize(oldSize);
             var newEvents = new List<CNEventPars>(events);
             newEvents[index] = newEvents[index] with { Size = newSize };
             var newSignature = new Signature(1, newEvents);
@@ -211,14 +223,7 @@ public class Optimizer
         else
         {
             // Modify the relative weight of the event
-            var newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
-
-            while (Math.Abs(newProb - events[index].Prob)/events[index].Prob <= double.Epsilon && nTries < OptimizationParams.MaxTries)
-            {
-                nTries++;
-                sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-                newProb = events[index].Prob * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
-            }
+            var newProb = GetNewWeight(events[index].Prob);
             // The other event parameters are multiplicatively modified (with the same relative factor)
             var newFactor = (totalWeight - newProb)/(totalWeight - events[index].Prob);
             var newEvents = events.Select(e => e with { Prob = e.Prob * newFactor }).ToList();
