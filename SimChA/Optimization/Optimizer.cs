@@ -162,7 +162,8 @@ public class Optimizer
             newProbs = newProbs.Select(x => targetWeight * x / newTotal).ToList();
         }
         newEvents = newEvents.Select((e, i) => e with { Prob = newProbs[i] }).ToList();
-        return currentParams;
+        var newSignature = new Signature(1, newEvents);
+        return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
 
     private double GetNewWeight(double oldProb)
@@ -207,18 +208,11 @@ public class Optimizer
         var newSignature = new Signature(1, newEvents);
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
-
-    private CNEventPars GetNewEventWeight(CNEventPars oldEvent)
-    {
-        var newProb = GetNewWeight(oldEvent.Prob);
-        return oldEvent with { Prob = newProb };
-    }
     private CNEventPars GetNewEventLength(CNEventPars oldEvent)
     {
         var newSize = GetNewLength(oldEvent.Size);
         return oldEvent with { Size = newSize };
     }
-
 
     private List<Sample> GenerateSimulatedData(SimParams currentParams)
     {
