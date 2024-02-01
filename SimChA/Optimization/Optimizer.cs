@@ -125,7 +125,7 @@ public class Optimizer
     {
         var nTries = 0;
         var newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
-        while (Math.Abs(newProb - oldProb)/oldProb <= double.Epsilon && nTries < OptimizationParams.MaxTries)
+        while (newProb <= 0.0 && nTries < OptimizationParams.MaxTries)
         {
             nTries++;
             newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
@@ -137,7 +137,7 @@ public class Optimizer
     {
         var nTries = 0;
         var newSize = (long) (oldSize * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor));
-        while (newSize <= 0 && Math.Abs(newSize-oldSize)/oldSize <= double.Epsilon && nTries < OptimizationParams.MaxTries)
+        while (newSize <= 0 && nTries < OptimizationParams.MaxTries)
         {
             nTries++;
             newSize = (long) (oldSize * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor));
