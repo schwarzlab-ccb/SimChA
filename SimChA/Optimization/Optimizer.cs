@@ -115,13 +115,28 @@ public class Optimizer
         return bestParams;
     }
 
-    private SimParams GetProposalParams2(SimParams currentParams)
+    private SimParams GetProposalParams(SimParams currentParams)
     {
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with {Seed = -1};
+        }
+        return OptimizationParams.ParamVariationMode switch
+        {
+            0 => GetAllNewParams(currentParams),
+            1 => GetNewPairParams(currentParams),
+            2 => GetNewSingleParam(currentParams),
+            _ => throw new Exception("Error in Optimizer. ParamVariationMode not recognized."),
+        };
+    }
 
+    private SimParams GetNewPairParams(SimParams currentParams)
+    {
         return currentParams;
     }
 
-    private double GetNewWeight(double oldProb)
+
+    private double GetNewValue(double oldProb)
     {
         var nTries = 0;
         var newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
@@ -133,30 +148,17 @@ public class Optimizer
         return newProb;
     }
 
-    private long GetNewSize(long oldSize)
-    {
-        var nTries = 0;
-        var newSize = (long) (oldSize * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor));
-        while (newSize <= 0 && nTries < OptimizationParams.MaxTries)
-        {
-            nTries++;
-            newSize = (long) (oldSize * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor));
-        }
-        return newSize;
-    }
+    private long GetNewValue(long oldValue)
+        => (long)GetNewValue(oldValue);
     
     private SimParams GetAllNewParams(SimParams currentParams)
     {
-        if (OptimizationParams.ResetSeed)
-        {
-            currentParams = currentParams with {Seed = -1};
-        }
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var targetWeight = events.Sum(e => e.Prob);
         var newProbs = new List<double>();
         foreach (var ev in events)
         {
-            var weight = GetNewWeight(ev.Prob);
+            var weight = GetNewValue(ev.Prob);
             newProbs.Add(weight);
         }
         var currentTotal = newProbs.Sum();
@@ -167,25 +169,20 @@ public class Optimizer
         {
             var internalDel = events.Find(e => e.Type == CNEventType.InternalDeletion) ?? throw new Exception("Error in Optimizer. No internal deletion event found.");
             var index = events.IndexOf(internalDel);
-            newEvents[index] = newEvents[index] with { Size = GetNewSize(internalDel.Size) };
+            newEvents[index] = newEvents[index] with { Size = GetNewValue(internalDel.Size) };
 
             var internalDup = events.Find(e => e.Type == CNEventType.InternalDuplication) ?? throw new Exception("Error in Optimizer. No internal duplication event found.");
             index = events.IndexOf(internalDup);
-            newEvents[index] = newEvents[index] with { Size = GetNewSize(internalDup.Size) };
+            newEvents[index] = newEvents[index] with { Size = GetNewValue(internalDup.Size) };
         }
         var newSignature = new Signature(1, newEvents);
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
 
-    private SimParams GetProposalParams(SimParams currentParams)
+    private SimParams GetNewSingleParam(SimParams currentParams)
     {
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var totalWeight = events.Sum(e => e.Prob);
-        // Reset the seed if selected
-        if (OptimizationParams.ResetSeed)
-        {
-            currentParams = currentParams with {Seed = -1};
-        }
         // Choose an event to modify
         // We add an extra two possible indices to account for the InternalDuplication and
         // InternalDeletion Length Parameters
@@ -214,7 +211,7 @@ public class Optimizer
                 throw new Exception("Error in Optimizer. Index out of range.");
             }
             // Modify the internal duplication/deletion length parameter
-            var newSize = GetNewSize(oldSize);
+            var newSize = GetNewValue(oldSize);
             var newEvents = new List<CNEventPars>(events);
             newEvents[index] = newEvents[index] with { Size = newSize };
             var newSignature = new Signature(1, newEvents);
@@ -223,7 +220,7 @@ public class Optimizer
         else
         {
             // Modify the relative weight of the event
-            var newProb = GetNewWeight(events[index].Prob);
+            var newProb = GetNewValue(events[index].Prob);
             // The other event parameters are multiplicatively modified (with the same relative factor)
             var newFactor = (totalWeight - newProb)/(totalWeight - events[index].Prob);
             var newEvents = events.Select(e => e with { Prob = e.Prob * newFactor }).ToList();
