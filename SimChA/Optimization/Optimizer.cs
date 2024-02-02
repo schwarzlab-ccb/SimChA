@@ -163,12 +163,19 @@ public class Optimizer
             // Reweight the ones that weren't changed by a common factor
             var newTotal = newProbs.Sum();
             var factor = (targetWeight - sumNewWeights)/(newTotal - sumNewWeights);
-            newProbs = newProbs.Select((x,i) => indices.Contains(i) ? x : factor * x).ToList();
-            if (newProbs.Any(x => x <= 0.0))
+            // If the factor is negative, reweight all events
+            if (factor <= 0.0)
             {
-                throw new Exception("Error in Optimizer. Negative probability.");
+                newProbs = newProbs.Select(x => targetWeight * x / newTotal).ToList();
             }
-            //newProbs = newProbs.Select(x => targetWeight * x / newTotal).ToList();
+            else
+            {
+                newProbs = newProbs.Select((x,i) => indices.Contains(i) ? x : factor * x).ToList();
+                if (newProbs.Any(x => x <= 0.0))
+                {
+                    throw new Exception("Error in Optimizer. Negative probability.");
+                }
+            }
         }
         newEvents = newEvents.Select((e, i) => e with { Prob = newProbs[i] }).ToList();
         var newSignature = new Signature(1, newEvents);
