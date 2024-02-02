@@ -96,6 +96,23 @@ public class TestFitness
         foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
         Assert.AreEqual(1, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
     }
+
+    [Test]
+    public void TestAutosomeStressTerm([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
+        var xxKaryotype = new Karyotype(genRef, true);
+        var xyKaryotype = new Karyotype(genRef, false);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
+        xxKaryotype.ApplyWGD(); // Double all
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
+        Assert.AreEqual(1, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
+    }
     
     [Test]
     public void TestCNCalulation([Values(0,1)] int refId)
@@ -124,6 +141,16 @@ public class TestFitness
         // TODO: Test the linear combination
     }
 
+    [Test]
+    public void TestAutosomeCalculate([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
+        var karyotype = new Karyotype(genRef, true);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
+        // TODO: Test the linear combination
+    }
     [Test]
     public void TestReferenceFitness([Values] bool sexXX, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
     {
