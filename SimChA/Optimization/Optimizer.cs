@@ -143,6 +143,7 @@ public class Optimizer
         var indices = Enumerable.Range(0, nParams).OrderBy(x => Rnd.Next()).Take(n).ToList();
         var newEvents = new List<CNEventPars>(events);
         bool reweightNeeded = false;
+        var sumNewWeights = 0.0;
         foreach (var index in indices)
         {
             if (index >= events.Count)
@@ -153,13 +154,21 @@ public class Optimizer
             else
             {   
                 newProbs[index] = GetNewWeight(events[index].Prob);
+                sumNewWeights += newProbs[index];
                 reweightNeeded = true;
             }
         }
         if (reweightNeeded)
         {
+            // Reweight the ones that weren't changed by a common factor
             var newTotal = newProbs.Sum();
-            newProbs = newProbs.Select(x => targetWeight * x / newTotal).ToList();
+            var factor = (targetWeight - sumNewWeights)/(newTotal - sumNewWeights);
+            newProbs = newProbs.Select((x,i) => indices.Contains(i) ? x : factor * x).ToList();
+            if (newProbs.Any(x => x <= 0.0))
+            {
+                throw new Exception("Error in Optimizer. Negative probability.");
+            }
+            //newProbs = newProbs.Select(x => targetWeight * x / newTotal).ToList();
         }
         newEvents = newEvents.Select((e, i) => e with { Prob = newProbs[i] }).ToList();
         var newSignature = new Signature(1, newEvents);
