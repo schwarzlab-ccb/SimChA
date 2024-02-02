@@ -88,6 +88,20 @@ public class TestFitness
         };
         Assert.AreEqual(0.2, Fitness.TsgOgTerm(genRef, testList, true));
         Assert.AreEqual(0.2 + 0.1, Fitness.TsgOgTerm(genRef, testList, false));
+        // Autosomes only
+        genRef.IncludeSexChromosomes = false;
+                testList = new List<(Gene, int)>{
+            (MakeGene("chrX", 0.1), 2)
+        };
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, false));
+        testList = new List<(Gene, int)>{
+            (MakeGene("chrX", 0.2), 2),
+            (MakeGene("chrY", 0.1), 2)
+        };
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, false));
+
     }
     
     [Test]
