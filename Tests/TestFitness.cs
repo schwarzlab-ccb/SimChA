@@ -32,6 +32,7 @@ public class TestFitness
     public void TestEssTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
         Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), true));
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
@@ -45,6 +46,13 @@ public class TestFitness
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
         Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, true));
+
+        var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.5), 0), (MakeGene("chrY", 0.5), 0)};
+        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, true));
+
+        genRef.IncludeSexChromosomes = true;
+        Assert.AreEqual(-0.5, Fitness.EssTerm(genRef, testSexChromosome, true));
+        Assert.AreEqual(-1.0, Fitness.EssTerm(genRef, testSexChromosome, false));
     }
 
     [Test]
