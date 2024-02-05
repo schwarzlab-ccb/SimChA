@@ -48,7 +48,7 @@ public class Optimizer
         return GetScore(simCNPs);
     }
 
-    private double GetScore(Dictionary<string, List<CopyNumber>> cnps)
+    public double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
         var totalDist = 0.0;
         if (OptimizationParams.UseMeanSeg)
@@ -82,6 +82,10 @@ public class Optimizer
     private SimParams FindBestParams(FileIO files)
     {
         var currentParams = GetProposalParams(SimParams);
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with {Seed = -1};
+        }
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
         var bestParams = currentParams;
@@ -117,10 +121,6 @@ public class Optimizer
 
     private SimParams GetProposalParams(SimParams currentParams)
     {
-        if (OptimizationParams.ResetSeed)
-        {
-            currentParams = currentParams with {Seed = -1};
-        }
         return OptimizationParams.ParamVariationMode switch
         {
             0 => GetAllNewParams(currentParams),
