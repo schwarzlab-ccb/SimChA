@@ -116,6 +116,41 @@ public class TestSummaryFeatures
     }
 
     [Test]
+    public void TestDefaultGetBreakpoints()
+    {
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
+        // Autosomes only
+        var breakpoints = SummaryFeatures.GetBreakpoints(cnps, false);
+        Assert.AreEqual(1, breakpoints.Count);
+        Assert.AreEqual(0, breakpoints[0]);
+        // Including sex chromosomes
+        breakpoints = SummaryFeatures.GetBreakpoints(cnps, true);
+        Assert.AreEqual(1, breakpoints.Count);
+        Assert.AreEqual(0, breakpoints[0]);
+    }
+
+    [Test]
+    public void TestGetBreakpoints()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Delete 1000-2000 on chr1
+        karXX.ApplyInternalDeletion(0, 1000, 2000);
+        // Gain 0-5000 on chr2
+        karXX.ApplyInternalDuplication(1, 0, 5000);
+        // Gain on chrX
+        karXX.ApplyInternalDuplication(22, 1000, 2000);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        // Autosomes only
+        var breakpoints = SummaryFeatures.GetBreakpoints(cnps, false);
+        Assert.AreEqual(1, breakpoints.Count);
+        Assert.AreEqual(3, breakpoints[0]);
+        // Including sex chromosomes
+        breakpoints = SummaryFeatures.GetBreakpoints(cnps, true);
+        Assert.AreEqual(1, breakpoints.Count);
+        Assert.AreEqual(5, breakpoints[0]);
+    }
+
+    [Test]
     public void TestDefaultSegLengths()
     {
         var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });

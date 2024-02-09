@@ -191,6 +191,10 @@ public static class SummaryFeatures
         foreach (var cnProfile in cnProfiles)
         {
             var cnList = cnProfile.Value;
+            if (!includeSexChromosomes)
+            {
+                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+            }
             var allBPs = cnList.Count(cn => cn.Segment.End != cn.Segment.Length);
             breakpoints.Add(allBPs);
         }
