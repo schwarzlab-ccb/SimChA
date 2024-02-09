@@ -236,14 +236,11 @@ public static class SummaryFeatures
         return meanCN;
     }
 
-    public static (List<double> values, double max) GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false)
-    {
-        var ploidies = includeSexChromosomes
+    public static List<double> GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false)
+        => includeSexChromosomes
                         ? cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key])).ToList()
                         : cnProfiles.Select(kvp => CopyNumbers.CalcAutosomePloidy(genRef, kvp.Value)).ToList();
-        return (ploidies, ploidies.Max());
-    }
-
+                        
     // Produces a matrix of copy-number values for each chromosome in each sample
     public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
     {

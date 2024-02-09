@@ -81,7 +81,7 @@ public class Optimizer
 
     private SimParams FindBestParams(FileIO files)
     {
-        var currentParams = GetProposalParams(SimParams);
+        var currentParams = SimParams;//GetProposalParams(SimParams);
         if (OptimizationParams.ResetSeed)
         {
             currentParams = currentParams with {Seed = -1};
@@ -267,11 +267,11 @@ public class Optimizer
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
-    private double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes);
-        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes);
-        var histMax = Math.Max(obsMax, simMax);
+        var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes);
+        var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes);
+        var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
         var histBins = 100;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);

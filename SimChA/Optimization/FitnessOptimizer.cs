@@ -160,16 +160,6 @@ public class FitnessOptimizer : Optimizer
         return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
     }
 
-    private double GetPloidyDistance(Dictionary<string, List<CopyNumber>> cnps)
-    {
-        var (obsValues, obsMax) = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict);
-        var (simValues, simMax) = SummaryFeatures.GetPloidy(GenRef, cnps, IsFemaleSimulatedDict);
-        var histMax = Math.Max(obsMax, simMax);
-        var histMin = 0;
-        var histBins = 50;
-        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
-
     private double GetHomozygousDeletionDistance(Dictionary<string, List<CopyNumber>> cnps)
     {
         var obsValues = SummaryFeatures.GetHomozygousDeletionFraction(GenRef, ObservedCNPs);
