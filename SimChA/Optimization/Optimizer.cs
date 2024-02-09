@@ -3,9 +3,9 @@ using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.IO;
 using MathNet.Numerics.Statistics;
-using System.Diagnostics;
 namespace SimChA.Optimization;
 using SimChA.EventData;
+using System;
 
 public class Optimizer
 {   
@@ -114,6 +114,10 @@ public class Optimizer
             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
             {
                 files.WriteSimParams(currentParams, $"params_{i}.json");
+            }
+            if (i % OptimizationParams.GCInterval == 0)
+            {
+                GC.Collect();
             }
         }
         return bestParams;

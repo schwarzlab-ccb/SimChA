@@ -15,7 +15,7 @@
 		"Events": [
 		  {
 			"Type": "ChromDeletion",
-			"Prob": 1,
+			"Prob": 10,
 			"Size": 0,
 			"Frag": 0
 		  },
@@ -146,16 +146,17 @@
 		"StepFactor": 0.01,
 		"MaxTries": 10,
 		"WriteIntermediate": true,
-    	"WriteFrequency": 50,
+		"WriteFrequency": 50,
 		"AcceptanceFactor": 10,
 		"EventWeightsOnly": true,
-		"ParamVariationMode": 0,
-    	"UseABC": true,
-		"UseMeanSeg": true,
+		"ParamVariationMode": 1,
+		"UseABC": false,
+		"UseMeanSeg": false,
 		"UsePloidy" : true,
 		"UseBreakpoints" : true,
 		"BreakpointsPerChrom": true,
 		"BreakpointsBinSize": 10000000,
-		"ResetSeed": true
+		"ResetSeed": true,
+		"GCInterval" : 25
 	}
   }
