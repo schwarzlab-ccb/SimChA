@@ -32,6 +32,7 @@ public class TestFitness
     public void TestEssTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
         Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), true));
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
@@ -45,6 +46,13 @@ public class TestFitness
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
         Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, true));
+
+        var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.5), 0), (MakeGene("chrY", 0.5), 0)};
+        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, true));
+
+        genRef.IncludeSexChromosomes = true;
+        Assert.AreEqual(-0.5, Fitness.EssTerm(genRef, testSexChromosome, true));
+        Assert.AreEqual(-1.0, Fitness.EssTerm(genRef, testSexChromosome, false));
     }
 
     [Test]
@@ -80,6 +88,20 @@ public class TestFitness
         };
         Assert.AreEqual(0.2, Fitness.TsgOgTerm(genRef, testList, true));
         Assert.AreEqual(0.2 + 0.1, Fitness.TsgOgTerm(genRef, testList, false));
+        // Autosomes only
+        genRef.IncludeSexChromosomes = false;
+                testList = new List<(Gene, int)>{
+            (MakeGene("chrX", 0.1), 2)
+        };
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, false));
+        testList = new List<(Gene, int)>{
+            (MakeGene("chrX", 0.2), 2),
+            (MakeGene("chrY", 0.1), 2)
+        };
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, false));
+
     }
     
     [Test]
@@ -91,6 +113,23 @@ public class TestFitness
         Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
         Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
         Assert.AreNotEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xxKaryotype.GenomeLen()));
+        xxKaryotype.ApplyWGD(); // Double all
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
+        Assert.AreEqual(1, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
+    }
+
+    [Test]
+    public void TestAutosomeStressTerm([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
+        var xxKaryotype = new Karyotype(genRef, true);
+        var xyKaryotype = new Karyotype(genRef, false);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
         xxKaryotype.ApplyWGD(); // Double all
         Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
         foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
@@ -124,6 +163,16 @@ public class TestFitness
         // TODO: Test the linear combination
     }
 
+    [Test]
+    public void TestAutosomeCalculate([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
+        var karyotype = new Karyotype(genRef, true);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
+        Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
+        // TODO: Test the linear combination
+    }
     [Test]
     public void TestReferenceFitness([Values] bool sexXX, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
     {

@@ -9,14 +9,15 @@ public class GenRef
     public Dictionary<string, int> ChrLengths { get; }
     public Dictionary<string, SexEnum> ChrSex { get; }
     public int AutosomeCount { get; }
-    public int ChrCount { get; }
+    public int ChrCount 
+        => IncludeSexChromosomes ? AutosomeCount * 2 + (ChrSex.Count - AutosomeCount) : AutosomeCount * 2;
     private Region[] XYGenome { get; }
     private Region[] XXGenome { get; }
     private Region[] Autosomes { get; }
     
     private long XYLinLen { get; }
     private long XXLinLen { get; }
-    private long AutosomeLinLen { get; }
+    public long AutosomeLinLen { get; }
     private long XYGenomeLen { get; }
     private long XXGenomeLen { get; }
     private List<string> XYChrs { get; }
@@ -52,7 +53,7 @@ public class GenRef
         => AutosomeChrs;
     
     public long AutosomeLen {get;}
-    public bool IncludeSexChromosomes { get; }
+    public bool IncludeSexChromosomes { get; set;}
 
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
 
@@ -64,7 +65,6 @@ public class GenRef
         ChrSex = chrSex;
         AutosomeCount = chrSex.Count(x => x.Value == SexEnum.Both);
         IncludeSexChromosomes = includeSexChromosomes;
-        ChrCount = AutosomeCount * 2 + (chrSex.Count - AutosomeCount);
         XYChrs = chrSex.Select(pair => pair.Key).ToList();
         XXChrs = chrSex.Where(pair => pair.Value != SexEnum.Male).Select(pair => pair.Key).ToList();
         AllChrs = chrSex.Select(pair => pair.Key).ToList();

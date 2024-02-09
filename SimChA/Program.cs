@@ -25,7 +25,6 @@ var files = new FileIO(options.OutputPath);
 bool parseGenContents = execMode == ExecMode.ParseGenContents;
 var includeSexChromosomes = !options.AutosomesOnly;
 var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
-files.WriteSimParams(simParams);
 
 var watch = new Stopwatch();
 watch.Start();
@@ -46,20 +45,33 @@ if (execMode == ExecMode.BinSamples)
     files.WriteCopyNumbers(binnedSamples);
     return 0;
 }
-else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEvents)
+else if (execMode == ExecMode.RunOptimization)
 {
+    if (simParams.OptimizationParams is null)
+    {
+        throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
+    }
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    double totalDist = 0.0;
-    if (execMode == ExecMode.OptimizeEvents)
+    Console.WriteLine("Generating Simulated Data");
+    if (simParams.OptimizationParams.Mode == "Events")
     {
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
-        Console.WriteLine("Generating Simulated Data");
-        totalDist = optimizer.Optimize();
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes);
+        if (simParams.OptimizationParams.UseABC)
+        {
+            var dist = optimizer.GetABCDistance();
+            Console.WriteLine($"ABC distance: {dist}");
+            return 0;
+        }
+        else
+        {
+            var outParams = optimizer.Optimize(files);
+            files.WriteSimParams(outParams);
+        }
     }
-    else if (execMode == ExecMode.OptimizeFitness)
+    else if (simParams.OptimizationParams.Mode == "Fitness")
     {
         if (options.BootstrapFile == "")
         {
@@ -70,14 +82,17 @@ else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEv
             throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
         }
         var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
-        Console.WriteLine("Generating Simulated Data");
-        totalDist = optimizer.Optimize();
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, options.BinnedSamples, fitnessList);
+        var outParams = optimizer.Optimize(files);
+        files.WriteSimParams(outParams);
+    }
+    else
+    {
+        throw new Exception("Error: Optimization mode not recognized. Please set OptimizationParams.Mode to either Events or Fitness.");
     }
     watch.Stop();
     //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-    Console.WriteLine();
-    Console.WriteLine($"Total distance: {totalDist}");
+    Console.WriteLine("Optimization finished");
     return 0;
 }
 if (execMode == ExecMode.Profiles)
@@ -134,6 +149,7 @@ else
         simulator.SampleEvents(sample);
     }
 }
+files.WriteSimParams(simParams);
 
 Console.WriteLine("");
 

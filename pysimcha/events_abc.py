@@ -36,24 +36,24 @@ def update_params_file(param_file, fit_event_weights, params):
     ndp = 3
     # Events are unfortunately an array in the parameters file
     if fit_event_weights:
-	    # ChromDeletion
-	    configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
-	    # ChromDuplication
-	    configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["w_chrom_dup"]), ndp)
-	    # InternalDuplication
-	    configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["w_int_dup"]), ndp)
-	    # InternalDeletion
-	    configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["w_int_del"]), ndp)
-	    # BreakageFusionBridge    
-	    configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["w_bfb"]), ndp)
-	    # TailDeletion
-	    configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["w_tail_del"]), ndp) 
-	    # Whole-Genome Doubling
-	    configs["Signatures"]["CNs"]["Events"][9]["Prob"]  = float(params["w_wgd"])
+        # ChromDeletion
+        configs["Signatures"]["CNs"]["Events"][0]["Prob"] = round(float(params["w_chrom_del"]), ndp)
+        # ChromDuplication
+        configs["Signatures"]["CNs"]["Events"][1]["Prob"] = round(float(params["w_chrom_dup"]), ndp)
+        # InternalDuplication
+        configs["Signatures"]["CNs"]["Events"][2]["Prob"] = round(float(params["w_int_dup"]), ndp)
+        # InternalDeletion
+        configs["Signatures"]["CNs"]["Events"][3]["Prob"] = round(float(params["w_int_del"]), ndp)
+        # BreakageFusionBridge    
+        configs["Signatures"]["CNs"]["Events"][6]["Prob"] = round(float(params["w_bfb"]), ndp)
+        # TailDeletion
+        configs["Signatures"]["CNs"]["Events"][7]["Prob"] = round(float(params["w_tail_del"]), ndp) 
+        # Whole-Genome Doubling
+        configs["Signatures"]["CNs"]["Events"][9]["Prob"] = float(params["w_wgd"])
     else:
-	    # The length-scales have to be rounded to integer status 
-	    configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
-	    configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
+        # The length-scales have to be rounded to integer status 
+        configs["Signatures"]["CNs"]["Events"][2]["Size"] = int(params["l_int_dup"]*100_000)
+        configs["Signatures"]["CNs"]["Events"][3]["Size"] = int(params["l_int_del"]*100_000)
     
     with open(file_path, 'w', encoding="utf-8") as json_file:
         json.dump(configs, json_file)
@@ -66,7 +66,7 @@ def run_simcha(params, param_file, genes_path, cohort_path, repeats, all_chromos
     param_file_path = update_params_file(param_file, fit_event_weights, params)
     
     # Run command for SimChA
-    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/{param_file} -R {repeats} -O {param_file_path}/out --optimization events -D {genes_path} -P {cohort_path}"
+    cmd = f"dotnet run --no-build --project SimChA -C {param_file_path}/{param_file} -R {repeats} -O {param_file_path}/out --optimization -D {genes_path} -P {cohort_path}"
     if not all_chromosomes:
         cmd += " --autosomes-only"
 
@@ -90,6 +90,19 @@ def generate_cohort(param_file, genes_path, out_path, repeats):
     subprocess.run([cmd], shell=True)
     return
 
+def init_params_file(param_file):
+     # Update the parameter file
+    with open(param_file, 'r', encoding='utf-8') as json_file:
+        configs = json.load(json_file)
+    # Tell the parameters file to only do event weights
+    configs["OptimizationParams"]["Mode"] = "Events"
+    configs["OptimizationParams"]["EventWeightsOnly"] = True
+    configs["OptimizationParams"]["UseABC"] = True
+    with open(param_file, 'w', encoding="utf-8") as json_file:
+        json.dump(configs, json_file)
+    # Return the path to the config file
+    return
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     parser.add_argument('-N', "--name",type=str, default="events_abc_results", help="Name for output directory to put SQL database produced by pyABC and the posterior plot produced")
@@ -110,6 +123,9 @@ if __name__ == "__main__":
     pwd = os.getcwd()
     # Build the program once for the corresponding thread, in case any changes have been made to SimChA
     subprocess.run(["dotnet build SimChA"], shell = True)
+    # Initialize the parameter file to only fit event weights
+    if args.event_weights:
+        init_params_file(args.param_file)
 
     # If we use SimChA-generated data as the ground-truth, we first have to generate that data
     param_file = args.param_file
@@ -131,14 +147,14 @@ if __name__ == "__main__":
 
     # Uniform prior distributions for the various different properties of the simple events
     if args.event_weights:
-    	limits = dict(w_chrom_del = (0, 5), w_chrom_dup = (0, 5), w_int_dup = (0, 50), w_int_del = (0, 50), w_bfb = (0, 10), w_tail_del = (0, 10), w_wgd = (0, 0.1))
+        limits = dict(w_chrom_del=(0, 10), w_chrom_dup=(0, 10), w_int_dup=(0, 35), w_int_del=(0, 35), w_bfb=(0, 10), w_tail_del=(0, 10), w_wgd=(0, 0.5))
     else:
-    	limits = dict(l_int_dup   = (1, 20), l_int_del   = (1, 20))
+        limits = dict(l_int_dup=(1, 20), l_int_del=(1, 20))
 
     # The length scale of events in is 100kb.
     # Priors are simply a uniform distribution between their two limits
     prior = Distribution(**{key: RV("uniform", a, b-a) for key, (a, b) in limits.items()})
-    
+
     # SimChA calculates the Euclidean-summed Wasserstein distance, so we don't need an observed distance
     observed_data = {"distance": 0.0}
     sampler = sampler.MulticoreEvalParallelSampler(n_procs=args.n_procs)
