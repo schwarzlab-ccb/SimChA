@@ -149,6 +149,55 @@ public class TestSummaryFeatures
     }
 
     [Test]
+    public void TestDefaultGetPloidy()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var karXY = new Karyotype(_genRef, false);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var sexDict = new Dictionary<string, bool> {{cnps.Keys.ToList()[0], true }, {cnps.Keys.ToList()[1], false}};
+        // Autosomes only
+        var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
+        Assert.AreEqual(2, ploidies.Count);
+        Assert.AreEqual(2, ploidies[0]);
+        Assert.AreEqual(2, ploidies[1]);
+        // Sex Chromosomes included
+        ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict, true);
+        Assert.AreEqual(2, ploidies.Count);
+        Assert.AreEqual(2, ploidies[0]);
+        Assert.AreEqual(2, ploidies[1]);
+    }
+
+    [Test]
+    public void TestGetPloidy()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // WGD and deletion of two copies of X chromosome
+        karXX.ApplyWGD();
+        karXX.ApplyContigDeletion(22);
+        karXX.ApplyContigDeletion(45);
+        var karXY = new Karyotype(_genRef, false);
+        // Delete all contigs from chr1-22 (i.e. one copy of each autosome)
+        for (int i = 0; i < 22; i++)
+        {
+            karXY.ApplyContigDeletion(i);
+        }
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var sexDict = new Dictionary<string, bool> {{cnps.Keys.ToList()[0], true }, {cnps.Keys.ToList()[1], false}};
+        // Autosomes only
+        var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
+        Assert.AreEqual(2, ploidies.Count);
+        Assert.AreEqual(4, ploidies[0]);
+        Assert.AreEqual(1, ploidies[1]);
+        // Sex Chromosomes included
+        ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict, true);
+        Assert.AreEqual(2, ploidies.Count);
+        var expectedXX = (4.0*_genRef.GetGenomeLen(true, false) - 2.0*_genRef.ChrLengths[_genRef.AllChrs[22]])/_genRef.GetGenomeLen(true, false);
+        Assert.AreEqual(expectedXX, ploidies[0], 1e-6);
+        var expectedXY = 2.0*(_genRef.GetGenomeLen(false) - _genRef.AutosomeLinLen)/_genRef.GetGenomeLen(false);
+        Assert.AreEqual(expectedXY, ploidies[1], 1e-6);
+    }
+
+    [Test]
     public void TestChrCNMatrix()
     {
         var karXX = new Karyotype(_genRef, true);
