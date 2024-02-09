@@ -185,6 +185,18 @@ public static class SummaryFeatures
         return averages;
     }
 
+    public static List<double> GetBreakpoints(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes)
+    {
+        var breakpoints = new List<double>();
+        foreach (var cnProfile in cnProfiles)
+        {
+            var cnList = cnProfile.Value;
+            var allBPs = cnList.Count(cn => cn.Segment.End != cn.Segment.Length);
+            breakpoints.Add(allBPs);
+        }
+        return breakpoints;
+    }
+
     public static Dictionary<string, List<int>> GetBreakpointsPerChromosome(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes)
     {
         var breakpoints = new Dictionary<string, List<int>>();
