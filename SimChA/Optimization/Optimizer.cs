@@ -292,9 +292,13 @@ public class Optimizer
     }
     private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
-        var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
-        var histMax = IncludeSexChromosomes ? 24 : 22;
+        //var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
+        //var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
+        var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, IncludeSexChromosomes);
+        var simValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, IncludeSexChromosomes);
+        //var histMax = IncludeSexChromosomes ? 24 : 22;
+        // Limit the maximum number of breakpoints to 100.
+        var histMax = 100;
         var histMin = 0;
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
