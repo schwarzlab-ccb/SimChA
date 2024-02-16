@@ -7,7 +7,7 @@ from os.path import join
 
 import sys 
 sys.path.append('..')
-from pycna.utils.assembiles import chr_names, aut_names, hg19_chr_lengths, hg19_chr_cum_starts
+from pycna.utils.assemblies import chr_names, aut_names, hg19_chr_lengths, hg19_chr_cum_starts
 
 
 def format_chromosomes_int(chroms):
@@ -78,39 +78,18 @@ def calc_CNs(dataset):
     return df
 
 # Get the segment lengths for a dataset (only non-diploid segments by default)
-def get_seg_lengths(data, include_cn_normal = False, include_loh = False, include_sex_chromosomes = False):
+def get_seg_lengths(data, include_cn_normal = False, include_loh = False):
     sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
     all_seg_lengths = []
     for _, id in enumerate(sample_ids):
-        df = data[data["sample_id"] == id]
-        # Remove sex chromosomes
-        if not include_sex_chromosomes:
-            df = df[~df["chrom"].isin(["chrX", "chrY"])]
-        # Remove cn normal and LOH segments if the flags are turned on
-        if not include_cn_normal:
-            df = df[~((df["cn_a"] == 1) & (df["cn_b"] == 1))]
-        elif not include_loh:
-            df = df[~((df["cn_a"] != 1) & (df["cn_a"] + df["cn_b"] == 2))]
-        
-        all_seg_lengths.extend(df["end"] - df["start"] if not df.empty else [0])
+        sample = data[data["sample_id"] == id]
+        for _, row in sample.iterrows():
+            if row["cn_a"] == 1 and row["cn_b"] == 1 and not include_cn_normal:
+                continue
+            elif row["cn_a"] != 1 and row["cn_a"]+row["cn_b"] == 2 and not include_loh:
+                continue
+            all_seg_lengths.append(row["end"] - row["start"])
     return all_seg_lengths
-
-def get_seg_len_means(data, include_cn_normal = False, include_loh = False, include_sex_chromosomes = False):
-    sample_ids = pd.Series({c: data[c].unique() for c in data})["sample_id"]
-    all_means = []
-    for _, id in enumerate(sample_ids):
-        df = data[data["sample_id"] == id]
-        # Remove sex chromosomes
-        if not include_sex_chromosomes:
-            df = df[~df["chrom"].isin(["chrX", "chrY"])]
-        # Remove cn normal and LOH segments if the flags are turned on
-        if not include_cn_normal:
-            df = df[~((df["cn_a"] == 1) & (df["cn_b"] == 1))]
-        elif not include_loh:
-            df = df[~((df["cn_a"] != 1) & (df["cn_a"] + df["cn_b"] == 2))]
-        
-        all_means.append((df['end'] - df['start']).mean() if not df.empty else 0)
-    return all_means
 
 # Get the changepoint values for a dataset
 def get_changepoints(data, include_cn_normal = False, include_loh = False):
@@ -271,4 +250,5 @@ def homozygous_length_distribution(df, bin_size=1_000_000):
                 length = (row["end"] - row["start"])/bin_size
                 hist.append(length)
     return hist
+
 
