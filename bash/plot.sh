@@ -1,4 +1,5 @@
 #!/bin/bash
+cd ..
 set -euo pipefail
 
 if [ $# -gt 0 ]; then out=$1; else out="./out"; fi
