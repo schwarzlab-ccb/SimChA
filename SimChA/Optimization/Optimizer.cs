@@ -273,8 +273,9 @@ public class Optimizer
 
     protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes);
-        var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes);
+        var cutoff = OptimizationParams.PloidyCutoff;
+        var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes, cutoff);
+        var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes, cutoff);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
         var histBins = 100;

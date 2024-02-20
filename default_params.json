@@ -157,6 +157,7 @@
 		"BreakpointsPerChrom": true,
 		"BreakpointsBinSize": 10000000,
 		"ResetSeed": true,
-		"GCInterval" : 25
+		"GCInterval" : 25,
+		"PloidyCutoff": 8.0
 	}
   }
