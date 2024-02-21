@@ -301,7 +301,7 @@ public class Optimizer
         //var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         //var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, IncludeSexChromosomes);
-        var simValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, IncludeSexChromosomes);
+        var simValues = SummaryFeatures.GetBreakpoints(simCNPs, IncludeSexChromosomes);
         //var histMax = IncludeSexChromosomes ? 24 : 22;
         // Limit the maximum number of breakpoints to 100.
         var histMax = 100;
