@@ -50,26 +50,31 @@ public class Optimizer
 
     public double GetScore(Dictionary<string, List<CopyNumber>> cnps)
     {
-        var totalDist = 0.0;
+        var totalDist = new List<double>();
+        if (OptimizationParams.UseSegLength)
+        {
+            var segDist = GetSegLengthDistance(cnps);
+            totalDist.Add(segDist*segDist);
+        }
         if (OptimizationParams.UseMeanSeg)
         {
             var segDist = GetMeanSegDistance(cnps);
-            totalDist += segDist*segDist;
+            totalDist.Add(segDist*segDist);
         }
         if (OptimizationParams.UsePloidy)
         {
             var ploidyDist = GetPloidyDistance(cnps);
-            totalDist += ploidyDist*ploidyDist;
+            totalDist.Add(ploidyDist*ploidyDist);
         }
         if (OptimizationParams.UseBreakpoints)
         {
             var bpDist = GetBreakpointDistance(cnps);
-            totalDist += bpDist*bpDist;
+            totalDist.Add(bpDist*bpDist);
         }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
-        return totalDist;
+        return totalDist.Sum();
     }
 
     private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
@@ -255,9 +260,9 @@ public class Optimizer
     {
         var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs);
         var (simValues, simMax) = SummaryFeatures.GetSegLengths(simCNPs);
-        var histMax = Math.Max(obsMax, simMax);
+        var histMax = 252_000_000;//Math.Max(obsMax, simMax);
         var histMin = 0;
-        var histBins = 200;
+        var histBins = 252;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
