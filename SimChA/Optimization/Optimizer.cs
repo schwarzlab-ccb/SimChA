@@ -258,11 +258,18 @@ public class Optimizer
     }
     private double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs);
-        var (simValues, simMax) = SummaryFeatures.GetSegLengths(simCNPs);
-        var histMax = 252_000_000;//Math.Max(obsMax, simMax);
+        long cutoff = -1;
+        var histMax = 252_000_000;
         var histMin = 0;
         var histBins = 252;
+        if (OptimizationParams.UseSegLength)
+        {
+            cutoff = OptimizationParams.SegLengthCutoff;
+            histMax = (int)cutoff;
+            histBins = 100;
+        }
+        var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs, cutoff);
+        var (simValues, simMax) = SummaryFeatures.GetSegLengths(simCNPs, cutoff);
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
@@ -278,7 +285,11 @@ public class Optimizer
 
     protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var cutoff = OptimizationParams.PloidyCutoff;
+        double cutoff = -1.0;
+        if (OptimizationParams.UsePloidy)
+        {
+            cutoff = OptimizationParams.PloidyCutoff;
+        }
         var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes, cutoff);
         var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes, cutoff);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());

@@ -25,5 +25,6 @@ public record OptimizationParams(
     int ParamVariationMode, // How many parameters to vary at each step. 
     // 0 = vary all, 1 = vary one, 2 = vary two
     int GCInterval, // Interval for Garbage Collection (how many simulated runs before performing GC)
-    double PloidyCutoff // Cutoff for ploidy in optimization distance
+    double PloidyCutoff, // Cutoff for ploidy in optimization distance
+    int SegLengthCutoff // Cutoff for segment length in optimization distance
     );

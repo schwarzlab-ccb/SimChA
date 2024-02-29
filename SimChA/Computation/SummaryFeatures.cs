@@ -31,7 +31,7 @@ public static class SummaryFeatures
         }
         return (cns, max);
     }
-    public static (List<double> segs, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
+    public static (List<double> segs, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, long cutoff = 20_000_000, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
     {
         var segLengths = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -51,12 +51,14 @@ public static class SummaryFeatures
             }
             if (weighted)
             {
-                var lengths = cnList.SelectMany(cn => Enumerable.Repeat((double)cn.Segment.Length, cn.CNH1 + cn.CNH2));
+                var lengths = cnList.Where(cn => cutoff <= 0 || cn.Segment.Length <= cutoff)
+                                    .SelectMany(cn => Enumerable.Repeat((double)cn.Segment.Length, cn.CNH1 + cn.CNH2));
                 segLengths.AddRange(lengths);
             }
             else
             {
-                segLengths.AddRange(cnList.Select(cn => (double) cn.Segment.Length));
+                segLengths.AddRange(cnList.Where(cn => cutoff <= 0 || cn.Segment.Length <= cutoff)
+                                          .Select(cn => (double) cn.Segment.Length));
             }
         }
         var max = (segLengths.Count > 0) ? segLengths.Max() : 0;
@@ -255,9 +257,9 @@ public static class SummaryFeatures
     public static List<double> GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false, double cutoff = 8.0)
         => includeSexChromosomes
                         ? cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key]))
-                                    .Where(ploidy => ploidy <= cutoff).ToList()
+                                    .Where(ploidy => cutoff <= 0 || ploidy <= cutoff).ToList()
                         : cnProfiles.Select(kvp => CopyNumbers.CalcAutosomePloidy(genRef, kvp.Value))
-                                    .Where(ploidy => ploidy <= cutoff).ToList();
+                                    .Where(ploidy => cutoff <= 0 || ploidy <= cutoff).ToList();
                         
     // Produces a matrix of copy-number values for each chromosome in each sample
     public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
