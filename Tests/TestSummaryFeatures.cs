@@ -156,16 +156,16 @@ public class TestSummaryFeatures
         var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
         var noCutoff = -1;
         var segLengths = SummaryFeatures.GetSegLengths(cnps, noCutoff);
-        Assert.AreEqual(0, segLengths.segs.Count);
+        Assert.AreEqual(0, segLengths.Count);
         // Count the CN-normal segments of autosomes
         segLengths = SummaryFeatures.GetSegLengths(cnps, noCutoff, true);
-        Assert.AreEqual(22, segLengths.segs.Count);
+        Assert.AreEqual(22, segLengths.Count);
         // Count the CN-normal segments and LoH segments of autosomes
         segLengths = SummaryFeatures.GetSegLengths(cnps, noCutoff, true, true);
-        Assert.AreEqual(22, segLengths.segs.Count);
+        Assert.AreEqual(22, segLengths.Count);
         // Count the CN-normal segments & LoH segments of all chromosomes
         segLengths = SummaryFeatures.GetSegLengths(cnps, noCutoff, true, true, true);
-        Assert.AreEqual(23, segLengths.segs.Count);
+        Assert.AreEqual(23, segLengths.Count);
     }
 
     [Test]
@@ -177,11 +177,11 @@ public class TestSummaryFeatures
         // Gain 0-5000 on chr2
         karXX.ApplyInternalDuplication(1, 0, 5000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var (segs, max) = SummaryFeatures.GetSegLengths(cnps);
+        var segs = SummaryFeatures.GetSegLengths(cnps);
         Assert.AreEqual(2, segs.Count);
         Assert.AreEqual(1000, segs[0]);
         Assert.AreEqual(5000, segs[1]);
-        Assert.AreEqual(5000, max);
+        Assert.AreEqual(5000, segs.Max());
     }
 
     [Test]
@@ -191,15 +191,15 @@ public class TestSummaryFeatures
         // Cutoff of set to exclude all chromosomes
         var cutoff = 10;
         var segLengths = SummaryFeatures.GetSegLengths(cnps, cutoff);
-        Assert.AreEqual(0, segLengths.segs.Count);
+        Assert.AreEqual(0, segLengths.Count);
         segLengths = SummaryFeatures.GetSegLengths(cnps, cutoff, true);
-        Assert.AreEqual(0, segLengths.segs.Count);
+        Assert.AreEqual(0, segLengths.Count);
         // Count the CN-normal segments and LoH segments of autosomes
         segLengths = SummaryFeatures.GetSegLengths(cnps, cutoff, true, true);
-        Assert.AreEqual(0, segLengths.segs.Count);
+        Assert.AreEqual(0, segLengths.Count);
         // Count the CN-normal segments & LoH segments of all chromosomes
         segLengths = SummaryFeatures.GetSegLengths(cnps, cutoff, true, true, true);
-        Assert.AreEqual(0, segLengths.segs.Count);
+        Assert.AreEqual(0, segLengths.Count);
     }
 
     [Test]
@@ -210,10 +210,10 @@ public class TestSummaryFeatures
         karXX.ApplyInternalDeletion(0, 100_000_000, 200_000_000);
         var cutoff = 20_000_000;
         var cnps = GetCNPs(new List<Karyotype> { karXX });
-        var (segs, max) = SummaryFeatures.GetSegLengths(cnps, cutoff);
+        var segs = SummaryFeatures.GetSegLengths(cnps, cutoff);
         Assert.AreEqual(0, segs.Count);
         long noCutoff = -1;
-        (segs, max) = SummaryFeatures.GetSegLengths(cnps, noCutoff);
+        segs = SummaryFeatures.GetSegLengths(cnps, noCutoff);
         Assert.AreEqual(1, segs.Count);
         Assert.AreEqual(100_000_000, segs[0], double.Epsilon);
     }
