@@ -97,7 +97,7 @@ public class Optimizer
         var temperature = 1.0;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
-            if (OptimizationParams.OptimizationMethod == "Simulated Annealing")
+            if (OptimizationParams.OptimizationMethod == "SimulatedAnnealing")
             {
                 temperature = OptimizationParams.StartTemp * (1.0 - (i+1)/OptimizationParams.NumSamplesTotal);
             }

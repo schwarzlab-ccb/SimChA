@@ -23,11 +23,11 @@ public record OptimizationParams(
     bool BreakpointsPerChrom, // If using breakpoints, count per chromosome or per genome
     long BreakpointsBinSize, // Size of bins for breakpoints if BreakpointsPerChrome is false
     int ParamVariationMode, // How many parameters to vary at each step. 
-    // 0 = vary all, 1 = vary one, 2 = vary two
+    // 0 = vary all, 1 = vary one, 2 = vary two, etc.
     int GCInterval, // Interval for Garbage Collection (how many simulated runs before performing GC)
     double PloidyCutoff, // Cutoff for ploidy in optimization distance
     int SegLengthCutoff, // Cutoff for segment length in optimization distance
     bool LogTransformSegLength, // Whether to log-transform segment length in optimization distance
-    string OptimizationMethod, // Method for optimization - Metropolis-Hastings, or Simulated Annealing, or Step-Size Decrease
+    string OptimizationMethod, // Method for optimization - MetropolisHastings, or SimulatedAnnealing, or StepDecay
     double StartTemp // Starting temperature for simulated annealing
     );
