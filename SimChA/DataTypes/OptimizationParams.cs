@@ -28,6 +28,7 @@ public record OptimizationParams(
     double PloidyCutoff, // Cutoff for ploidy in optimization distance
     int SegLengthCutoff, // Cutoff for segment length in optimization distance
     bool LogTransformSegLength, // Whether to log-transform segment length in optimization distance
-    string OptimizationMethod, // Method for optimization - MetropolisHastings, or SimulatedAnnealing, or StepDecay
-    double StartTemp // Starting temperature for simulated annealing
+    string OptimizationMethod, // Method for optimization - MetropolisHastings, or SimulatedAnnealing, AdaptiveSimulatedAnnealing, or StepDecay
+    double StartTemp, // Starting temperature for simulated annealing
+    double CoolingRate // Cooling rate (must be less than 1) used in adapative simulated annealing
     );

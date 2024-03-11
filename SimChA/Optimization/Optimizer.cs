@@ -40,8 +40,14 @@ public class Optimizer
     }
 
     public virtual SimParams Optimize(FileIO files)
-        => FindBestParams(files);
-    
+        => OptimizationParams.OptimizationMethod switch
+            {
+                "MetropolisHastings" => FindBestParams(files),
+                "SimulatedAnnealing" => AdaptiveBestParams(files),
+                "AdaptiveSimulatedAnnealing" => AdaptiveBestParams(files),
+                _ => throw new Exception("Error in Optimizer. Optimization method not recognized."),
+            };
+
     public double GetABCDistance()
     {
         var simCNPs = GenerateCNPs(SimParams);
@@ -83,7 +89,7 @@ public class Optimizer
         IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         return GetCNPs(samples);
     }
-    private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
+    private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature = 1.0)
         => Math.Min(1, Math.Exp(-OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature)));
 
     private SimParams FindBestParams(FileIO files)
@@ -94,18 +100,14 @@ public class Optimizer
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
-        var temperature = 1.0;
+        var stepSize = OptimizationParams.StepFactor;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
-            if (OptimizationParams.OptimizationMethod == "SimulatedAnnealing")
-            {
-                temperature = OptimizationParams.StartTemp * (1.0 - (i+1)/OptimizationParams.NumSamplesTotal);
-            }
-            Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
-            var proposedParams = GetProposalParams(currentParams);
+            //Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
+            var proposedParams = GetProposalParams(currentParams, stepSize);
             var proposedCNPs = GenerateCNPs(proposedParams);
             var proposedScore = GetScore(proposedCNPs);
-            var prob = GetAcceptanceProbability(currentScore, proposedScore, temperature);
+            var prob = GetAcceptanceProbability(currentScore, proposedScore);
             if (Rnd.NextDouble() < prob)
             {
                 currentParams = proposedParams;
@@ -130,16 +132,93 @@ public class Optimizer
         return bestParams;
     }
 
-    private SimParams GetProposalParams(SimParams currentParams)
+    private SimParams AdaptiveBestParams(FileIO files)
     {
-        return OptimizationParams.ParamVariationMode switch
+        var currentParams = SimParams;
+        var currentCNPs = GenerateCNPs(currentParams);
+        var currentScore = GetScore(currentCNPs);
+        var bestParams = currentParams;
+        var bestScore = currentScore;
+        var counter = 0;
+        // Simulated Annealing parameters
+        var temperature = OptimizationParams.StartTemp;
+        var coolingRate = OptimizationParams.CoolingRate;
+        // Adaptive Simulated Annealing parameters
+        var nSuccesses = 0;
+        var nFailures = 0;
+        var stepSize = OptimizationParams.StepFactor;
+        for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
-            0 => GetAllNewParams(currentParams),
-            _ => GetNNewParams(currentParams),
-        };
+            // Simulated Annealing updates temperature at the beginning of each iteration
+            if (OptimizationParams.OptimizationMethod == "SimulatedAnnealing")
+            {
+                temperature = OptimizationParams.StartTemp * (1.0 - i/(double)OptimizationParams.NumSamplesTotal);
+            }
+            Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
+            var proposedParams = GetProposalParams(currentParams, stepSize);
+            var proposedCNPs = GenerateCNPs(proposedParams);
+            var proposedScore = GetScore(proposedCNPs);
+            var prob = GetAcceptanceProbability(currentScore, proposedScore, temperature);
+            if (Rnd.NextDouble() < prob)
+            {
+                currentParams = proposedParams;
+                currentScore = proposedScore;
+                nSuccesses++;
+            }
+            else 
+            {
+                nFailures++;
+            }
+            if (proposedScore < bestScore)
+            {
+                bestParams = proposedParams;
+                bestScore = proposedScore;
+                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                counter++;
+            }
+            if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
+            {
+                files.WriteSimParams(currentParams, $"params_{i}.json");
+            }
+            if (i % OptimizationParams.GCInterval == 0)
+            {
+                GC.Collect();
+            }
+            // Adaptive Simulated Annealing updates temperature at the end of each iteration
+            // Adaptive adjustments
+
+            if (OptimizationParams.OptimizationMethod == "AdaptiveSimulatedAnnealing")
+            {
+                if (nSuccesses > nFailures)
+                {
+                    stepSize *= 1.05; // Increase step size to explore more aggressively
+                    temperature /= coolingRate; // Cool slower if we're having success
+                }
+                else
+                {
+                    stepSize *= 0.95; // Decrease step size to refine the search
+                    temperature *= coolingRate; // Cool faster if we're stuck
+                }
+                
+                // Reset success and failure counters periodically
+                if ((i + 1) % 100 == 0)
+                {
+                    nSuccesses = 0;
+                    nFailures = 0;
+                }
+            }
+        }
+        return bestParams;
     }
 
-    private SimParams GetNNewParams(SimParams currentParams)
+    private SimParams GetProposalParams(SimParams currentParams, double stepSize)
+        => OptimizationParams.ParamVariationMode switch
+            {
+                0 => GetAllNewParams(currentParams, stepSize),
+                _ => GetNNewParams(currentParams, stepSize),
+            };
+
+    private SimParams GetNNewParams(SimParams currentParams, double stepSize)
     {
         var n = OptimizationParams.ParamVariationMode;
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
@@ -160,11 +239,11 @@ public class Optimizer
             if (index >= events.Count)
             {
                 var eventIndex = index == events.Count ? events.IndexOf(events.Find(e => e.Type == CNEventType.InternalDeletion)) : events.IndexOf(events.Find(e => e.Type == CNEventType.InternalDuplication));
-                newEvents[eventIndex] = GetNewEventLength(newEvents[eventIndex]);
+                newEvents[eventIndex] = GetNewEventLength(newEvents[eventIndex], stepSize);
             }
             else
             {   
-                newProbs[index] = GetNewWeight(events[index].Prob);
+                newProbs[index] = GetNewWeight(events[index].Prob, stepSize);
                 sumNewWeights += newProbs[index];
                 reweightNeeded = true;
             }
@@ -193,29 +272,31 @@ public class Optimizer
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
 
-    private double GetNewWeight(double oldProb)
+    private double GetNewWeight(double oldProb, double stepSize)
     {
         var nTries = 0;
-        var newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
+        double sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+        var newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
         while (newProb <= 0.0 && nTries < OptimizationParams.MaxTries)
         {
             nTries++;
-            newProb = oldProb * (1 + (Rnd.NextDouble() < 0.5 ? -1 : 1) * Rnd.NextDouble() * OptimizationParams.StepFactor);
+            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
         }
         return newProb;
     }
 
-    private long GetNewLength(long oldValue)
-        => (long)GetNewWeight(oldValue);
+    private long GetNewLength(long oldValue, double stepSize)
+        => (long)GetNewWeight(oldValue, stepSize);
     
-    private SimParams GetAllNewParams(SimParams currentParams)
+    private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
     {
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var targetWeight = events.Sum(e => e.Prob);
         var newProbs = new List<double>();
         foreach (var ev in events)
         {
-            var weight = GetNewWeight(ev.Prob);
+            var weight = GetNewWeight(ev.Prob, stepSize);
             newProbs.Add(weight);
         }
         var currentTotal = newProbs.Sum();
@@ -226,18 +307,18 @@ public class Optimizer
         {
             var internalDel = events.Find(e => e.Type == CNEventType.InternalDeletion) ?? throw new Exception("Error in Optimizer. No internal deletion event found.");
             var index = events.IndexOf(internalDel);
-            newEvents[index] = GetNewEventLength(newEvents[index]);
+            newEvents[index] = GetNewEventLength(newEvents[index], stepSize);
 
             var internalDup = events.Find(e => e.Type == CNEventType.InternalDuplication) ?? throw new Exception("Error in Optimizer. No internal duplication event found.");
             index = events.IndexOf(internalDup);
-            newEvents[index] = GetNewEventLength(newEvents[index]);
+            newEvents[index] = GetNewEventLength(newEvents[index], stepSize);
         }
         var newSignature = new Signature(1, newEvents);
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
-    private CNEventPars GetNewEventLength(CNEventPars oldEvent)
+    private CNEventPars GetNewEventLength(CNEventPars oldEvent, double stepSize)
     {
-        var newSize = GetNewLength(oldEvent.Size);
+        var newSize = GetNewLength(oldEvent.Size, stepSize);
         return oldEvent with { Size = newSize };
     }
 

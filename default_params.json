@@ -163,6 +163,7 @@
 		"SegLengthCutoff": 20000000,
 		"LogTransformSegLength": true,
 		"OptimizationMethod" : "MetropolisHastings",
-		"StartTemp" : 10.0
+		"StartTemp" : 10.0,
+		"CoolingRate": 0.95
 	}
   }
