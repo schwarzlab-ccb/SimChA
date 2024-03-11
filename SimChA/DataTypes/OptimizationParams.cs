@@ -26,5 +26,6 @@ public record OptimizationParams(
     // 0 = vary all, 1 = vary one, 2 = vary two
     int GCInterval, // Interval for Garbage Collection (how many simulated runs before performing GC)
     double PloidyCutoff, // Cutoff for ploidy in optimization distance
-    int SegLengthCutoff // Cutoff for segment length in optimization distance
+    int SegLengthCutoff, // Cutoff for segment length in optimization distance
+    bool LogTransformSegLength // Whether to log-transform segment length in optimization distance
     );

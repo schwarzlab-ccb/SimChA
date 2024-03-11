@@ -31,7 +31,7 @@ public static class SummaryFeatures
         }
         return (cns, max);
     }
-    public static (List<double> segs, double max) GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, long cutoff = 20_000_000, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
+    public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, long cutoff = 20_000_000, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
     {
         var segLengths = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -61,8 +61,7 @@ public static class SummaryFeatures
                                           .Select(cn => (double) cn.Segment.Length));
             }
         }
-        var max = (segLengths.Count > 0) ? segLengths.Max() : 0;
-        return (segLengths, max);
+        return segLengths;
     }
 
     public static List<double> GetMeanSegLength(Dictionary<string, List<CopyNumber>> cnps, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)

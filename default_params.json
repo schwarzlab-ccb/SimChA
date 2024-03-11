@@ -160,6 +160,7 @@
 		"ResetSeed": true,
 		"GCInterval" : 25,
 		"PloidyCutoff": 8.0,
-		"SegLengthCutoff": 20000000
+		"SegLengthCutoff": 20000000,
+		"LogTransformSegLength": true
 	}
   }

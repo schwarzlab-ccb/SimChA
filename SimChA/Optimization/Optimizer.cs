@@ -268,8 +268,14 @@ public class Optimizer
             histMax = (int)cutoff;
             histBins = 100;
         }
-        var (obsValues, obsMax) = SummaryFeatures.GetSegLengths(ObservedCNPs, cutoff);
-        var (simValues, simMax) = SummaryFeatures.GetSegLengths(simCNPs, cutoff);
+        var obsValues = SummaryFeatures.GetSegLengths(ObservedCNPs, cutoff);
+        var simValues = SummaryFeatures.GetSegLengths(simCNPs, cutoff);
+
+        if (OptimizationParams.LogTransformSegLength)
+        {
+            obsValues = obsValues.Select(x => Math.Log(x)).ToList();
+            simValues = simValues.Select(x => Math.Log(x)).ToList();
+        }
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
