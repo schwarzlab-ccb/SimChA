@@ -83,27 +83,29 @@ public class Optimizer
         IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         return GetCNPs(samples);
     }
+    private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
+        => Math.Min(1, Math.Exp(-OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature)));
 
     private SimParams FindBestParams(FileIO files)
     {
-        var currentParams = SimParams;//GetProposalParams(SimParams);
-        if (OptimizationParams.ResetSeed)
-        {
-            currentParams = currentParams with {Seed = -1};
-        }
+        var currentParams = SimParams;
         var currentCNPs = GenerateCNPs(currentParams);
         var currentScore = GetScore(currentCNPs);
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
+        var temperature = 1.0;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
+            if (OptimizationParams.OptimizationMethod == "Simulated Annealing")
+            {
+                temperature = OptimizationParams.StartTemp * (1.0 - (i+1)/OptimizationParams.NumSamplesTotal);
+            }
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams);
             var proposedCNPs = GenerateCNPs(proposedParams);
             var proposedScore = GetScore(proposedCNPs);
-            var delta = OptimizationParams.AcceptanceFactor*(proposedScore - currentScore)/currentScore;
-            var prob = Math.Min(1, Math.Exp(-delta));
+            var prob = GetAcceptanceProbability(currentScore, proposedScore, temperature);
             if (Rnd.NextDouble() < prob)
             {
                 currentParams = proposedParams;

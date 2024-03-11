@@ -27,5 +27,7 @@ public record OptimizationParams(
     int GCInterval, // Interval for Garbage Collection (how many simulated runs before performing GC)
     double PloidyCutoff, // Cutoff for ploidy in optimization distance
     int SegLengthCutoff, // Cutoff for segment length in optimization distance
-    bool LogTransformSegLength // Whether to log-transform segment length in optimization distance
+    bool LogTransformSegLength, // Whether to log-transform segment length in optimization distance
+    string OptimizationMethod, // Method for optimization - Metropolis-Hastings, or Simulated Annealing, or Step-Size Decrease
+    double StartTemp // Starting temperature for simulated annealing
     );
