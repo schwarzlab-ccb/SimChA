@@ -31,6 +31,6 @@ public record OptimizationParams(
     string OptimizationMethod, // Method for optimization - MetropolisHastings, or SimulatedAnnealing, AdaptiveSimulatedAnnealing, or StepSizeDecay
     double StartTemp, // Starting temperature for simulated annealing
     double CoolingRate, // Cooling rate (must be less than 1) used in adapative simulated annealing or alternatively the decay rate for StepSizeDecay
-    string StepSizeDecayType, // Type of decay for step size in StepSizeDecay
+    string StepSizeDecayType, // Type of decay for step size in StepSizeDecay - Linear, Exponential, or Inverse
     double MinStepSize // Minimum step size for optimization
     );
