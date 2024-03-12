@@ -43,8 +43,9 @@ public class Optimizer
         => OptimizationParams.OptimizationMethod switch
             {
                 "MetropolisHastings" => FindBestParams(files),
-                "SimulatedAnnealing" => AdaptiveBestParams(files),
-                "AdaptiveSimulatedAnnealing" => AdaptiveBestParams(files),
+                "SimulatedAnnealing" => AnnealingBestParams(files),
+                "AdaptiveSimulatedAnnealing" => AnnealingBestParams(files),
+                "StepSizeDecay" => DecayBestParams(files), 
                 _ => throw new Exception("Error in Optimizer. Optimization method not recognized."),
             };
 
@@ -89,8 +90,11 @@ public class Optimizer
         IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         return GetCNPs(samples);
     }
-    private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature = 1.0)
+    private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
         => Math.Min(1, Math.Exp(-OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature)));
+
+    private double GetAcceptanceProbability(double scoreA, double scoreB)
+        => GetAcceptanceProbability(scoreA, scoreB, 1.0);
 
     private SimParams FindBestParams(FileIO files)
     {
@@ -132,7 +136,57 @@ public class Optimizer
         return bestParams;
     }
 
-    private SimParams AdaptiveBestParams(FileIO files)
+    private SimParams DecayBestParams(FileIO files)
+    {
+        var currentParams = SimParams;
+        var currentCNPs = GenerateCNPs(currentParams);
+        var currentScore = GetScore(currentCNPs);
+        var bestParams = currentParams;
+        var bestScore = currentScore;
+        var counter = 0;
+        var stepSize = OptimizationParams.StepFactor;
+        var decay = OptimizationParams.CoolingRate;
+
+        for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
+        {
+            Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
+            var proposedParams = GetProposalParams(currentParams, stepSize);
+            var proposedCNPs = GenerateCNPs(proposedParams);
+            var proposedScore = GetScore(proposedCNPs);
+            var prob = GetAcceptanceProbability(currentScore, proposedScore);
+            if (Rnd.NextDouble() < prob)
+            {
+                currentParams = proposedParams;
+                currentScore = proposedScore;
+            }
+            if (proposedScore < bestScore)
+            {
+                bestParams = proposedParams;
+                bestScore = proposedScore;
+                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                counter++;
+            }
+            // Apply decay to step size
+            switch (OptimizationParams.StepSizeDecayType)
+            {
+                case "Exponential":
+                    stepSize *= decay;
+                    break;
+                case "Linear":
+                    stepSize = Math.Max(OptimizationParams.MinStepSize, stepSize - decay);
+                    break;
+                case "Inverse":
+                    stepSize = OptimizationParams.StepFactor / (1 + decay * i);
+                    break;
+                default:
+                    throw new Exception("Error in Optimizer. StepSizeDecayType not recognized.");
+            }
+
+        }
+        return bestParams;
+    }
+
+    private SimParams AnnealingBestParams(FileIO files)
     {
         var currentParams = SimParams;
         var currentCNPs = GenerateCNPs(currentParams);
@@ -147,6 +201,7 @@ public class Optimizer
         var nSuccesses = 0;
         var nFailures = 0;
         var stepSize = OptimizationParams.StepFactor;
+        
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
             // Simulated Annealing updates temperature at the beginning of each iteration
@@ -196,7 +251,8 @@ public class Optimizer
                 }
                 else
                 {
-                    stepSize *= 0.95; // Decrease step size to refine the search
+                    // Decrease step size to refine the search
+                    stepSize = Math.Max(OptimizationParams.MinStepSize, stepSize*0.95); 
                     temperature *= coolingRate; // Cool faster if we're stuck
                 }
                 

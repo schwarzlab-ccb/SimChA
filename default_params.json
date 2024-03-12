@@ -164,6 +164,8 @@
 		"LogTransformSegLength": true,
 		"OptimizationMethod" : "MetropolisHastings",
 		"StartTemp" : 10.0,
-		"CoolingRate": 0.95
+		"CoolingRate": 0.95,
+		"StepSizeDecayType": "Exponential",
+		"MinStepSize": 0.001
 	}
   }
