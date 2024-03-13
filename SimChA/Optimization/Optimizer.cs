@@ -104,7 +104,7 @@ public class Optimizer
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
-        var stepSize = OptimizationParams.StepFactor;
+        var stepSize = OptimizationParams.StepSize;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
             //Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
@@ -144,7 +144,7 @@ public class Optimizer
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
-        var stepSize = OptimizationParams.StepFactor;
+        var stepSize = OptimizationParams.StepSize;
         var decay = OptimizationParams.CoolingRate;
 
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
@@ -176,7 +176,7 @@ public class Optimizer
                     stepSize = Math.Max(OptimizationParams.MinStepSize, stepSize - decay);
                     break;
                 case "Inverse":
-                    stepSize = OptimizationParams.StepFactor / (1 + decay * i);
+                    stepSize = OptimizationParams.StepSize / (1 + decay * i);
                     break;
                 default:
                     throw new Exception("Error in Optimizer. StepSizeDecayType not recognized.");
@@ -200,8 +200,8 @@ public class Optimizer
         // Adaptive Simulated Annealing parameters
         var nSuccesses = 0;
         var nFailures = 0;
-        var stepSize = OptimizationParams.StepFactor;
-        
+        var stepSize = OptimizationParams.StepSize;
+
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
         {
             // Simulated Annealing updates temperature at the beginning of each iteration
