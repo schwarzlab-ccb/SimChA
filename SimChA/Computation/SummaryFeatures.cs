@@ -31,6 +31,46 @@ public static class SummaryFeatures
         }
         return (cns, max);
     }
+
+    public static Dictionary<int, (double weight, List<double> segs)> GetStratifiedSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool weightedByCount = false, bool includeCNNormal = true, bool includeLOH = true, bool includeSexChromosomes = false)
+    {
+        var cnLess  = new List<double>();
+        var cnEqual = new List<double>();
+        var cnMore  = new List<double>();
+        foreach (var cnProfile in cnProfiles)
+        {
+            var cnList = cnProfile.Value;
+            if (!includeSexChromosomes)
+            {
+                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+            }
+            if (!includeCNNormal)
+            {
+                cnList = cnList.Where(cn => !(cn.CNH1 == 1 && cn.CNH2 == 1)).ToList();
+            }
+            if (!includeLOH)
+            {
+                cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
+            }
+            cnLess.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 < 2).Select(cn => (double)cn.Segment.Length));
+            cnEqual.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 == 2).Select(cn => (double)cn.Segment.Length));
+            cnMore.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 > 2).Select(cn => (double)cn.Segment.Length));
+        }
+        var weights = new List<double>() {1.0/3, 1.0/3, 1.0/3};
+        if (weightedByCount)
+        {
+            var nSegments = cnLess.Count + cnEqual.Count + cnMore.Count;
+            weights = new List<double>() {cnLess.Count /(double) nSegments, cnEqual.Count /(double) nSegments, cnMore.Count /(double) nSegments};
+        }
+        var segLengths = new Dictionary<int, (double, List<double>)>
+        {
+            [0] = (weights[0], cnLess),
+            [1] = (weights[1], cnEqual),
+            [2] = (weights[2], cnMore)
+        };
+        return segLengths;
+    }
+
     public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, long cutoff = 20_000_000, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
     {
         var segLengths = new List<double>();
