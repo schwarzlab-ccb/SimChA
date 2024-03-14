@@ -271,7 +271,7 @@ public class Optimizer
         => OptimizationParams.ParamVariationMode switch
             {
                 0 => GetAllNewParams(currentParams, stepSize),
-                _ => GetNNewParams(currentParams, stepSize),
+                _ => GetNNewParams(currentParams, stepSize)
             };
 
     private SimParams GetNNewParams(SimParams currentParams, double stepSize)
