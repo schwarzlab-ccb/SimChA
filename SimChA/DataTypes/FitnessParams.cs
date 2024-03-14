@@ -9,6 +9,9 @@ public class FitnessParams
     public double Essentiality { get; }
     public double TotalStrength { get; }
 
+    public List<double> ToList()
+        => new() { Stress, TsgOg, Essentiality, TotalStrength};
+
     public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength)
     {
         var sum = stress + tsgOg + essentiality;
@@ -16,5 +19,14 @@ public class FitnessParams
         TsgOg = tsgOg/sum;
         Essentiality = 1.0 - Stress - TsgOg;
         TotalStrength = totalStrength;
+    }
+
+    public FitnessParams(List<double> fitnessParamList)
+    {
+        var sum = fitnessParamList[0] + fitnessParamList[1] + fitnessParamList[2];
+        Stress = fitnessParamList[0]/sum;
+        TsgOg = fitnessParamList[1]/sum;
+        Essentiality = 1.0 - Stress - TsgOg;
+        TotalStrength = fitnessParamList[3];
     }
 }

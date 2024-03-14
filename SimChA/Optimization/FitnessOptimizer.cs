@@ -69,6 +69,91 @@ public class FitnessOptimizer : Optimizer
         }
         return bestParams;
     }
+
+    private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
+    {
+        var fitnessParams = currentParams.Fitness;
+        var fitnessList = fitnessParams.ToList(); // Convert FitnessParams to an array
+        var newFitnessParams = new List<double>();
+        foreach (var param in fitnessList)
+        {
+            var oldValue = param;
+            var newValue = GetNewValue(oldValue, stepSize); // Generate a new value for the parameter
+            newFitnessParams.Add(newValue); // Set the new value for the parameter
+        }
+        var newFitness = new FitnessParams(newFitnessParams);
+        
+        var newParams = currentParams with { Fitness = newFitness };
+        return newParams;
+    }
+
+    private double GetNewValue(double oldValue, double stepSize, double minimum = 0.0)
+    {
+        var nTries = 0;
+        var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+        double newValue = oldValue * (1 + sign * Rnd.NextDouble() * stepSize);
+        while (newValue < minimum && Math.Abs(newValue - oldValue)/oldValue <= double.Epsilon && nTries < 10)
+        {
+            nTries++;
+            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            newValue = oldValue * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepSize);
+        }
+        if (newValue < minimum)
+        {
+            throw new Exception("Error in FitnessOptimizer. New value is less than minimum");
+        }
+        return newValue;
+    }
+
+    private SimParams GetNNewParams(SimParams currentParams)
+    {
+        if (currentParams.MCParams is null)
+        {
+            throw new Exception("Error in FitnessOptimizer. No MC parameters were provided.");
+        }
+        int index = Rnd.Next(4);
+        // Modify the relative weight of the fitness parameter
+        var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+        double oldWeight = 1;
+        var oldStress = currentParams.Fitness.Stress;
+        var oldTsgOg = currentParams.Fitness.TsgOg;
+        var oldEssentiality = currentParams.Fitness.Essentiality;
+        var oldStrength = currentParams.Fitness.TotalStrength;
+        switch (index)
+        {
+            case 0:
+                oldWeight = oldStress;
+                break;
+            case 1:
+                oldWeight *= oldTsgOg;
+                break;
+            case 2:
+                oldWeight *= oldEssentiality;
+                break;
+            default:
+                oldWeight *= oldStrength;
+                break;
+        }
+        double newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepSize);
+        int nTries = 0;
+        while (Math.Abs(newWeight - oldWeight)/oldWeight <= double.Epsilon && nTries < 10)
+        {
+            nTries++;
+            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
+            newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepSize);
+        }
+        // Stress, TSG/OG, and Essentiality must sum to 1, so if one changed, then
+        // the others must change as well.
+        var newFactor = (1 - newWeight)/(1-oldWeight);
+        return index switch
+        {
+            0 => currentParams with { Fitness = new FitnessParams(newWeight, oldTsgOg * newFactor, oldEssentiality * newFactor, oldStrength) },
+            1 => currentParams with { Fitness = new FitnessParams(oldStress * newFactor, newWeight, oldEssentiality * newFactor, oldStrength) },
+            2 => currentParams with { Fitness = new FitnessParams(oldStress * newFactor, oldTsgOg * newFactor, newWeight, oldStrength) },
+            _ => currentParams with { Fitness = new FitnessParams(oldStress, oldTsgOg, oldEssentiality, newWeight) },
+        };
+    }
+
     private SimParams GetProposalParams(SimParams currentParams)
     {
         if (currentParams.MCParams is null)
@@ -98,13 +183,13 @@ public class FitnessOptimizer : Optimizer
                 oldWeight *= oldStrength;
                 break;
         }
-        double newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+        double newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepSize);
         int nTries = 0;
         while (Math.Abs(newWeight - oldWeight)/oldWeight <= double.Epsilon && nTries < 10)
         {
             nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepFactor);
+            newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepSize);
         }
         // Stress, TSG/OG, and Essentiality must sum to 1, so if one changed, then
         // the others must change as well.

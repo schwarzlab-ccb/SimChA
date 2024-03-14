@@ -328,22 +328,27 @@ public class Optimizer
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
 
-    private double GetNewWeight(double oldProb, double stepSize)
+    private double GetNewWeight(double oldProb, double stepSize, double minimum = 0.0)
     {
         var nTries = 0;
         double sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
         var newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
-        while (newProb <= 0.0 && nTries < OptimizationParams.MaxTries)
+        while (newProb <= minimum && nTries < OptimizationParams.MaxTries)
         {
             nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
             newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
         }
+        if (newProb < minimum)
+        {
+            throw new Exception("Error in Optimizer. New probability is less than minimum.");
+        }
         return newProb;
     }
 
+    // Lengths have to be greater than or equal to 1
     private long GetNewLength(long oldValue, double stepSize)
-        => (long)GetNewWeight(oldValue, stepSize);
+        => (long)GetNewWeight(oldValue, stepSize, 1.0);
     
     private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
     {
