@@ -179,6 +179,48 @@ public class TestSummaryFeatures
     }
 
     [Test]
+    public void TestStratifiedSegLengths()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Delete 1000-2000 on chr1
+        karXX.ApplyInternalDeletion(0, 1000, 2000);
+        // Gain 0-5000 on chr2
+        karXX.ApplyInternalDuplication(1, 0, 5000);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var stratifiedSegLengths = SummaryFeatures.GetStratifiedSegLengths(cnps);
+        Assert.AreEqual(3, stratifiedSegLengths.Count);
+        // cn < 2
+        Assert.AreEqual(1, stratifiedSegLengths[0].segs.Count);
+        Assert.AreEqual(1000, stratifiedSegLengths[0].segs[0]);
+        // cn == 2
+        Assert.AreEqual(23, stratifiedSegLengths[1].segs.Count);
+        // cn == 3
+        Assert.AreEqual(1, stratifiedSegLengths[2].segs.Count);
+        Assert.AreEqual(5000, stratifiedSegLengths[2].segs[0]);
+
+        // Weights should all be equal by default
+        Assert.AreEqual(1.0/3, stratifiedSegLengths[0].weight, double.Epsilon);
+        Assert.AreEqual(1.0/3, stratifiedSegLengths[1].weight, double.Epsilon);
+        Assert.AreEqual(1.0/3, stratifiedSegLengths[2].weight, double.Epsilon);
+
+        // Recalculating weights based off count
+        stratifiedSegLengths = SummaryFeatures.GetStratifiedSegLengths(cnps, true);
+        Assert.AreEqual(3, stratifiedSegLengths.Count);
+        // cn < 2
+        Assert.AreEqual(1, stratifiedSegLengths[0].segs.Count);
+        Assert.AreEqual(1000, stratifiedSegLengths[0].segs[0]);
+        // cn == 2
+        Assert.AreEqual(23, stratifiedSegLengths[1].segs.Count);
+        // cn == 3
+        Assert.AreEqual(1, stratifiedSegLengths[2].segs.Count);
+        Assert.AreEqual(5000, stratifiedSegLengths[2].segs[0]);
+        // Weights now calculated according to number of segments
+        Assert.AreEqual(1.0/25, stratifiedSegLengths[0].weight, double.Epsilon);
+        Assert.AreEqual(23.0/25, stratifiedSegLengths[1].weight, double.Epsilon);
+        Assert.AreEqual(1.0/25, stratifiedSegLengths[2].weight, double.Epsilon);
+    }
+
+    [Test]
     public void TestDefaultSegLengths()
     {
         var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
