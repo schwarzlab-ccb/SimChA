@@ -9,7 +9,7 @@ public class FitnessParams
     public double Essentiality { get; }
     public double TotalStrength { get; }
 
-    public List<double> ToList()
+    public List<double> ParamsList()
         => new() { Stress, TsgOg, Essentiality, TotalStrength};
 
     public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength)

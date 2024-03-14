@@ -77,19 +77,13 @@ public class FitnessOptimizer : Optimizer
 
     private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
     {
-        var fitnessParams = currentParams.Fitness;
-        var fitnessList = fitnessParams.ToList(); // Convert FitnessParams to an array
+        var fitnessList = currentParams.Fitness.ParamsList();
         var newFitnessParams = new List<double>();
-        foreach (var param in fitnessList)
+        foreach (var oldValue in fitnessList)
         {
-            var oldValue = param;
-            var newValue = GetNewValue(oldValue, stepSize); // Generate a new value for the parameter
-            newFitnessParams.Add(newValue); // Set the new value for the parameter
+            newFitnessParams.Add(GetNewValue(oldValue, stepSize));
         }
-        var newFitness = new FitnessParams(newFitnessParams);
-        
-        var newParams = currentParams with { Fitness = newFitness };
-        return newParams;
+        return currentParams with { Fitness = new FitnessParams(newFitnessParams) };
     }
 
     private double GetNewValue(double oldValue, double stepSize, double minimum = 0.0)
