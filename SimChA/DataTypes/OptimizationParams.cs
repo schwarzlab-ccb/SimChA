@@ -17,7 +17,9 @@ public record OptimizationParams(
     bool ResetSeed, // Whether to reset the random seed for each proposed parameter set
     bool UseABC, // Whether to use Approximate Bayesian Computation
     bool UseSegLength, // Whether to use segment length in optimization distance
-    bool UseMeanSeg, // Whether to use mean segment length in optimization distance
+    string SegLengthType, // What kind of segment length distribution to use in optimization distance
+    // Stratified, All, or Mean
+    bool SegmentCountWeighted, // Whether to weight segment count histograms in optimization distance
     bool UsePloidy, // Whether to use ploidy in optimization distance
     bool UseBreakpoints, // Whether to use breakpoints in optimization distance
     bool BreakpointsPerChrom, // If using breakpoints, count per chromosome or per genome

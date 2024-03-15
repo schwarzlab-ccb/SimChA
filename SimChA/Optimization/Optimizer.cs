@@ -45,7 +45,7 @@ public class Optimizer
                 "MetropolisHastings" => FindBestParams(files),
                 "SimulatedAnnealing" => AnnealingBestParams(files),
                 "AdaptiveSimulatedAnnealing" => AnnealingBestParams(files),
-                "StepSizeDecay" => DecayBestParams(files), 
+                "StepSizeDecay" => DecayBestParams(files),
                 _ => throw new Exception("Error in Optimizer. Optimization method not recognized."),
             };
 
@@ -61,11 +61,6 @@ public class Optimizer
         if (OptimizationParams.UseSegLength)
         {
             var segDist = GetSegLengthDistance(cnps);
-            totalDist.Add(segDist*segDist);
-        }
-        if (OptimizationParams.UseMeanSeg)
-        {
-            var segDist = GetMeanSegDistance(cnps);
             totalDist.Add(segDist*segDist);
         }
         if (OptimizationParams.UsePloidy)
@@ -401,6 +396,15 @@ public class Optimizer
         return samples;
     }
     private double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+        => OptimizationParams.SegLengthType switch
+            {
+                "Stratified" => GetStratifiedSegLengthDistance(simCNPs),
+                "All" => GetAllSegLengths(simCNPs),
+                "Mean" => GetMeanSegDistance(simCNPs),
+                _ => throw new Exception("Error in Optimizer. SegLengthType not recognized."),
+            };
+
+    private double GetAllSegLengths(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         long cutoff = -1;
         var histMax = 252_000_000;
@@ -422,6 +426,34 @@ public class Optimizer
             histMin = (int)Math.Log(1/1000000.0);
         }
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
+    }
+
+    private double GetStratifiedSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    {
+        var histMax = 252_000_000;
+        var histMin = 0;
+        var histBins = 101;
+        var weighted = OptimizationParams.SegmentCountWeighted;
+        var obsValues = SummaryFeatures.GetStratifiedSegLengths(ObservedCNPs, weighted);
+        var simValues = SummaryFeatures.GetStratifiedSegLengths(simCNPs, weighted);
+        if (OptimizationParams.LogTransformSegLength)
+        {
+            for (int i = 0; i < obsValues.Count; i++)
+            {
+                obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log(x)).ToList());
+                simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log(x)).ToList());
+            }
+            histMax = (int)Math.Log(histMax) + 1;
+            histMin = (int)Math.Log(1/1000000.0);
+        }
+        var totalDist = 0.0;
+        for (int i = 0; i < obsValues.Count; i++)
+        {
+            var obs = obsValues[i].segs;
+            var sim = simValues[i].segs;
+            totalDist += CalculateDistance(obs, sim, histBins, histMin, histMax) * simValues[i].weight;            
+        }
+        return totalDist;
     }
 
     private double GetMeanSegDistance(Dictionary<string, List<CopyNumber>> simCNPs)

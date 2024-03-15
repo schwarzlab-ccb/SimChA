@@ -152,7 +152,7 @@
 		"ParamVariationMode": 1,
 		"UseABC": false,
 		"UseSegLength": true,
-		"UseMeanSeg": false,
+		"SegLengthType": "Stratified",
 		"UsePloidy" : true,
 		"UseBreakpoints" : true,
 		"BreakpointsPerChrom": true,
@@ -166,6 +166,7 @@
 		"StartTemp" : 10.0,
 		"CoolingRate": 0.95,
 		"StepSizeDecayType": "Exponential",
-		"MinStepSize": 0.001
+		"MinStepSize": 0.001,
+		"SegmentCountWeighted" : false
 	}
   }
