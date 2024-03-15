@@ -20,13 +20,4 @@ public class FitnessParams
         Essentiality = 1.0 - Stress - TsgOg;
         TotalStrength = totalStrength;
     }
-
-    public FitnessParams(List<double> fitnessParamList)
-    {
-        var sum = fitnessParamList[0] + fitnessParamList[1] + fitnessParamList[2];
-        Stress = fitnessParamList[0]/sum;
-        TsgOg = fitnessParamList[1]/sum;
-        Essentiality = 1.0 - Stress - TsgOg;
-        TotalStrength = fitnessParamList[3];
-    }
 }

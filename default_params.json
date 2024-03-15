@@ -6,7 +6,7 @@
 	"Fitness": {
 	  "Stress": 0.93,
 	  "TsgOg": 0.05,
-    "Essentiality": 0.05,
+	  "Essentiality": 0.05,
 	  "TotalStrength": 1
 	},
 	"Signatures": {
@@ -161,7 +161,7 @@
 		"GCInterval" : 25,
 		"PloidyCutoff": 8.0,
 		"SegLengthCutoff": 20000000,
-		"LogTransformSegLength": true,
+		"LogTransformSegLength": false,
 		"OptimizationMethod" : "MetropolisHastings",
 		"StartTemp" : 10.0,
 		"CoolingRate": 0.95,
