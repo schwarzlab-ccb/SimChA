@@ -32,7 +32,8 @@ public static class SummaryFeatures
         return (cns, max);
     }
 
-    public static Dictionary<int, (double weight, List<double> segs)> GetStratifiedSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, bool weightedByCount = false, bool includeCNNormal = true, bool includeLOH = true, bool includeSexChromosomes = false)
+    public static Dictionary<int, (double weight, List<double> segs)> GetStratifiedSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, 
+        bool weightedByCount = false, bool includeCNNormal = true, bool includeLOH = true, bool includeSexChromosomes = false)
     {
         var cnLess  = new List<double>();
         var cnEqual = new List<double>();
@@ -71,7 +72,8 @@ public static class SummaryFeatures
         return segLengths;
     }
 
-    public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, long cutoff = 20_000_000, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
+    public static List<double> GetSegLengths(Dictionary<string, List<CopyNumber>> cnProfiles, 
+        long cutoff = 20_000_000, bool includeCNNormal = false, bool includeLOH = false, bool includeSexChromosomes = false, bool weighted = false)
     {
         var segLengths = new List<double>();
         foreach (var cnProfile in cnProfiles)

@@ -407,8 +407,8 @@ public class Optimizer
     private double GetAllSegLengths(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         long cutoff = -1;
-        var histMax = 252_000_000;
-        var histMin = 0;
+        var histMax = 252_000_000.0;
+        var histMin = 0.0;
         var histBins = 252;
         if (OptimizationParams.SegLengthCutoff > 0)
         {
@@ -422,16 +422,16 @@ public class Optimizer
         {
             obsValues = obsValues.Select(x => Math.Log(x)).ToList();
             simValues = simValues.Select(x => Math.Log(x)).ToList();
-            histMax = (int)Math.Log(histMax) + 1;
-            histMin = (int)Math.Log(1/1000000.0);
+            histMax = Math.Log(histMax) + 1.0;
+            histMin = Math.Log(1/1000000.0);
         }
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
     private double GetStratifiedSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var histMax = 252_000_000;
-        var histMin = 0;
+        var histMax = 252_000_000.0;
+        var histMin = 0.0;
         var histBins = 101;
         var weighted = OptimizationParams.SegmentCountWeighted;
         var obsValues = SummaryFeatures.GetStratifiedSegLengths(ObservedCNPs, weighted);
@@ -443,8 +443,8 @@ public class Optimizer
                 obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log(x)).ToList());
                 simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log(x)).ToList());
             }
-            histMax = (int)Math.Log(histMax) + 1;
-            histMin = (int)Math.Log(1/1000000.0);
+            histMax = Math.Log(histMax) + 1.0;
+            histMin = Math.Log(1/1000000.0);
         }
         var totalDist = 0.0;
         for (int i = 0; i < obsValues.Count; i++)
@@ -512,7 +512,7 @@ public class Optimizer
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    protected static double CalculateDistance(List<double> data, List<double> sim, int bins, int min, double max)
+    protected static double CalculateDistance(List<double> data, List<double> sim, int bins, double min, double max)
     {
         var dataHist = new Histogram(data, bins, min, max);
         var simHist  = new Histogram(sim, bins, min, max);
