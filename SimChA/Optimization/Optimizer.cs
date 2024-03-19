@@ -37,6 +37,11 @@ public class Optimizer
         {
             throw new Exception("Error in Optimizer. No signatures were provided.");
         }
+
+        if (OptimizationParams.StepSize <= 0)
+        {
+            throw new Exception("Error in Optimizer. StepSize must be greater than 0.");
+        }
     }
 
     public virtual SimParams Optimize(FileIO files)
