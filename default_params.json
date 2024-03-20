@@ -167,6 +167,8 @@
 		"CoolingRate": 0.95,
 		"StepSizeDecayType": "Exponential",
 		"MinStepSize": 0.001,
-		"SegmentCountWeighted" : false
+		"SegmentCountWeighted" : false,
+		"MinLength": 10000,
+		"MaxLength": 10000000
 	}
   }
