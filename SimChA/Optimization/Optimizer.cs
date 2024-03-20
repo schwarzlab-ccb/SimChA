@@ -346,6 +346,9 @@ public class Optimizer
         return newProb;
     }
 
+    private long GetNewLength()
+        => Rnd.Next(OptimizationParams.MinLength, OptimizationParams.MaxLength);
+
     // Lengths have to be greater than or equal to 1
     private long GetNewLength(long oldValue, double stepSize)
         => (long)GetNewWeight(oldValue, stepSize, 1.0);
@@ -379,7 +382,7 @@ public class Optimizer
     }
     private CNEventPars GetNewEventLength(CNEventPars oldEvent, double stepSize)
     {
-        var newSize = GetNewLength(oldEvent.Size, stepSize);
+        var newSize = GetNewLength();//GetNewLength(oldEvent.Size, stepSize);
         return oldEvent with { Size = newSize };
     }
 
