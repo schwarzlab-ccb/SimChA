@@ -35,6 +35,7 @@ public record OptimizationParams(
     double CoolingRate, // Cooling rate (must be less than 1) used in adapative simulated annealing or alternatively the decay rate for StepSizeDecay
     string StepSizeDecayType, // Type of decay for step size in StepSizeDecay - Linear, Exponential, or Inverse
     double MinStepSize, // Minimum step size for optimization
+    bool BoundedLengths, // Whether to bound segment lengths in optimization
     int MaxLength, // Maximum length parameter
     int MinLength // Minimum length parameter
     );

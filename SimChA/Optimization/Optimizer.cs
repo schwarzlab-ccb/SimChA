@@ -339,9 +339,10 @@ public class Optimizer
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
             newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
         }
+        // If we don't find a valid probability, return the old one 
         if (newProb < minimum)
         {
-            throw new Exception("Error in Optimizer. New probability is less than minimum.");
+            return oldProb;
         }
         return newProb;
     }
@@ -351,7 +352,7 @@ public class Optimizer
 
     // Lengths have to be greater than or equal to 1
     private long GetNewLength(long oldValue, double stepSize)
-        => (long)GetNewWeight(oldValue, stepSize, 1.0);
+     => OptimizationParams.BoundedLengths ? GetNewLength() : (long)GetNewWeight(oldValue, stepSize, 1.0);
     
     private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
     {
@@ -382,7 +383,7 @@ public class Optimizer
     }
     private CNEventPars GetNewEventLength(CNEventPars oldEvent, double stepSize)
     {
-        var newSize = GetNewLength();//GetNewLength(oldEvent.Size, stepSize);
+        var newSize = GetNewLength(oldEvent.Size, stepSize);
         return oldEvent with { Size = newSize };
     }
 

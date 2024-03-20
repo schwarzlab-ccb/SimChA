@@ -168,7 +168,8 @@
 		"StepSizeDecayType": "Exponential",
 		"MinStepSize": 0.001,
 		"SegmentCountWeighted" : false,
-		"MinLength": 10000,
-		"MaxLength": 10000000
+		"BoundedLengths" : false,
+		"MinLength": 50000,
+		"MaxLength": 5000000
 	}
   }
