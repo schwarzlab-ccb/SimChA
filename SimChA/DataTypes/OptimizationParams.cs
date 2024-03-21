@@ -37,5 +37,7 @@ public record OptimizationParams(
     double MinStepSize, // Minimum step size for optimization
     bool BoundedLengths, // Whether to bound segment lengths in optimization
     int MaxLength, // Maximum length parameter
-    int MinLength // Minimum length parameter
+    int MinLength, // Minimum length parameter
+    bool UseHomozygousDeletion, // Flag to use homozygous deletions in fitness optimization distance
+    bool UseCNAlongGenome // Flat to use copy number along the genome in fitness optimization distance
     );

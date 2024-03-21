@@ -35,6 +35,7 @@ public class FitnessOptimizer : Optimizer
         var distance = GetFitnessDistance(cnps, binnedCNPs);
         return distance;
     }
+
     private SimParams FindBestParams(FileIO files)
     {
         var currentParams = SimParams;
@@ -81,28 +82,10 @@ public class FitnessOptimizer : Optimizer
         var newParams = new List<double>();
         foreach (var oldValue in fitnessList)
         {
-            newParams.Add(GetNewValue(oldValue, stepSize));
+            newParams.Add(GetNewWeight(oldValue, stepSize));
         }
         var newFitness = new FitnessParams(newParams[0], newParams[1], newParams[2], newParams[3]);
         return currentParams with { Fitness = newFitness };
-    }
-
-    private double GetNewValue(double oldValue, double stepSize, double minimum = 0.0)
-    {
-        var nTries = 0;
-        var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-        double newValue = oldValue * (1 + sign * Rnd.NextDouble() * stepSize);
-        while (newValue < minimum && Math.Abs(newValue - oldValue)/oldValue <= double.Epsilon && nTries < 10)
-        {
-            nTries++;
-            sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newValue = oldValue * (1 + sign * Rnd.NextDouble() * OptimizationParams.StepSize);
-        }
-        if (newValue < minimum)
-        {
-            throw new Exception("Error in FitnessOptimizer. New value is less than minimum");
-        }
-        return newValue;
     }
 
     private SimParams GetOneNewParam(SimParams currentParams, double stepSize)
@@ -186,11 +169,34 @@ public class FitnessOptimizer : Optimizer
 
     public double GetFitnessDistance(Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, List<CopyNumber>> binnedCNPs)
     {
-        var hdDist = GetHomozygousDeletionDistance(cnps);
-        var meanCNAcrossGenomeDist = GetMeanCopyNumberAlongGenomeDistance(binnedCNPs);
-        var meanCN = GetPloidyDistance(cnps);
+        var totalDist = new List<double>();
+        if (OptimizationParams.UseSegLength)
+        {
+            var segDist = GetSegLengthDistance(cnps);
+            totalDist.Add(segDist*segDist);
+        }
+        if (OptimizationParams.UseCNAlongGenome)
+        {
+            var dist = GetMeanCopyNumberAlongGenomeDistance(binnedCNPs);
+            totalDist.Add(dist*dist);
+        }
+        if (OptimizationParams.UseBreakpoints)
+        {
+            var bpDist = GetBreakpointDistance(cnps);
+            totalDist.Add(bpDist*bpDist);
+        }
+        if (OptimizationParams.UseHomozygousDeletion)
+        {
+            var hdDist = GetHomozygousDeletionDistance(cnps);
+            totalDist.Add(hdDist*hdDist);
+        }
+        if (OptimizationParams.UsePloidy)
+        {
+            var ploidyDist = GetPloidyDistance(cnps);
+            totalDist.Add(ploidyDist*ploidyDist);
+        }
 
-        return (hdDist + meanCNAcrossGenomeDist + meanCN)/3;
+        return totalDist.Sum();
     }
 
     private double GetMeanCopyNumberAlongGenomeDistance(Dictionary<string, List<CopyNumber>> binnedCNPs)

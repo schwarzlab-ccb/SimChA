@@ -328,23 +328,23 @@ public class Optimizer
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
     }
 
-    private double GetNewWeight(double oldProb, double stepSize, double minimum = 0.0)
+    protected double GetNewWeight(double oldWeight, double stepSize, double minimum = 0.0)
     {
         var nTries = 0;
         double sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-        var newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
-        while (newProb <= minimum && nTries < OptimizationParams.MaxTries)
+        var newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * stepSize);
+        while (newWeight <= minimum && nTries < OptimizationParams.MaxTries)
         {
             nTries++;
             sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
-            newProb = oldProb * (1 + sign * Rnd.NextDouble() * stepSize);
+            newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * stepSize);
         }
-        // If we don't find a valid probability, return the old one 
-        if (newProb < minimum)
+        // If we don't find a valid value, return the old one 
+        if (newWeight < minimum)
         {
-            return oldProb;
+            return oldWeight;
         }
-        return newProb;
+        return newWeight;
     }
 
     private long GetNewLength()
@@ -404,7 +404,7 @@ public class Optimizer
         }
         return samples;
     }
-    private double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    protected double GetSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
         => OptimizationParams.SegLengthType switch
             {
                 "Stratified" => GetStratifiedSegLengthDistance(simCNPs),
@@ -499,7 +499,7 @@ public class Optimizer
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    private double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    protected double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
         //var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         //var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
