@@ -704,4 +704,47 @@ public class TestSummaryFeatures
             Assert.AreEqual(0, values[3053+i]);
         }
     }
+
+    [Test]
+    public void TestMeanCNAlongGenome()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        karXX.ApplyContigDuplication(0);
+        karXX.ApplyContigDeletion(1);
+        karXX.ApplyInternalDeletion(2, 1000, 200000);
+        // Bin the genome into 1Mb bins
+        var binWidth = 1_000_000;
+        var includeSexChromosomes = false;
+        var binner = new Binner(_genRef, binWidth, includeSexChromosomes);
+        var karDict = new Dictionary<string, Karyotype> {{"sample_1", karXX}};
+        var binnedCNPs = binner.GetBinnedCNProfiles(karDict);
+        var values = SummaryFeatures.GetMeanCNAlongGenome(binnedCNPs);
+        Assert.AreEqual(2897, values.Count);
+        // Chrom Duplication on chr1
+        for (int i = 0; i < 250; i++)
+        {
+            Assert.AreEqual(3, values[i]);
+        }
+        // Chrom deletion on chr2
+        for (int i = 250; i < 250+244; i++)
+        {
+            Assert.AreEqual(1, values[i]);
+        }
+        var n = values.GetRange(494, 494+199);
+        // Segmental deletion on chr3
+        for (int i = 494; i < 494+2; i++)
+        {
+            Assert.AreEqual(1, values[i]);
+        }
+        // Rest of chr3 is cn-normal
+        for (int i = 496; i < 494+199; i++)
+        {
+            Assert.AreEqual(2, values[i]);
+        }
+        // Rest of the autosomes
+        for (int i = 693; i < 2897; i++)
+        {
+            Assert.AreEqual(2, values[i]);
+        }
+    }
 }
