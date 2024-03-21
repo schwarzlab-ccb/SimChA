@@ -279,7 +279,7 @@ public static class SummaryFeatures
         return fraction;
     }
 
-    public static List<double> GetMeanCopyNumberAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles)
+    public static List<double> GetMeanCNAlongGenome(Dictionary<string, List<CopyNumber>> cnProfiles)
     {
         var meanCN = new List<double>();
         // Number of segments - assumes we already have binned copy-number profiles

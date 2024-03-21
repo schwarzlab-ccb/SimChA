@@ -9,10 +9,12 @@ public class Binner
 {
     protected readonly Dictionary<string, List<long>> ChromosomeBins;
     protected readonly GenRef GenRef;
-    public Binner(GenRef genRef)
+    protected readonly long BinWidth;
+    public Binner(GenRef genRef, long binWidth = 1_000_000)
     {
         GenRef = genRef;
         ChromosomeBins = GetChromosomeBins();
+        BinWidth = binWidth;
     }
     public Dictionary<string, List<CopyNumber>> GetBinnedCNProfiles(List<Sample> samples)
     {
@@ -29,19 +31,18 @@ public class Binner
 
     private Dictionary<string, List<long>> GetChromosomeBins()
     {
-        var binSize = 1_000_000;
         var chromBins = new Dictionary<string, List<long>>();
         foreach (var chrom in GenRef.AllChrs)
         {
-            var nFullBins = GenRef.ChrLengths[chrom] / binSize;
-            var remainder = GenRef.ChrLengths[chrom] % binSize;
+            var nFullBins = GenRef.ChrLengths[chrom] / BinWidth;
+            var remainder = GenRef.ChrLengths[chrom] % BinWidth;
             // Adjusting the first and last bins
             var endBinSize = (long)(0.5 + remainder / 2.0);
             var offset = remainder - 2*endBinSize;
             var binList = new List<long>{0};
             for (int i = 0; i < nFullBins; i++)
             {
-                binList.Add(i*binSize+endBinSize);
+                binList.Add(i*BinWidth+endBinSize);
             }
             binList.Add(binList.Last()+endBinSize+offset-1);
             chromBins[chrom] = binList;

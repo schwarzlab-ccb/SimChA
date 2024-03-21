@@ -177,7 +177,7 @@ public class FitnessOptimizer : Optimizer
         }
         if (OptimizationParams.UseCNAlongGenome)
         {
-            var dist = GetMeanCopyNumberAlongGenomeDistance(binnedCNPs);
+            var dist = GetMeanCNAlongGenomeDistance(binnedCNPs);
             totalDist.Add(dist*dist);
         }
         if (OptimizationParams.UseBreakpoints)
@@ -199,13 +199,13 @@ public class FitnessOptimizer : Optimizer
         return totalDist.Sum();
     }
 
-    private double GetMeanCopyNumberAlongGenomeDistance(Dictionary<string, List<CopyNumber>> binnedCNPs)
+    private double GetMeanCNAlongGenomeDistance(Dictionary<string, List<CopyNumber>> binnedCNPs)
     {
         // TODO: Do we worry about the slightly smaller bins from the fact that the genome 
         // is not completely divisible by 1MB?
         // What about the segments that are partially in the binned region?
-        var obsCounts = SummaryFeatures.GetMeanCopyNumberAlongGenome(ObservedCNPs1MB);
-        var simCounts = SummaryFeatures.GetMeanCopyNumberAlongGenome(binnedCNPs);
+        var obsCounts = SummaryFeatures.GetMeanCNAlongGenome(ObservedCNPs1MB);
+        var simCounts = SummaryFeatures.GetMeanCNAlongGenome(binnedCNPs);
         
         return StatisticMeasures.WassersteinDistance(obsCounts, simCounts);
     }
