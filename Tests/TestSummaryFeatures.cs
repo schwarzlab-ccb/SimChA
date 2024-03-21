@@ -211,7 +211,7 @@ public class TestSummaryFeatures
         Assert.AreEqual(1000, stratifiedSegLengths[0].segs[0]);
         // cn == 2
         Assert.AreEqual(23, stratifiedSegLengths[1].segs.Count);
-        // cn == 3
+        // cn > 2
         Assert.AreEqual(1, stratifiedSegLengths[2].segs.Count);
         Assert.AreEqual(5000, stratifiedSegLengths[2].segs[0]);
         // Weights now calculated according to number of segments
@@ -664,5 +664,44 @@ public class TestSummaryFeatures
         var values = SummaryFeatures.GetHomozygousDeletionFraction(_genRef, cnps);
         Assert.AreEqual(1, values.Count);
         Assert.AreEqual(homoDelFrac, values[0], double.Epsilon);
+    }
+    [Test]
+    public void TestDefaultMeanCNAlongGenome()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Bin the genome into 1Mb bins
+        var binWidth = 1_000_000;
+        var includeSexChromosomes = false;
+        var binner = new Binner(_genRef, binWidth, includeSexChromosomes);
+        var karDict = new Dictionary<string, Karyotype> {{"sample_1", karXX}};
+        var binnedCNPs = binner.GetBinnedCNProfiles(karDict);
+        //IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
+        var values = SummaryFeatures.GetMeanCNAlongGenome(binnedCNPs);
+        // Without sex chromosomes
+        Assert.AreEqual(2897, values.Count);
+        foreach (var val in values)
+        {
+            Assert.AreEqual(2, val);
+        }
+        // with sex chromosomes
+        includeSexChromosomes = true;
+        binner = new Binner(_genRef, binWidth, includeSexChromosomes);
+        binnedCNPs = binner.GetBinnedCNProfiles(karDict);
+        values = SummaryFeatures.GetMeanCNAlongGenome(binnedCNPs);
+        Assert.AreEqual(3113, values.Count);
+        for (int i = 0; i < 2897; i++)
+        {
+            Assert.AreEqual(2, values[i]);
+        }
+        // X chromosome
+        for (int i = 0; i < 156; i++)
+        {
+            Assert.AreEqual(2, values[2897+i]);
+        }
+        // Y chromosome
+        for (int i = 0; i < 60; i++)
+        {
+            Assert.AreEqual(0, values[3053+i]);
+        }
     }
 }
