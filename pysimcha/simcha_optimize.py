@@ -15,13 +15,36 @@ def generate_cohort(path, param_file, genes_path, out_path, repeats, all_chromom
     subprocess.run([cmd], shell=True)
     return
    
-def run_simcha(path, param_file, genes_path, cohort_path, repeats, all_chromosomes, out_dir):
+def run_events_optimization(path, param_file, genes_path, cohort_path, repeats, all_chromosomes, out_dir):
     # Run command for SimChA
     cmd = f"dotnet run --no-build --project {path} -C {param_file} -R {repeats} -O {out_dir} --optimization -D {genes_path} -P {cohort_path}"
     if not all_chromosomes:
         cmd += " --autosomes-only"
     subprocess.run([cmd], shell=True)
-   
+
+def run_fitness_optimization(path, param_file, genes_path, cohort_path, repeats, all_chromosomes, out_dir, binned_path, bootstrap_path):
+    # Run command for SimChA
+    cmd = f"dotnet run --no-build --project {path} -C {param_file} -R {repeats} -O {out_dir} --optimization fitness -D {genes_path} -P {cohort_path} --binned-samples {binned_path} -B {bootstrap_path} -M"
+    if not all_chromosomes:
+        cmd += " --autosomes-only"
+    subprocess.run([cmd], shell=True)
+
+def check_inputs(in_path, genes_path, cohort_path):
+
+    clones_file = "clones.tsv"
+    binned_file = "binned_CNs.tsv"
+
+    if not os.path.isdir(in_path):
+        subprocess.run([f"mkdir -p in_path"], shell = True)
+    # bootstrap file needed for sampling the fitnesses of the mcmc produces clones
+    if not os.path.isfile(os.path.join(in_path, clones_file)):
+        cmd = f"dotnet run --no-build --project SimChA -P {cohort_path} -O {in_path} -D {genes_path}"
+        subprocess.run([cmd], shell = True)
+    # To avoid having to generate the binned copy-number profiles for each run of SimChA, we do it once here if the file does not exist.
+    if not os.path.isfile(os.path.join(in_path, binned_file)):
+        cmd = f"dotnet run --no-build --project SimChA -P {cohort_path} -O {in_path} --bin-samples"
+        subprocess.run([cmd], shell = True)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyABC program to fit parameters in SimChA ")
     parser.add_argument("-P", "--path", type=str, default="SimChA", help="Path to SimChA")
@@ -34,6 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("-T", "--test", action="store_true", help="Flag to use SimChA-generated data as the ground-truth rather than real data samples.")
     parser.add_argument("-C", "--config_file", type=str, default="simple_params.json", help="Parameter file used by SimChA.")
     parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
+    parser.add_argument("--fitness", action="store_true", help="Flag to run the fitness optimization.")
     args = parser.parse_args()
 
     genes_path = args.genes_path
@@ -42,16 +66,24 @@ if __name__ == "__main__":
 
     # If we use SimChA-generated data as the ground-truth, we first have to generate that data
     param_file = args.config_file
-    if args.test:
-        cohort_dir_path = "out/ground_truth"
-        # Generate the simulated data
-        generate_cohort(args.path, param_file, genes_path, cohort_dir_path, args.repeats, args.all_chromosomes)
-        cohort_path = "out/ground_truth/copynumbers.tsv"
-    else:
-        cohort_path = args.data_path
     
     # Create the output directory for the final plots as well as the SQL database
     out_dir = args.name
     subprocess.run([f"mkdir -p {out_dir}"], shell=True)
 
-    run_simcha(args.path, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes, out_dir)
+    if args.fitness:
+        cohort_path = args.data_path
+        inputs_path = "fitness_in"
+        check_inputs(inputs_path, genes_path, cohort_path)
+        bootstrap_path = os.path.join(inputs_path, "clones.tsv")
+        binned_path    = os.path.join(inputs_path, "binned_CNs.tsv")
+        run_fitness_optimization(args.path, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes, out_dir, binned_path, bootstrap_path)
+    else:
+        if args.test:
+            cohort_dir_path = "out/ground_truth"
+            # Generate the simulated data
+            generate_cohort(args.path, param_file, genes_path, cohort_dir_path, args.repeats, args.all_chromosomes)
+            cohort_path = "out/ground_truth/copynumbers.tsv"
+        else:
+            cohort_path = args.data_path
+        run_events_optimization(args.path, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes, out_dir)

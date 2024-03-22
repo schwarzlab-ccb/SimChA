@@ -439,7 +439,7 @@ public class Optimizer
 
     private double GetStratifiedSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var histMax = GenRef.ChrLengths["chr1"] + 1.0;
+        var histMax = (double)GenRef.ChrLengths["chr1"];
         var histMin = 0.0;
         var histBins = 101;
         var weighted = OptimizationParams.SegmentCountWeighted;
@@ -455,14 +455,14 @@ public class Optimizer
             histMax = Math.Log(histMax) + 1.0;
             histMin = Math.Log(1/1000000.0);
         }
-        var totalDist = 0.0;
+        var totalDist = new List<double>();
         for (int i = 0; i < obsValues.Count; i++)
         {
             var obs = obsValues[i].segs;
             var sim = simValues[i].segs;
-            totalDist += CalculateDistance(obs, sim, histBins, histMin, histMax) * simValues[i].weight;            
+            totalDist.Add(CalculateDistance(obs, sim, histBins, histMin, histMax) * simValues[i].weight);
         }
-        return totalDist;
+        return totalDist.Sum();
     }
 
     private double GetMeanSegDistance(Dictionary<string, List<CopyNumber>> simCNPs)
