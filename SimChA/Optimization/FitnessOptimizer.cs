@@ -65,7 +65,8 @@ public class FitnessOptimizer : Optimizer
             {
                 bestParams = proposedParams;
                 bestScore = proposedScore;
-                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                //files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                files.WriteSimParams(bestParams);
                 counter++;
             }
              if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
