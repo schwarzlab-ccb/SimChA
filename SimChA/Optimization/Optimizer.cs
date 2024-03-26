@@ -91,9 +91,9 @@ public class Optimizer
         return GetCNPs(samples);
     }
     private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
-        => Math.Min(1, Math.Exp(-OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature)));
+        => Math.Min(0, -OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature));
 
-    private double GetAcceptanceProbability(double scoreA, double scoreB)
+    protected double GetAcceptanceProbability(double scoreA, double scoreB)
         => GetAcceptanceProbability(scoreA, scoreB, 1.0);
 
     private SimParams FindBestParams(FileIO files)
@@ -112,7 +112,7 @@ public class Optimizer
             var proposedCNPs = GenerateCNPs(proposedParams);
             var proposedScore = GetScore(proposedCNPs);
             var prob = GetAcceptanceProbability(currentScore, proposedScore);
-            if (Rnd.NextDouble() < prob)
+            if (prob >= Math.Log(Rnd.NextDouble()))
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;

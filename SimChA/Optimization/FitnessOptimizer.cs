@@ -54,9 +54,8 @@ public class FitnessOptimizer : Optimizer
             var proposedParams = GetProposalParams(currentParams, stepSize);
             var proposedSamples = GenerateSimulatedData(proposedParams);
             var proposedScore = GetScore(proposedSamples);
-            var delta = proposedScore - currentScore;
-            var prob = Math.Min(1, Math.Exp(-delta));
-            if (Rnd.NextDouble() < prob)
+            var prob = GetAcceptanceProbability(currentScore, proposedScore);
+            if (prob >= Math.Log(Rnd.NextDouble()))
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;

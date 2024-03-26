@@ -9,7 +9,7 @@ public class MCSimulator : Simulator
 {
     private FitnessParams Fitness { get; }
     private MCParams McParams { get; }
-    
+    private double TotalEventWeight {get; set;}
     public MCSimulator(
         Random rnd,
         GenRef genRef,
@@ -26,6 +26,10 @@ public class MCSimulator : Simulator
         {
             throw new Exception("No events to sample from.");
         }
+        foreach( var e in sample.EventPars)
+        {
+            TotalEventWeight += e.Prob;
+        }
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
@@ -40,7 +44,7 @@ public class MCSimulator : Simulator
         foreach (var eventData in events)
         {
             eventData.ApplyEvent(kar);
-            eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
+            eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob/TotalEventWeight);
         }
         double dFit = kar.UpdateFitness(GenRef, Fitness) - targetFit;
         // Variable to immediately quit the MC Sampling if we've reached enough accuracy
