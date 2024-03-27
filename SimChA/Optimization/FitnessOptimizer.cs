@@ -12,14 +12,14 @@ public class FitnessOptimizer : Optimizer
 {   
     private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
 
-    private readonly List<double> FitnessList;
+    private readonly List<(double, double, double)> FitnessComponents;
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, string binnedSamples, List<double> fitnessList) 
+        GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, string binnedSamples, List<(double, double, double)> fitnessComponents) 
         : base(simParams, rnd, repeats, genRef, observedData, includeSexChromosomes)
     {
-        FitnessList = fitnessList;
+        FitnessComponents = fitnessComponents;
         Binner = new Binner(GenRef);
         ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
     }
@@ -144,7 +144,18 @@ public class FitnessOptimizer : Optimizer
                 1 => GetOneNewParam(currentParams, stepSize),
                 _ => throw new Exception("Error in FitnessOptimizer. ParamVariationMode is not valid.")
             };
-
+    private List<double> GetFitnessList(FitnessParams fParams)
+    {
+        var fitnessList = new List<double>();
+        foreach (var component in FitnessComponents)
+        {
+            double stressTerm = component.Item1 * fParams.Stress;
+            double tsgogTerm  = component.Item2 * fParams.TsgOg;
+            double essTerm    = component.Item3 * fParams.Essentiality;
+            fitnessList.Add(1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength);
+        }
+        return fitnessList;
+    }
     private List<Sample> GenerateSimulatedData(SimParams currentParams)
     {
         if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
@@ -156,9 +167,9 @@ public class FitnessOptimizer : Optimizer
             throw new Exception("No MC parameters were provided.");
         }
         Validators.ValidateSignatures(currentParams.Signatures);
-
+        var fitnessList = GetFitnessList(currentParams.Fitness);
         var samples = Converters.MakeSamples(Rnd, Repeats, currentParams.EventCount, 
-            currentParams.EventDist, currentParams.Signatures, currentParams.Sex, FitnessList);
+            currentParams.EventDist, currentParams.Signatures, currentParams.Sex, fitnessList);
         var simulator = new MCSimulator(Rnd, GenRef, currentParams.Fitness, currentParams.MCParams);
         foreach (var sample in samples)
         {
