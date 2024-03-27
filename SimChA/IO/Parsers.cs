@@ -280,6 +280,24 @@ public static class Parsers
         return fitnessList;
     }
 
+    public static List<(double, double, double)> ParseFitnessComponents(TextReader fitnessStream)
+    {
+        var fitnessList = new List<(double, double, double)>();
+        string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
+        // Continue past the header
+        while (fitnessStream.ReadLine() is { } line)
+        {
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat);
+            var tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
+            var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
+            double tsgogTerm = og + tsg;
+            double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat);
+            fitnessList.Add((stressTerm, tsgogTerm, essTerm));
+        }
+        return fitnessList;
+    }
+
     public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ParseChromosomes(string text)
     {
         IList<string> lines = text.Split("\n");

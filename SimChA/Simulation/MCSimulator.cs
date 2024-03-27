@@ -81,6 +81,8 @@ public class MCSimulator : Simulator
         var currentEvents = InitEvents(kar, nEvents, sample.EventPars);
         double currentPotential = Potential(new Karyotype(kar), targetFitness, currentEvents).potential;
 
+        double bestPotential = currentPotential;
+        var bestEvents = new List<BaseEventData>(currentEvents);
         for (int i = 0; i < McParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
@@ -91,13 +93,20 @@ public class MCSimulator : Simulator
             {
                 currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
+                if (proposalPotential < bestPotential)
+                {
+                    bestPotential = proposalPotential;
+                    bestEvents = proposedEvents;
+                }
                 // Break out of the sampling if we have reached the threshold
                 // and have reached the minimum number of samples required
                 if (thresholdAccept && i > McParams.NumSamplesMin)
-                    break;
+                {
+                    return currentEvents;
+                }
             }
         }
-        return currentEvents;
+        return bestEvents;
     }
     private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
         List<CloneIn>> clones, int eventCount)
