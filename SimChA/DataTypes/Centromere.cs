@@ -14,7 +14,7 @@ public record Centromere(long Start, long End, string ChrNo, bool Hap1, bool For
 
     private string DirString => DirToStr(Forward);
     
-    public override string ToString() => $"{HapString}{DirString}{ChrNo}[{Start}:{End})";
+    public override string ToString() => $"{HapString}{DirString}{ChrNo}c[{Start}:{End})";
 
     public int NumSNVsBetween(long start, long end)
         => (SNVDict!=null) ? SNVDict.Keys.Count(loc => loc>= start && loc <= end) : 0 ;
