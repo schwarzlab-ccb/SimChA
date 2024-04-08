@@ -122,6 +122,15 @@ public class TestKaryotype
     }
 
     [Test]
+    public void TestTailDuplication()
+    {
+        long len = _kar.ContigLen(0);
+        _kar.ApplyTailDuplication(0, TEST_FRAC, true);
+        Assert.AreEqual(len, _kar.ContigLen(0));
+        Assert.AreEqual(TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
+    }
+
+    [Test]
     public void TestBFB()
     {
         long len = _kar.ContigLen(0);
