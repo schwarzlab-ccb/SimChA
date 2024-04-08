@@ -7,8 +7,6 @@ public record InternalEventData : ContigEventData
 {
     public long Start { get; }
     public long End { get; }
-
-    public long Length => End - Start;
     public double Prob { get; }
 
     // Constructor used for internal events
