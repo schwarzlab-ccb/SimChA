@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -7,12 +8,16 @@ public record InternalEventData : ContigEventData
     public long Start { get; }
     public long End { get; }
 
+    public long Length => End - Start;
+    public double Prob { get; }
+
     // Constructor used for internal events
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
         Start = Sampling.GetPos(rnd, contigLen - segLen);
         End = Start + segLen;
+        Prob = Sampling.GetExpProb(segLen, CNEventPars.Size);
     }
 
     public override void ApplyEvent(Karyotype kar)
