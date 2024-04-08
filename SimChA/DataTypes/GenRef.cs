@@ -55,9 +55,13 @@ public class GenRef
     public long AutosomeLen {get;}
     public bool IncludeSexChromosomes { get; set;}
 
+    Dictionary<string, (int, int)> pCentromeres { get; }
+    Dictionary<string, (int, int)> qCentromeres { get; }
+
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
 
-    public GenRef(string name, Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex, 
+    public GenRef(string name, Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex,
+        (Dictionary<string, (int, int)> p, Dictionary<string, (int, int)> q) centromeres,
         Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, bool includeSexChromosomes, Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
@@ -68,6 +72,8 @@ public class GenRef
         XYChrs = chrSex.Select(pair => pair.Key).ToList();
         XXChrs = chrSex.Where(pair => pair.Value != SexEnum.Male).Select(pair => pair.Key).ToList();
         AllChrs = chrSex.Select(pair => pair.Key).ToList();
+        pCentromeres = centromeres.p;
+        qCentromeres = centromeres.q;
         YChrName = chrSex.Where(pair => pair.Value == SexEnum.Male).Select(pair => pair.Key).FirstOrDefault("");
         XChrName = chrSex.Where(pair => pair.Value == SexEnum.Female).Select(pair => pair.Key).FirstOrDefault("");
         bool useSNV = genContentsDict != null;

@@ -475,6 +475,6 @@ public class FileIO
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
         var geneLists = ReadGeneLists(dataFolder, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, geneLists, includeSexChromosomes, genContentsDict);
+        return new GenRef(refName, chrLengths, chrSex, centromeres, geneLists, includeSexChromosomes, genContentsDict);
     }
 }
