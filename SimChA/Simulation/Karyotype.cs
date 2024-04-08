@@ -97,6 +97,15 @@ public class Karyotype
         contig.DeleteRange(tailStart, tailEnd);
     }
 
+    public void ApplyTailDuplication(int contigID, long tailLen, bool fiveToThree)
+    {
+        var contig = _contigs[contigID];
+        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
+        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        var newTail = new Contig(contig.GetSubContig(tailStart, tailEnd));
+        _contigs.Add(newTail);
+    }
+
     public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];

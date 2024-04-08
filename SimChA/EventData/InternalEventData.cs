@@ -40,4 +40,6 @@ public record InternalEventData : ContigEventData
 
     public override string ToString()
         => $"contig:{ContigId};start:{Start};end:{End}";
+    public override double GetProb()
+        => Prob;
 }

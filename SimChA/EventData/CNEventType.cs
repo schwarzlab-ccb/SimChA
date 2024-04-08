@@ -9,6 +9,7 @@ public enum CNEventType
 {
     ChromDeletion,
     ChromDuplication,
+    TailDuplication,
     TailDeletion,
     InternalDeletion,
     InternalDuplication,
