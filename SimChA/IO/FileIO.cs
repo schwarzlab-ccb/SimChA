@@ -449,7 +449,7 @@ public class FileIO
         }
     }
 
-    public static Dictionary<string, (int, int)> ReadCentromeres(string folder)
+    public static (Dictionary<string, (int, int)> p, Dictionary<string, (int, int)> q) ReadCentromeres(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CENTROMERES_TSV));
         if (!File.Exists(fileFullPath))
@@ -458,7 +458,7 @@ public class FileIO
         }
         try
         {
-            string fileContent = File.ReadAllText(fileFullPath);
+            var fileContent = new StreamReader(fileFullPath);
             return Parsers.ParseCentromeres(fileContent);
         }
         catch (Exception e)
@@ -471,7 +471,7 @@ public class FileIO
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
-        //var centromeres = ReadCentromeres(dataFolder);
+        var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
         var geneLists = ReadGeneLists(dataFolder, chrSex);
