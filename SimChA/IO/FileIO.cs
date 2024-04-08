@@ -15,7 +15,7 @@ public class FileIO
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
     private const string GENOME_FASTA = "genome.fa";
-    
+    private const string CENTROMERES_TSV = "centromeres.tsv";
     // input
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     
@@ -29,6 +29,7 @@ public class FileIO
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
     private const string FASTA_FILENAME = "genome.fa";
+
     
     private string Timestamp { get; }
     private string OutFolder { get; }
@@ -433,7 +434,6 @@ public class FileIO
     public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ReadChromosomes(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
-        string assemblyName = Path.GetFileName(folder) ?? throw new Exception($"Failed to parse assembly name from {folder}");
         if (!File.Exists(fileFullPath))
         {
             throw new Exception($"File {fileFullPath} does not exist");
@@ -449,10 +449,29 @@ public class FileIO
         }
     }
 
+    public static Dictionary<string, (int, int)> ReadCentromeres(string folder)
+    {
+        string fileFullPath = Path.GetFullPath(Path.Combine(folder, CENTROMERES_TSV));
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            string fileContent = File.ReadAllText(fileFullPath);
+            return Parsers.ParseCentromeres(fileContent);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
     public static GenRef GetGenRef(string dataFolder, bool includeSexChromosomes = true, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
+        //var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
         var geneLists = ReadGeneLists(dataFolder, chrSex);
