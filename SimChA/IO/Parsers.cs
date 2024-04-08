@@ -313,8 +313,22 @@ public static class Parsers
             var sexEnum = GetSexEnum(lines, lineSplit, index);
             chrSex.Add(chrNo, sexEnum);
         }
-
         return (chrLengths, chrSex);
+    }
+
+    public static Dictionary<string, (int, int)> ParseCentromeres(string text)
+    {
+        IList<string> lines = text.Split("\n");
+        Dictionary<string, (int, int)> centromeres = new();
+        foreach (var line in lines)
+        {
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            string chrNo = lineSplit[0];
+            int start = int.Parse(lineSplit[1]);
+            int end = int.Parse(lineSplit[2]);
+            centromeres.Add(chrNo, (start, end));
+        }
+        return centromeres;
     }
 
     private static SexEnum GetSexEnum(IList<string> lines, IReadOnlyList<string> lineSplit, int index)
