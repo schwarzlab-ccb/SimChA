@@ -84,6 +84,44 @@ public static class Sampling
         var idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
         return (idSelected, kar.ContigLen(idSelected));
     }
+
+    public static (int id, int centromereIndex, bool pArm) SampleContigByArms(Random rnd, Karyotype kar)
+    {
+        var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0).ToList();
+        //var centromeres = contigIds.Where(id => kar.GetContig(id).GetRegions().Select(c => c is Centromere).Any()).ToList();
+        var centromeres = contigIds
+            .SelectMany(id => kar.GetContig(id).GetRegions().Select(region => new { Id = id, Region = region }))
+            .Where(x => x.Region is Centromere)
+            .Select(x => x.Id)
+            .ToList();
+        if (!centromeres.Any())
+        {
+            return (-1, 0, rnd.CoinFlip());
+        }
+        else
+        {
+            var idSelected = centromeres[rnd.Next(centromeres.Count)];
+            var contig = kar.GetContig(idSelected);
+            var centromereRegions = contig.GetRegions().Where(r => r is Centromere).ToList();
+            var selectedCentromere = centromereRegions[rnd.Next(centromereRegions.Count)];
+            var centromereIndex = contig.GetRegions().IndexOf(selectedCentromere);
+            bool hasLeftRegion = centromereIndex > 0;
+            bool hasRightRegion = centromereIndex < contig.GetRegions().Count - 1;
+            if (!hasLeftRegion && !hasRightRegion)
+            {
+                return (-1, 0, rnd.CoinFlip());
+            }
+            if (!hasLeftRegion)
+            {
+                return (idSelected, centromereIndex, false);
+            }
+            if (!hasRightRegion)
+            {
+                return (idSelected, centromereIndex, true);
+            }
+            return (idSelected, centromereIndex, rnd.CoinFlip());
+        }
+    }
     
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
@@ -105,9 +143,14 @@ public static class Sampling
             case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
+                return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
+
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
-                return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
+                var (armSeq, centromereIndex, pArm) = SampleContigByArms(rnd, kar);
+                return armSeq < 0 
+                    ? null
+                    : new ArmEventData(rnd, cnEventPars, armSeq, centromereIndex, pArm);
 
             // Internal events
             case CNEventType.InternalDuplication:
@@ -116,7 +159,7 @@ public static class Sampling
             case CNEventType.InvertedDuplication:
                 return new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
             
-            case CNEventType.Translocation:        
+            case CNEventType.Translocation:
                 return seq.Count < 2 
                     ? null 
                     : new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len);

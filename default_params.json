@@ -4,9 +4,9 @@
 	"EventCount": 75,
 	"EventDist": "Exponential",
 	"Fitness": {
-	  "Stress": 0.93,
-	  "TsgOg": 0.05,
-	  "Essentiality": 0.05,
+	  "Stress": 0.9619,
+	  "TsgOg": 0.0355,
+	  "Essentiality": 0.0026,
 	  "TotalStrength": 1
 	},
 	"Signatures": {
@@ -51,12 +51,24 @@
 		  },
 		  {
 			"Type": "BreakageFusionBridge",
-			"Prob": 16.66,
+			"Prob": 0,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "TailDeletion",
+			"Prob": 0,
+			"Size": 0,
+			"Frag": 0
+		  },
+		  {
+			"Type": "ArmDeletion",
+			"Prob": 16.66,
+			"Size": 0,
+			"Frag": 0
+		  },
+		  {
+			"Type": "ArmDuplication",
 			"Prob": 16.66,
 			"Size": 0,
 			"Frag": 0

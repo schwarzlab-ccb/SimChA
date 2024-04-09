@@ -4,6 +4,8 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Simulation;
+using SimChA.IO;
+using SimChA.DataTypes;
 
 namespace Tests;
 
@@ -70,5 +72,31 @@ public class TestSampling
             Assert.AreNotEqual(index, 2);
             Assert.AreNotEqual(index, 3);
         }
+    }
+    [Test]
+    public void TestSampleContigsByArms()
+    {
+        var regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true),
+            new Centromere(3, 4, "chr1", true, true),
+            new QArm(4, 5, "chr1", true, true),
+        };
+        var contigs = new List<Contig>(){new(regions)};
+        var kar = new Karyotype(contigs, new List<GenRange>(), false);
+        /*for (int i = 1; i < 46; i++)
+        {
+            kar.ApplyContigDeletion(i);
+        }*/
+        _rnd = new Random(0);
+        var (id, index, pArm) = Sampling.SampleContigByArms(_rnd, kar);
+        Assert.AreEqual(0, id);
+        // Delete the p-arm of the first chromosome
+        kar.ApplyArmDeletion(0, 1, true);
+        (id, index, pArm) = Sampling.SampleContigByArms(_rnd, kar);
+        Assert.AreEqual(0, id);
+        Assert.IsFalse(pArm);
     }
 }

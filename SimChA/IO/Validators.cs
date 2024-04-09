@@ -16,7 +16,10 @@ public static class Validators
             case CNEventType.WholeGenomeDoubling:
             case CNEventType.BreakageFusionBridge:
             case CNEventType.TailDeletion:
+            case CNEventType.TailDuplication:
             case CNEventType.SNV:
+            case CNEventType.ArmDeletion:
+            case CNEventType.ArmDuplication:
                 break;
                 
             case CNEventType.InternalDeletion:

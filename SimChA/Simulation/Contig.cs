@@ -60,11 +60,11 @@ public class Contig
         return new Contig(keepFirst ? second : first);
     }
 
-    public void DeleteArm(bool pArm)
-        => _regions = RegionOps.DeleteArm(_regions, pArm);
+    public void DeleteArm(int centromereIndex, bool pArm)
+        => _regions = RegionOps.DeleteArm(_regions, centromereIndex, pArm);
 
-    public Contig GetArm(bool pArm)
-        => new(RegionOps.GetArm(_regions, pArm));
+    public Contig GetArm(int centromereIndex, bool pArm)
+        => new(RegionOps.GetArm(_regions, centromereIndex, pArm));
 
     public void Join(Contig other)
         => _regions = RegionOps.ConcatRegions(_regions, other._regions);

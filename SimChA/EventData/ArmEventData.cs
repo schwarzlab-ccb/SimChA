@@ -6,23 +6,25 @@ namespace SimChA.EventData;
 
 public record ArmEventData : ContigEventData
 {
+    public int CentromereIndex { get; }
     public bool PArm { get; }
     
-    // Constructor used for Tail CNEventPars
-    public ArmEventData(Random rnd, CNEventPars CNEventPars, int contigId) : base(CNEventPars, contigId)
+    // Constructor used for Arm-level events CNEventPars
+    public ArmEventData(Random rnd, CNEventPars CNEventPars, int contigId, int centromereIndex, bool pArm) : base(CNEventPars, contigId)
     {
-        PArm = rnd.CoinFlip();
+        CentromereIndex = centromereIndex;
+        PArm = pArm;
     }
 
     public override void ApplyEvent(Karyotype kar)
     {
         if (EventType == CNEventType.ArmDeletion)
         {
-            kar.ApplyArmDeletion(ContigId, PArm);
+            kar.ApplyArmDeletion(ContigId, CentromereIndex, PArm);
         }
         else if (EventType == CNEventType.ArmDuplication)
         {
-            kar.ApplyArmDuplication(ContigId, PArm);
+            kar.ApplyArmDuplication(ContigId, CentromereIndex, PArm);
         }
         else
         {
@@ -31,5 +33,5 @@ public record ArmEventData : ContigEventData
     }
     
     public override string ToString()
-        => PArm ? $"contig:{ContigId};p" : $"contig:{ContigId};q";
+        => PArm ? $"contig:{ContigId};p;cent:{CentromereIndex}" : $"contig:{ContigId};q;cent:{CentromereIndex}";
 }

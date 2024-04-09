@@ -16,7 +16,6 @@ public static class CopyNumbers
         var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
-            
 
     public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
     {
