@@ -24,9 +24,9 @@ public class Karyotype
     private readonly List<Contig> _contigs;
     private readonly Dictionary<string, List<GenRange>> _missingRanges;
     
-    public Karyotype(GenRef genRef, bool sexXX)
+    public Karyotype(GenRef genRef, bool sexXX, bool segmented = true)
     {
-        _contigs = genRef.GetGenotype(sexXX, true).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.GetGenotype(sexXX, segmented).Select(region => new Contig(region)).ToList();
         _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         SexXX = sexXX;
     }
@@ -111,6 +111,18 @@ public class Karyotype
         var contig = _contigs[contigID];
         long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         contig.Bridge(tailSplit, fiveToThree);
+    }
+
+    public void ApplyArmDeletion(int contigId, bool pArm)
+    {
+        var contig = _contigs[contigId];
+        contig.DeleteArm(pArm);
+    }
+    public void ApplyArmDuplication(int contigId, bool pArm)
+    {
+        var contig = _contigs[contigId];
+        var armContig = contig.GetArm(pArm);
+        _contigs.Add(new Contig(armContig));
     }
     
     public void ApplyContigDeletion(int contigID)

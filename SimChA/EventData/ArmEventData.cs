@@ -6,32 +6,30 @@ namespace SimChA.EventData;
 
 public record ArmEventData : ContigEventData
 {
-    public long Fraction { get; }
-    public bool Direction { get; }
+    public bool PArm { get; }
     
     // Constructor used for Tail CNEventPars
-    public ArmEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
+    public ArmEventData(Random rnd, CNEventPars CNEventPars, int contigId) : base(CNEventPars, contigId)
     {
-        Fraction = Sampling.GetPos(rnd, contigLen);
-        Direction = rnd.CoinFlip();
+        PArm = rnd.CoinFlip();
     }
 
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.TailDeletion)
+        if (EventType == CNEventType.ArmDeletion)
         {
-            kar.ApplyTailDeletion(ContigId, Fraction, Direction);
+            kar.ApplyArmDeletion(ContigId, PArm);
         }
-        else if (EventType == CNEventType.TailDuplication)
+        else if (EventType == CNEventType.ArmDuplication)
         {
-            kar.ApplyTailDuplication(ContigId, Fraction, Direction);
+            kar.ApplyArmDuplication(ContigId, PArm);
         }
-        else if (EventType == CNEventType.BreakageFusionBridge)
+        else
         {
-            kar.ApplyBFB(ContigId, Fraction, Direction);
+            throw new InvalidOperationException("Invalid event type for ArmEventData");
         }
     }
     
     public override string ToString()
-        => $"contig:{ContigId};fraction:{Fraction};dir:{Direction}";
+        => PArm ? $"contig:{ContigId};p" : $"contig:{ContigId};q";
 }

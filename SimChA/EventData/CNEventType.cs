@@ -25,6 +25,8 @@ public enum CNEventType
     TIBridge,
     Pyrgo,
     Rigma,
-    SNV
+    SNV,
+    ArmDeletion,
+    ArmDuplication
     // Tyfonas
 }

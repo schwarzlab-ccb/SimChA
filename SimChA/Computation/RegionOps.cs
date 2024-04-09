@@ -101,6 +101,35 @@ public static class RegionOps
         return newRegions;
     }
 
+    public static List<Region> DeleteArm(List<Region> regions, bool pArm)
+    {
+        int centromereIndex = regions.FindIndex(r => r is Centromere);
+        if (centromereIndex > 0)
+        {
+            if (pArm)
+            {
+                regions.RemoveRange(0, centromereIndex);
+            }
+            else
+            {
+                regions.RemoveRange(centromereIndex + 1, regions.Count - centromereIndex - 1);
+            }
+        }
+        return regions;
+    }
+    
+    public static List<Region> GetArm(List<Region> regions, bool pArm)
+    {
+        int centromereIndex = regions.FindIndex(r => r is Centromere);
+        if (centromereIndex > 0)
+        {
+            return pArm
+                ? regions.GetRange(0, centromereIndex)
+                : regions.GetRange(centromereIndex + 1, regions.Count - centromereIndex - 1);
+        }
+        return new List<Region>();
+    }
+
     public static List<Region> CopyRange(List<Region> regions, long start, long end)
     {
         var newRegions = new List<Region>();

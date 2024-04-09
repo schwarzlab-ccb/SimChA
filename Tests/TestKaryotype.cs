@@ -91,10 +91,11 @@ public class TestKaryotype
     public void TestInternalInversion()
     {
         long len = _kar.ContigLen(0);
+        var nRegions = _kar.GetContig(0).GetRegions().Count;
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
         var regions = _kar.FindRegionsOfChr("chr1").ToList();
-        Assert.AreEqual(3, regions.Count(r => r.Hap1));
+        Assert.AreEqual(nRegions + 2, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));
         Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).Start);
     }
@@ -103,10 +104,11 @@ public class TestKaryotype
     public void TestInvertedDuplication()
     {
         long len = _kar.ContigLen(0);
+        var nRegions = _kar.GetContig(0).GetRegions().Count;
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
         var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr("chr1").ToList());
-        Assert.AreEqual(3, gluedRegions.Count(r => r.Hap1));
+        Assert.AreEqual(nRegions + 1, gluedRegions.Count(r => r.Hap1));
         Assert.AreEqual(1, gluedRegions.Count(r => !r.Forward));
         Assert.AreEqual(TEST_FRAC, gluedRegions.First(r => !r.Forward).Start);
     }

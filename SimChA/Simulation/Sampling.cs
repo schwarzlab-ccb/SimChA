@@ -105,6 +105,8 @@ public static class Sampling
             case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
+            case CNEventType.ArmDeletion:
+            case CNEventType.ArmDuplication:
                 return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             // Internal events
