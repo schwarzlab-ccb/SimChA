@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Extreme.DataAnalysis.Models;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -95,6 +96,39 @@ public class TestRegions
             _cRegion with { Start = 3, End = 4 }
         };
         Assert.AreEqual(res, RegionOps.DeleteRange(regions, 1, 3));
+    }
+    
+    [Test]
+    public void TestDeleteArm()
+    {
+        var regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(1, 3, "chr1", true, true)
+        };
+        var res = new List<Region>
+        {
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(1, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(res, RegionOps.DeleteArm(regions, true));
+    }
+
+    [Test]
+    public void TestGetArm()
+    {
+        var regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(1, 3, "chr1", true, true)
+        };
+        var res = new List<Region>
+        {
+            new QArm(1, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(res, RegionOps.GetArm(regions, false));
     }
 
     [Test]
