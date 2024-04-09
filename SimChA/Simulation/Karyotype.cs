@@ -26,7 +26,7 @@ public class Karyotype
     
     public Karyotype(GenRef genRef, bool sexXX)
     {
-        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.GetGenotype(sexXX, true).Select(region => new Contig(region)).ToList();
         _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         SexXX = sexXX;
     }
