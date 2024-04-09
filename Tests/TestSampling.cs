@@ -91,12 +91,17 @@ public class TestSampling
             kar.ApplyContigDeletion(i);
         }*/
         _rnd = new Random(0);
-        var (id, index, pArm) = Sampling.SampleContigByArms(_rnd, kar);
+        var (id, _, _) = Sampling.SampleContigByArms(_rnd, kar);
         Assert.AreEqual(0, id);
         // Delete the p-arm of the first chromosome
         kar.ApplyArmDeletion(0, 1, true);
-        (id, index, pArm) = Sampling.SampleContigByArms(_rnd, kar);
+        (id, _, _) = Sampling.SampleContigByArms(_rnd, kar);
         Assert.AreEqual(0, id);
+        // Delete the new "p-arm" of the first chromosome, which is in position 2 now
+        kar.ApplyArmDeletion(0, 2, true);
+        (id, _, bool pArm) = Sampling.SampleContigByArms(_rnd, kar);
+        Assert.AreEqual(0, id);
+        // The p-arm must be false now
         Assert.IsFalse(pArm);
     }
 }
