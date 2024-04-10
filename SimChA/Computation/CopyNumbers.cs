@@ -30,6 +30,7 @@ public static class CopyNumbers
         var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
         return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo, keepMissing);
     }
+
     
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing)
     {
@@ -52,6 +53,27 @@ public static class CopyNumbers
             }
             
         }
+        // Merge the result list such that adjacent segments with the same copy number are combined
+        result = result.Aggregate(new List<CopyNumber>(), (acc, cn) =>
+        {
+            if (acc.Count == 0)
+            {
+                acc.Add(cn);
+            }
+            else
+            {
+                var last = acc[^1];
+                if (last.CNH1 == cn.CNH1 && last.CNH2 == cn.CNH2)
+                {
+                    acc[^1] = new CopyNumber(new GenRange(last.Segment.Start, cn.Segment.End, last.Segment.ChrNo), last.CNH1, last.CNH2, last.NSNVs + cn.NSNVs);
+                }
+                else
+                {
+                    acc.Add(cn);
+                }
+            }
+            return acc;
+        });
         return result;
     }
 
