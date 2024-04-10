@@ -113,15 +113,15 @@ public class Karyotype
         contig.Bridge(tailSplit, fiveToThree);
     }
 
-    public void ApplyArmDeletion(int contigId, int centromereIndex, bool pArm)
+    public void ApplyArmDeletion(int contigId, int centromereIndex, bool pArm, bool includeCentromere)
     {
         var contig = _contigs[contigId];
-        contig.DeleteArm(centromereIndex, pArm);
+        contig.DeleteArm(centromereIndex, pArm, includeCentromere);
     }
-    public void ApplyArmDuplication(int contigId, int centromereIndex, bool pArm)
+    public void ApplyArmDuplication(int contigId, int centromereIndex, bool pArm, bool includeCentromere)
     {
         var contig = _contigs[contigId];
-        var armContig = contig.GetArm(centromereIndex, pArm);
+        var armContig = contig.GetArm(centromereIndex, pArm, includeCentromere);
         _contigs.Add(new Contig(armContig));
     }
     

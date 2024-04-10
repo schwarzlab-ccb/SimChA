@@ -101,7 +101,7 @@ public static class RegionOps
         return newRegions;
     }
 
-    public static List<Region> DeleteArm(List<Region> regions, int centromereIndex, bool pArm)
+    public static List<Region> DeleteArm(List<Region> regions, int centromereIndex, bool pArm, bool includeCentromere)
     {
         if (pArm)
         {
@@ -109,15 +109,22 @@ public static class RegionOps
         }
         else
         {
-            regions.RemoveRange(centromereIndex + 1, regions.Count - centromereIndex - 1);
+            regions.RemoveRange(centromereIndex + 1, regions.Count-1);
         }
         return regions;
     }
     
-    public static List<Region> GetArm(List<Region> regions, int centromereIndex, bool pArm)
-        =>  pArm
-            ? regions.GetRange(0, centromereIndex)
-            : regions.GetRange(centromereIndex + 1, regions.Count - centromereIndex - 1);
+    public static List<Region> GetArm(List<Region> regions, int index, bool pArm, bool includeCentromere)
+    {
+        if (pArm)
+        {   
+            return includeCentromere ? regions.GetRange(0, index + 1) : regions.GetRange(0, index);
+        }
+        else
+        {
+            return includeCentromere ? regions.GetRange(index, regions.Count - index) : regions.GetRange(index + 1, regions.Count - index - 1);
+        }
+    }
 
     public static List<Region> CopyRange(List<Region> regions, long start, long end)
     {

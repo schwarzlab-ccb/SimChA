@@ -112,7 +112,7 @@ public class TestRegions
             new Centromere(1, 2, "chr1", true, true),
             new QArm(2, 3, "chr1", true, true)
         };
-        Assert.AreEqual(res, RegionOps.DeleteArm(regions, 1, true));
+        Assert.AreEqual(res, RegionOps.DeleteArm(regions, 1, true, false));
     }
 
     [Test]
@@ -124,11 +124,28 @@ public class TestRegions
             new Centromere(1, 2, "chr1", true, true),
             new QArm(2, 3, "chr1", true, true)
         };
-        var res = new List<Region>
+        var qArm = new List<Region>
         {
             new QArm(2, 3, "chr1", true, true)
         };
-        Assert.AreEqual(res, RegionOps.GetArm(regions, 1, false));
+        Assert.AreEqual(qArm, RegionOps.GetArm(regions, 1, false, false));
+        var pArm = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true)
+        };
+        Assert.AreEqual(pArm, RegionOps.GetArm(regions, 1, true, false));
+        var qArmWithCentromere = new List<Region>
+        {
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(qArmWithCentromere, RegionOps.GetArm(regions, 1, false, true));
+        var pArmWithCentromere = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true)
+        };
+        Assert.AreEqual(pArmWithCentromere, RegionOps.GetArm(regions, 1, true, true));        
     }
 
     [Test]

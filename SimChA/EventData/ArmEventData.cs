@@ -8,23 +8,25 @@ public record ArmEventData : ContigEventData
 {
     public int CentromereIndex { get; }
     public bool PArm { get; }
+    public bool IncludeCentromere {get;}
     
     // Constructor used for Arm-level events CNEventPars
     public ArmEventData(Random rnd, CNEventPars CNEventPars, int contigId, int centromereIndex, bool pArm) : base(CNEventPars, contigId)
     {
         CentromereIndex = centromereIndex;
         PArm = pArm;
+        IncludeCentromere = rnd.CoinFlip();
     }
 
     public override void ApplyEvent(Karyotype kar)
     {
         if (EventType == CNEventType.ArmDeletion)
         {
-            kar.ApplyArmDeletion(ContigId, CentromereIndex, PArm);
+            kar.ApplyArmDeletion(ContigId, CentromereIndex, PArm, IncludeCentromere);
         }
         else if (EventType == CNEventType.ArmDuplication)
         {
-            kar.ApplyArmDuplication(ContigId, CentromereIndex, PArm);
+            kar.ApplyArmDuplication(ContigId, CentromereIndex, PArm, IncludeCentromere);
         }
         else
         {
