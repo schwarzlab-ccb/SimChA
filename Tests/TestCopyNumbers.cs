@@ -88,12 +88,27 @@ public class TestCopyNumbers
     [Test]
     public void TestCutSegPoints()
     {
-        var karXX = new Karyotype(_genRef, true);
-        var karXY = new Karyotype(_genRef, false);
+        bool segmented = false;
+        var karXX = new Karyotype(_genRef, true, segmented);
+        var karXY = new Karyotype(_genRef, false, segmented);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         karXY.ApplyInternalDeletion(0, 2000, 3000);
         var segs = CopyNumbers.GetSegPoints(_genRef, "chr1", new List<Karyotype> {karXX, karXY});
         var expected = new List<long> {0, 1000, 2000, 3000, _genRef.ChrLengths["chr1"]};
+        Assert.AreEqual(expected, segs);
+
+        // Test with segmented karyotypes
+        // There are originally three segments: p-arm, centromere, and the q-arm
+        segmented = true;
+        karXX = new Karyotype(_genRef, true, segmented);
+        karXY = new Karyotype(_genRef, false, segmented);
+        karXX.ApplyInternalDeletion(0, 1000, 2000);
+        karXY.ApplyInternalDeletion(0, 2000, 3000);
+        segs = CopyNumbers.GetSegPoints(_genRef, "chr1", new List<Karyotype> {karXX, karXY});
+        var chr1Segments = _genRef.GetGenotype(true, segmented)[0];
+        var segmentEnds = chr1Segments.Select(r => r.End).ToList();
+        expected = new List<long> {0, 1000, 2000, 3000};
+        expected.AddRange(segmentEnds);
         Assert.AreEqual(expected, segs);
     }
     
