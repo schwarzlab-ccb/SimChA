@@ -20,6 +20,7 @@ public static class CopyNumbers
     public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
     {
         var chrIDs = bins.Keys;
+        karyotype.MergeRegions();
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), bins[c], c, keepMissing, false));
     }
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, string chrNo, bool keepMissing = false)
@@ -50,7 +51,6 @@ public static class CopyNumbers
             {
                 result.Add(new CopyNumber(seg, -1, -1, -1));
             }
-            
         }
         if (joinSegments)
         {

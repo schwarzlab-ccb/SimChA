@@ -183,6 +183,65 @@ public class TestRegions
     }
 
     [Test]
+    public void TestMergeRegions()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3 },
+            _cRegion with { Start = 3, End = 4 }
+        };
+        var mergeAll = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 4 },
+        };
+        Assert.AreEqual(mergeAll, RegionOps.MergeRegions(regions));
+
+        regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3, Forward = false },
+            _cRegion with { Start = 3, End = 4, Forward = false }
+        };
+        var mergeAllInverted = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 2},
+            _cRegion with { Start = 2, End = 4, Forward = false },
+        };
+        Assert.AreEqual(mergeAllInverted, RegionOps.MergeRegions(regions));
+
+        regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3, Forward = false },
+            _cRegion with { Start = 3, End = 4}
+        };
+        var mergeOneInverted = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 2},
+            _cRegion with { Start = 2, End = 3, Forward = false },
+            _cRegion with { Start = 3, End = 4}
+        };
+        Assert.AreEqual(mergeOneInverted, RegionOps.MergeRegions(regions));
+
+        regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 3, End = 4}
+        };
+        var mergeGapped = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 2},
+            _cRegion with { Start = 3, End = 4}
+        };
+        Assert.AreEqual(mergeGapped, RegionOps.MergeRegions(regions));
+    }
+
+    [Test]
     public void TestCopy()
     {
         var regions = new List<Region> { _cRegion };

@@ -178,4 +178,6 @@ public class Contig
         }
         return presentGenes;
     }
+    public void MergeRegions()
+        => _regions = RegionOps.MergeRegions(_regions);
 }

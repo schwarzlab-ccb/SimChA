@@ -308,4 +308,29 @@ public static class RegionOps
         }
         throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
     }
+
+    public static List<Region> MergeRegions(List<Region> regions)
+    {
+        var newRegions = new List<Region>();
+        for (int i = 0; i < regions.Count; i++)
+        {
+            if (i == 0)
+            {
+                newRegions.Add(regions[i]);
+            }
+            else
+            {
+                var last = newRegions[^1];
+                if (last.ChrNo == regions[i].ChrNo && last.End == regions[i].Start && last.Forward == regions[i].Forward)
+                {
+                    newRegions[^1] = last with {End = regions[i].End};
+                }
+                else
+                {
+                    newRegions.Add(regions[i]);
+                }
+            }
+        }
+        return newRegions;
+    }
 }

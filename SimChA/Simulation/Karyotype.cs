@@ -300,4 +300,8 @@ public class Karyotype
         return snvList;
     }
     
+    public void MergeRegions()
+    {
+        _contigs.ForEach(c => c.MergeRegions());
+    }
 }
