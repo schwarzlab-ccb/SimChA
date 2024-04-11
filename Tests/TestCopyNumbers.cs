@@ -47,7 +47,7 @@ public class TestCopyNumbers
     }
 
     [Test]
-    public void TestWGSPloid([Values] bool sex)
+    public void TestWGSPloidy([Values] bool sex)
     {
         _kar = new Karyotype(_genRef, sex);
         TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
