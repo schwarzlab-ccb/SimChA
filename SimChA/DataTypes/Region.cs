@@ -6,17 +6,32 @@ namespace SimChA.DataTypes;
 // TODO: The direction should not be part of the region, should be part of the chromosome
 public record Region(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : GenRange(Start, End, ChrNo)
 { 
-    private static string HapToString(bool parent) 
+    protected static string HapToString(bool parent) 
         => parent ? "H1" : "H2";
     
-    private string HapString => HapToString(Hap1);
+    protected string HapString => HapToString(Hap1);
 
     public static string DirToStr(bool dir) => dir ? ">" : "<";
 
-    private string DirString => DirToStr(Forward);
+    protected string DirString => DirToStr(Forward);
     
     public override string ToString() => $"{HapString}{DirString}{ChrNo}[{Start}:{End})";
 
     public int NumSNVsBetween(long start, long end)
         => (SNVDict!=null) ? SNVDict.Keys.Count(loc => loc>= start && loc <= end) : 0 ;
+}
+
+public record PArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
+{
+    public override string ToString() => $"{HapString}{DirString}{ChrNo}p[{Start}:{End})";
+}
+
+public record QArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
+{
+    public override string ToString() => $"{HapString}{DirString}{ChrNo}q[{Start}:{End})";
+}
+
+public record Centromere(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
+{ 
+    public override string ToString() => $"{HapString}{DirString}{ChrNo}c[{Start}:{End})";
 }
