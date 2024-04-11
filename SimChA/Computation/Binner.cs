@@ -25,7 +25,7 @@ public class Binner
         {
             foreach (var clone in sample.Clones)
             {
-                binnedCNPs[sample.SampleId] = CopyNumbers.CalcBinnedCopyNumbers(GenRef, sample.Kars[clone.CloneId], ChromosomeBins, true).ToList();
+                binnedCNPs[sample.SampleId] = CopyNumbers.CalcBinnedCopyNumbers(sample.Kars[clone.CloneId], ChromosomeBins, true).ToList();
             }
         }
         return binnedCNPs;
@@ -36,7 +36,7 @@ public class Binner
         var binnedCNPs = new Dictionary<string, List<CopyNumber>>();
         foreach (var sample in karDict.Keys)
         {
-            binnedCNPs[sample] = CopyNumbers.CalcBinnedCopyNumbers(GenRef, karDict[sample], ChromosomeBins, true).ToList();
+            binnedCNPs[sample] = CopyNumbers.CalcBinnedCopyNumbers(karDict[sample], ChromosomeBins, true).ToList();
         }
         return binnedCNPs;
     }

@@ -17,10 +17,10 @@ public static class CopyNumbers
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
 
-    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
+    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
     {
         var chrIDs = bins.Keys;
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), bins[c], c, keepMissing));
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), bins[c], c, keepMissing, false));
     }
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, string chrNo, bool keepMissing = false)
     {
@@ -30,9 +30,8 @@ public static class CopyNumbers
         var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
         return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo, keepMissing);
     }
-
     
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing)
+    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing, bool joinSegments = true)
     {
         var result = new List<CopyNumber>();
         for (int i = 0; i < segs.Count - 1; i++)
@@ -53,27 +52,30 @@ public static class CopyNumbers
             }
             
         }
-        // Merge the result list such that adjacent segments with the same copy number are combined
-        result = result.Aggregate(new List<CopyNumber>(), (acc, cn) =>
+        if (joinSegments)
         {
-            if (acc.Count == 0)
+            // Merge the result list such that adjacent segments with the same copy number are combined
+            result = result.Aggregate(new List<CopyNumber>(), (acc, cn) =>
             {
-                acc.Add(cn);
-            }
-            else
-            {
-                var last = acc[^1];
-                if (last.CNH1 == cn.CNH1 && last.CNH2 == cn.CNH2)
-                {
-                    acc[^1] = new CopyNumber(new GenRange(last.Segment.Start, cn.Segment.End, last.Segment.ChrNo), last.CNH1, last.CNH2, last.NSNVs + cn.NSNVs);
-                }
-                else
+                if (acc.Count == 0)
                 {
                     acc.Add(cn);
                 }
-            }
-            return acc;
-        });
+                else
+                {
+                    var last = acc[^1];
+                    if (last.CNH1 == cn.CNH1 && last.CNH2 == cn.CNH2)
+                    {
+                        acc[^1] = new CopyNumber(new GenRange(last.Segment.Start, cn.Segment.End, last.Segment.ChrNo), last.CNH1, last.CNH2, last.NSNVs + cn.NSNVs);
+                    }
+                    else
+                    {
+                        acc.Add(cn);
+                    }
+                }
+                return acc;
+            });
+        }
         return result;
     }
 
