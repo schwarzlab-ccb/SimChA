@@ -101,15 +101,29 @@ public static class RegionOps
         return newRegions;
     }
 
-    public static List<Region> DeleteArm(List<Region> regions, int centromereIndex, bool pArm, bool includeCentromere)
+    public static List<Region> DeleteArm(List<Region> regions, int index, bool pArm, bool includeCentromere)
     {
         if (pArm)
         {
-            regions.RemoveRange(0, centromereIndex);
+            if (includeCentromere)
+            {
+                regions.RemoveRange(0, index + 1);
+            }
+            else 
+            {
+                regions.RemoveRange(0, index);
+            }
         }
         else
         {
-            regions.RemoveRange(centromereIndex + 1, regions.Count-1);
+            if (includeCentromere)
+            {
+                regions.RemoveRange(index, regions.Count - index);
+            }
+            else
+            {
+                regions.RemoveRange(index + 1, regions.Count - index - 1);
+            }
         }
         return regions;
     }
