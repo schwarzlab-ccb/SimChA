@@ -114,12 +114,12 @@ public class GenRef
         XXGenomeLen = XXGenome.Sum(regions => regions.Sum(r => r.Length));
         AutosomeChrs = chrSex.Where(pair => pair.Value != SexEnum.Male && pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
         AutosomeLinLen = AutosomeChrs.Select(c => (long) chrLengths[c]).Sum();
-        var autohaplotypeOne = CreateAutosomeHaplotype(true, useSNV);
-        var autohaplotypeTwo = CreateAutosomeHaplotype(false, useSNV);
+        var autohaplotypeOne = CreateHaplotype(true, true, true, useSNV);
+        var autohaplotypeTwo = CreateHaplotype(true, true, true, useSNV);
         Autosomes = autohaplotypeOne.Concat(autohaplotypeTwo).ToList();
         // Create p-arm, centromere, q-arm haplotypes for autosomes
-        var segmentedAutoHaplotypeOne = CreateSegmentedHaplotype(true, true, useSNV);
-        var segmentedAutoHaplotypeTwo = CreateSegmentedHaplotype(false, true, useSNV);
+        var segmentedAutoHaplotypeOne = CreateSegmentedHaplotype(true, true, true, useSNV);
+        var segmentedAutoHaplotypeTwo = CreateSegmentedHaplotype(false, true, true, useSNV);
         AutosomesSegmented = segmentedAutoHaplotypeOne.Concat(segmentedAutoHaplotypeTwo).ToList();
         
         AutosomeLen = Autosomes.Sum(regions => regions.Sum(r => r.Length));
@@ -130,35 +130,41 @@ public class GenRef
     private Region GetRegion(string chrNo, bool isFirstHaplotype, bool useSNV) => 
         new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
 
-    private IEnumerable<List<Region>> CreateHaplotype(bool isFirstHaplotype, bool isFemale, bool useSNV = false)
-    {
-        var nonGender = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
-        var sexChr = ChrSex.Select(x => x.Key).Where(x =>
-            isFirstHaplotype | isFemale ? ChrSex[x] == SexEnum.Female : ChrSex[x] == SexEnum.Male);
-        var all = nonGender.Concat(sexChr);
-        return all.Select(num => new List<Region>{GetRegion(num, isFirstHaplotype, useSNV)});
-    }
     private IEnumerable<List<Region>> CreateAutosomeHaplotype(bool isFirstHaplotype, bool useSNV = false)
     {
         var autosomes = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
         return autosomes.Select(num => new List<Region>{GetRegion(num, isFirstHaplotype, useSNV)});
     }
 
+    private IEnumerable<List<Region>> CreateHaplotype(bool isFirstHaplotype, bool isFemale, bool autosomesOnly = false, bool useSNV = false)
+    {
+        var chrs = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
+        if (!autosomesOnly)
+        {
+            var sexChr = ChrSex.Select(x => x.Key).Where(x =>
+                isFirstHaplotype | isFemale ? ChrSex[x] == SexEnum.Female : ChrSex[x] == SexEnum.Male);
+            chrs = chrs.Concat(sexChr);
+        }
+        return chrs.Select(num => new List<Region>{GetRegion(num, isFirstHaplotype, useSNV)});
+    }
+
+    private IEnumerable<List<Region>> CreateSegmentedHaplotype(bool isFirstHaplotype, bool isFemale, bool autosomesOnly = false, bool useSNV = false)
+    {
+        var chrs = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
+        if (!autosomesOnly)
+        {
+            var sexChr = ChrSex.Select(x => x.Key).Where(x =>
+                isFirstHaplotype | isFemale ? ChrSex[x] == SexEnum.Female : ChrSex[x] == SexEnum.Male);
+            chrs = chrs.Concat(sexChr);
+        }
+        return chrs.Select(num => GetRegions(num, isFirstHaplotype, useSNV));
+    }
+
     private List<Region> GetRegions(string chrNo, bool isFirstHaplotype, bool isFemale, bool useSNV = false)
     {
         var pArm = new PArm(0, PCentromeres[chrNo].start, chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
         var centromere = new Centromere(PCentromeres[chrNo].start, QCentromeres[chrNo].end, chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
-        // var pcentromere = new Region(PCentromeres[chrNo].start, PCentromeres[chrNo].end, chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
-        // var qcentromere = new Region(QCentromeres[chrNo].start, QCentromeres[chrNo].end, chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
         var qArm = new QArm(QCentromeres[chrNo].end, ChrLengths[chrNo], chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
         return new List<Region> {pArm, centromere, qArm};
-    }
-    private IEnumerable<List<Region>> CreateSegmentedHaplotype(bool isFirstHaplotype, bool isFemale, bool useSNV = false)
-    {
-        var nonGender = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
-        var sexChr = ChrSex.Select(x => x.Key).Where(x =>
-            isFirstHaplotype | isFemale ? ChrSex[x] == SexEnum.Female : ChrSex[x] == SexEnum.Male);
-        var all = nonGender.Concat(sexChr);
-        return all.Select(num => GetRegions(num, isFirstHaplotype, useSNV));
     }
 }
