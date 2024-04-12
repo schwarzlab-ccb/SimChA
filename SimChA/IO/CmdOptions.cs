@@ -48,6 +48,9 @@ public class CmdOptions
     [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
     public bool AutosomesOnly { get; set; }
 
+    [Option("target-params", Required = false, Default = "./target_params.json", HelpText = "A json file with the target set of parameters for parameter inference.")]
+    public string TargetParams { get; set; }
+
     public ExecMode ExecMode
     {
         get

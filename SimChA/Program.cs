@@ -53,6 +53,7 @@ else if (execMode == ExecMode.RunOptimization)
     }
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
+    SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
     Console.WriteLine("Generating Simulated Data");

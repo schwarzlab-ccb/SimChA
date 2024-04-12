@@ -24,13 +24,13 @@ public class Optimizer
     protected List<Sample> ObservedSamples { get; }
     protected List<Sample> SimulatedSamples { get; set; }
     
-    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData, bool includeSexChromosomes)
+    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, SimParams targetParams = null)
     {
         SimParams = simParams;
         Rnd = rnd;
         Repeats = repeats;
         GenRef = genRef;
-        ObservedSamples = observedData;
+        ObservedSamples = GenerateSimulatedData(targetParams);//observedData;
         (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
