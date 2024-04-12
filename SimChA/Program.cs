@@ -59,7 +59,7 @@ else if (execMode == ExecMode.RunOptimization)
     Console.WriteLine("Generating Simulated Data");
     if (simParams.OptimizationParams.Mode == "Events")
     {
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes);
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, targetParams);
         if (simParams.OptimizationParams.UseABC)
         {
             var dist = optimizer.GetABCDistance();
