@@ -6,13 +6,13 @@ namespace SimChA.EventData;
 
 public record TailEventData : ContigEventData
 {
-    public long Fraction { get; }
+    public long Length { get; }
     public bool Direction { get; }
     
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
-        Fraction = Sampling.GetPos(rnd, contigLen);
+        Length = Sampling.GetPos(rnd, contigLen);
         Direction = rnd.CoinFlip();
     }
 
@@ -20,18 +20,18 @@ public record TailEventData : ContigEventData
     {
         if (EventType == CNEventType.TailDeletion)
         {
-            kar.ApplyTailDeletion(ContigId, Fraction, Direction);
+            kar.ApplyTailDeletion(ContigId, Length, Direction);
         }
         else if (EventType == CNEventType.TailDuplication)
         {
-            kar.ApplyTailDuplication(ContigId, Fraction, Direction);
+            kar.ApplyTailDuplication(ContigId, Length, Direction);
         }
         else if (EventType == CNEventType.BreakageFusionBridge)
         {
-            kar.ApplyBFB(ContigId, Fraction, Direction);
+            kar.ApplyBFB(ContigId, Length, Direction);
         }
     }
     
     public override string ToString()
-        => $"contig:{ContigId};fraction:{Fraction};dir:{Direction}";
+        => $"contig:{ContigId};length:{Length};dir:{Direction}";
 }
