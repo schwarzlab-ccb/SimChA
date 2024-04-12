@@ -20,6 +20,8 @@ public class Optimizer
     private bool IncludeSexChromosomes { get; }
     private bool BreakpointsPerChrom {get;}
     private long BPBinSize {get;}
+    protected List<Sample> ObservedSamples { get; }
+    protected List<Sample> SimulatedSamples { get; set; }
     
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData, bool includeSexChromosomes)
     {
@@ -27,6 +29,7 @@ public class Optimizer
         Rnd = rnd;
         Repeats = repeats;
         GenRef = genRef;
+        ObservedSamples = observedData;
         ObservedCNPs = GetCNPs(observedData);
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
@@ -56,7 +59,8 @@ public class Optimizer
 
     public double GetABCDistance()
     {
-        var simCNPs = GenerateCNPs(SimParams);
+        var samples = GenerateSimulatedData(SimParams);
+        var simCNPs = GetCNPs(samples);
         return GetScore(simCNPs);
     }
 
@@ -84,12 +88,6 @@ public class Optimizer
         return totalDist.Sum();
     }
 
-    private Dictionary<string, List<CopyNumber>> GenerateCNPs(SimParams currentParams)
-    {
-        var samples = GenerateSimulatedData(currentParams);
-        IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
-        return GetCNPs(samples);
-    }
     private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
         => Math.Min(0, -OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature));
 
@@ -99,7 +97,8 @@ public class Optimizer
     private SimParams FindBestParams(FileIO files)
     {
         var currentParams = SimParams;
-        var currentCNPs = GenerateCNPs(currentParams);
+        var currentSamples = GenerateSimulatedData(currentParams);
+        var currentCNPs = GetCNPs(currentSamples);
         var currentScore = GetScore(currentCNPs);
         var bestParams = currentParams;
         var bestScore = currentScore;
@@ -109,7 +108,8 @@ public class Optimizer
         {
             //Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams, stepSize);
-            var proposedCNPs = GenerateCNPs(proposedParams);
+            var proposedSamples = GenerateSimulatedData(proposedParams);
+            var proposedCNPs = GetCNPs(proposedSamples);
             var proposedScore = GetScore(proposedCNPs);
             var prob = GetAcceptanceProbability(currentScore, proposedScore);
             if (prob >= Math.Log(Rnd.NextDouble()))
@@ -139,7 +139,8 @@ public class Optimizer
     private SimParams DecayBestParams(FileIO files)
     {
         var currentParams = SimParams;
-        var currentCNPs = GenerateCNPs(currentParams);
+        var currentSamples = GenerateSimulatedData(currentParams);
+        var currentCNPs = GetCNPs(currentSamples);
         var currentScore = GetScore(currentCNPs);
         var bestParams = currentParams;
         var bestScore = currentScore;
@@ -151,13 +152,15 @@ public class Optimizer
         {
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams, stepSize);
-            var proposedCNPs = GenerateCNPs(proposedParams);
+            var proposedSamples = GenerateSimulatedData(proposedParams);
+            var proposedCNPs = GetCNPs(proposedSamples);
             var proposedScore = GetScore(proposedCNPs);
             var prob = GetAcceptanceProbability(currentScore, proposedScore);
             if (Rnd.NextDouble() < prob)
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
+                currentSamples = proposedSamples;
             }
             if (proposedScore < bestScore)
             {
@@ -189,7 +192,8 @@ public class Optimizer
     private SimParams AnnealingBestParams(FileIO files)
     {
         var currentParams = SimParams;
-        var currentCNPs = GenerateCNPs(currentParams);
+        var currentSamples = GenerateSimulatedData(currentParams);
+        var currentCNPs = GetCNPs(currentSamples);
         var currentScore = GetScore(currentCNPs);
         var bestParams = currentParams;
         var bestScore = currentScore;
@@ -211,7 +215,8 @@ public class Optimizer
             }
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams, stepSize);
-            var proposedCNPs = GenerateCNPs(proposedParams);
+            var proposedSamples = GenerateSimulatedData(proposedParams);
+            var proposedCNPs = GetCNPs(proposedSamples);
             var proposedScore = GetScore(proposedCNPs);
             var prob = GetAcceptanceProbability(currentScore, proposedScore, temperature);
             if (Rnd.NextDouble() < prob)
@@ -505,7 +510,6 @@ public class Optimizer
         //var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, IncludeSexChromosomes);
         var simValues = SummaryFeatures.GetBreakpoints(simCNPs, IncludeSexChromosomes);
-        //var histMax = IncludeSexChromosomes ? 24 : 22;
         // Limit the maximum number of breakpoints to 100.
         var histMax = 100;
         var histMin = 0;
