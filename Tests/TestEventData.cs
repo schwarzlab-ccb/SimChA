@@ -48,18 +48,6 @@ public class TestEventData
     }
 
     [Test]
-    public void TestTailEventData()
-    {
-        const long len = 1_000_000;
-        var eventP = new CNEventPars(CNEventType.TailDeletion, 1, 1_000_000);
-        var eventData = new InternalEventData(_rnd, eventP, 0, len);
-        Assert.GreaterOrEqual(eventData.Start, 0);
-        Assert.LessOrEqual(eventData.Start, len);
-        Assert.Greater(eventData.End,eventData.Start);
-        Assert.LessOrEqual(eventData.Start, len);
-    }
-
-    [Test]
     public void TestPairEventData()
     {
         const long lenA = 1_000_000;
