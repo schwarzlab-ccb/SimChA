@@ -142,6 +142,7 @@ public class TestSummaryFeatures
         // Gain on chrX
         karXX.ApplyInternalDuplication(22, 1000, 2000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
+        // Let there be 3 events
         var eventCounts = new Dictionary<string, int> {{"sample_1", 3}};
         // Autosomes only
         var breakpoints = SummaryFeatures.GetBreakpoints(cnps, eventCounts, false);

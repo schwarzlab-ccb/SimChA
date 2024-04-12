@@ -15,9 +15,9 @@ def generate_cohort(path, param_file, genes_path, out_path, repeats, all_chromom
     subprocess.run([cmd], shell=True)
     return
    
-def run_events_optimization(path, param_file, genes_path, cohort_path, repeats, all_chromosomes, out_dir):
+def run_events_optimization(path, param_file, genes_path, cohort_path, repeats, all_chromosomes, out_dir, target_params):
     # Run command for SimChA
-    cmd = f"dotnet run --no-build --project {path} -C {param_file} -R {repeats} -O {out_dir} --optimization -D {genes_path} -P {cohort_path}"
+    cmd = f"dotnet run --no-build --project {path} -C {param_file} -R {repeats} -O {out_dir} --optimization -D {genes_path} -P {cohort_path} --target-params {target_params}"
     if not all_chromosomes:
         cmd += " --autosomes-only"
     subprocess.run([cmd], shell=True)
@@ -58,6 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("-C", "--config_file", type=str, default="simple_params.json", help="Parameter file used by SimChA.")
     parser.add_argument("--all_chromosomes", action="store_true", help="Flag to run SimChA with all chromosomes.")
     parser.add_argument("--fitness", action="store_true", help="Flag to run the fitness optimization.")
+    parser.add_argument("--target_params", type=str, default="target_params.json", help="Target parameters config file")
     args = parser.parse_args()
 
     genes_path = args.genes_path
@@ -82,8 +83,8 @@ if __name__ == "__main__":
         if args.test:
             cohort_dir_path = "out/ground_truth"
             # Generate the simulated data
-            generate_cohort(args.path, param_file, genes_path, cohort_dir_path, args.repeats, args.all_chromosomes)
+            generate_cohort(args.path, args.target_params, genes_path, cohort_dir_path, args.repeats, args.all_chromosomes)
             cohort_path = "out/ground_truth/copynumbers.tsv"
         else:
             cohort_path = args.data_path
-        run_events_optimization(args.path, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes, out_dir)
+        run_events_optimization(args.path, param_file, genes_path, cohort_path, args.repeats, args.all_chromosomes, out_dir, args.target_params)
