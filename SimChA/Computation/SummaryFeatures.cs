@@ -245,7 +245,7 @@ public static class SummaryFeatures
             }
             else
             {
-                throw new Exception("Error in SummaryFeatures - GetBreakpoints. Event count is zero.");
+                count = 0;
             }
             breakpoints.Add(count);
         }
