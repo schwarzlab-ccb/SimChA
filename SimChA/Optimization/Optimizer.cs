@@ -17,7 +17,6 @@ public class Optimizer
     protected readonly OptimizationParams OptimizationParams;
     protected Dictionary<string, int> ObservedEventCounts { get; }
     protected Dictionary<string, bool> IsFemaleObservedDict {get; set;}
-    protected Dictionary<string, bool> IsFemaleSimulatedDict;
     private bool IncludeSexChromosomes { get; }
     private bool BreakpointsPerChrom {get;}
     private long BPBinSize {get;}
@@ -32,7 +31,7 @@ public class Optimizer
         GenRef = genRef;
         ObservedSamples = GenerateSimulatedData(targetParams);//observedData;
         (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
-        IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
+        IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
         IncludeSexChromosomes = includeSexChromosomes;
         BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
@@ -68,6 +67,7 @@ public class Optimizer
     public double GetScore(List<Sample> samples)
     {
         var (cnps, eventCounts) = GetInfo(samples);
+        var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         var totalDist = new List<double>();
         if (OptimizationParams.UseSegLength)
         {
@@ -76,7 +76,7 @@ public class Optimizer
         }
         if (OptimizationParams.UsePloidy)
         {
-            var ploidyDist = GetPloidyDistance(cnps);
+            var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
             totalDist.Add(ploidyDist*ploidyDist);
         }
         if (OptimizationParams.UseBreakpoints)
@@ -475,7 +475,7 @@ public class Optimizer
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
-    protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, bool> simFemaleDict)
     {
         double cutoff = -1.0;
         if (OptimizationParams.UsePloidy)
@@ -483,7 +483,7 @@ public class Optimizer
             cutoff = OptimizationParams.PloidyCutoff;
         }
         var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes, cutoff);
-        var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, IsFemaleSimulatedDict, IncludeSexChromosomes, cutoff);
+        var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, simFemaleDict, IncludeSexChromosomes, cutoff);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
         var histBins = 100;

@@ -203,7 +203,7 @@ public class FitnessOptimizer : Optimizer
         }
         if (OptimizationParams.UsePloidy)
         {
-            var ploidyDist = GetPloidyDistance(cnps);
+            var ploidyDist = GetPloidyDistance(cnps, new Dictionary<string, bool> ());
             totalDist.Add(ploidyDist*ploidyDist);
         }
 
