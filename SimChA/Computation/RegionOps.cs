@@ -103,6 +103,10 @@ public static class RegionOps
 
     public static List<Region> DeleteArm(List<Region> regions, int index, bool pArm, bool includeCentromere)
     {
+        if (index < 0 || index >= regions.Count)
+        {
+            return new List<Region> { };
+        }
         if (pArm)
         {
             if (includeCentromere)
@@ -130,6 +134,10 @@ public static class RegionOps
     
     public static List<Region> GetArm(List<Region> regions, int index, bool pArm, bool includeCentromere)
     {
+        if (index < 0 || index >= regions.Count)
+        {
+            return new List<Region> { };
+        }
         if (pArm)
         {   
             return includeCentromere ? regions.GetRange(0, index + 1) : regions.GetRange(0, index);
