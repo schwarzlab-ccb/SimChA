@@ -276,6 +276,10 @@ public class Optimizer
 
     private SimParams GetNNewParams(SimParams currentParams, double stepSize)
     {
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with { Seed = -1 };
+        }
         var n = OptimizationParams.ParamVariationMode;
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var newProbs = events.Select(e => e.Prob).ToList();
@@ -356,6 +360,10 @@ public class Optimizer
     
     private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
     {
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with { Seed = -1 };
+        }
         var events = currentParams.Signatures["CNs"].Events.Where(e => e.Prob > 0).ToList();
         var targetWeight = events.Sum(e => e.Prob);
         var newProbs = new List<double>();
