@@ -15,6 +15,7 @@ public class Optimizer
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
     protected readonly OptimizationParams OptimizationParams;
+    protected Dictionary<string, int> ObservedEventCounts { get; }
     protected Dictionary<string, bool> IsFemaleObservedDict {get; set;}
     protected Dictionary<string, bool> IsFemaleSimulatedDict;
     private bool IncludeSexChromosomes { get; }
@@ -30,7 +31,7 @@ public class Optimizer
         Repeats = repeats;
         GenRef = genRef;
         ObservedSamples = observedData;
-        ObservedCNPs = GetCNPs(observedData);
+        (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
         IsFemaleObservedDict = observedData.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
         IncludeSexChromosomes = includeSexChromosomes;
@@ -60,12 +61,13 @@ public class Optimizer
     public double GetABCDistance()
     {
         var samples = GenerateSimulatedData(SimParams);
-        var simCNPs = GetCNPs(samples);
-        return GetScore(simCNPs);
+        var (simCNPs, eventCount) = GetInfo(samples);
+        return GetScore(samples);
     }
 
-    public double GetScore(Dictionary<string, List<CopyNumber>> cnps)
+    public double GetScore(List<Sample> samples)
     {
+        var (cnps, eventCounts) = GetInfo(samples);
         var totalDist = new List<double>();
         if (OptimizationParams.UseSegLength)
         {
@@ -79,7 +81,7 @@ public class Optimizer
         }
         if (OptimizationParams.UseBreakpoints)
         {
-            var bpDist = GetBreakpointDistance(cnps);
+            var bpDist = GetBreakpointDistance(cnps, eventCounts);
             totalDist.Add(bpDist*bpDist);
         }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
@@ -98,8 +100,7 @@ public class Optimizer
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
-        var currentCNPs = GetCNPs(currentSamples);
-        var currentScore = GetScore(currentCNPs);
+        var currentScore = GetScore(currentSamples);
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
@@ -109,8 +110,7 @@ public class Optimizer
             //Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams, stepSize);
             var proposedSamples = GenerateSimulatedData(proposedParams);
-            var proposedCNPs = GetCNPs(proposedSamples);
-            var proposedScore = GetScore(proposedCNPs);
+            var proposedScore = GetScore(proposedSamples);
             var prob = GetAcceptanceProbability(currentScore, proposedScore);
             if (prob >= Math.Log(Rnd.NextDouble()))
             {
@@ -140,8 +140,7 @@ public class Optimizer
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
-        var currentCNPs = GetCNPs(currentSamples);
-        var currentScore = GetScore(currentCNPs);
+        var currentScore = GetScore(currentSamples);
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
@@ -153,14 +152,12 @@ public class Optimizer
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams, stepSize);
             var proposedSamples = GenerateSimulatedData(proposedParams);
-            var proposedCNPs = GetCNPs(proposedSamples);
-            var proposedScore = GetScore(proposedCNPs);
+            var proposedScore = GetScore(proposedSamples);
             var prob = GetAcceptanceProbability(currentScore, proposedScore);
             if (Rnd.NextDouble() < prob)
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
-                currentSamples = proposedSamples;
             }
             if (proposedScore < bestScore)
             {
@@ -193,8 +190,7 @@ public class Optimizer
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
-        var currentCNPs = GetCNPs(currentSamples);
-        var currentScore = GetScore(currentCNPs);
+        var currentScore = GetScore(currentSamples);
         var bestParams = currentParams;
         var bestScore = currentScore;
         var counter = 0;
@@ -216,8 +212,7 @@ public class Optimizer
             Console.WriteLine($"Iteration {i+1} of {OptimizationParams.NumSamplesTotal}");
             var proposedParams = GetProposalParams(currentParams, stepSize);
             var proposedSamples = GenerateSimulatedData(proposedParams);
-            var proposedCNPs = GetCNPs(proposedSamples);
-            var proposedScore = GetScore(proposedCNPs);
+            var proposedScore = GetScore(proposedSamples);
             var prob = GetAcceptanceProbability(currentScore, proposedScore, temperature);
             if (Rnd.NextDouble() < prob)
             {
@@ -504,12 +499,12 @@ public class Optimizer
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    protected double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    protected double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, int> simEventCounts)
     {
         //var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         //var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
-        var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, IncludeSexChromosomes);
-        var simValues = SummaryFeatures.GetBreakpoints(simCNPs, IncludeSexChromosomes);
+        var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, ObservedEventCounts, IncludeSexChromosomes);
+        var simValues = SummaryFeatures.GetBreakpoints(simCNPs, simEventCounts, IncludeSexChromosomes);
         // Limit the maximum number of breakpoints to 100.
         var histMax = 100;
         var histMin = 0;
@@ -531,17 +526,19 @@ public class Optimizer
         var simHist  = new Histogram(sim, bins, min, max);
         return StatisticMeasures.WassersteinDistance(dataHist, simHist);
     }
-    protected Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
+    protected (Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, int> eventCounts) GetInfo(List<Sample> samples)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
+        var eventCounts = new Dictionary<string, int>();
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
                 var cnp = CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList();
                 cnps[sample.SampleId] = cnp;
+                eventCounts[sample.SampleId] = sample.EventDescs[clone.CloneId].Count;
             }
         }
-        return cnps;
+        return (cnps, eventCounts);
     }
 }

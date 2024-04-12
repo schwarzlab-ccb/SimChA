@@ -27,14 +27,14 @@ public class FitnessOptimizer : Optimizer
     public override SimParams Optimize(FileIO files)
         => FindBestParams(files);
 
-    private double GetScore(List<Sample> samples)
+    /*private double GetScore(List<Sample> samples)
     {
         var cnps = GetCNPs(samples);
         var binnedCNPs = Binner.GetBinnedCNProfiles(samples);
         IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
         var distance = GetFitnessDistance(cnps, binnedCNPs);
         return distance;
-    }
+    }*/
 
     private SimParams FindBestParams(FileIO files)
     {
@@ -193,7 +193,7 @@ public class FitnessOptimizer : Optimizer
         }
         if (OptimizationParams.UseBreakpoints)
         {
-            var bpDist = GetBreakpointDistance(cnps);
+            var bpDist = GetBreakpointDistance(cnps, new Dictionary<string, int>());
             totalDist.Add(bpDist*bpDist);
         }
         if (OptimizationParams.UseHomozygousDeletion)

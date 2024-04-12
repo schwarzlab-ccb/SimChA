@@ -119,12 +119,14 @@ public class TestSummaryFeatures
     public void TestDefaultGetBreakpoints()
     {
         var cnps = GetCNPs(new List<Karyotype> { new(_genRef, true) });
+        // Let there be one event to stop division by 0
+        var eventCounts = new Dictionary<string, int> {{"sample_1", 1}};
         // Autosomes only
-        var breakpoints = SummaryFeatures.GetBreakpoints(cnps, false);
+        var breakpoints = SummaryFeatures.GetBreakpoints(cnps, eventCounts, false);
         Assert.AreEqual(1, breakpoints.Count);
         Assert.AreEqual(0, breakpoints[0]);
         // Including sex chromosomes
-        breakpoints = SummaryFeatures.GetBreakpoints(cnps, true);
+        breakpoints = SummaryFeatures.GetBreakpoints(cnps, eventCounts, true);
         Assert.AreEqual(1, breakpoints.Count);
         Assert.AreEqual(0, breakpoints[0]);
     }
@@ -140,14 +142,15 @@ public class TestSummaryFeatures
         // Gain on chrX
         karXX.ApplyInternalDuplication(22, 1000, 2000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var eventCounts = new Dictionary<string, int> {{"sample_1", 3}};
         // Autosomes only
-        var breakpoints = SummaryFeatures.GetBreakpoints(cnps, false);
+        var breakpoints = SummaryFeatures.GetBreakpoints(cnps, eventCounts, false);
         Assert.AreEqual(1, breakpoints.Count);
-        Assert.AreEqual(3, breakpoints[0]);
+        Assert.AreEqual(1, breakpoints[0]);
         // Including sex chromosomes
-        breakpoints = SummaryFeatures.GetBreakpoints(cnps, true);
+        breakpoints = SummaryFeatures.GetBreakpoints(cnps, eventCounts, true);
         Assert.AreEqual(1, breakpoints.Count);
-        Assert.AreEqual(5, breakpoints[0]);
+        Assert.AreEqual(5.0/3.0, breakpoints[0]);
     }
 
     [Test]

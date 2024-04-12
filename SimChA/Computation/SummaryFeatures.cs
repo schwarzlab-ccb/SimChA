@@ -228,7 +228,7 @@ public static class SummaryFeatures
         return averages;
     }
 
-    public static List<double> GetBreakpoints(Dictionary<string, List<CopyNumber>> cnProfiles, bool includeSexChromosomes)
+    public static List<double> GetBreakpoints(Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, int> eventCount, bool includeSexChromosomes)
     {
         var breakpoints = new List<double>();
         foreach (var cnProfile in cnProfiles)
@@ -238,8 +238,16 @@ public static class SummaryFeatures
             {
                 cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
             }
-            var allBPs = cnList.Count(cn => cn.Segment.End != cn.Segment.Length);
-            breakpoints.Add(allBPs);
+            double count = cnList.Count(cn => cn.Segment.End != cn.Segment.Length);
+            if (eventCount[cnProfile.Key] > 0)
+            {
+                count /= eventCount[cnProfile.Key];
+            }
+            else
+            {
+                throw new Exception("Error in SummaryFeatures - GetBreakpoints. Event count is zero.");
+            }
+            breakpoints.Add(count);
         }
         return breakpoints;
     }
