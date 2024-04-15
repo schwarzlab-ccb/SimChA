@@ -130,6 +130,9 @@ public class TestKaryotype
         _kar.ApplyTailDuplication(0, TEST_FRAC, true);
         Assert.AreEqual(len, _kar.ContigLen(0));
         Assert.AreEqual(TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
+        _kar.ApplyTailDuplication(0, 2*TEST_FRAC, true);
+        Assert.AreEqual(len, _kar.ContigLen(0));
+        Assert.AreEqual(2*TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
     }
 
     [Test]
