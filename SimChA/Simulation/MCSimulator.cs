@@ -9,7 +9,6 @@ public class MCSimulator : Simulator
 {
     private FitnessParams Fitness { get; }
     private MCParams McParams { get; }
-    private double TotalEventWeight {get; set;}
     public MCSimulator(
         Random rnd,
         GenRef genRef,
@@ -26,10 +25,6 @@ public class MCSimulator : Simulator
         {
             throw new Exception("No events to sample from.");
         }
-        foreach( var e in sample.EventPars)
-        {
-            TotalEventWeight += e.Prob;
-        }
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
@@ -44,6 +39,10 @@ public class MCSimulator : Simulator
         foreach (var eventData in events)
         {
             eventData.ApplyEvent(kar);
+            if (eventData.CNEventPars.Size > 0)
+            {
+                eventPotentialTotal += Math.Log(eventData.GetProb());
+            }
             eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
         }
         double dFit = kar.UpdateFitness(GenRef, Fitness) - targetFit;
@@ -56,6 +55,16 @@ public class MCSimulator : Simulator
 
         return (potential, accept);
     }
+    public double GetFitness(Karyotype kar, List<BaseEventData> events)
+    {
+        // Probability of picking each event and their corresponding signature
+        foreach (var eventData in events)
+        {
+            eventData.ApplyEvent(kar);
+        }
+        return kar.UpdateFitness(GenRef, Fitness);
+    }
+
     private List<BaseEventData> GetNewProposal(Sample sample, Karyotype kar, List<BaseEventData> oldEvents)
     {
         var proposedEvents = oldEvents.ToList();
@@ -107,6 +116,7 @@ public class MCSimulator : Simulator
                 }
             }
         }
+        double fit = GetFitness(new Karyotype(kar), currentEvents);
         return currentEvents;
     }
     private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
