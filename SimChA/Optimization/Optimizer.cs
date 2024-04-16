@@ -9,44 +9,62 @@ using System;
 
 public class Optimizer
 {   
-    protected Dictionary<string, List<CopyNumber>> ObservedCNPs { get; }
+    protected Dictionary<string, List<CopyNumber>> ObservedCNPs { get; set;}
     protected GenRef GenRef { get; }
     protected readonly Random Rnd;
     protected readonly int Repeats;
     protected readonly SimParams SimParams;
-    protected readonly OptimizationParams OptimizationParams;
-    protected Dictionary<string, int> ObservedEventCounts { get; }
+    protected OptimizationParams OptimizationParams {get; set;}
+    protected Dictionary<string, int> ObservedEventCounts { get; set;}
     protected Dictionary<string, bool> IsFemaleObservedDict {get; set;}
     private bool IncludeSexChromosomes { get; }
-    private bool BreakpointsPerChrom {get;}
-    private long BPBinSize {get;}
-    protected List<Sample> ObservedSamples { get; }
+    private bool BreakpointsPerChrom {get; set;}
+    private long BPBinSize {get; set;}
+    protected List<Sample> ObservedSamples { get; set;}
     protected List<Sample> SimulatedSamples { get; set; }
-    
-    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, SimParams targetParams = null)
+    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, bool includeSexChromosomes)
     {
         SimParams = simParams;
         Rnd = rnd;
         Repeats = repeats;
         GenRef = genRef;
-        ObservedSamples = targetParams == null ? observedData : GenerateSimulatedData(targetParams);
-        (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
-        IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
-        OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
-        IncludeSexChromosomes = includeSexChromosomes;
-        BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
-        BPBinSize = OptimizationParams.BreakpointsBinSize;
         if (SimParams.Signatures is null || SimParams.Signatures.Count == 0)
         {
             throw new Exception("Error in Optimizer. No signatures were provided.");
         }
+        IncludeSexChromosomes = includeSexChromosomes;
+    }
 
+    public void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
+    {
+        ObservedSamples = samples;
+        ObservedCNPs = GetCNPs(ObservedSamples);
+        ObservedEventCounts = eventCounts;
+        IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
+        OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
+        
+        BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
+        BPBinSize = OptimizationParams.BreakpointsBinSize;
         if (OptimizationParams.StepSize <= 0)
         {
             throw new Exception("Error in Optimizer. StepSize must be greater than 0.");
         }
     }
 
+    public void InitializeObservations(SimParams targetParams)
+    {
+        ObservedSamples = GenerateSimulatedData(targetParams);
+        (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
+        IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
+        OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
+        
+        BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
+        BPBinSize = OptimizationParams.BreakpointsBinSize;
+        if (OptimizationParams.StepSize <= 0)
+        {
+            throw new Exception("Error in Optimizer. StepSize must be greater than 0.");
+        }
+    }
     public virtual SimParams Optimize(FileIO files)
         => OptimizationParams.OptimizationMethod switch
             {
@@ -548,5 +566,19 @@ public class Optimizer
             }
         }
         return (cnps, eventCounts);
+    }
+
+    protected Dictionary<string, List<CopyNumber>> GetCNPs(List<Sample> samples)
+    {
+        var cnps = new Dictionary<string, List<CopyNumber>>();
+        foreach (var sample in samples)
+        {
+            foreach (var clone in sample.Clones)
+            {
+                var cnp = CopyNumbers.CalcCopyNumbers(GenRef, sample.Kars[clone.CloneId], sample.Kars[clone.CloneId].SexXX).ToList();
+                cnps[sample.SampleId] = cnp;
+            }
+        }
+        return cnps;
     }
 }

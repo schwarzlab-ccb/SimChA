@@ -277,7 +277,7 @@ public static class Parsers
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
             double totalFitness = 1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
             // If the file includes data on how many chromosomal events the sample underwent
-            int eventCount = lineSplit.Count > 9 ? int.Parse(lineSplit[8]) : -1;
+            int eventCount = lineSplit.Count >= 9 ? int.Parse(lineSplit[8]) : -1;
             output.Add((totalFitness, eventCount));
         }
         return output;
@@ -286,7 +286,7 @@ public static class Parsers
     public static List<(double, double, double, int)> ParseCloneComponents(TextReader fitnessStream)
     {
         var output = new List<(double, double, double, int)>();
-        string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
+        string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Error in ParseCloneComponents: Fitness file is empty.");
         // Continue past the header
         while (fitnessStream.ReadLine() is { } line)
         {
@@ -297,8 +297,30 @@ public static class Parsers
             double tsgogTerm = og + tsg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat);
             // If the file includes data on how many chromosomal events the sample underwent
-            int eventCount = lineSplit.Count > 9 ? int.Parse(lineSplit[8]) : -1;
+            int eventCount = lineSplit.Count >= 9 ? int.Parse(lineSplit[8]) : -1;
             output.Add((stressTerm, tsgogTerm, essTerm, eventCount));
+        }
+        return output;
+    }
+
+    public static Dictionary<string, int> ParseEventCounts(TextReader sampleStream)
+    {
+        var output = new Dictionary<string, int>();
+        string? firstLine = sampleStream.ReadLine() ?? throw new Exception("Error in ParseEventCounts: Sample file is empty.");
+        // Continue past the header
+        while (sampleStream.ReadLine() is { } line)
+        {
+            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            string sampleName = lineSplit[0];
+            if (lineSplit.Count >= 9)
+            {
+                int eventCount = int.Parse(lineSplit[8]);
+                output.Add(sampleName, eventCount);
+            }
+            else
+            {
+                throw new Exception("Error in ParseEventCounts: Sample file does not contain event count column.");
+            }
         }
         return output;
     }

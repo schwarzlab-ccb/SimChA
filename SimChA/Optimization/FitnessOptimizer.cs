@@ -16,8 +16,8 @@ public class FitnessOptimizer : Optimizer
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, string binnedSamples, List<(double, double, double, int)> cloneComponents) 
-        : base(simParams, rnd, repeats, genRef, observedData, includeSexChromosomes)
+        GenRef genRef, bool includeSexChromosomes, string binnedSamples, List<(double, double, double, int)> cloneComponents) 
+        : base(simParams, rnd, repeats, genRef, includeSexChromosomes)
     {
         CloneComponents = cloneComponents;
         Binner = new Binner(GenRef);

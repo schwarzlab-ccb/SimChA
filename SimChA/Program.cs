@@ -53,13 +53,23 @@ else if (execMode == ExecMode.RunOptimization)
     }
     Console.WriteLine("Optimization model -------- ");
     Console.WriteLine("Reading observed data:");
-    SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+    var eventCounts = FileIO.ReadEventCounts(options.BootstrapFile);
     var observedSamples = Simulator.SamplesFromProfiles(profiles);
     Console.WriteLine("Generating Simulated Data");
     if (simParams.OptimizationParams.Mode == "Events")
     {
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, targetParams);
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes);
+        if (options.TargetParams != null)
+        {
+            SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
+            optimizer.InitializeObservations(targetParams);
+        }
+        else
+        {
+            optimizer.InitializeObservations(observedSamples, eventCounts);
+        }
+        
         if (simParams.OptimizationParams.UseABC)
         {
             var dist = optimizer.GetABCDistance();
@@ -83,7 +93,7 @@ else if (execMode == ExecMode.RunOptimization)
             throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
         }
         var cloneComponents = FileIO.ReadCloneComponents(options.BootstrapFile);
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, options.BinnedSamples, cloneComponents);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, options.BinnedSamples, cloneComponents);
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }

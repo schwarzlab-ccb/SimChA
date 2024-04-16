@@ -413,6 +413,24 @@ public class FileIO
         }
     }
 
+    public static Dictionary<string, int> ReadEventCounts(string filePath)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var fitnessFile = new StreamReader(fileFullPath);
+            return Parsers.ParseEventCounts(fitnessFile);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
     public static Dictionary<string, List<CopyNumber>> ReadProfiles(string cnaProfile)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
