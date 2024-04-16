@@ -51,22 +51,23 @@ else if (execMode == ExecMode.RunOptimization)
     {
         throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
     }
-    Console.WriteLine("Optimization model -------- ");
-    Console.WriteLine("Reading observed data:");
-    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-    var eventCounts = FileIO.ReadEventCounts(options.BootstrapFile);
-    var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    Console.WriteLine("Generating Simulated Data");
+    
     if (simParams.OptimizationParams.Mode == "Events")
     {
+        Console.WriteLine("Event Optimization Mode -------- ");
         var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes);
         if (options.TargetParams != null)
         {
+            Console.WriteLine("Generating Simulated Data");
             SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
             optimizer.InitializeObservations(targetParams);
         }
         else
         {
+            Console.WriteLine("Reading observed data:");
+            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+            var eventCounts = FileIO.ReadEventCounts(options.BootstrapFile);
+            var observedSamples = Simulator.SamplesFromProfiles(profiles);
             optimizer.InitializeObservations(observedSamples, eventCounts);
         }
         
@@ -84,6 +85,7 @@ else if (execMode == ExecMode.RunOptimization)
     }
     else if (simParams.OptimizationParams.Mode == "Fitness")
     {
+        Console.WriteLine("Fitness Optimization Mode -------- ");
         if (options.BootstrapFile == "")
         {
             throw new Exception("Error: No bootstrap file provided. Cannot perform fitness optimization.");
