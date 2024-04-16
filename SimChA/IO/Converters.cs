@@ -72,8 +72,12 @@ public static class Converters
         double[] sigProbs = selectedSigs.Select(s => s.Value.Prob).ToArray();
         for (int i = 0; i < repeats; i++)
         {
-            double sampledDistance = Sampling.SampleDist(rnd, distribution);
             var (fitnessTarget, mutCount) = clonesList[rnd.Next(clonesList.Count)];
+            if (mutCount < 0)
+            {
+                double sampledDistance = Sampling.SampleDist(rnd, distribution);
+                mutCount = (int) Math.Round(meanDist * sampledDistance);
+            }
             var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
