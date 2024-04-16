@@ -72,7 +72,7 @@ else if (execMode == ExecMode.RunOptimization)
         }
         else 
         {
-            throw new Exception("Error: No target parameters (synthetic target) or bootstrap file (observed target) provided. Cannot perform optimization without a target data set.");
+            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform optimization without a target data set.");
         }
         
         if (simParams.OptimizationParams.UseABC)
