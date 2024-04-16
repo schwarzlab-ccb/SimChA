@@ -286,7 +286,7 @@ public class FileIO
         }
     }
 
-    public static List<double> ReadFitnesses(string filePath, FitnessParams fitnessParams)
+    public static List<(double fitness, int eventCount)> ReadFitnesses(string filePath, FitnessParams fitnessParams)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
@@ -296,7 +296,7 @@ public class FileIO
         try
         {
             var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseFitnesses(fitnessFile, fitnessParams);
+            return Parsers.ParseClones(fitnessFile, fitnessParams);
         }
         catch (Exception e)
         {
@@ -304,7 +304,7 @@ public class FileIO
         }
     }
 
-    public static List<(double, double, double)> ReadFitnessComponents(string filePath)
+    public static List<(double, double, double, int)> ReadCloneComponents(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
@@ -314,7 +314,7 @@ public class FileIO
         try
         {
             var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseFitnessComponents(fitnessFile);
+            return Parsers.ParseCloneComponents(fitnessFile);
         }
         catch (Exception e)
         {

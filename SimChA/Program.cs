@@ -82,8 +82,8 @@ else if (execMode == ExecMode.RunOptimization)
         {
             throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
         }
-        var fitnessComponents = FileIO.ReadFitnessComponents(options.BootstrapFile);
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, options.BinnedSamples, fitnessComponents);
+        var cloneComponents = FileIO.ReadCloneComponents(options.BootstrapFile);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, includeSexChromosomes, options.BinnedSamples, cloneComponents);
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }
@@ -127,8 +127,8 @@ else
         }
         if (execMode == ExecMode.Bootstrap)
         {
-            var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, fitnessList);
+            var clonesList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, clonesList);
         }
         else
         {

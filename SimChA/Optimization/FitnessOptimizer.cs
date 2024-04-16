@@ -12,14 +12,14 @@ public class FitnessOptimizer : Optimizer
 {   
     private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
 
-    private readonly List<(double, double, double)> FitnessComponents;
+    private readonly List<(double, double, double, int)> CloneComponents;
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, string binnedSamples, List<(double, double, double)> fitnessComponents) 
+        GenRef genRef, List<Sample> observedData, bool includeSexChromosomes, string binnedSamples, List<(double, double, double, int)> cloneComponents) 
         : base(simParams, rnd, repeats, genRef, observedData, includeSexChromosomes)
     {
-        FitnessComponents = fitnessComponents;
+        CloneComponents = cloneComponents;
         Binner = new Binner(GenRef);
         ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
     }
@@ -144,17 +144,18 @@ public class FitnessOptimizer : Optimizer
                 1 => GetOneNewParam(currentParams, stepSize),
                 _ => throw new Exception("Error in FitnessOptimizer. ParamVariationMode is not valid.")
             };
-    private List<double> GetFitnessList(FitnessParams fParams)
+    private List<(double, int)> GetCloneList(FitnessParams fParams)
     {
-        var fitnessList = new List<double>();
-        foreach (var component in FitnessComponents)
+        var cloneList = new List<(double, int)>();
+        foreach (var component in CloneComponents)
         {
             double stressTerm = component.Item1 * fParams.Stress;
             double tsgogTerm  = component.Item2 * fParams.TsgOg;
             double essTerm    = component.Item3 * fParams.Essentiality;
-            fitnessList.Add(1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength);
+            double fitness = 1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
+            cloneList.Add((fitness, component.Item4));
         }
-        return fitnessList;
+        return cloneList;
     }
     private List<Sample> GenerateSimulatedData(SimParams currentParams)
     {
@@ -167,9 +168,9 @@ public class FitnessOptimizer : Optimizer
             throw new Exception("No MC parameters were provided.");
         }
         Validators.ValidateSignatures(currentParams.Signatures);
-        var fitnessList = GetFitnessList(currentParams.Fitness);
+        var cloneList = GetCloneList(currentParams.Fitness);
         var samples = Converters.MakeSamples(Rnd, Repeats, currentParams.EventCount, 
-            currentParams.EventDist, currentParams.Signatures, currentParams.Sex, fitnessList);
+            currentParams.EventDist, currentParams.Signatures, currentParams.Sex, cloneList);
         var simulator = new MCSimulator(Rnd, GenRef, currentParams.Fitness, currentParams.MCParams);
         foreach (var sample in samples)
         {

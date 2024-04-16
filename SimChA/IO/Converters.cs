@@ -64,7 +64,7 @@ public static class Converters
         return samples;
     }
 
-    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, Dictionary<string, Signature> sigs, SexEnum sex, List<double> fitnessList)
+    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, Dictionary<string, Signature> sigs, SexEnum sex, List<(double fitness, int eventCount)> clonesList)
     {
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Value.Prob > 0).ToDictionary(s => s.Key, s => s.Value);
@@ -73,8 +73,7 @@ public static class Converters
         for (int i = 0; i < repeats; i++)
         {
             double sampledDistance = Sampling.SampleDist(rnd, distribution);
-            int mutCount = (int) Math.Round(meanDist * sampledDistance);
-            double fitnessTarget = fitnessList[rnd.Next(fitnessList.Count)];
+            var (fitnessTarget, mutCount) = clonesList[rnd.Next(clonesList.Count)];
             var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);

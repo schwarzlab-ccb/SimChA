@@ -262,9 +262,9 @@ public static class Parsers
         return cloneFitness;
     }
 
-    public static List<double> ParseFitnesses(TextReader fitnessStream, FitnessParams fParams)
+    public static List<(double fitness, int eventCount)> ParseClones(TextReader fitnessStream, FitnessParams fParams)
     {
-        var fitnessList = new List<double>();
+        var output = new List<(double fitness, int eventCount)>();
         string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
         // Continue past the header
         while (fitnessStream.ReadLine() is { } line)
@@ -275,14 +275,16 @@ public static class Parsers
             var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
             double tsgogTerm = (og + tsg) * fParams.TsgOg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
-            fitnessList.Add(1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength);
+            double totalFitness = 1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
+            int eventCount = int.Parse(lineSplit[8]);
+            output.Add((totalFitness, eventCount));
         }
-        return fitnessList;
+        return output;
     }
 
-    public static List<(double, double, double)> ParseFitnessComponents(TextReader fitnessStream)
+    public static List<(double, double, double, int)> ParseCloneComponents(TextReader fitnessStream)
     {
-        var fitnessList = new List<(double, double, double)>();
+        var output = new List<(double, double, double, int)>();
         string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
         // Continue past the header
         while (fitnessStream.ReadLine() is { } line)
@@ -293,9 +295,10 @@ public static class Parsers
             var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
             double tsgogTerm = og + tsg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat);
-            fitnessList.Add((stressTerm, tsgogTerm, essTerm));
+            int eventCount = int.Parse(lineSplit[8]);
+            output.Add((stressTerm, tsgogTerm, essTerm, eventCount));
         }
-        return fitnessList;
+        return output;
     }
 
     public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ParseChromosomes(string text)

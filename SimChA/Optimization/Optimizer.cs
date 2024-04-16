@@ -29,7 +29,7 @@ public class Optimizer
         Rnd = rnd;
         Repeats = repeats;
         GenRef = genRef;
-        ObservedSamples = GenerateSimulatedData(targetParams);//observedData;
+        ObservedSamples = targetParams == null ? observedData : GenerateSimulatedData(targetParams);
         (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
         IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
