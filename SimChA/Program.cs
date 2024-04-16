@@ -62,13 +62,17 @@ else if (execMode == ExecMode.RunOptimization)
             SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
             optimizer.InitializeObservations(targetParams);
         }
-        else
+        else if (options.BootstrapFile != null)
         {
             Console.WriteLine("Reading observed data:");
             var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
             var eventCounts = FileIO.ReadEventCounts(options.BootstrapFile);
             var observedSamples = Simulator.SamplesFromProfiles(profiles);
             optimizer.InitializeObservations(observedSamples, eventCounts);
+        }
+        else 
+        {
+            throw new Exception("Error: No target parameters (synthetic target) or bootstrap file (observed target) provided. Cannot perform optimization without a target data set.");
         }
         
         if (simParams.OptimizationParams.UseABC)

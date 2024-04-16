@@ -36,7 +36,7 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
 
-    [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
+    [Option('B', "bootstrap", Required = false, Default = null, HelpText = "Bootstrap sampling of provided fitness from the input file.")]
     public string BootstrapFile { get; set; }
 
     [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
