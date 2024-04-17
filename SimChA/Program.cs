@@ -97,10 +97,22 @@ else if (execMode == ExecMode.RunOptimization)
             SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
             optimizer.InitializeObservations(targetParams);
         }
-        else if (options.BinnedSamples != "")
+        else if (options.BinnedSamples != "" && options.EventCounts != "" && options.CNProfiles != "")
         {
-            var cloneComponents = FileIO.ReadCloneComponents(options.BootstrapFile);
-            //optimizer.InitializeObservations(cloneComponents);
+            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+            var observedSamples = Simulator.SamplesFromProfiles(profiles);
+            var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+            foreach (var sample in observedSamples)
+            {
+                int counter = 1;
+                int total = sample.Clones.Count;
+                foreach (var clone in sample.Clones)
+                {
+                    Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
+                    sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
+                }
+            }
+            optimizer.InitializeObservations(observedSamples, eventCounts);
         }
         else
         {

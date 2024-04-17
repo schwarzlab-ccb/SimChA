@@ -12,7 +12,7 @@ public class FitnessOptimizer : Optimizer
 {   
     private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; set; }
 
-    private Dictionary<string, (double, double, double, int)> CloneComponents { get; set; }
+    private Dictionary<string, (double stress, double tsgog, double ess)> FitnessComponents { get; set; }
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
@@ -21,7 +21,7 @@ public class FitnessOptimizer : Optimizer
     {
         
         Binner = new Binner(GenRef);
-        CloneComponents = new Dictionary<string, (double, double, double, int)>();
+        FitnessComponents = new Dictionary<string, (double, double, double)>();
         ObservedCNPs1MB = new Dictionary<string, List<CopyNumber>>();
     }
     public override void InitializeObservations(SimParams targetParams)
@@ -30,13 +30,18 @@ public class FitnessOptimizer : Optimizer
         ObservedCNPs1MB = Binner.GetBinnedCNProfiles(ObservedSamples);
     }
 
-    public void InitializeObservations(List<Sample> samples,string binnedSamplesPath, Dictionary<string, (double, double, double, int)> cloneComponents)
+    public void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts, Dictionary<string, (double, double, double)> fitnessComponents)
     {
-        //base.InitializeObservations(samples, eventCounts);
-        CloneComponents = cloneComponents;
-        var eventCounts = CloneComponents.ToDictionary(pair => pair.Key, pair => pair.Value.Item4);
         base.InitializeObservations(samples, eventCounts);
-        ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamplesPath);
+        foreach (var sample in ObservedSamples)
+        {
+            foreach (var clone in sample.Clones)
+            {
+                var stats = sample.Stats[clone.CloneId];
+                FitnessComponents[sample.SampleId] = (stats.Stress, stats.Tsg + stats.Og, stats.Ess);
+            }
+        }
+        ObservedCNPs1MB = Binner.GetBinnedCNProfiles(ObservedSamples);
     }
 
     public override SimParams Optimize(FileIO files)
@@ -162,13 +167,14 @@ public class FitnessOptimizer : Optimizer
     private List<(double, int)> GetCloneList(FitnessParams fParams)
     {
         var cloneList = new List<(double, int)>();
-        foreach (var component in CloneComponents.Values)
+        foreach (var component in FitnessComponents)
         {
-            double stressTerm = component.Item1 * fParams.Stress;
-            double tsgogTerm  = component.Item2 * fParams.TsgOg;
-            double essTerm    = component.Item3 * fParams.Essentiality;
+            var (stress, tsgog, ess) = component.Value;
+            double stressTerm = stress * fParams.Stress;
+            double tsgogTerm  = tsgog * fParams.TsgOg;
+            double essTerm    = ess * fParams.Essentiality;
             double fitness = 1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
-            cloneList.Add((fitness, component.Item4));
+            cloneList.Add((fitness, -1));
         }
         return cloneList;
     }
