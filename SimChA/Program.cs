@@ -99,6 +99,7 @@ else if (execMode == ExecMode.RunOptimization)
         }
         else if (options.EventCounts != "" && options.CNProfiles != "")
         {
+            Console.WriteLine("Reading observed data:");
             var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
             var observedSamples = Simulator.SamplesFromProfiles(profiles);
             var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
