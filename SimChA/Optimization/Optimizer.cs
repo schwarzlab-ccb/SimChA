@@ -46,7 +46,7 @@ public class Optimizer
         Setup();
     }
 
-    protected void Setup()
+    private void Setup()
     {
         IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
@@ -81,10 +81,10 @@ public class Optimizer
         return GetScore(samples);
     }
 
-    public double GetScore(List<Sample> samples)
+    public virtual double GetScore(List<Sample> samples)
     {
         var (cnps, eventCounts) = GetInfo(samples);
-        var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
+        
         var totalDist = new List<double>();
         if (OptimizationParams.UseSegLength)
         {
@@ -93,6 +93,7 @@ public class Optimizer
         }
         if (OptimizationParams.UsePloidy)
         {
+            var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
             var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
             totalDist.Add(ploidyDist*ploidyDist);
         }

@@ -30,12 +30,27 @@ public class FitnessOptimizer : Optimizer
     public override void InitializeObservations(SimParams targetParams)
     {
         base.InitializeObservations(targetParams);
-        ObservedCNPs1MB = Binner.GetBinnedCNProfiles(ObservedSamples);
+        foreach (var sample in ObservedSamples)
+        {
+            int counter = 1;
+            int total = sample.Clones.Count;
+            foreach (var clone in sample.Clones)
+            {
+                Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
+                sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, GenRef, SimParams.Fitness, sample.Kars);
+            }
+        }
+        Setup();
     }
 
     public override void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
     {
         base.InitializeObservations(samples, eventCounts);
+        Setup();
+    }
+
+    private void Setup()
+    {
         foreach (var sample in ObservedSamples)
         {
             foreach (var clone in sample.Clones)
@@ -49,15 +64,6 @@ public class FitnessOptimizer : Optimizer
 
     public override SimParams Optimize(FileIO files)
         => FindBestParams(files);
-
-    /*private double GetScore(List<Sample> samples)
-    {
-        var cnps = GetCNPs(samples);
-        var binnedCNPs = Binner.GetBinnedCNProfiles(samples);
-        IsFemaleSimulatedDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
-        var distance = GetFitnessDistance(cnps, binnedCNPs);
-        return distance;
-    }*/
 
     private SimParams FindBestParams(FileIO files)
     {
@@ -191,9 +197,12 @@ public class FitnessOptimizer : Optimizer
         return samples;
     }
 
-    public double GetFitnessDistance(Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, List<CopyNumber>> binnedCNPs)
+    public override double GetScore(List<Sample> samples)
     {
+        var (cnps, eventCounts) = GetInfo(samples);
+        var binnedCNPs = Binner.GetBinnedCNProfiles(samples);
         var totalDist = new List<double>();
+
         if (OptimizationParams.UseSegLength)
         {
             var segDist = GetSegLengthDistance(cnps);
@@ -206,7 +215,7 @@ public class FitnessOptimizer : Optimizer
         }
         if (OptimizationParams.UseBreakpoints)
         {
-            var bpDist = GetBreakpointDistance(cnps, new Dictionary<string, int>());
+            var bpDist = GetBreakpointDistance(cnps, eventCounts);
             totalDist.Add(bpDist*bpDist);
         }
         if (OptimizationParams.UseHomozygousDeletion)
@@ -216,10 +225,10 @@ public class FitnessOptimizer : Optimizer
         }
         if (OptimizationParams.UsePloidy)
         {
-            var ploidyDist = GetPloidyDistance(cnps, new Dictionary<string, bool> ());
+            var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
+            var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
             totalDist.Add(ploidyDist*ploidyDist);
         }
-
         return totalDist.Sum();
     }
 
