@@ -97,7 +97,7 @@ else if (execMode == ExecMode.RunOptimization)
             SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
             optimizer.InitializeObservations(targetParams);
         }
-        else if (options.BinnedSamples != "" && options.EventCounts != "" && options.CNProfiles != "")
+        else if (options.EventCounts != "" && options.CNProfiles != "")
         {
             var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
             var observedSamples = Simulator.SamplesFromProfiles(profiles);

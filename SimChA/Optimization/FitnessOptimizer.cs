@@ -19,7 +19,10 @@ public class FitnessOptimizer : Optimizer
         GenRef genRef, bool includeSexChromosomes) 
         : base(simParams, rnd, repeats, genRef, includeSexChromosomes)
     {
-        
+        if (SimParams.MCParams is null)
+        {
+            throw new Exception("Error in FitnessOptimizer.No MC parameters were provided.");
+        }
         Binner = new Binner(GenRef);
         FitnessComponents = new Dictionary<string, (double, double, double)>();
         ObservedCNPs1MB = new Dictionary<string, List<CopyNumber>>();
@@ -30,7 +33,7 @@ public class FitnessOptimizer : Optimizer
         ObservedCNPs1MB = Binner.GetBinnedCNProfiles(ObservedSamples);
     }
 
-    public void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts, Dictionary<string, (double, double, double)> fitnessComponents)
+    public override void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
     {
         base.InitializeObservations(samples, eventCounts);
         foreach (var sample in ObservedSamples)
@@ -110,10 +113,6 @@ public class FitnessOptimizer : Optimizer
 
     private SimParams GetOneNewParam(SimParams currentParams, double stepSize)
     {
-        if (currentParams.MCParams is null)
-        {
-            throw new Exception("Error in FitnessOptimizer. No MC parameters were provided.");
-        }
         int index = Rnd.Next(4);
         // Modify the relative weight of the fitness parameter
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
@@ -174,21 +173,13 @@ public class FitnessOptimizer : Optimizer
             double tsgogTerm  = tsgog * fParams.TsgOg;
             double essTerm    = ess * fParams.Essentiality;
             double fitness = 1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
-            cloneList.Add((fitness, -1));
+            var events = ObservedEventCounts[component.Key];
+            cloneList.Add((fitness, events));
         }
         return cloneList;
     }
     private List<Sample> GenerateSimulatedData(SimParams currentParams)
     {
-        if (currentParams.Signatures is null || currentParams.Signatures.Count == 0)
-        {
-            throw new Exception("No signatures were provided.");
-        }
-        if (currentParams.MCParams is null)
-        {
-            throw new Exception("No MC parameters were provided.");
-        }
-        Validators.ValidateSignatures(currentParams.Signatures);
         var cloneList = GetCloneList(currentParams.Fitness);
         var samples = Converters.MakeSamples(Rnd, Repeats, currentParams.EventCount, 
             currentParams.EventDist, currentParams.Signatures, currentParams.Sex, cloneList);

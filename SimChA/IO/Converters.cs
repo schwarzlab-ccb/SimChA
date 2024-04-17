@@ -73,7 +73,7 @@ public static class Converters
         for (int i = 0; i < repeats; i++)
         {
             var (fitnessTarget, mutCount) = clonesList[rnd.Next(clonesList.Count)];
-            if (mutCount < 0)
+            if (mutCount <= 0)
             {
                 double sampledDistance = Sampling.SampleDist(rnd, distribution);
                 mutCount = (int) Math.Round(meanDist * sampledDistance);
