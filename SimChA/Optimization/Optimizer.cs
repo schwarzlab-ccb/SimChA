@@ -21,7 +21,6 @@ public class Optimizer
     private bool BreakpointsPerChrom {get; set;}
     private long BPBinSize {get; set;}
     protected List<Sample> ObservedSamples { get; set;}
-    protected List<Sample> SimulatedSamples { get; set; }
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, bool includeSexChromosomes)
     {
         SimParams = simParams;
@@ -33,37 +32,37 @@ public class Optimizer
             throw new Exception("Error in Optimizer. No signatures were provided.");
         }
         IncludeSexChromosomes = includeSexChromosomes;
+        ObservedCNPs = new Dictionary<string, List<CopyNumber>>();
+        ObservedEventCounts = new Dictionary<string, int>();
+        IsFemaleObservedDict = new Dictionary<string, bool>();
+        ObservedSamples = new List<Sample>();
     }
 
-    public void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
+    public virtual void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
     {
         ObservedSamples = samples;
         ObservedCNPs = GetCNPs(ObservedSamples);
         ObservedEventCounts = eventCounts;
+        Setup();
+    }
+
+    protected void Setup()
+    {
         IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
         OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
-        
-        BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
-        BPBinSize = OptimizationParams.BreakpointsBinSize;
+        //BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
+        //BPBinSize = OptimizationParams.BreakpointsBinSize;
         if (OptimizationParams.StepSize <= 0)
         {
             throw new Exception("Error in Optimizer. StepSize must be greater than 0.");
         }
     }
 
-    public void InitializeObservations(SimParams targetParams)
+    public virtual void InitializeObservations(SimParams targetParams)
     {
         ObservedSamples = GenerateSimulatedData(targetParams);
         (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
-        IsFemaleObservedDict = ObservedSamples.ToDictionary(s => s.SampleId, s => s.SexXX);
-        OptimizationParams = SimParams.OptimizationParams ?? throw new Exception("Error in Optimizer. OptimizationParams not set.");
-        
-        BreakpointsPerChrom = OptimizationParams.BreakpointsPerChrom;
-        BPBinSize = OptimizationParams.BreakpointsBinSize;
-        if (OptimizationParams.StepSize <= 0)
-        {
-            throw new Exception("Error in Optimizer. StepSize must be greater than 0.");
-        }
+        Setup();
     }
     public virtual SimParams Optimize(FileIO files)
         => OptimizationParams.OptimizationMethod switch

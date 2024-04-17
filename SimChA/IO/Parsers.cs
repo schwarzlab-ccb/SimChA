@@ -283,14 +283,15 @@ public static class Parsers
         return output;
     }
 
-    public static List<(double, double, double, int)> ParseCloneComponents(TextReader fitnessStream)
+    public static Dictionary<string, (double, double, double, int)> ParseCloneComponents(TextReader fitnessStream)
     {
-        var output = new List<(double, double, double, int)>();
+        var output = new Dictionary<string, (double, double, double, int)>();
         string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Error in ParseCloneComponents: Fitness file is empty.");
         // Continue past the header
         while (fitnessStream.ReadLine() is { } line)
         {
             var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
+            string sampleName = lineSplit[0];
             double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat);
             var tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
             var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
@@ -298,7 +299,7 @@ public static class Parsers
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat);
             // If the file includes data on how many chromosomal events the sample underwent
             int eventCount = lineSplit.Count >= 9 ? int.Parse(lineSplit[8]) : -1;
-            output.Add((stressTerm, tsgogTerm, essTerm, eventCount));
+            output[sampleName] = (stressTerm, tsgogTerm, essTerm, eventCount);
         }
         return output;
     }

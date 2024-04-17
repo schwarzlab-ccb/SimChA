@@ -36,7 +36,7 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
 
-    [Option('B', "bootstrap", Required = false, Default = null, HelpText = "Bootstrap sampling of provided fitness from the input file.")]
+    [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
     public string BootstrapFile { get; set; }
 
     [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
@@ -48,7 +48,7 @@ public class CmdOptions
     [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
     public bool AutosomesOnly { get; set; }
 
-    [Option("target-params", Required = false, Default = null, HelpText = "A json file with the target set of parameters for parameter inference.")]
+    [Option("target-params", Required = false, Default = "", HelpText = "A json file with the target set of parameters for parameter inference.")]
     public string TargetParams { get; set; }
 
     public ExecMode ExecMode

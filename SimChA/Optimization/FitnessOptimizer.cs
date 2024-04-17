@@ -10,18 +10,33 @@ using System.Reflection;
 
 public class FitnessOptimizer : Optimizer
 {   
-    private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; }
+    private Dictionary<string, List<CopyNumber>> ObservedCNPs1MB { get; set; }
 
-    private readonly List<(double, double, double, int)> CloneComponents;
+    private Dictionary<string, (double, double, double, int)> CloneComponents { get; set; }
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, bool includeSexChromosomes, string binnedSamples, List<(double, double, double, int)> cloneComponents) 
+        GenRef genRef, bool includeSexChromosomes) 
         : base(simParams, rnd, repeats, genRef, includeSexChromosomes)
     {
-        CloneComponents = cloneComponents;
+        
         Binner = new Binner(GenRef);
-        ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamples);
+        CloneComponents = new Dictionary<string, (double, double, double, int)>();
+        ObservedCNPs1MB = new Dictionary<string, List<CopyNumber>>();
+    }
+    public override void InitializeObservations(SimParams targetParams)
+    {
+        base.InitializeObservations(targetParams);
+        ObservedCNPs1MB = Binner.GetBinnedCNProfiles(ObservedSamples);
+    }
+
+    public void InitializeObservations(List<Sample> samples,string binnedSamplesPath, Dictionary<string, (double, double, double, int)> cloneComponents)
+    {
+        //base.InitializeObservations(samples, eventCounts);
+        CloneComponents = cloneComponents;
+        var eventCounts = CloneComponents.ToDictionary(pair => pair.Key, pair => pair.Value.Item4);
+        base.InitializeObservations(samples, eventCounts);
+        ObservedCNPs1MB = FileIO.ReadProfiles(binnedSamplesPath);
     }
 
     public override SimParams Optimize(FileIO files)
@@ -147,7 +162,7 @@ public class FitnessOptimizer : Optimizer
     private List<(double, int)> GetCloneList(FitnessParams fParams)
     {
         var cloneList = new List<(double, int)>();
-        foreach (var component in CloneComponents)
+        foreach (var component in CloneComponents.Values)
         {
             double stressTerm = component.Item1 * fParams.Stress;
             double tsgogTerm  = component.Item2 * fParams.TsgOg;

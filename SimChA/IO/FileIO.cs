@@ -304,7 +304,7 @@ public class FileIO
         }
     }
 
-    public static List<(double, double, double, int)> ReadCloneComponents(string filePath)
+    public static Dictionary<string, (double, double, double, int)> ReadCloneComponents(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))

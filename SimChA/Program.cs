@@ -56,13 +56,13 @@ else if (execMode == ExecMode.RunOptimization)
     {
         Console.WriteLine("Event Optimization Mode -------- ");
         var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes);
-        if (options.TargetParams != null)
+        if (options.TargetParams != "")
         {
             Console.WriteLine("Generating Simulated Data");
             SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
             optimizer.InitializeObservations(targetParams);
         }
-        else if (options.BootstrapFile != null)
+        else if (options.BootstrapFile != "")
         {
             Console.WriteLine("Reading observed data:");
             var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
@@ -72,7 +72,7 @@ else if (execMode == ExecMode.RunOptimization)
         }
         else 
         {
-            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform optimization without a target data set.");
+            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform event optimization without a target data set.");
         }
         
         if (simParams.OptimizationParams.UseABC)
@@ -90,16 +90,23 @@ else if (execMode == ExecMode.RunOptimization)
     else if (simParams.OptimizationParams.Mode == "Fitness")
     {
         Console.WriteLine("Fitness Optimization Mode -------- ");
-        if (options.BootstrapFile == "")
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes);
+        if (options.TargetParams != "")
         {
-            throw new Exception("Error: No bootstrap file provided. Cannot perform fitness optimization.");
+            Console.WriteLine("Generating Simulated Data");
+            SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
+            optimizer.InitializeObservations(targetParams);
         }
-        if (options.BinnedSamples == "")
+        else if (options.BinnedSamples != "")
         {
-            throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
+            var cloneComponents = FileIO.ReadCloneComponents(options.BootstrapFile);
+            //optimizer.InitializeObservations(cloneComponents);
         }
-        var cloneComponents = FileIO.ReadCloneComponents(options.BootstrapFile);
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, options.BinnedSamples, cloneComponents);
+        else
+        {
+            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform fitness optimization without a target data set.");
+        }
+        
         var outParams = optimizer.Optimize(files);
         files.WriteSimParams(outParams);
     }
