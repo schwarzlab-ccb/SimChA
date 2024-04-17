@@ -313,15 +313,8 @@ public static class Parsers
         {
             var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
             string sampleName = lineSplit[0];
-            if (lineSplit.Count >= 9)
-            {
-                int eventCount = int.Parse(lineSplit[8]);
-                output.Add(sampleName, eventCount);
-            }
-            else
-            {
-                throw new Exception("Error in ParseEventCounts: Sample file does not contain event count column.");
-            }
+            int eventCount = int.Parse(lineSplit[1]);
+            output.Add(sampleName, eventCount);
         }
         return output;
     }

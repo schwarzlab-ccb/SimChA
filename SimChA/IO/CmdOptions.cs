@@ -50,7 +50,8 @@ public class CmdOptions
 
     [Option("target-params", Required = false, Default = "", HelpText = "A json file with the target set of parameters for parameter inference.")]
     public string TargetParams { get; set; }
-
+    [Option("event-counts", Required = false, Default = "", HelpText = "A tsv file with the event counts for each sample for parameter inference.")]
+    public string EventCounts { get; set; }
     public ExecMode ExecMode
     {
         get
