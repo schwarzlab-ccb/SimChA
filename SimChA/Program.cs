@@ -28,7 +28,7 @@ var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGe
 
 var watch = new Stopwatch();
 watch.Start();
-List<Sample> samples;
+List<Sample> samples = new();
 if (execMode == ExecMode.BinSamples)
 {
     if (options.CNProfiles == "")
@@ -155,18 +155,15 @@ else
         var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
         samples = new List<Sample> {treeSample};
     }
-    else
+    else if (execMode == ExecMode.UseMCMC)
     {
-        if (simParams.MCTarget is null && options.UseMCMC)
+        if (simParams.MCParams is null)
         {
-            throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
+            throw new Exception("Error: MCParams not set. Cannot perform MCMC sampling. Please set MCParams in the config file.");
         }
-        if (execMode == ExecMode.UseMCMC)
+        
+        if (options.CNProfiles != "" && options.EventCounts != "")
         {
-            if (options.CNProfiles == "" || options.EventCounts == "")
-            {
-                throw new Exception("Error: No CN profiles and/or event counts provided. Cannot perform MC sampling.");
-            }
             var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
             var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
             var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
@@ -174,21 +171,17 @@ else
         }
         else
         {
+            if (simParams.MCTarget is null)
+            {
+                throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
+            }
             samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
         }
+        simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
     }
 
     foreach (var sample in samples)
     {
-        if (options.UseMCMC)
-        {
-            if (simParams.MCParams == null)
-            {
-                throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
-            }
-
-            simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
-        }
         simulator.SampleEvents(sample);
     }
 }
