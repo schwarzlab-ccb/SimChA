@@ -87,4 +87,17 @@ public static class Converters
         }
         return samples;
     }
+    public static List<Sample> UpdateSampleEventCounts(GenRef genRef, SimParams simParams, List<Sample> samples, Dictionary<string, int> eventCounts)
+    {
+        foreach (var sample in samples)
+        {
+            int total = sample.Clones.Count;
+            foreach (var clone in sample.Clones)
+            {
+                sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
+            }
+        }
+
+        return samples;
+    }
 }

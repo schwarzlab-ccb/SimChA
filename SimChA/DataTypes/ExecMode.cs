@@ -11,5 +11,6 @@ public enum ExecMode
     ParseGenContents,
     Bootstrap,
     RunOptimization,
-    BinSamples
+    BinSamples,
+    UseMCMC
 }

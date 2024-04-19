@@ -60,6 +60,10 @@ public class CmdOptions
             {
                 return ExecMode.BinSamples;
             }
+            if (UseMCMC)
+            {
+                return ExecMode.UseMCMC;
+            }
             if (RunOptimization)
             {
                 return ExecMode.RunOptimization;

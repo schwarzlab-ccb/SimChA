@@ -161,10 +161,16 @@ else
         {
             throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
         }
-        if (execMode == ExecMode.Bootstrap)
+        if (execMode == ExecMode.UseMCMC)
         {
-            var clonesList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, clonesList);
+            if (options.CNProfiles == "" || options.EventCounts == "")
+            {
+                throw new Exception("Error: No CN profiles and/or event counts provided. Cannot perform MC sampling.");
+            }
+            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+            var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+            var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, fitnessList);
         }
         else
         {

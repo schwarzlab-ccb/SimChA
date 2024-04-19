@@ -133,7 +133,7 @@ public class MCSimulator : Simulator
             {
                 double oldFitness = childKar.FitnessVal;
                 
-                var bestEvents = GetBestEvents(sample, childKar, child.Distance,child.FitnessTarget);
+                var bestEvents = GetBestEvents(sample, childKar, child.Distance, child.FitnessTarget);
 
                 for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
                 {

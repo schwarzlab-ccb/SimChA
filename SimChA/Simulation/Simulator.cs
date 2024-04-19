@@ -76,4 +76,19 @@ public class Simulator
             }
         ).ToList();
     }
+    public List<(double fitness, int eventCount)> FitnessListFromSamples(SimParams simParams, Dictionary<string, Karyotype> profiles, Dictionary<string, int> eventCounts)
+    {
+        var output = new List<(double fitness, int eventCount)>();
+        var samples = SamplesFromProfiles(profiles);
+        foreach (var sample in samples)
+        {
+            int total = sample.Clones.Count;
+            foreach (var clone in sample.Clones)
+            {
+                sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, GenRef, simParams.Fitness, sample.Kars);
+                output.Add((sample.Stats[clone.CloneId].Fitness, eventCounts[sample.SampleId]));
+            }
+        }
+        return output;
+    }
 }
