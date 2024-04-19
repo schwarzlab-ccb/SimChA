@@ -97,7 +97,7 @@ public class FitnessOptimizer : Optimizer
                 files.WriteSimParams(bestParams);
                 counter++;
             }
-             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
+            if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
             {
                 files.WriteSimParams(currentParams, $"params_{i}.json");
             }
@@ -107,6 +107,10 @@ public class FitnessOptimizer : Optimizer
 
     private SimParams GetAllNewParams(SimParams currentParams, double stepSize)
     {
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with { Seed = -1 };
+        }
         var fitnessList = currentParams.Fitness.ParamsList();
         var newParams = new List<double>();
         foreach (var oldValue in fitnessList)
@@ -119,6 +123,10 @@ public class FitnessOptimizer : Optimizer
 
     private SimParams GetOneNewParam(SimParams currentParams, double stepSize)
     {
+        if (OptimizationParams.ResetSeed)
+        {
+            currentParams = currentParams with { Seed = -1 };
+        }
         int index = Rnd.Next(4);
         // Modify the relative weight of the fitness parameter
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
