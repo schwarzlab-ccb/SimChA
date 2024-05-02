@@ -1,6 +1,3 @@
 [submodule "simcha_notebooks"]
 	path = simcha_notebooks
 	url = git@bitbucket.org:schwarzlab/simcha_notebooks.git
-[submodule "pycna"]
-	path = pycna
-	url = git@bitbucket.org:schwarzlab/pycna.git
