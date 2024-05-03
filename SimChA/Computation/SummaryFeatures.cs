@@ -295,7 +295,7 @@ public static class SummaryFeatures
 
         for (int i = 0; i < cnLength; i++)
         {
-            // TODO: What do we do with bins that are just empty?
+            // The filtering process is for non-imputed CN profiles, since there may be bins with NaN values (e.g. missing segments)
             var filtered = cnProfiles.Where(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2 >= 0);
             var mean = filtered.Any() ? filtered.Average(kvp => kvp.Value[i].CNH1 + kvp.Value[i].CNH2) : 0.0;
             meanCN.Add(mean);
