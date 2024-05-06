@@ -89,18 +89,22 @@ public class Optimizer
         if (OptimizationParams.UseSegLength)
         {
             var segDist = GetSegLengthDistance(cnps);
-            totalDist.Add(segDist*segDist);
+            totalDist.Add(segDist);
         }
         if (OptimizationParams.UsePloidy)
         {
             var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
             var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
-            totalDist.Add(ploidyDist*ploidyDist);
+            totalDist.Add(ploidyDist);
         }
         if (OptimizationParams.UseBreakpoints)
         {
             var bpDist = GetBreakpointDistance(cnps, eventCounts);
-            totalDist.Add(bpDist*bpDist);
+            totalDist.Add(bpDist);
+        }
+        if (totalDist.Any(x => x < 0))
+        {
+            throw new Exception("Error in GetScore function of FitnessOptimizer. Negative distance value.");
         }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);

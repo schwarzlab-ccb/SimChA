@@ -179,6 +179,10 @@ else
         }
         simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
     }
+    else
+    {
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+    }
 
     foreach (var sample in samples)
     {

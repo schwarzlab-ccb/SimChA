@@ -214,28 +214,32 @@ public class FitnessOptimizer : Optimizer
         if (OptimizationParams.UseSegLength)
         {
             var segDist = GetSegLengthDistance(cnps);
-            totalDist.Add(segDist*segDist);
+            totalDist.Add(segDist);
         }
         if (OptimizationParams.UseCNAlongGenome)
         {
             var dist = GetMeanCNAlongGenomeDistance(binnedCNPs);
-            totalDist.Add(dist*dist);
+            totalDist.Add(dist);
         }
         if (OptimizationParams.UseBreakpoints)
         {
             var bpDist = GetBreakpointDistance(cnps, eventCounts);
-            totalDist.Add(bpDist*bpDist);
+            totalDist.Add(bpDist);
         }
         if (OptimizationParams.UseHomozygousDeletion)
         {
             var hdDist = GetHomozygousDeletionDistance(cnps);
-            totalDist.Add(hdDist*hdDist);
+            totalDist.Add(hdDist);
         }
         if (OptimizationParams.UsePloidy)
         {
             var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
             var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
-            totalDist.Add(ploidyDist*ploidyDist);
+            totalDist.Add(ploidyDist);
+        }
+        if (totalDist.Any(x => x < 0))
+        {
+            throw new Exception("Error in GetScore function of FitnessOptimizer. Negative distance value.");
         }
         return totalDist.Sum();
     }

@@ -30,6 +30,9 @@ public class MCSimulator : Simulator
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
+
+    public double FitnessConversion(double fitness)
+    => (fitness - 1.0) * Fitness.SimulationFactor + 1.0;
     
     public (double potential, bool accept) Potential(Karyotype kar, double targetFit, List<BaseEventData> events)
     {
@@ -45,7 +48,7 @@ public class MCSimulator : Simulator
             }
             eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
         }
-        double dFit = kar.UpdateFitness(GenRef, Fitness) - targetFit;
+        double dFit = FitnessConversion(kar.UpdateFitness(GenRef, Fitness)) - targetFit;
         // Variable to immediately quit the MC Sampling if we've reached enough accuracy
         bool accept = Math.Abs(dFit / targetFit) < McParams.ThresholdFit;
 
