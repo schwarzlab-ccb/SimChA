@@ -42,7 +42,7 @@ public class MCSimulator : Simulator
         foreach (var eventData in events)
         {
             eventData.ApplyEvent(kar);
-            if (eventData.CNEventPars.Size > 0)
+            if (eventData.CNEventPars.Size > 0 && McParams.IncludeSize)
             {
                 eventPotentialTotal += Math.Log(eventData.GetProb());
             }

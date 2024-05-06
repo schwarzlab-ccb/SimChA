@@ -9,5 +9,6 @@ public record MCParams(
     int NumSamplesTotal, // Number of true samples
     double ThetaFitness, // exponential multiplier for fitness
     double SwapEventP, // Probability of completely swapping an event
-    double ThresholdFit // Percentage difference allowed between accepted and target fitness
+    double ThresholdFit, // Percentage difference allowed between accepted and target fitness
+    bool IncludeSize // Include the size of the internal events during the fitness matching procedure
     );

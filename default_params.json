@@ -7,7 +7,8 @@
 	  "Stress": 0.9619,
 	  "TsgOg": 0.0355,
 	  "Essentiality": 0.0026,
-	  "TotalStrength": 1
+	  "TotalStrength": 1,
+	  "SimulationFactor": 1
 	},
 	"Signatures": {
 	  "CNs": {
@@ -146,7 +147,8 @@
 	  "NumSamplesTotal": 2500,
 	  "ThetaFitness": 10,
 	  "SwapEventP": 1,
-	  "ThresholdFit": 1E-08
+	  "ThresholdFit": 1E-08,
+	  "IncludeSize": false
 	},
 	"MCTarget": {
 		"Mean": 1,
