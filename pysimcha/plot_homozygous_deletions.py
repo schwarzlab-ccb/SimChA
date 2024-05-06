@@ -4,10 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from os.path import join
-from utils import load_dataset
-import sys
-sys.path.append('..')
-from pycna.utils.assembiles import hg19_chr_lengths
+from utils import chr_lengths
 
 
 def genome_length_init():
@@ -15,7 +12,7 @@ def genome_length_init():
     cum_start = 0
     hg19_chr_cum_starts = {}
     # Loop over each chromosome in the chromosome lengths dictionary
-    for chrom, length in hg19_chr_lengths.items():
+    for chrom, length in chr_lengths.items():
         hg19_chr_cum_starts[chrom] = cum_start
         cum_start += length
 

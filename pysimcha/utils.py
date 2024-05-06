@@ -5,9 +5,120 @@ import pandas as pd
 import json
 from os.path import join
 
-import sys 
-sys.path.append('..')
-from pycna.utils.assemblies import chr_names, aut_names, hg19_chr_lengths, hg19_chr_cum_starts
+chr_names = [
+    "chr1",
+    "chr2",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr20",
+    "chr21",
+    "chr22",
+    "chrX",
+    "chrY",
+]
+
+
+aut_names = chr_names[:-2]
+xx_names = chr_names[:-1]
+xy_names = chr_names
+
+
+chr_colors = {
+    "chr1": "red",
+    "chr2": "mediumblue",
+    "chr3": "forestgreen",
+    "chr4": "darkorange",
+    "chr5": "dodgerblue",
+    "chr6": "olivedrab",
+    "chr7": "purple",
+    "chr8": "gray",
+    "chr9": "gold",
+    "chr10": "salmon",
+    "chr11": "turquoise",
+    "chr12": "darkviolet",
+    "chr13": "green",
+    "chr14": "indianred",
+    "chr15": "steelblue",
+    "chr16": "sienna",
+    "chr17": "royalblue",
+    "chr18": "darkgoldenrod",
+    "chr19": "mediumvioletred",
+    "chr20": "teal",
+    "chr21": "peru",
+    "chr22": "navy",
+    "chrX": "chocolate",
+    "chrY": "darkslateblue",
+}
+
+# https://www.ncbi.nlm.nih.gov/grc/human/data?asm=GRCh37
+chr_lengths = {
+    "chr1": 249_250_621,
+    "chr2": 243_199_373,
+    "chr3": 198_022_430,
+    "chr4": 191_154_276,
+    "chr5": 180_915_260,
+    "chr6": 171_115_067,
+    "chr7": 159_138_663,
+    "chr8": 146_364_022,
+    "chr9": 141_213_431,
+    "chr10": 135_534_747,
+    "chr11": 135_006_516,
+    "chr12": 133_851_895,
+    "chr13": 115_169_878,
+    "chr14": 107_349_540,
+    "chr15": 102_531_392,
+    "chr16": 90_354_753,
+    "chr17": 81_195_210,
+    "chr18": 78_077_248,
+    "chr19": 59_128_983,
+    "chr20": 63_025_520,
+    "chr21": 48_129_895,
+    "chr22": 51_304_566,
+    "chrX": 155_270_560,
+    "chrY": 59_373_566,
+}
+
+chr_starts = {
+    "chr1": 0,
+    "chr2": 249250621,
+    "chr3": 492449994,
+    "chr4": 690472424,
+    "chr5": 881626700,
+    "chr6": 1062541960,
+    "chr7": 1233657027,
+    "chr8": 1392795690,
+    "chr9": 1539159712,
+    "chr10": 1680373143,
+    "chr11": 1815907890,
+    "chr12": 1950914406,
+    "chr13": 2084766301,
+    "chr14": 2199936179,
+    "chr15": 2307285719,
+    "chr16": 2409817111,
+    "chr17": 2500171864,
+    "chr18": 2581367074,
+    "chr19": 2659444322,
+    "chr20": 2718573305,
+    "chr21": 2781598825,
+    "chr22": 2829728720,
+    "chrX": 2881033286,
+    "chrY": 3036303846,
+}
 
 
 def format_chromosomes_int(chroms):
@@ -138,7 +249,7 @@ def get_BP_per_bin_size(data, bin_size=10_000_000):
         # Loop over the chromosomes
         for _, chr in enumerate(chr_names): 
             segs = sample[sample["chrom"] == chr]
-            intervals = np.arange(0, hg19_chr_lengths[chr]+bin_size, bin_size)
+            intervals = np.arange(0, chr_lengths[chr]+bin_size, bin_size)
             # Just want the counts of all the end points
             res = np.histogram(segs['end'].iloc[:-1], bins=intervals)[0]
             all_chr_bins.extend(res)
@@ -154,13 +265,13 @@ def calc_hallmarks(dataset):
 def row_to_list(row, bins, column):
     # Initialize an empty list
     res = []
-    start_index = np.digitize(row['start']+hg19_chr_cum_starts[row['chrom']], bins)
+    start_index = np.digitize(row['start']+chr_starts[row['chrom']], bins)
     start = bins[start_index]
     #start = row['start'] + hg19_chr_cum_starts[row['chrom']]
     # Round start to the nearest bin
     #if start % step_size != 0:
     #    start = start - (start % step_size) + step_size
-    end_index = np.digitize(row['end']+hg19_chr_cum_starts[row['chrom']]-1, bins)
+    end_index = np.digitize(row['end']+chr_starts[row['chrom']]-1, bins)
     end = bins[end_index]
     # The rounding can cause the start to now be greater than the end
     # in which case, it is a single bin
@@ -175,9 +286,9 @@ def row_to_list(row, bins, column):
     return res
 
 def chromosome_to_bins(chrom, step_size=1_000_000):
-    bins = np.arange(step_size, hg19_chr_lengths[chrom], step_size)
-    bins += hg19_chr_cum_starts[chrom] - 1
-    bins = np.append(bins, hg19_chr_lengths[chrom] + hg19_chr_cum_starts[chrom])
+    bins = np.arange(step_size, chr_lengths[chrom], step_size)
+    bins += chr_starts[chrom] - 1
+    bins = np.append(bins, chr_lengths[chrom] + chr_starts[chrom])
     return bins
 
 def get_chromosome_bins(step_size=1_000_000, includeSexChromosomes=False):

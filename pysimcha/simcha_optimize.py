@@ -10,7 +10,7 @@ import json
 
 def generate_cohort(path, param_file, genes_path, out_path, repeats, all_chromomsomes):
     cmd = f"dotnet run --no-build --project {path} -C {param_file} -R {repeats} -O {out_path} -D {genes_path}"
-    if not all_chromosomes:
+    if not all_chromomsomes:
         cmd += " --autosomes-only"
     subprocess.run([cmd], shell=True)
     return

@@ -7,8 +7,7 @@ import matplotlib.patches as mpatches
 import pandas as pd
 import math
 import sys
-sys.path.append('../scripts')
-from utils import chromosome_colors
+from utils import chr_colors
 
 # a plot with rectangles between start-end on a line given by the copy number
 def plot_hap(ax, chr_data, chr, hap):    
@@ -31,7 +30,7 @@ def plot_hap(ax, chr_data, chr, hap):
             y_pos = row["cn_both"] - .1        
             hatch = None            
             alpha = 1
-        fc = chromosome_colors[chr]
+        fc = chr_colors[chr]
         rect = mpatches.Rectangle((start, y_pos), width, height, fc=fc, alpha=alpha, hatch=hatch)   
         ax.add_patch(rect)           
 
@@ -55,7 +54,7 @@ def plot_chr(ax, data, chr, start = 0, end = 0, join_haps = False):
 
 
 def plot_CNs(data, sample, join_haps = False, dpi=150):
-    chr_names = chromosome_colors.keys()
+    chr_names = chr_colors.keys()
     # set 24 subplots vertically stacked
     fig, axs = plt.subplots(len(chr_names), 1)
     fig.set_size_inches(1920 / dpi, 1080 / dpi * 8)

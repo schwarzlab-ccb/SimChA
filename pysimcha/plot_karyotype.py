@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import re
 import matplotlib.patches as mpatches
-from utils import chromosome_colors
+from utils import chr_colors
 
 def get_test_data():
     # Four datasets with length (float) and direction (bool)
@@ -115,7 +115,7 @@ def plot_karyotype(data, sample_name, dpi=150):
             x = starts[i] + (0 if direction else length)
             dx = length if direction else -length
             starts[i] += abs(dx)
-            last_left = draw_horizontal_arrow(ax, x, sample_count - i - 1, dx, 0, chromosome_colors[chr_no], last_left)
+            last_left = draw_horizontal_arrow(ax, x, sample_count - i - 1, dx, 0, chr_colors[chr_no], last_left)
 
     # Set the x-axis limits and labels
     ax.set_xlim(0, np.max(starts))
@@ -124,7 +124,7 @@ def plot_karyotype(data, sample_name, dpi=150):
     ax.set_title(f"Karyotype of sample {sample_name}")
 
     # plot all chromosome colors as a legend
-    for i, (chr_no, color) in enumerate(chromosome_colors.items()):
+    for i, (chr_no, color) in enumerate(chr_colors.items()):
         ax.plot(0, 0, color=color, label=chr_no)
         ax.legend(loc="upper left", bbox_to_anchor=(1, 1))
 

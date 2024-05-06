@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from os.path import join
 import BISCUT_preprocessing as pre
-import os
 
 # Autosomes
 chrs = [f"chr{i}" for i in range(1, 23)]
