@@ -11,9 +11,9 @@ public class FileIO
 {
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
-    private const string ESSENTIALS_TSV = "essentials.tsv";
-    private const string OGS_TSV = "ogs.tsv";
-    private const string TSGS_TSV = "tsgs.tsv";
+    private const string ESSENTIALS_TSV = "essentials_select.tsv";
+    private const string OGS_TSV = "ogs_select.tsv";
+    private const string TSGS_TSV = "tsgs_select.tsv";
     private const string GENOME_FASTA = "genome.fa";
     private const string CENTROMERES_TSV = "centromeres.tsv";
     // input

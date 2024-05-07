@@ -361,5 +361,3 @@ def homozygous_length_distribution(df, bin_size=1_000_000):
                 length = (row["end"] - row["start"])/bin_size
                 hist.append(length)
     return hist
-
-
