@@ -8,7 +8,7 @@
 	  "TsgOg": 0.0355,
 	  "Essentiality": 0.0026,
 	  "TotalStrength": 1,
-	  "SimulationFactor": 1
+	  "Haploinsufficiency" : false
 	},
 	"Signatures": {
 	  "CNs": {

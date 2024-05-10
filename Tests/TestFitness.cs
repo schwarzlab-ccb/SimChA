@@ -56,6 +56,33 @@ public class TestFitness
     }
 
     [Test]
+    public void TestEssTermHaploinsufficiency([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        genRef.IncludeSexChromosomes = false;
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), true, true));
+        
+        var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, true, true));
+        
+        var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
+        Assert.AreEqual(-0.2, Fitness.EssTerm(genRef, testMissing, true, true));
+
+        var testHaploinsufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
+        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testHaploinsufficient, true, true));
+        
+        var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
+        Assert.AreEqual(-0.2 + -0.4, Fitness.EssTerm(genRef, testList, true, true));
+
+        var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.5), 0), (MakeGene("chrY", 0.5), 0)};
+        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, true, true));
+
+        genRef.IncludeSexChromosomes = true;
+        Assert.AreEqual(-1.0 +  0.0, Fitness.EssTerm(genRef, testSexChromosome, true, true));
+        Assert.AreEqual(-0.5 + -0.5, Fitness.EssTerm(genRef, testSexChromosome, false, true));
+    }
+
+    [Test]
     public void TestTsgOgTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
