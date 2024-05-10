@@ -8,17 +8,18 @@ public class FitnessParams
     public double TsgOg { get; }
     public double Essentiality { get; }
     public double TotalStrength { get; }
-    public bool Haploinsufficiency {get;}
+    public bool Haploinsufficiency { get; }
 
     public List<double> ParamsList()
         => new() { Stress, TsgOg, Essentiality, TotalStrength};
 
-    public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength)
+    public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength, bool haploinsufficiency = false)
     {
         var sum = stress + tsgOg + essentiality;
         Stress = stress/sum;
         TsgOg = tsgOg/sum;
         Essentiality = 1.0 - Stress - TsgOg;
         TotalStrength = totalStrength;
+        Haploinsufficiency = haploinsufficiency;
     }
 }
