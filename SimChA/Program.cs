@@ -161,7 +161,7 @@ else
         {
             throw new Exception("Error: MCParams not set. Cannot perform MCMC sampling. Please set MCParams in the config file.");
         }
-        
+
         if (options.CNProfiles != "" && options.EventCounts != "")
         {
             var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
