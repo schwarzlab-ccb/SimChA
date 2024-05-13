@@ -44,7 +44,7 @@ public static class Fitness
         => x;
 
     public static double StressTerm(long refBaseCount, long baseCount)
-        => 1 - baseCount / (double) refBaseCount;
+        => Math.Min(0, 1 - baseCount / (double) refBaseCount);
 
     private static double ExpectedCN(GenRef genRef, string chrNo, bool sexXX)
     {
