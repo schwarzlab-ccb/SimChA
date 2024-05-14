@@ -111,13 +111,16 @@ public class FitnessOptimizer : Optimizer
         {
             currentParams = currentParams with { Seed = -1 };
         }
-        var fitnessList = currentParams.Fitness.ParamsList();
+        var fParams = currentParams.Fitness;
+        var fitnessList = fParams.ParamsList(OptimizationParams.IncludeTotalStrength);
         var newParams = new List<double>();
         foreach (var oldValue in fitnessList)
         {
             newParams.Add(GetNewWeight(oldValue, stepSize));
         }
-        var newFitness = new FitnessParams(newParams[0], newParams[1], newParams[2], newParams[3]);
+        var newFitness = OptimizationParams.IncludeTotalStrength 
+                            ? new FitnessParams(newParams[0], newParams[1], newParams[2], newParams[3], fParams.Haploinsufficiency)
+                            : new FitnessParams(newParams[0], newParams[1], newParams[2], fParams.TotalStrength, fParams.Haploinsufficiency);
         return currentParams with { Fitness = newFitness };
     }
 
@@ -127,7 +130,8 @@ public class FitnessOptimizer : Optimizer
         {
             currentParams = currentParams with { Seed = -1 };
         }
-        int index = Rnd.Next(4);
+        int nParams = OptimizationParams.IncludeTotalStrength ? 4 : 3;
+        int index = Rnd.Next(nParams);
         // Modify the relative weight of the fitness parameter
         var sign = Rnd.NextDouble() < 0.5 ? -1 : 1;
         double oldWeight = 1;
@@ -137,17 +141,18 @@ public class FitnessOptimizer : Optimizer
         var oldStrength = currentParams.Fitness.TotalStrength;
         switch (index)
         {
-            case 0:
-                oldWeight = oldStress;
-                break;
             case 1:
                 oldWeight *= oldTsgOg;
                 break;
             case 2:
                 oldWeight *= oldEssentiality;
                 break;
+            // this case only occurs when IncludeTotalStrength is turned on
+            case 3:
+                oldWeight = oldStrength;
+                break;
             default:
-                oldWeight *= oldStrength;
+                oldWeight = oldStress;
                 break;
         }
         double newWeight = oldWeight * (1 + sign * Rnd.NextDouble() * stepSize);
@@ -163,10 +168,10 @@ public class FitnessOptimizer : Optimizer
         var newFactor = (1 - newWeight)/(1-oldWeight);
         return index switch
         {
-            0 => currentParams with { Fitness = new FitnessParams(newWeight, oldTsgOg * newFactor, oldEssentiality * newFactor, oldStrength) },
             1 => currentParams with { Fitness = new FitnessParams(oldStress * newFactor, newWeight, oldEssentiality * newFactor, oldStrength) },
             2 => currentParams with { Fitness = new FitnessParams(oldStress * newFactor, oldTsgOg * newFactor, newWeight, oldStrength) },
-            _ => currentParams with { Fitness = new FitnessParams(oldStress, oldTsgOg, oldEssentiality, newWeight) },
+            3 => currentParams with { Fitness = new FitnessParams(oldStress, oldTsgOg, oldEssentiality, newWeight) },
+            _ => currentParams with { Fitness = new FitnessParams(newWeight, oldTsgOg * newFactor, oldEssentiality * newFactor, oldStrength) },
         };
     }
 

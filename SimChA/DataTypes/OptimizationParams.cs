@@ -39,5 +39,6 @@ public record OptimizationParams(
     int MaxLength, // Maximum length parameter
     int MinLength, // Minimum length parameter
     bool UseHomozygousDeletion, // Flag to use homozygous deletions in fitness optimization distance
-    bool UseCNAlongGenome // Flat to use copy number along the genome in fitness optimization distance
+    bool UseCNAlongGenome, // Flag to use copy number along the genome in fitness optimization distance
+    bool IncludeTotalStrength // Flag to vary total strength during the fitness parameter optimization
     );

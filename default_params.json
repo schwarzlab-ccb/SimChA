@@ -186,6 +186,7 @@
 		"MinLength": 50000,
 		"MaxLength": 5000000, 
 		"UseHomozygousDeletion": false,
-		"UseCNAlongGenome": false
+		"UseCNAlongGenome": false,
+		"IncludeTotalStrength": false
 	}
   }

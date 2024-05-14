@@ -10,8 +10,10 @@ public class FitnessParams
     public double TotalStrength { get; }
     public bool Haploinsufficiency { get; }
 
-    public List<double> ParamsList()
-        => new() { Stress, TsgOg, Essentiality, TotalStrength};
+    public List<double> ParamsList(bool includeTotalStrength)
+        => includeTotalStrength 
+           ? new() { Stress, TsgOg, Essentiality, TotalStrength}
+           : new() { Stress, TsgOg, Essentiality};
 
     public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength, bool haploinsufficiency = false)
     {
