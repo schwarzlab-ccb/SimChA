@@ -416,13 +416,20 @@ public class Optimizer
 
         if (!OptimizationParams.EventWeightsOnly)
         {
-            var internalDel = events.Find(e => e.Type == CNEventType.InternalDeletion) ?? throw new Exception("Error in Optimizer. No internal deletion event found.");
-            var index = events.IndexOf(internalDel);
-            newEvents[index] = GetNewEventLength(newEvents[index], stepSize);
+            // There are allowed to be multiple versions of the same event (in particular internal events with different means)
+            var internalDeletions = events.Where(e => e.Type == CNEventType.InternalDeletion).ToList();
+            foreach (var internalDel in internalDeletions)
+            {
+                var index = events.IndexOf(internalDel);
+                newEvents[index] = GetNewEventLength(newEvents[index], stepSize);
+            }
 
-            var internalDup = events.Find(e => e.Type == CNEventType.InternalDuplication) ?? throw new Exception("Error in Optimizer. No internal duplication event found.");
-            index = events.IndexOf(internalDup);
-            newEvents[index] = GetNewEventLength(newEvents[index], stepSize);
+            var internalDuplications = events.Where(e => e.Type == CNEventType.InternalDuplication).ToList();
+            foreach (var internalDup in internalDuplications)
+            {
+                var index = events.IndexOf(internalDup);
+                newEvents[index] = GetNewEventLength(newEvents[index], stepSize);
+            }
         }
         var newSignature = new Signature(1, newEvents);
         return currentParams with { Signatures = new Dictionary<string, Signature> { ["CNs"] = newSignature } };
