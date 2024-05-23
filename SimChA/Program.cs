@@ -137,6 +137,12 @@ if (execMode == ExecMode.Profiles)
     Console.WriteLine("Reading profiles:");
     var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
     samples = Simulator.SamplesFromProfiles(profiles);
+    if (options.FitnessLandscape)
+    {
+        Console.WriteLine("Computing fitness landscape:");
+        var fitnessLandscape = new FitnessLandscape();
+        fitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
+    }
 }
 else
 {

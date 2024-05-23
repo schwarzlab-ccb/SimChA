@@ -177,6 +177,17 @@ public class FileIO
         }
     }
 
+    public void WriteFitnessLandscape(string filename, List<List<double>> output)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), filename);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        outputFile.WriteLine("alpha\tbeta\tfitness");
+        foreach (var line in output)
+        {
+            outputFile.WriteLine($"{line[0]}\t{line[1]}\t{line[2]}");
+        }
+    }
 
     public void WriteVCF(GenRef genRef, IEnumerable<Sample> samples)
     {
