@@ -126,7 +126,7 @@ public static class Sampling
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
-        if (!seq.Any())
+        if (seq.Count == 0)
             return null;
         
         switch (cnEventPars.Type)
