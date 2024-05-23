@@ -55,7 +55,7 @@ else if (execMode == ExecMode.RunOptimization)
     if (simParams.OptimizationParams.Mode == "Events")
     {
         Console.WriteLine("Event Optimization Mode -------- ");
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes);
+        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
         if (options.TargetParams != "")
         {
             Console.WriteLine("Generating Simulated Data");
@@ -83,14 +83,14 @@ else if (execMode == ExecMode.RunOptimization)
         }
         else
         {
-            var outParams = optimizer.Optimize(files);
+            var outParams = optimizer.Optimize();
             files.WriteSimParams(outParams);
         }
     }
     else if (simParams.OptimizationParams.Mode == "Fitness")
     {
         Console.WriteLine("Fitness Optimization Mode -------- ");
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes);
+        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
         if (options.TargetParams != "")
         {
             Console.WriteLine("Generating Simulated Data");
@@ -120,7 +120,7 @@ else if (execMode == ExecMode.RunOptimization)
             throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform fitness optimization without a target data set.");
         }
         
-        var outParams = optimizer.Optimize(files);
+        var outParams = optimizer.Optimize();
         files.WriteSimParams(outParams);
     }
     else

@@ -16,8 +16,8 @@ public class FitnessOptimizer : Optimizer
     private readonly Binner Binner;
 
     public FitnessOptimizer(SimParams simParams, Random rnd, int repeats, 
-        GenRef genRef, bool includeSexChromosomes) 
-        : base(simParams, rnd, repeats, genRef, includeSexChromosomes)
+        GenRef genRef, bool includeSexChromosomes, FileIO files) 
+        : base(simParams, rnd, repeats, genRef, includeSexChromosomes, files)
     {
         if (SimParams.MCParams is null)
         {
@@ -62,10 +62,10 @@ public class FitnessOptimizer : Optimizer
         ObservedCNPs1MB = Binner.GetBinnedCNProfiles(ObservedSamples);
     }
 
-    public override SimParams Optimize(FileIO files)
-        => FindBestParams(files);
+    public override SimParams Optimize()
+        => FindBestParams();
 
-    private SimParams FindBestParams(FileIO files)
+    private SimParams FindBestParams()
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
@@ -94,12 +94,12 @@ public class FitnessOptimizer : Optimizer
                 bestParams = proposedParams;
                 bestScore = proposedScore;
                 //files.WriteSimParams(bestParams, $"best_params_{counter}.json");
-                files.WriteSimParams(bestParams);
+                Files.WriteSimParams(bestParams);
                 counter++;
             }
             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
             {
-                files.WriteSimParams(currentParams, $"params_{i}.json");
+                Files.WriteSimParams(currentParams, $"params_{i}.json");
             }
         }
         return bestParams;

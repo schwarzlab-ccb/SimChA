@@ -21,7 +21,8 @@ public class Optimizer
     private bool BreakpointsPerChrom {get; set;}
     private long BPBinSize {get; set;}
     protected List<Sample> ObservedSamples { get; set;}
-    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, bool includeSexChromosomes)
+    protected FileIO Files { get; }
+    public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, bool includeSexChromosomes, FileIO files)
     {
         SimParams = simParams;
         Rnd = rnd;
@@ -36,6 +37,7 @@ public class Optimizer
         ObservedEventCounts = new Dictionary<string, int>();
         IsFemaleObservedDict = new Dictionary<string, bool>();
         ObservedSamples = new List<Sample>();
+        Files = files;
     }
 
     public virtual void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
@@ -64,13 +66,13 @@ public class Optimizer
         (ObservedCNPs, ObservedEventCounts) = GetInfo(ObservedSamples);
         Setup();
     }
-    public virtual SimParams Optimize(FileIO files)
+    public virtual SimParams Optimize()
         => OptimizationParams.OptimizationMethod switch
             {
-                "MetropolisHastings" => FindBestParams(files),
-                "SimulatedAnnealing" => AnnealingBestParams(files),
-                "AdaptiveSimulatedAnnealing" => AnnealingBestParams(files),
-                "StepSizeDecay" => DecayBestParams(files),
+                "MetropolisHastings" => FindBestParams(),
+                "SimulatedAnnealing" => AnnealingBestParams(),
+                "AdaptiveSimulatedAnnealing" => AnnealingBestParams(),
+                "StepSizeDecay" => DecayBestParams(),
                 _ => throw new Exception("Error in Optimizer. Optimization method not recognized."),
             };
 
@@ -106,6 +108,10 @@ public class Optimizer
         {
             throw new Exception("Error in GetScore function of FitnessOptimizer. Negative distance value.");
         }
+        if (OptimizationParams.PrintScore)
+        {
+            Console.WriteLine($"Score: {totalDist.Sum()}");
+        }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
@@ -118,7 +124,7 @@ public class Optimizer
     protected double GetAcceptanceProbability(double scoreA, double scoreB)
         => GetAcceptanceProbability(scoreA, scoreB, 1.0);
 
-    private SimParams FindBestParams(FileIO files)
+    private SimParams FindBestParams()
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
@@ -143,12 +149,12 @@ public class Optimizer
             {
                 bestParams = proposedParams;
                 bestScore = proposedScore;
-                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                Files.WriteSimParams(bestParams, $"best_params_{counter}.json");
                 counter++;
             }
             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
             {
-                files.WriteSimParams(currentParams, $"params_{i}.json");
+                Files.WriteSimParams(currentParams, $"params_{i}.json");
             }
             if (i % OptimizationParams.GCInterval == 0)
             {
@@ -158,7 +164,7 @@ public class Optimizer
         return bestParams;
     }
 
-    private SimParams DecayBestParams(FileIO files)
+    private SimParams DecayBestParams()
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
@@ -185,7 +191,7 @@ public class Optimizer
             {
                 bestParams = proposedParams;
                 bestScore = proposedScore;
-                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                Files.WriteSimParams(bestParams, $"best_params_{counter}.json");
                 counter++;
             }
             // Apply decay to step size
@@ -208,7 +214,7 @@ public class Optimizer
         return bestParams;
     }
 
-    private SimParams AnnealingBestParams(FileIO files)
+    private SimParams AnnealingBestParams()
     {
         var currentParams = SimParams;
         var currentSamples = GenerateSimulatedData(currentParams);
@@ -250,12 +256,12 @@ public class Optimizer
             {
                 bestParams = proposedParams;
                 bestScore = proposedScore;
-                files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                Files.WriteSimParams(bestParams, $"best_params_{counter}.json");
                 counter++;
             }
             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
             {
-                files.WriteSimParams(currentParams, $"params_{i}.json");
+                Files.WriteSimParams(currentParams, $"params_{i}.json");
             }
             if (i % OptimizationParams.GCInterval == 0)
             {
