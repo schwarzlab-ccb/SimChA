@@ -102,6 +102,10 @@ public class FitnessOptimizer : Optimizer
                 Files.WriteSimParams(currentParams, $"params_{i}.json");
             }
         }
+        if (OptimizationParams.WriteScores)
+        {
+            Files.WriteScores(Scores);
+        }
         return bestParams;
     }
 
@@ -214,39 +218,47 @@ public class FitnessOptimizer : Optimizer
     {
         var (cnps, eventCounts) = GetInfo(samples);
         var binnedCNPs = Binner.GetBinnedCNProfiles(samples);
-        var totalDist = new List<double>();
+        var totalDist = new Dictionary<string, double>();
 
         if (OptimizationParams.UseSegLength)
         {
             var segDist = GetSegLengthDistance(cnps);
-            totalDist.Add(segDist);
+            totalDist["seg_length"] = segDist;
         }
         if (OptimizationParams.UseCNAlongGenome)
         {
             var dist = GetMeanCNAlongGenomeDistance(binnedCNPs);
-            totalDist.Add(dist);
+            totalDist["mean_cn"] = dist;
         }
         if (OptimizationParams.UseBreakpoints)
         {
             var bpDist = GetBreakpointDistance(cnps, eventCounts);
-            totalDist.Add(bpDist);
+            totalDist["breakpoints"] = bpDist;
         }
         if (OptimizationParams.UseHomozygousDeletion)
         {
             var hdDist = GetHomozygousDeletionDistance(cnps);
-            totalDist.Add(hdDist);
+            totalDist["hd_frac"] = hdDist;
         }
         if (OptimizationParams.UsePloidy)
         {
             var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
             var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
-            totalDist.Add(ploidyDist);
+            totalDist["ploidy"] = ploidyDist;
         }
-        if (totalDist.Any(x => x < 0))
+        if (totalDist.Count == 0)
+        {
+            throw new Exception("Error in GetScore function of Optimizer. No summary statistics selected.");
+        }
+        if (totalDist.Any(kvp => kvp.Value < 0))
         {
             throw new Exception("Error in GetScore function of FitnessOptimizer. Negative distance value.");
         }
-        return totalDist.Sum();
+        if (OptimizationParams.WriteScores)
+        {
+            Scores.Add(totalDist);
+        }
+        return totalDist.Values.Sum();
     }
 
     private double GetMeanCNAlongGenomeDistance(Dictionary<string, List<CopyNumber>> binnedCNPs)

@@ -41,5 +41,5 @@ public record OptimizationParams(
     bool UseHomozygousDeletion, // Flag to use homozygous deletions in fitness optimization distance
     bool UseCNAlongGenome, // Flag to use copy number along the genome in fitness optimization distance
     bool IncludeTotalStrength, // Flag to vary total strength during the fitness parameter optimization
-    bool PrintScore // Flag to print the score for each sample during optimization
+    bool WriteScores // Flag to print the score for each sample during optimization
     );

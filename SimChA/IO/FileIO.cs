@@ -29,6 +29,7 @@ public class FileIO
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
     private const string FASTA_FILENAME = "genome.fa";
+    private const string SCORES_FILENAME = "optimization_scores.tsv";
 
     
     private string Timestamp { get; }
@@ -138,7 +139,6 @@ public class FileIO
 
     public void WriteEvents(IEnumerable<Sample> samples)
     {
-        // TODO: Format output, talk with Tom about readable ideas
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
@@ -154,6 +154,19 @@ public class FileIO
                                          $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
                 }
             }
+        }
+    }
+
+    public void WriteScores(IEnumerable<Dictionary<string, double>> scores)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SCORES_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        var header = string.Join("\t", scores.First().Keys);
+        outputFile.WriteLine(header);
+        foreach (var score in scores)
+        {
+            outputFile.WriteLine(string.Join("\t", score.Values));
         }
     }
 

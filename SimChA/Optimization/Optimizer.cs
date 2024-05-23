@@ -22,6 +22,7 @@ public class Optimizer
     private long BPBinSize {get; set;}
     protected List<Sample> ObservedSamples { get; set;}
     protected FileIO Files { get; }
+    protected List<Dictionary<string, double>> Scores;
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, bool includeSexChromosomes, FileIO files)
     {
         SimParams = simParams;
@@ -38,6 +39,7 @@ public class Optimizer
         IsFemaleObservedDict = new Dictionary<string, bool>();
         ObservedSamples = new List<Sample>();
         Files = files;
+        Scores = new List<Dictionary<string, double>>();
     }
 
     public virtual void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
@@ -87,35 +89,39 @@ public class Optimizer
     {
         var (cnps, eventCounts) = GetInfo(samples);
         
-        var totalDist = new List<double>();
+        var totalDist = new Dictionary<string, double>();
         if (OptimizationParams.UseSegLength)
         {
             var segDist = GetSegLengthDistance(cnps);
-            totalDist.Add(segDist);
+            totalDist["seg_length"] = segDist;
         }
         if (OptimizationParams.UsePloidy)
         {
             var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
             var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
-            totalDist.Add(ploidyDist);
+            totalDist["ploidy"] = ploidyDist;
         }
         if (OptimizationParams.UseBreakpoints)
         {
             var bpDist = GetBreakpointDistance(cnps, eventCounts);
-            totalDist.Add(bpDist);
+            totalDist["breakpoints"] = bpDist;
         }
-        if (totalDist.Any(x => x < 0))
+        if (totalDist.Count == 0)
+        {
+            throw new Exception("Error in GetScore function of Optimizer. No summary statistics selected.");
+        }
+        if (totalDist.Any(kvp => kvp.Value < 0))
         {
             throw new Exception("Error in GetScore function of FitnessOptimizer. Negative distance value.");
         }
-        if (OptimizationParams.PrintScore)
+        if (OptimizationParams.WriteScores)
         {
-            Console.WriteLine($"Score: {totalDist.Sum()}");
+            Scores.Add(totalDist);
         }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
-        return totalDist.Sum();
+        return totalDist.Values.Sum();
     }
 
     private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
@@ -160,6 +166,10 @@ public class Optimizer
             {
                 GC.Collect();
             }
+        }
+        if (OptimizationParams.WriteScores)
+        {
+            Files.WriteScores(Scores);
         }
         return bestParams;
     }
