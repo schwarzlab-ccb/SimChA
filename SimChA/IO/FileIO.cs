@@ -162,11 +162,18 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SCORES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        var header = string.Join("\t", scores.First().Keys);
+        var keyOrder = scores.First().Keys.ToList();
+        var header = string.Join("\t", keyOrder);
         outputFile.WriteLine(header);
         foreach (var score in scores)
         {
-            outputFile.WriteLine(string.Join("\t", score.Values));
+            string scoreline = "";
+            foreach (var key in keyOrder)
+            {
+                scoreline += $"{score[key]}\t";
+            }
+            scoreline = scoreline.Substring(0, scoreline.Length - 2);
+            outputFile.WriteLine(scoreline);
         }
     }
 
