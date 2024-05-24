@@ -1,7 +1,5 @@
 using SimChA.DataTypes;
-using SimChA.Simulation;
 using MathNet.Numerics.Statistics;
-using SimChA.Optimization;
 namespace SimChA.Computation;
 
 public static class SummaryFeatures

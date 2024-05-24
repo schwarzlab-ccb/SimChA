@@ -2,24 +2,23 @@ using SimChA.DataTypes;
 using SimChA.IO;
 namespace SimChA.Computation;
 
-public class FitnessLandscape
+public static class FitnessLandscape
 {
-    private Dictionary<string, Dictionary<string, double>>
-    public void GenerateFitnessLandscape(GenRef genRef, SimParams simParams, List<Sample> samples, FileIO files)
+    public static void GenerateFitnessLandscape(GenRef genRef, SimParams simParams, List<Sample> samples, FileIO files)
     {
         GetSampleStats(genRef, simParams, samples);
-        int nSteps = 100;
+        int nSteps = 1000;
         var range = Enumerable.Range(0, nSteps).Select(i => i * 1.0 / (nSteps - 1) ).ToList();
         foreach (var sample in samples)
         {
             foreach (var clone in sample.Clones)
             {
-                var output = new List<List<double>>();
-                var filename = $"FitnessLandscape_{sample.SampleId}_{clone.CloneId}.tsv";
                 var stats = sample.Stats[clone.CloneId];
                 var stress = stats.Stress;
                 var tsgog = stats.Tsg + stats.Og;
                 var ess = stats.Ess;
+
+                var output = new List<List<double>>();
                 foreach (var alpha in range)
                 {
                     foreach (var beta in range)
@@ -32,12 +31,13 @@ public class FitnessLandscape
                         output.Add(new List<double> {alpha, beta, fitness});
                     }
                 }
+                var filename = $"FitnessLandscape_{sample.SampleId}_{clone.CloneId}.tsv";
                 files.WriteFitnessLandscape(filename, output);
             }
         }
     }
 
-    private void GetSampleStats(GenRef genRef, SimParams simParams, List<Sample> samples)
+    private static void GetSampleStats(GenRef genRef, SimParams simParams, List<Sample> samples)
     {
         foreach (var sample in samples)
         {

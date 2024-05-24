@@ -25,6 +25,15 @@ public static class Fitness
         return 1 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
     }
 
+    public static double CalculateFromComponents(
+        double stressTerm,
+        double tsgogTerm,
+        double essTerm,
+        FitnessParams fParams)
+    {
+        return 1 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
+    }
+
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
     {
         Console.WriteLine("CNs:");

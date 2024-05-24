@@ -195,6 +195,20 @@ public class TestFitness
     }
 
     [Test]
+    public void TestCalculateFromComponents([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        var karyotype = new Karyotype(genRef, true);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
+        double stress = Fitness.StressTerm(genRef.GetGenomeLen(true), karyotype.GenomeLen());
+        double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), true);
+        double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), true);
+        double ess = Fitness.EssTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype), true);
+        double total = 1 + (stress + tsg + og + ess) * fit.TotalStrength;
+        Assert.AreEqual(total, Fitness.CalculateFromComponents(stress, tsg+og, ess, fit), EPSILON);
+    }
+
+    [Test]
     public void TestAutosomeCalculate([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];

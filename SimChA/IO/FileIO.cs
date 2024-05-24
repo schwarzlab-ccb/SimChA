@@ -180,7 +180,7 @@ public class FileIO
     public void WriteFitnessLandscape(string filename, List<List<double>> output)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), filename);
-        Console.WriteLine($"Writing to file {outPath}");
+        Console.WriteLine($"\nWriting to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         outputFile.WriteLine("alpha\tbeta\tfitness");
         foreach (var line in output)

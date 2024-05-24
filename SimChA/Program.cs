@@ -140,8 +140,7 @@ if (execMode == ExecMode.Profiles)
     if (options.FitnessLandscape)
     {
         Console.WriteLine("Computing fitness landscape:");
-        var fitnessLandscape = new FitnessLandscape();
-        fitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
+        FitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
     }
 }
 else

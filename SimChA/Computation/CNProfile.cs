@@ -24,11 +24,11 @@ public abstract class CNProfile
         var ogCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar);
         var essCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar);
         
-        double fitness = Fitness.Calculate(kar, genRef, fParams);
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.SexXX), kar.GenomeLen());
         double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.SexXX);
         double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.SexXX);
         double ess = Fitness.EssTerm(genRef, essCNs, kar.SexXX, fParams.Haploinsufficiency);
+        double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
         return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, stress, tsg, og, ess);
     }
