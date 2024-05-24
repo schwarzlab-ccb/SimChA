@@ -7,7 +7,7 @@ public static class FitnessLandscape
     public static void GenerateFitnessLandscape(GenRef genRef, SimParams simParams, List<Sample> samples, FileIO files)
     {
         GetSampleStats(genRef, simParams, samples);
-        int nSteps = 1000;
+        int nSteps = 5000;
         var range = Enumerable.Range(0, nSteps).Select(i => i * 1.0 / (nSteps - 1) ).ToList();
         foreach (var sample in samples)
         {
