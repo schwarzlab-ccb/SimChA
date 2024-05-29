@@ -118,10 +118,10 @@ public class Optimizer
         {
             Scores.Add(totalDist);
         }
-	if (totalDist.Any(kvp => kvp.Value > 1))
-	{
-	    throw new Exception("Error in GetScore function of Optimizer. At least one distance is greater than 1.");
-	}
+        if (totalDist.Any(kvp => kvp.Value > 1))
+        {
+            throw new Exception("Error in GetScore function of Optimizer. At least one distance is greater than 1.");
+        }
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);

@@ -167,12 +167,8 @@ public class FileIO
         outputFile.WriteLine(header);
         foreach (var score in scores)
         {
-            string scoreline = "";
-            foreach (var key in keyOrder)
-            {
-                scoreline += $"{score[key]}\t";
-            }
-            scoreline = scoreline.Substring(0, scoreline.Length - 2);
+            // Use string.Join to concatenate the values for the current score dictionary
+            var scoreline = string.Join("\t", keyOrder.Select(key => score[key].ToString()));
             outputFile.WriteLine(scoreline);
         }
     }
