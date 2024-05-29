@@ -112,12 +112,16 @@ public class Optimizer
         }
         if (totalDist.Any(kvp => kvp.Value < 0))
         {
-            throw new Exception("Error in GetScore function of FitnessOptimizer. Negative distance value.");
+            throw new Exception("Error in GetScore function of Optimizer. Negative distance value.");
         }
         if (OptimizationParams.WriteScores)
         {
             Scores.Add(totalDist);
         }
+	if (totalDist.Any(kvp => kvp.Value > 1))
+	{
+	    throw new Exception("Error in GetScore function of Optimizer. At least one distance is greater than 1.");
+	}
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
