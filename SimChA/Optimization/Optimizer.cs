@@ -129,7 +129,7 @@ public class Optimizer
     }
 
     private double GetAcceptanceProbability(double scoreA, double scoreB, double temperature)
-        => Math.Min(0, -OptimizationParams.AcceptanceFactor*(scoreB - scoreA)/(scoreA*temperature));
+        => Math.Min(0, OptimizationParams.AcceptanceFactor*(scoreA - scoreB)/(scoreA*temperature));
 
     protected double GetAcceptanceProbability(double scoreA, double scoreB)
         => GetAcceptanceProbability(scoreA, scoreB, 1.0);
@@ -498,7 +498,7 @@ public class Optimizer
     {
         var histMax = (double)GenRef.ChrLengths["chr1"];
         var histMin = 0.0;
-        var histBins = 101;
+        var histBins = OptimizationParams.SegLengthBinCount;
         var weighted = OptimizationParams.SegmentCountWeighted;
         var obsValues = SummaryFeatures.GetStratifiedSegLengths(ObservedCNPs, weighted);
         var simValues = SummaryFeatures.GetStratifiedSegLengths(simCNPs, weighted);
@@ -528,7 +528,7 @@ public class Optimizer
         var simValues = SummaryFeatures.GetMeanSegLength(simCNPs);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
-        var histBins = 100;
+        var histBins = OptimizationParams.SegLengthBinCount;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
 
@@ -543,17 +543,7 @@ public class Optimizer
         var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, simFemaleDict, IncludeSexChromosomes, cutoff);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
-        var histBins = 100;
-        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
-
-    private double GetChangepointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
-    {
-        var (obsValues, obsMax) = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
-        var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(simCNPs);
-        var histMax = Math.Max(obsMax, simMax);
-        var histMin = 0;
-        var histBins = histMax;
+        var histBins = OptimizationParams.PloidyBinCount;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     protected double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, int> simEventCounts)
@@ -563,9 +553,9 @@ public class Optimizer
         var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, ObservedEventCounts, IncludeSexChromosomes);
         var simValues = SummaryFeatures.GetBreakpoints(simCNPs, simEventCounts, IncludeSexChromosomes);
         // Limit the maximum number of breakpoints to 100.
-        var histMax = 100;
+        var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
-        var histBins = histMax;
+        var histBins = OptimizationParams.BreakpointsBinCount;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     private double GetMajMinCNDistance(Dictionary<string, List<CopyNumber>> simCNPs, bool getMajor)
@@ -575,6 +565,15 @@ public class Optimizer
         var histMax = Math.Max(obsMax, simMax);
         var histMin = 0;
         var histBins = 50;
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
+    }
+    private double GetChangepointDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    {
+        var (obsValues, obsMax) = SummaryFeatures.GetChangepointInfo(ObservedCNPs);
+        var (simValues, simMax)  = SummaryFeatures.GetChangepointInfo(simCNPs);
+        var histMax = Math.Max(obsMax, simMax);
+        var histMin = 0;
+        var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     protected static double CalculateDistance(List<double> data, List<double> sim, int bins, double min, double max)
