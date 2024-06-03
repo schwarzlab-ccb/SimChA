@@ -32,7 +32,7 @@ public class StatisticMeasures
         double distance = 0.0;
         for (int i = 0; i < histA.BucketCount; i++)
         {
-            distance += Math.Abs(cdfA[i] - cdfB[i]);
+            distance += Math.Abs(cdfA[i] - cdfB[i]) * histA[i].Width;
         }
         return distance / histA.BucketCount;
     }

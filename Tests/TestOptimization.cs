@@ -61,6 +61,7 @@ public class TestOptimization
         var bCDF = StatisticMeasures.GetCDF(bHist);
         Assert.AreEqual(0.5, bCDF[0], double.Epsilon);
         var dist = StatisticMeasures.WassersteinDistance(aHist, bHist);
-        Assert.AreEqual(0.3125, dist, double.Epsilon);
+        var binWidth = (max - min )/ bins;
+        Assert.AreEqual(0.3125*binWidth, dist, double.Epsilon);
     }
 }

@@ -496,7 +496,7 @@ public class Optimizer
 
     private double GetStratifiedSegLengthDistance(Dictionary<string, List<CopyNumber>> simCNPs)
     {
-        var histMax = (double)GenRef.ChrLengths["chr1"];
+        var histMax = (double)GenRef.ChrLengths["chr1"] + 1;
         var histMin = 0.0;
         var histBins = OptimizationParams.SegLengthBinCount;
         var weighted = OptimizationParams.SegmentCountWeighted;
@@ -509,7 +509,7 @@ public class Optimizer
                 obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log(x)).ToList());
                 simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log(x)).ToList());
             }
-            histMax = Math.Log(histMax) + 1.0;
+            histMax = Math.Log(histMax);
             histMin = Math.Log(1/1000000.0);
         }
         var totalDist = new List<double>();
@@ -542,7 +542,7 @@ public class Optimizer
         var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes, cutoff);
         var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, simFemaleDict, IncludeSexChromosomes, cutoff);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
-        var histMin = 0;
+        var histMin = Math.Min(obsValues.Min(), simValues.Min());
         var histBins = OptimizationParams.PloidyBinCount;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
@@ -576,12 +576,13 @@ public class Optimizer
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    protected static double CalculateDistance(List<double> data, List<double> sim, int bins, double min, double max)
+    protected static double CalculateDistance(List<double> data, List<double> sim, int nBins, double min, double max, bool logBins = false)
     {
-        var dataHist = new Histogram(data, bins, min, max);
-        var simHist  = new Histogram(sim, bins, min, max);
+        var dataHist = new Histogram(data, nBins, min, max);
+        var simHist  = new Histogram(sim, nBins, min, max);
         return StatisticMeasures.WassersteinDistance(dataHist, simHist);
     }
+
     protected (Dictionary<string, List<CopyNumber>> cnps, Dictionary<string, int> eventCounts) GetInfo(List<Sample> samples)
     {
         var cnps = new Dictionary<string, List<CopyNumber>>();
