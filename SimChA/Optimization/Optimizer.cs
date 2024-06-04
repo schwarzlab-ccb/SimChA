@@ -498,19 +498,28 @@ public class Optimizer
     {
         var histMax = (double)GenRef.ChrLengths["chr1"] + 1;
         var histMin = 0.0;
-        var histBins = OptimizationParams.SegLengthBinCount;
+        int histBins = 0;
+        if (OptimizationParams.SegLengthBinCount == 0)
+        {
+            throw new Exception("Error in Optimizer. SegLengthBinCount not set.");
+        }
+        else
+        {
+            histBins = OptimizationParams.SegLengthBinCount;
+        }
         var weighted = OptimizationParams.SegmentCountWeighted;
         var obsValues = SummaryFeatures.GetStratifiedSegLengths(ObservedCNPs, weighted);
         var simValues = SummaryFeatures.GetStratifiedSegLengths(simCNPs, weighted);
         if (OptimizationParams.LogTransformSegLength)
         {
+            histMax = Math.Log10(histMax);
+            histMin = histMax;
             for (int i = 0; i < obsValues.Count; i++)
             {
-                obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log(x)).ToList());
-                simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log(x)).ToList());
+                obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log10(x)).ToList());
+                simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log10(x)).ToList());
+                histMin = Math.Min(histMin, Math.Min(obsValues[i].segs.Min(), simValues[i].segs.Min()));
             }
-            histMax = Math.Log(histMax);
-            histMin = Math.Log(1/1000000.0);
         }
         var totalDist = new List<double>();
         for (int i = 0; i < obsValues.Count; i++)
@@ -576,7 +585,7 @@ public class Optimizer
         var histBins = histMax;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
-    protected static double CalculateDistance(List<double> data, List<double> sim, int nBins, double min, double max, bool logBins = false)
+    protected static double CalculateDistance(List<double> data, List<double> sim, int nBins, double min, double max)
     {
         var dataHist = new Histogram(data, nBins, min, max);
         var simHist  = new Histogram(sim, nBins, min, max);
