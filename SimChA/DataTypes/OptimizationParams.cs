@@ -44,5 +44,6 @@ public record OptimizationParams(
     bool WriteScores, // Flag to print the score for each sample during optimization
     int PloidyBinCount, // Number of bins for ploidy in optimization distance
     int SegLengthBinCount, // Number of bins for segment length in optimization distance
-    int BreakpointsBinCount // Number of bins for breakpoints in optimization distance
+    int BreakpointsBinCount, // Number of bins for breakpoints in optimization distance
+    bool DeterministicAcceptance // Flag to use deterministic acceptance in optimization
     );

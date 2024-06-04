@@ -150,7 +150,8 @@ public class Optimizer
             var proposedSamples = GenerateSimulatedData(proposedParams);
             var proposedScore = GetScore(proposedSamples);
             var prob = GetAcceptanceProbability(currentScore, proposedScore);
-            if (prob >= Math.Log(Rnd.NextDouble()))
+            bool acceptCondition = OptimizationParams.DeterministicAcceptance ? proposedScore < currentScore : prob >= Math.Log(Rnd.NextDouble());
+            if (acceptCondition)
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
