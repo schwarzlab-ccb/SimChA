@@ -498,15 +498,11 @@ public class Optimizer
     {
         var histMax = (double)GenRef.ChrLengths["chr1"] + 1;
         var histMin = 0.0;
-        int histBins = 0;
         if (OptimizationParams.SegLengthBinCount == 0)
         {
             throw new Exception("Error in Optimizer. SegLengthBinCount not set.");
         }
-        else
-        {
-            histBins = OptimizationParams.SegLengthBinCount;
-        }
+        int histBins = OptimizationParams.SegLengthBinCount;
         var weighted = OptimizationParams.SegmentCountWeighted;
         var obsValues = SummaryFeatures.GetStratifiedSegLengths(ObservedCNPs, weighted);
         var simValues = SummaryFeatures.GetStratifiedSegLengths(simCNPs, weighted);
@@ -531,16 +527,6 @@ public class Optimizer
         return totalDist.Sum();
     }
 
-    private double GetMeanSegDistance(Dictionary<string, List<CopyNumber>> simCNPs)
-    {
-        var obsValues = SummaryFeatures.GetMeanSegLength(ObservedCNPs);
-        var simValues = SummaryFeatures.GetMeanSegLength(simCNPs);
-        var histMax = Math.Max(obsValues.Max(), simValues.Max());
-        var histMin = 0;
-        var histBins = OptimizationParams.SegLengthBinCount;
-        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
-    }
-
     protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, bool> simFemaleDict)
     {
         double cutoff = -1.0;
@@ -548,23 +534,40 @@ public class Optimizer
         {
             cutoff = OptimizationParams.PloidyCutoff;
         }
+        if (OptimizationParams.PloidyBinCount == 0)
+        {
+            throw new Exception("Error in Optimizer. SegLengthBinCount not set.");
+        }
+        int histBins = OptimizationParams.PloidyBinCount;
         var obsValues = SummaryFeatures.GetPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes, cutoff);
         var simValues = SummaryFeatures.GetPloidy(GenRef, simCNPs, simFemaleDict, IncludeSexChromosomes, cutoff);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = Math.Min(obsValues.Min(), simValues.Min());
-        var histBins = OptimizationParams.PloidyBinCount;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     protected double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, int> simEventCounts)
     {
         //var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
         //var simValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, simCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
+        if (OptimizationParams.BreakpointsBinCount == 0)
+        {
+            throw new Exception("Error in Optimizer. BreakpointsBinCount not set.");
+        }
+        var histBins = OptimizationParams.BreakpointsBinCount;
         var obsValues = SummaryFeatures.GetBreakpoints(ObservedCNPs, ObservedEventCounts, IncludeSexChromosomes);
         var simValues = SummaryFeatures.GetBreakpoints(simCNPs, simEventCounts, IncludeSexChromosomes);
-        // Limit the maximum number of breakpoints to 100.
+        var histMax = Math.Max(obsValues.Max(), simValues.Max());
+        var histMin = Math.Min(obsValues.Min(), simValues.Min());
+        return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
+    }
+
+    private double GetMeanSegDistance(Dictionary<string, List<CopyNumber>> simCNPs)
+    {
+        var obsValues = SummaryFeatures.GetMeanSegLength(ObservedCNPs);
+        var simValues = SummaryFeatures.GetMeanSegLength(simCNPs);
         var histMax = Math.Max(obsValues.Max(), simValues.Max());
         var histMin = 0;
-        var histBins = OptimizationParams.BreakpointsBinCount;
+        var histBins = OptimizationParams.SegLengthBinCount;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
     private double GetMajMinCNDistance(Dictionary<string, List<CopyNumber>> simCNPs, bool getMajor)

@@ -19,7 +19,7 @@ public class StatisticMeasures
         {
             distance += Math.Abs(cdfA[i] - cdfB[i]);
         }
-        return distance;// / A.Count;
+        return distance / A.Count;
     }
 
     public static double WassersteinDistance(Histogram histA, Histogram histB)
@@ -27,15 +27,13 @@ public class StatisticMeasures
         // Calculate CDFs
         var cdfA = GetCDF(histA);
         var cdfB = GetCDF(histB);
-        var binWidth = histA[0].Width;
         // Calculate 1-Wasserstein distance
         double distance = 0.0;
         for (int i = 0; i < histA.BucketCount; i++)
         {
             distance += Math.Abs(cdfA[i] - cdfB[i]);
         }
-
-        return distance * binWidth;// / histA.BucketCount;
+        return distance / histA.BucketCount;
     }
 
 
