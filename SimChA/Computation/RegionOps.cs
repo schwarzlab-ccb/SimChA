@@ -239,6 +239,42 @@ public static class RegionOps
 
     public static List<Region> GlueNeighbours(List<Region> regions)
     {
+        // Step 1: Sort the regions
+        var sortedRegions = regions.OrderBy(r => r.ChrNo).ThenBy(r => r.Start).ThenBy(r => r.End).ToList();
+
+        var mergedRegions = new List<Region>();
+        foreach (var currentRegion in sortedRegions)
+        {
+            bool isMerged = false;
+            for (int i = 0; i < mergedRegions.Count; i++)
+            {
+                var existingRegion = mergedRegions[i];
+                // Check if the current region can be merged with the existing one
+                if (existingRegion.ChrNo == currentRegion.ChrNo &&
+                    existingRegion.Forward == currentRegion.Forward &&
+                    (existingRegion.End >= currentRegion.Start || existingRegion.Start == currentRegion.End))
+                {
+                    // Merge regions by updating the existing region to encompass both
+                    var newStart = Math.Min(existingRegion.Start, currentRegion.Start);
+                    var newEnd = Math.Max(existingRegion.End, currentRegion.End);
+                    mergedRegions[i] = existingRegion with { Start = newStart, End = newEnd };
+                    isMerged = true;
+                    break;
+                }
+            }
+            // If the current region wasn't merged, add it as a new entry
+            if (!isMerged)
+            {
+                mergedRegions.Add(currentRegion);
+            }
+        }
+
+        // Return the merged and glued regions
+        return mergedRegions;
+    }
+
+    public static List<Region> OldGlueNeighbours(List<Region> regions)
+    {
         var newRegions = new List<Region>();
         bool[] merged = new bool[regions.Count];
         for (int i = 0; i < regions.Count; i++)

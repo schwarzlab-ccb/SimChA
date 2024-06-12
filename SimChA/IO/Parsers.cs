@@ -91,7 +91,7 @@ public static class Parsers
             if (sample != lastSample)
             {
                 // First is empty
-                if (regionsA.Any() || regionsB.Any())
+                if (regionsA.Count != 0 || regionsB.Count != 0)
                 {
                     // Till the end of a chromosome
                     if (lastPos != genRef.ChrLengths[lastChr])
