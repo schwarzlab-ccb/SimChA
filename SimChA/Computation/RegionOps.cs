@@ -252,12 +252,13 @@ public static class RegionOps
                 // Check if the current region can be merged with the existing one
                 if (existingRegion.ChrNo == currentRegion.ChrNo &&
                     existingRegion.Forward == currentRegion.Forward &&
-                    (existingRegion.End >= currentRegion.Start || existingRegion.Start == currentRegion.End))
+                    (existingRegion.End == currentRegion.Start))
                 {
                     // Merge regions by updating the existing region to encompass both
-                    var newStart = Math.Min(existingRegion.Start, currentRegion.Start);
-                    var newEnd = Math.Max(existingRegion.End, currentRegion.End);
-                    mergedRegions[i] = existingRegion with { Start = newStart, End = newEnd };
+                    // TODO: how does the direction of the region affect this
+                    //var newStart = Math.Min(existingRegion.Start, currentRegion.Start);
+                    //var newEnd = Math.Max(existingRegion.End, currentRegion.End);
+                    mergedRegions[i] = existingRegion with { End = currentRegion.End };
                     isMerged = true;
                     break;
                 }
