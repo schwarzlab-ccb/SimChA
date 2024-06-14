@@ -31,7 +31,7 @@ public static class Fitness
         double essTerm,
         FitnessParams fParams)
     {
-        return 1 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
+        return 1 + (stressTerm*fParams.Stress + tsgogTerm*fParams.TsgOg + essTerm*fParams.Essentiality)*fParams.TotalStrength;
     }
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
