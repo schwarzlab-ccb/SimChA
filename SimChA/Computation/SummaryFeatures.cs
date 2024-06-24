@@ -226,6 +226,9 @@ public static class SummaryFeatures
         return averages;
     }
 
+    public static double GetMeanBreakpoints(Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, int> eventCount, bool includeSexChromosomes)
+        => GetBreakpoints(cnProfiles, eventCount, includeSexChromosomes).DefaultIfEmpty(0).Average();
+
     public static List<double> GetBreakpoints(Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, int> eventCount, bool includeSexChromosomes)
     {
         var breakpoints = new List<double>();
@@ -300,6 +303,9 @@ public static class SummaryFeatures
         }
         return meanCN;
     }
+
+    public static double GetMeanPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false)
+        => GetPloidy(genRef, cnProfiles, isFemaleDict, includeSexChromosomes, -1.0).DefaultIfEmpty(0).Average();
 
     public static List<double> GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false, double cutoff = 8.0)
         => includeSexChromosomes

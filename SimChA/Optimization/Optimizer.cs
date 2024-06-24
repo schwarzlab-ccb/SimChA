@@ -98,12 +98,14 @@ public class Optimizer
         if (OptimizationParams.UsePloidy)
         {
             var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
-            var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
+            //var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
+            var ploidyDist = GetMeanPloidyDistance(cnps, isFemaleDict);
             totalDist["ploidy"] = ploidyDist;
         }
         if (OptimizationParams.UseBreakpoints)
         {
-            var bpDist = GetBreakpointDistance(cnps, eventCounts);
+            //var bpDist = GetBreakpointDistance(cnps, eventCounts);
+            var bpDist = GetMeanBreakpointDistance(cnps, eventCounts);
             totalDist["breakpoints"] = bpDist;
         }
         if (totalDist.Count == 0)
@@ -528,6 +530,13 @@ public class Optimizer
         return totalDist.Sum();
     }
 
+    protected double GetMeanPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, bool> simFemaleDict)
+    {
+        var obsMean = SummaryFeatures.GetMeanPloidy(GenRef, ObservedCNPs, IsFemaleObservedDict, IncludeSexChromosomes);
+        var simMean = SummaryFeatures.GetMeanPloidy(GenRef, simCNPs, simFemaleDict, IncludeSexChromosomes);
+        return Math.Abs(obsMean - simMean);
+    }
+
     protected double GetPloidyDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, bool> simFemaleDict)
     {
         double cutoff = -1.0;
@@ -546,6 +555,14 @@ public class Optimizer
         var histMin = Math.Min(obsValues.Min(), simValues.Min());
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
+
+    protected double GetMeanBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, int> simEventCounts)
+    {
+        var obsMean = SummaryFeatures.GetMeanBreakpoints(ObservedCNPs, ObservedEventCounts, IncludeSexChromosomes);
+        var simMean = SummaryFeatures.GetMeanBreakpoints(simCNPs, simEventCounts, IncludeSexChromosomes);
+        return Math.Abs(obsMean - simMean);
+    }
+
     protected double GetBreakpointDistance(Dictionary<string, List<CopyNumber>> simCNPs, Dictionary<string, int> simEventCounts)
     {
         //var obsValues = SummaryFeatures.GetBreakpointsDistribution(GenRef, ObservedCNPs, IncludeSexChromosomes, BreakpointsPerChrom, BPBinSize);
