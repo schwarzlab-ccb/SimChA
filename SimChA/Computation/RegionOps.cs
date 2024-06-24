@@ -255,9 +255,6 @@ public static class RegionOps
                     (existingRegion.End == currentRegion.Start))
                 {
                     // Merge regions by updating the existing region to encompass both
-                    // TODO: how does the direction of the region affect this
-                    //var newStart = Math.Min(existingRegion.Start, currentRegion.Start);
-                    //var newEnd = Math.Max(existingRegion.End, currentRegion.End);
                     mergedRegions[i] = existingRegion with { End = currentRegion.End };
                     isMerged = true;
                     break;
@@ -274,32 +271,6 @@ public static class RegionOps
         return mergedRegions;
     }
 
-    public static List<Region> OldGlueNeighbours(List<Region> regions)
-    {
-        var newRegions = new List<Region>();
-        bool[] merged = new bool[regions.Count];
-        for (int i = 0; i < regions.Count; i++)
-        {
-            if (merged[i])
-            {
-                continue;
-            }
-            var newRegion = regions[i];
-            int j = i + 1; 
-            if (j < regions.Count
-                && !merged[j] 
-                && regions[j].ChrNo == newRegion.ChrNo 
-                && regions[j].Start == newRegion.End 
-                && regions[j].Forward == newRegion.Forward)
-            {
-                newRegion = newRegion with {End = regions[j].End};
-                merged[j] = true;
-            }
-            newRegions.Add(newRegion);
-        }
-        return newRegions;
-    }
-
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
         => regions.Select(r => r with { Forward = !r.Forward }).Reverse().ToList();
 
@@ -314,7 +285,7 @@ public static class RegionOps
     
     public static List<List<Region>> Scatter(List<long> locs, List<Region> regions)
     {
-        if (!locs.Any()) 
+        if (locs.Count == 0) 
         {
             return new List<List<Region>> { regions };
         }
