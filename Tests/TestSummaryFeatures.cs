@@ -487,6 +487,30 @@ public class TestSummaryFeatures
         Assert.AreEqual(2, values[1]);
         Assert.AreEqual(2, max);
     }
+
+    [Test]
+    public void TestDefaultMeanBreakpoints()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var eventCounts = new Dictionary<string, int> {{cnps.Keys.ToList()[0], 1 }};
+        var mean = SummaryFeatures.GetMeanBreakpoints(cnps, eventCounts, false);
+        Assert.AreEqual(0, mean);
+    }
+
+    [Test]
+    public void TestMeanBreakpoints()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // Missing segment from the start
+        karXX.ApplyInternalDeletion(0, 0, 1000);
+        karXX.ApplyInternalDuplication(1, 1000, 2000);
+        var cnps = GetCNPs(new List<Karyotype> { karXX });
+        var nEvents = 2;
+        var eventCounts = new Dictionary<string, int> {{cnps.Keys.ToList()[0], 2 }};
+        var mean = SummaryFeatures.GetMeanBreakpoints(cnps, eventCounts, false);
+        Assert.AreEqual(1.5, mean);
+    }
     
     [Test]
     public void TestDefaultBreakpointsPerChromosome()
