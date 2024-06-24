@@ -293,6 +293,38 @@ public class TestSummaryFeatures
     }
 
     [Test]
+    public void TestDefaultGetMeanPloidy()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        var karXY = new Karyotype(_genRef, false);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var sexDict = new Dictionary<string, bool> {{cnps.Keys.ToList()[0], true }, {cnps.Keys.ToList()[1], false}};
+        var meanPloidy = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
+        Assert.AreEqual(2, meanPloidy);
+    }
+
+    [Test]
+    public void TestGetMeanPloidy()
+    {
+        var karXX = new Karyotype(_genRef, true);
+        // WGD and deletion of two copies of X chromosome
+        karXX.ApplyWGD();
+        karXX.ApplyContigDeletion(22);
+        karXX.ApplyContigDeletion(45);
+        var karXY = new Karyotype(_genRef, false);
+        // Delete all contigs from chr1-22 (i.e. one copy of each autosome)
+        for (int i = 0; i < 22; i++)
+        {
+            karXY.ApplyContigDeletion(i);
+        }
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var sexDict = new Dictionary<string, bool> {{cnps.Keys.ToList()[0], true }, {cnps.Keys.ToList()[1], false}};
+        // Autosomes only
+        var mean = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
+        Assert.AreEqual(2.5, mean);
+    }
+
+    [Test]
     public void TestDefaultGetPloidy()
     {
         var karXX = new Karyotype(_genRef, true);
