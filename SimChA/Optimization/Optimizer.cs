@@ -120,10 +120,10 @@ public class Optimizer
         {
             Scores.Add(totalDist);
         }
-        if (totalDist.Any(kvp => kvp.Value > 1))
+        /*if (totalDist.Any(kvp => kvp.Value > 1))
         {
             throw new Exception("Error in GetScore function of Optimizer. At least one distance is greater than 1.");
-        }
+        }*/
         //var copyNumberMatrix = SummaryFeatures.GetChrCopyNumberMatrix(GenRef.AllChrs, cnps);
         //var mkv = SummaryFeatures.GetMKV(copyNumberMatrix);
         //var aneuploidy = SummaryFeatures.GetAverageAneuploidy(copyNumberMatrix);
@@ -517,7 +517,9 @@ public class Optimizer
             {
                 obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log10(x)).ToList());
                 simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log10(x)).ToList());
-                histMin = Math.Min(histMin, Math.Min(obsValues[i].segs.Min(), simValues[i].segs.Min()));
+                // TODO: do I need to worry about if there are no elements?
+                var minData = Math.Min(obsValues[i].segs.DefaultIfEmpty(0).Min(), simValues[i].segs.DefaultIfEmpty(0).Min());
+                histMin = Math.Min(histMin, minData);
             }
         }
         var totalDist = new List<double>();
