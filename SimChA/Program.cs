@@ -52,10 +52,10 @@ else if (execMode == ExecMode.RunOptimization)
         throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
     }
     
+    var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
     if (simParams.OptimizationParams.Mode == "Events")
     {
         Console.WriteLine("Event Optimization Mode -------- ");
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
         if (options.TargetParams != "")
         {
             Console.WriteLine("Generating Simulated Data");
@@ -74,23 +74,13 @@ else if (execMode == ExecMode.RunOptimization)
         {
             throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform event optimization without a target data set.");
         }
-        
-        if (simParams.OptimizationParams.UseABC)
-        {
-            var dist = optimizer.GetABCDistance();
-            Console.WriteLine($"ABC distance: {dist}");
-            return 0;
-        }
-        else
-        {
-            var outParams = optimizer.Optimize();
-            files.WriteSimParams(outParams);
-        }
+        var outParams = optimizer.Optimize();
+        files.WriteSimParams(outParams);
     }
     else if (simParams.OptimizationParams.Mode == "Fitness")
     {
         Console.WriteLine("Fitness Optimization Mode -------- ");
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
+        optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
         if (options.TargetParams != "")
         {
             Console.WriteLine("Generating Simulated Data");

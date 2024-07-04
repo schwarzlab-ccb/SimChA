@@ -78,13 +78,6 @@ public class Optimizer
                 _ => throw new Exception("Error in Optimizer. Optimization method not recognized."),
             };
 
-    public double GetABCDistance()
-    {
-        var samples = GenerateSimulatedData(SimParams);
-        var (simCNPs, eventCount) = GetInfo(samples);
-        return GetScore(samples);
-    }
-
     public virtual double GetScore(List<Sample> samples)
     {
         var (cnps, eventCounts) = GetInfo(samples);

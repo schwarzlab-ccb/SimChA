@@ -15,7 +15,6 @@ public record OptimizationParams(
     double AcceptanceFactor, // Factor for accepting new parameter set
     bool EventWeightsOnly, // Whether to only optimize event weights. If false, optimize event lengths too
     bool ResetSeed, // Whether to reset the random seed for each proposed parameter set
-    bool UseABC, // Whether to use Approximate Bayesian Computation
     bool UseSegLength, // Whether to use segment length in optimization distance
     string SegLengthType, // What kind of segment length distribution to use in optimization distance
     // Stratified, All, or Mean

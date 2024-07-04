@@ -164,7 +164,6 @@
 		"AcceptanceFactor": 10,
 		"EventWeightsOnly": true,
 		"ParamVariationMode": 1,
-		"UseABC": false,
 		"UseSegLength": true,
 		"SegLengthType": "Stratified",
 		"UsePloidy" : true,
@@ -188,6 +187,9 @@
 		"UseHomozygousDeletion": false,
 		"UseCNAlongGenome": true,
 		"IncludeTotalStrength": false,
-    "WriteScores": true
+		"WriteScores": false,
+		"PloidyBinCount": 25,
+		"BreakpointsBinCount": 25,
+		"SegLengthBinCount": 100
 	}
   }
