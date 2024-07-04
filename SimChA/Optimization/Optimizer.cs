@@ -107,9 +107,9 @@ public class Optimizer
         {
             throw new Exception("Error in GetScore function of Optimizer. No summary statistics selected.");
         }
-        if (totalDist.Any(kvp => kvp.Value < 0))
+        if (totalDist.Any(kvp => kvp.Value < 0) || totalDist.Any(kvp => double.IsNaN(kvp.Value)))
         {
-            throw new Exception("Error in GetScore function of Optimizer. Negative distance value.");
+            throw new Exception("Error in GetScore function of Optimizer. Invalid (i.e. negative or NaN) distance value.");
         }
         if (OptimizationParams.WriteScores)
         {
@@ -504,6 +504,7 @@ public class Optimizer
         var weighted = OptimizationParams.SegmentCountWeighted;
         var obsValues = SummaryFeatures.GetStratifiedSegLengths(ObservedCNPs, weighted);
         var simValues = SummaryFeatures.GetStratifiedSegLengths(simCNPs, weighted);
+        var totalDist = new List<double> {0, 0, 0};
         if (OptimizationParams.LogTransformSegLength)
         {
             histMax = Math.Log10(histMax);
@@ -512,17 +513,23 @@ public class Optimizer
             {
                 obsValues[i] = (obsValues[i].weight, obsValues[i].segs.Select(x => Math.Log10(x)).ToList());
                 simValues[i] = (simValues[i].weight, simValues[i].segs.Select(x => Math.Log10(x)).ToList());
-                // TODO: do I need to worry about if there are no elements?
-                var minData = Math.Min(obsValues[i].segs.DefaultIfEmpty(0).Min(), simValues[i].segs.DefaultIfEmpty(0).Min());
-                histMin = Math.Min(histMin, minData);
+                if (obsValues[i].segs.Count == 0)
+                {
+                    throw new Exception("Error in Optimizer. No segment lengths found in the observed dataset.");
+                }
+                else if (simValues[i].segs.Count == 0)
+                {
+                    // NOTE: This is a hack to avoid a crash when there are no segment lengths in the simulated dataset
+                    // TODO: Is this the best way to handle this?
+                    totalDist[i] = 100;
+                }
+                else 
+                {
+                    var minData = Math.Min(obsValues[i].segs.Min(), simValues[i].segs.Min());
+                    histMin = Math.Min(histMin, minData);
+                    totalDist[i] = CalculateDistance(obsValues[i].segs, simValues[i].segs, histBins, histMin, histMax) * simValues[i].weight;
+                }
             }
-        }
-        var totalDist = new List<double>();
-        for (int i = 0; i < obsValues.Count; i++)
-        {
-            var obs = obsValues[i].segs;
-            var sim = simValues[i].segs;
-            totalDist.Add(CalculateDistance(obs, sim, histBins, histMin, histMax) * simValues[i].weight);
         }
         return totalDist.Sum();
     }
