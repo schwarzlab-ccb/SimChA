@@ -25,6 +25,7 @@ public class Optimizer
     protected List<Dictionary<string, double>> Scores;
     public Optimizer(SimParams simParams, Random rnd, int repeats, GenRef genRef, bool includeSexChromosomes, FileIO files)
     {
+        
         SimParams = simParams;
         Rnd = rnd;
         Repeats = repeats;
@@ -44,6 +45,7 @@ public class Optimizer
 
     public virtual void InitializeObservations(List<Sample> samples, Dictionary<string, int> eventCounts)
     {
+        Console.WriteLine("Event Optimization Mode -------- ");
         ObservedSamples = samples;
         ObservedCNPs = GetCNPs(ObservedSamples);
         ObservedEventCounts = eventCounts;

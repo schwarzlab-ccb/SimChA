@@ -19,6 +19,7 @@ public class FitnessOptimizer : Optimizer
         GenRef genRef, bool includeSexChromosomes, FileIO files) 
         : base(simParams, rnd, repeats, genRef, includeSexChromosomes, files)
     {
+        Console.WriteLine("Fitness Optimization Mode -------- ");
         if (SimParams.MCParams is null)
         {
             throw new Exception("Error in FitnessOptimizer.No MC parameters were provided.");

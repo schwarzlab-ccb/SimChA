@@ -51,74 +51,39 @@ else if (execMode == ExecMode.RunOptimization)
     {
         throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
     }
+    else if (simParams.OptimizationParams.Mode != "Events" && simParams.OptimizationParams.Mode != "Fitness")
+    {
+        throw new Exception("Error: OptimizationParams.Mode not recognized. Please set OptimizationParams.Mode to either Events or Fitness.");
+    }
     
-    var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
-    if (simParams.OptimizationParams.Mode == "Events")
+    var optimizer = simParams.OptimizationParams.Mode == "Events" 
+                  ? new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files)
+                  : new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
+
+    if (options.TargetParams != "")
     {
-        Console.WriteLine("Event Optimization Mode -------- ");
-        if (options.TargetParams != "")
-        {
-            Console.WriteLine("Generating Simulated Data");
-            SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
-            optimizer.InitializeObservations(targetParams);
-        }
-        else if (options.CNProfiles != "" && options.EventCounts != "")
-        {
-            Console.WriteLine("Reading observed data:");
-            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-            var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
-            var observedSamples = Simulator.SamplesFromProfiles(profiles);
-            optimizer.InitializeObservations(observedSamples, eventCounts);
-        }
-        else 
-        {
-            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform event optimization without a target data set.");
-        }
-        var outParams = optimizer.Optimize();
-        files.WriteSimParams(outParams);
+        Console.WriteLine("Generating synthetic data");
+        var targetParams = FileIO.ReadSimParams(options.TargetParams);
+        optimizer.InitializeObservations(targetParams);
     }
-    else if (simParams.OptimizationParams.Mode == "Fitness")
+    else if (options.CNProfiles != "" && options.EventCounts != "")
     {
-        Console.WriteLine("Fitness Optimization Mode -------- ");
-        optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
-        if (options.TargetParams != "")
-        {
-            Console.WriteLine("Generating Simulated Data");
-            SimParams targetParams = FileIO.ReadSimParams(options.TargetParams);
-            optimizer.InitializeObservations(targetParams);
-        }
-        else if (options.EventCounts != "" && options.CNProfiles != "")
-        {
-            Console.WriteLine("Reading observed data:");
-            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-            var observedSamples = Simulator.SamplesFromProfiles(profiles);
-            var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
-            foreach (var sample in observedSamples)
-            {
-                int counter = 1;
-                int total = sample.Clones.Count;
-                foreach (var clone in sample.Clones)
-                {
-                    Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-                    sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
-                }
-            }
-            optimizer.InitializeObservations(observedSamples, eventCounts);
-        }
-        else
-        {
-            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform fitness optimization without a target data set.");
-        }
-        
-        var outParams = optimizer.Optimize();
-        files.WriteSimParams(outParams);
+        Console.WriteLine("Reading observed data:");
+        var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+        var observedSamples = Simulator.SamplesFromProfiles(profiles);
+        var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+        optimizer.InitializeObservations(observedSamples, eventCounts);
     }
-    else
+    else 
     {
-        throw new Exception("Error: Optimization mode not recognized. Please set OptimizationParams.Mode to either Events or Fitness.");
+        throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform event optimization without a target data set.");
     }
+    
+    // Perform the optimization
+    var outParams = optimizer.Optimize();
+    files.WriteSimParams(outParams);
     watch.Stop();
-    //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
+    Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
     Console.WriteLine("Optimization finished");
     return 0;
 }
