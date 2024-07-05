@@ -74,7 +74,7 @@ public class FileIO
             foreach (var clone in sample.Clones)
             {
                 var kar = sample.Kars[clone.CloneId];
-                var cns = CopyNumbers.CalcCopyNumbers(genRef, kar, segs, sample.SexXX, true);
+                var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, kar, segs, sample.SexXX, true);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }

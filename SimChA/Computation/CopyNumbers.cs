@@ -19,6 +19,12 @@ public static class CopyNumbers
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
 
+    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool isFemale, bool keepMissing = false) 
+    {
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
+    }
+
     public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
     {
         var chrIDs = bins.Keys;
