@@ -473,12 +473,15 @@ public class Optimizer
         long cutoff = -1;
         var histMax = GenRef.ChrLengths["chr1"] + 1.0;
         var histMin = 0.0;
-        var histBins = 101;//(int) (histMax / 1_000_000);
+        if (OptimizationParams.SegLengthBinCount == 0)
+        {
+            throw new Exception("Error in Optimizer. SegLengthBinCount not set.");
+        }
+        int histBins = OptimizationParams.SegLengthBinCount;
         if (OptimizationParams.SegLengthCutoff > 0)
         {
             cutoff = OptimizationParams.SegLengthCutoff;
             histMax = (int)cutoff;
-            histBins = 100;
         }
         var obsValues = SummaryFeatures.GetSegLengths(ObservedCNPs, cutoff);
         var simValues = SummaryFeatures.GetSegLengths(simCNPs, cutoff);
@@ -521,7 +524,7 @@ public class Optimizer
                 {
                     // NOTE: This is a hack to avoid a crash when there are no segment lengths in the simulated dataset
                     // TODO: Is this the best way to handle this?
-                    totalDist[i] = 100;
+                    totalDist[i] = 1;
                 }
                 else 
                 {
