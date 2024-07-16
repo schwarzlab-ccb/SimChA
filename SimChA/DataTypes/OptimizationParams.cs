@@ -20,7 +20,10 @@ public record OptimizationParams(
     // Stratified, All, or Mean
     bool SegmentCountWeighted, // Whether to weight segment count histograms in optimization distance
     bool UsePloidy, // Whether to use ploidy in optimization distance
+    bool MeanPloidy, // Whether to use mean ploidy in optimization distance. If false, full ploidy distribution use, and PloidyBinCount is required 
+    int PloidyBinCount, // Number of bins for ploidy in optimization distance
     bool UseBreakpoints, // Whether to use breakpoints in optimization distance
+    bool MeanBPs, // Whether to use mean breakpoints in optimization distance. If false, full breakpoint distribution use, and BreakpointsBinCount is required
     bool BreakpointsPerChrom, // If using breakpoints, count per chromosome or per genome
     long BreakpointsBinSize, // Size of bins for breakpoints if BreakpointsPerChrome is false
     int ParamVariationMode, // How many parameters to vary at each step. 
@@ -41,7 +44,7 @@ public record OptimizationParams(
     bool UseCNAlongGenome, // Flag to use copy number along the genome in fitness optimization distance
     bool IncludeTotalStrength, // Flag to vary total strength during the fitness parameter optimization
     bool WriteScores, // Flag to print the score for each sample during optimization
-    int PloidyBinCount, // Number of bins for ploidy in optimization distance
+    
     int SegLengthBinCount, // Number of bins for segment length in optimization distance
     int BreakpointsBinCount, // Number of bins for breakpoints in optimization distance
     bool DeterministicAcceptance // Flag to use deterministic acceptance in optimization

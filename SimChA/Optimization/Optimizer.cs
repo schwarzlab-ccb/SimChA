@@ -93,14 +93,12 @@ public class Optimizer
         if (OptimizationParams.UsePloidy)
         {
             var isFemaleDict = samples.ToDictionary(s => s.SampleId, s => s.SexXX);
-            //var ploidyDist = GetPloidyDistance(cnps, isFemaleDict);
-            var ploidyDist = GetMeanPloidyDistance(cnps, isFemaleDict);
+            var ploidyDist = OptimizationParams.MeanPloidy ? GetMeanPloidyDistance(cnps, isFemaleDict) : GetPloidyDistance(cnps, isFemaleDict);
             totalDist["ploidy"] = ploidyDist;
         }
         if (OptimizationParams.UseBreakpoints)
         {
-            //var bpDist = GetBreakpointDistance(cnps, eventCounts);
-            var bpDist = GetMeanBreakpointDistance(cnps, eventCounts);
+            var bpDist = OptimizationParams.MeanBPs ? GetMeanBreakpointDistance(cnps, eventCounts) : GetBreakpointDistance(cnps, eventCounts);
             totalDist["breakpoints"] = bpDist;
         }
         if (totalDist.Count == 0)
