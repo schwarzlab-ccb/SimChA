@@ -106,11 +106,6 @@ public class MCSimulator : Simulator
                 currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
                 lastFitness = fitness;
-                if (Math.Abs(lastFitness - targetFitness) < best_diff)
-                {
-                    best_diff = Math.Abs(lastFitness - targetFitness);
-                    bestEvents = proposedEvents;
-                }
                 /*if (proposalPotential < bestPotential)
                 {
                     bestPotential = proposalPotential;
@@ -123,6 +118,11 @@ public class MCSimulator : Simulator
                     break;
                     //return currentEvents;
                 }
+            }
+            if (Math.Abs(lastFitness - targetFitness) < best_diff)
+            {
+                best_diff = Math.Abs(lastFitness - targetFitness);
+                bestEvents = proposedEvents;
             }
         }
         return bestEvents;//currentEvents;
@@ -150,13 +150,11 @@ public class MCSimulator : Simulator
                     eventData.ApplyEvent(childKar);
                     double newFitness = childKar.UpdateFitness(GenRef, FitnessParams);
                     double dFit = newFitness - oldFitness;
-                    double fitDiff = newFitness - child.FitnessTarget;
                     var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit,
                         newFitness);
                     childEvs.Add(abberation);
+                    oldFitness = newFitness;
                 }
-                double stress = Fitness.StressTerm(GenRef.GetGenomeLen(childKar.SexXX), childKar.GenomeLen());
-                double fitness = childKar.UpdateFitness(GenRef, FitnessParams);
                 Counter++;
                 if (child.CloneId != node.CloneId)
                 {
