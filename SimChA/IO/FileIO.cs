@@ -277,14 +277,14 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\tstress\ttsg\tog\tess");
+        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\ttarget_fitnes\tstress\ttsg\tog\tess");
         foreach (var sample in samples)
         {
             foreach (var stats in sample.Stats)
             {
                 string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{stats.Key}" : $"{sample.SampleId}";
                 var clone = stats.Value;
-                file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
+                file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.FitnessTarget}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
             }
         }
     }

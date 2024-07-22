@@ -30,6 +30,6 @@ public abstract class CNProfile
         double ess = Fitness.EssTerm(genRef, essCNs, kar.SexXX, fParams.Haploinsufficiency);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
-        return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, stress, tsg, og, ess);
+        return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, clone.FitnessTarget, stress, tsg, og, ess);
     }
 }
