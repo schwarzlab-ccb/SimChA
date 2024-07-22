@@ -277,7 +277,7 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\ttarget_fitnes\tstress\ttsg\tog\tess");
+        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\tfitness_target\tstress\ttsg\tog\tess");
         foreach (var sample in samples)
         {
             foreach (var stats in sample.Stats)
