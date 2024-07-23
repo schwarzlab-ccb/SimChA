@@ -106,6 +106,11 @@ public class MCSimulator : Simulator
                 currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
                 lastFitness = fitness;
+                if (Math.Abs(lastFitness - targetFitness) < best_diff)
+                {
+                    best_diff = Math.Abs(lastFitness - targetFitness);
+                    bestEvents = proposedEvents;
+                }
                 /*if (proposalPotential < bestPotential)
                 {
                     bestPotential = proposalPotential;
@@ -118,11 +123,6 @@ public class MCSimulator : Simulator
                     break;
                     //return currentEvents;
                 }
-            }
-            if (Math.Abs(lastFitness - targetFitness) < best_diff)
-            {
-                best_diff = Math.Abs(lastFitness - targetFitness);
-                bestEvents = proposedEvents;
             }
         }
         return bestEvents;//currentEvents;
