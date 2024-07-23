@@ -91,7 +91,6 @@ public class MCSimulator : Simulator
         var currentEvents = InitEvents(kar, nEvents, sample.EventPars);
         double currentPotential = Potential(new Karyotype(kar), targetFitness, currentEvents).potential;
         var best_diff = 1000.0;
-        var lastFitness = 1.0;
         var bestEvents = new List<BaseEventData>(currentEvents);
         //double bestPotential = currentPotential;
         //var bestEvents = new List<BaseEventData>(currentEvents);
@@ -105,10 +104,10 @@ public class MCSimulator : Simulator
             {
                 currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
-                lastFitness = fitness;
-                if (Math.Abs(lastFitness - targetFitness) < best_diff)
+                var proposed_diff = Math.Abs(fitness - targetFitness);
+                if (proposed_diff < best_diff)
                 {
-                    best_diff = Math.Abs(lastFitness - targetFitness);
+                    best_diff = proposed_diff;
                     bestEvents = proposedEvents;
                 }
                 /*if (proposalPotential < bestPotential)
