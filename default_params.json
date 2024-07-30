@@ -148,7 +148,8 @@
 	  "ThetaFitness": 10,
 	  "SwapEventP": 1,
 	  "ThresholdFit": 1E-08,
-	  "IncludeSize": false
+	  "IncludeSize": false,
+	  "IncludeProb": true
 	},
 	"MCTarget": {
 		"Mean": 1,

@@ -52,7 +52,10 @@ public class MCSimulator : Simulator
 
         double fitnessPotential = -McParams.ThetaFitness * Math.Abs(dFit)/targetFit;
 
-        double potential = fitnessPotential + eventPotentialTotal;
+        double potential = fitnessPotential;
+        if (McParams.IncludeProb) {
+            potential += eventPotentialTotal;
+        }
 
         return (potential, accept, newFitness);
     }
