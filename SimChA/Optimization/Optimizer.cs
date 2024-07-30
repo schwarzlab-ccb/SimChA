@@ -135,7 +135,7 @@ public class Optimizer
         var currentSamples = GenerateSimulatedData(currentParams);
         var currentScore = GetScore(currentSamples);
         var bestParams = currentParams;
-        var bestScore = currentScore;
+        var bestScore = 1000.0;
         var counter = 0;
         var stepSize = OptimizationParams.StepSize;
         for (int i = 0; i < OptimizationParams.NumSamplesTotal; i++)
@@ -144,19 +144,20 @@ public class Optimizer
             var proposedParams = GetProposalParams(currentParams, stepSize);
             var proposedSamples = GenerateSimulatedData(proposedParams);
             var proposedScore = GetScore(proposedSamples);
-            var prob = GetAcceptanceProbability(currentScore, proposedScore);
-            bool acceptCondition = OptimizationParams.DeterministicAcceptance ? proposedScore < currentScore : prob >= Math.Log(Rnd.NextDouble());
+            bool acceptCondition = OptimizationParams.DeterministicAcceptance 
+                ? proposedScore < currentScore 
+                : GetAcceptanceProbability(currentScore, proposedScore) >= Math.Log(Rnd.NextDouble());
             if (acceptCondition)
             {
                 currentParams = proposedParams;
                 currentScore = proposedScore;
-            }
-            if (proposedScore < bestScore)
-            {
-                bestParams = proposedParams;
-                bestScore = proposedScore;
-                Files.WriteSimParams(bestParams, $"best_params_{counter}.json");
-                counter++;
+                if (proposedScore < bestScore)
+                {
+                    bestParams = proposedParams;
+                    bestScore = proposedScore;
+                    Files.WriteSimParams(bestParams, $"best_params_{counter}.json");
+                    counter++;
+                }
             }
             if (OptimizationParams.WriteIntermediate && i % OptimizationParams.WriteFrequency == 0)
             {
