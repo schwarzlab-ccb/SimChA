@@ -19,8 +19,15 @@ public static class Fitness
         double stressTerm = StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen())*fParams.Stress;
         double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.SexXX);
         double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.SexXX);
-        double tsgogTerm = (ogTerm - tsgTerm)*fParams.TsgOg;
         double essTerm = EssTerm(genRef, essCNs, karyotype.SexXX, fParams.Haploinsufficiency)*fParams.Essentiality;
+        if (fParams.NormalizeGenes)
+        {
+            ogTerm /= ogCNs.Count();
+            tsgTerm /= tsgCNs.Count();
+            essTerm /= essCNs.Count();
+        }
+        double tsgogTerm = (ogTerm - tsgTerm)*fParams.TsgOg;
+        
         
         return 1 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
     }

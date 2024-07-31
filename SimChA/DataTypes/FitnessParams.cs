@@ -10,12 +10,14 @@ public class FitnessParams
     public double TotalStrength { get; }
     public bool Haploinsufficiency { get; }
 
+    public bool NormalizeGenes { get; }
+
     public List<double> ParamsList(bool includeTotalStrength)
         => includeTotalStrength 
            ? new() { Stress, TsgOg, Essentiality, TotalStrength}
            : new() { Stress, TsgOg, Essentiality};
 
-    public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength, bool haploinsufficiency = false)
+    public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength, bool haploinsufficiency = false, bool normalizeGenes = false)
     {
         var sum = stress + tsgOg + essentiality;
         Stress = stress/sum;
@@ -23,5 +25,6 @@ public class FitnessParams
         Essentiality = 1.0 - Stress - TsgOg;
         TotalStrength = totalStrength;
         Haploinsufficiency = haploinsufficiency;
+        NormalizeGenes = normalizeGenes;
     }
 }
