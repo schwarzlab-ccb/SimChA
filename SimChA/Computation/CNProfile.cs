@@ -25,9 +25,9 @@ public abstract class CNProfile
         var essCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar);
         
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.SexXX), kar.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.SexXX);
-        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.SexXX);
-        double ess = Fitness.EssTerm(genRef, essCNs, kar.SexXX, fParams.Haploinsufficiency);
+        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.SexXX, fParams.NormalizeGenes);
+        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.SexXX, fParams.NormalizeGenes);
+        double ess = Fitness.EssTerm(genRef, essCNs, kar.SexXX, fParams.NormalizeGenes, fParams.Haploinsufficiency);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
         return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, clone.FitnessTarget, stress, tsg, og, ess);

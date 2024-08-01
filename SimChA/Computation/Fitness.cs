@@ -18,14 +18,8 @@ public static class Fitness
 
         double stressTerm = StressTerm(genRef.GetGenomeLen(karyotype.SexXX), karyotype.GenomeLen())*fParams.Stress;
         double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.SexXX);
-        double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.SexXX);
-        double essTerm = EssTerm(genRef, essCNs, karyotype.SexXX, fParams.Haploinsufficiency)*fParams.Essentiality;
-        if (fParams.NormalizeGenes)
-        {
-            ogTerm /= ogCNs.Count();
-            tsgTerm /= tsgCNs.Count();
-            essTerm /= essCNs.Count();
-        }
+        double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.SexXX, fParams.NormalizeGenes);
+        double essTerm = EssTerm(genRef, essCNs, karyotype.SexXX, fParams.NormalizeGenes, fParams.Haploinsufficiency)*fParams.Essentiality;
         double tsgogTerm = (ogTerm - tsgTerm)*fParams.TsgOg;
         
         
@@ -56,8 +50,8 @@ public static class Fitness
     public static double Exponential(double x)
         => Math.Pow(x, 9) * 5;
 
-    public static double Linear(double x)
-        => x;
+    public static double Linear(double x, int n)
+        => x/n;
 
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double) refBaseCount);
@@ -75,18 +69,20 @@ public static class Fitness
         return 2;
     }
 
-    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX)
+    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, bool sexXX, bool normalizeGenes = false)
     {
         var genesList = genRef.IncludeSexChromosomes ? geneCNs : geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
-        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness));
+        var norm = normalizeGenes ? genesList.Count() : 1;
+        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness, norm));
     }
 
-    public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, bool sexXX, bool haploinsufficiency = false)
+    public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, bool sexXX, bool normalizeGenes = false, bool haploinsufficiency = false)
     {
         var genesList = genRef.IncludeSexChromosomes ? essCNs : essCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
+        var norm = normalizeGenes ? genesList.Count() : 1;
         return haploinsufficiency
-            ? genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX), 0) * g.gene.DeltaFitness : 0)
-            : genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness : 0);
+            ? genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX), 0) * g.gene.DeltaFitness/norm : 0)
+            : genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness/norm : 0);
     }
 
 
