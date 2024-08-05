@@ -50,8 +50,8 @@ public static class Fitness
     public static double Exponential(double x)
         => Math.Pow(x, 9) * 5;
 
-    public static double Linear(double x, int n)
-        => x/n;
+    public static double Linear(double x)
+        => x;
 
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double) refBaseCount);
@@ -73,7 +73,7 @@ public static class Fitness
     {
         var genesList = genRef.IncludeSexChromosomes ? geneCNs : geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
         var norm = normalizeGenes ? genesList.Count() : 1;
-        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness, norm));
+        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX)) * Linear(g.gene.DeltaFitness))/norm;
     }
 
     public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, bool sexXX, bool normalizeGenes = false, bool haploinsufficiency = false)
@@ -81,8 +81,8 @@ public static class Fitness
         var genesList = genRef.IncludeSexChromosomes ? essCNs : essCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
         var norm = normalizeGenes ? genesList.Count() : 1;
         return haploinsufficiency
-            ? genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX), 0) * g.gene.DeltaFitness/norm : 0)
-            : genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness/norm : 0);
+            ? genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sexXX), 0) * g.gene.DeltaFitness : 0) / norm
+            : genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness : 0) / norm;
     }
 
 
