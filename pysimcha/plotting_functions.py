@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from utils import format_chromosomes, format_chromosomes_int
-
 COL_ALLELE_A = mpl.colors.to_rgba('orange')
 COL_ALLELE_B = mpl.colors.to_rgba('teal')
 LINEWIDTH_COPY_NUMBERS = 4
@@ -32,6 +30,11 @@ CHROM_SIZES = [247249719, 242951149, 199501827, 191273063, 180857866, 170899992,
     158821424, 146274826, 140273252, 135374737, 134452384, 132349534,
     114142980, 106368585, 100338915, 88827254, 78774742, 76117153,
     63811651, 62435964, 46944323, 49691432, 154913754]
+
+
+
+def format_chromosomes_int(chroms):
+    return chroms.astype(str).str.replace('chr', '').replace('X', '23').replace('Y', '24').astype(int)
 
 # sum = 0
 # CHROM_ABS_START = {list(CHROM_SIZE.keys())[i]: (sum := sum+([0]+list(CHROM_SIZE.values()))[i])
