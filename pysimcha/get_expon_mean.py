@@ -1,9 +1,8 @@
 import pandas as pd
-import numpy as np
 import argparse
 import os
-import sys
 from scipy.stats import expon
+
 
 def get_expon_mean(a, b, c, n_cutoff):
 	path_to_file = os.path.abspath(__file__)

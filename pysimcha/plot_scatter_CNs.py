@@ -9,6 +9,7 @@ from os.path import join
 from cns.process.binning import bin_by_break_type
 from cns.utils.assemblies import hg19_chr_lengths, hg19_chr_starts, human_chr_colors, aut_names, chr_names
 
+
 # Define a function to convert a row to a list
 def row_to_list(row, bins, column):
     # Initialize an empty list
@@ -118,7 +119,6 @@ def samples_to_SNPs(cns, column='cn', step_size=1_000_000, includeSexChromosomes
     return df_CNs
 
 
-
 def plot_scatter_CNs(data, use_hg19=True, output="../out"):
     cns = pd.read_csv(join(data, "copynumbers.tsv"), index_col=0, sep="\t")
     cns['cn'] = cns['cn_a'] + cns['cn_b']
@@ -216,12 +216,8 @@ def plot_scatter_CNs():
     ax.set_ylabel("Mean copy-number")
     ax.set_title("Mean Copy-Number Profile of PCAWG Dataset")
 
-
     fig.savefig(f"./scatter_CNs_pcawg.png", dpi=300, bbox_inches="tight")
     
-
-
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot the average scatter CN plots for a given dataset')
