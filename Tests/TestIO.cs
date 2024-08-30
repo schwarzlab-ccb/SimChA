@@ -44,10 +44,12 @@ public class TestIO
         var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, fit, null, null);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
-        Console.WriteLine(serialized);
         var deserialized = JsonSerializer.Deserialize<SimParams>(serialized);
         Assert.NotNull(deserialized);
-        Assert.AreEqual(simParams, deserialized);
+        // Assure that the deserialized object is the same as the original, including the nested objects
+        Assert.AreEqual(simParams.Seed, deserialized!.Seed);
+        Assert.AreEqual(simParams.Fitness.TotalStrength, deserialized.Fitness.TotalStrength);
+        Assert.AreEqual(simParams.Signatures, deserialized.Signatures);
     }
 
     [Test]

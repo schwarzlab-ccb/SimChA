@@ -104,7 +104,7 @@ public class TestKaryotype
     public void TestInvertedDuplication()
     {
         long len = _kar.ContigLen(0);
-        var nRegions = _kar.GetContig(0).GetRegions().Count;
+        var nRegions = RegionOps.GlueNeighbours(_kar.GetContig(0).GetRegions()).Count;
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
         var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr("chr1").ToList());
@@ -147,14 +147,11 @@ public class TestKaryotype
     [Test]
     public void TestBFBChain()
     {
-        for (int i = 1; i < 46; i++)
-        {
-            _kar.ApplyContigDeletion(i);
-        }
         for (int i = 0; i < 4; i++)
         {
-            _kar.ApplyBFB(0, 1_000_000, true);
-            Assert.AreEqual((int) Math.Pow(2, i+1), _kar.ToString().Split("~").Length);
+            long len = _kar.ContigLen(0);
+            _kar.ApplyBFB(0, TEST_FRAC, true);
+            Assert.AreEqual((len - TEST_FRAC) * 2, _kar.ContigLen(0));
         }
     }
     
@@ -315,7 +312,7 @@ public class TestKaryotype
         _kar.ApplySNV(contigID, loc, newNucleotide);
         Assert.AreEqual(46, _kar.CountContigs());
         
-        var regions = _kar.GetContig(contigID).GetRegions();
+        var regions = RegionOps.GlueNeighbours(_kar.GetContig(contigID).GetRegions());
         Assert.AreEqual(1, regions.Count);
 
         var SNVDict = regions[0].SNVDict;
@@ -331,7 +328,7 @@ public class TestKaryotype
         Assert.AreEqual(46, _kar.CountContigs());
         
         regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(1, regions.Count);
+        Assert.AreEqual(3, regions.Count);
 
         SNVDict = regions[0].SNVDict;
         Assert.NotNull(SNVDict);

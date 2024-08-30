@@ -2,11 +2,8 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.IO;
-using MathNet.Numerics.Statistics;
-namespace SimChA.Optimization;
 
-using System.CodeDom.Compiler;
-using System.Reflection;
+namespace SimChA.Optimization;
 
 public class FitnessOptimizer : Optimizer
 {   

@@ -21,17 +21,20 @@ public record Region(long Start, long End, string ChrNo, bool Hap1, bool Forward
         => (SNVDict!=null) ? SNVDict.Keys.Count(loc => loc>= start && loc <= end) : 0 ;
 }
 
-public record PArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
+public record PArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) 
+    : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
 {
-    public override string ToString() => $"{HapString}{DirString}{ChrNo}p[{Start}:{End})";
+    public override string ToString() => base.ToString();
 }
 
-public record QArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
+public record QArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) 
+    : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
 {
-    public override string ToString() => $"{HapString}{DirString}{ChrNo}q[{Start}:{End})";
+    public override string ToString() => base.ToString();
 }
 
-public record Centromere(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
+public record Centromere(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) 
+    : Region(Start, End, ChrNo, Hap1, Forward, SNVDict)
 { 
-    public override string ToString() => $"{HapString}{DirString}{ChrNo}c[{Start}:{End})";
+    public override string ToString() => base.ToString();
 }
