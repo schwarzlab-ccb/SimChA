@@ -77,10 +77,12 @@ public class Karyotype
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
     
+    public List<(long start, long end)> GetCentromeres(int contigId)
+        => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres() : new List<(long, long)>();
+    
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
     
-    public List<Contig> GetAllContigs() => _contigs;
     public Contig GetContig(int contigID) => _contigs[contigID];
 
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)

@@ -144,10 +144,12 @@ public class Contig
     {
         _regions = RegionOps.ConcatRegions(_regions, other._regions);
     }
-    
+
     public void GlueNeighbours()
-        => _regions = RegionOps.GlueNeighbours(_regions);
-    
+    {
+        _regions = RegionOps.GlueNeighbours(_regions);
+    }
+
     public void SNV(long location, Nucleotide newNucleotide)
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
@@ -159,7 +161,7 @@ public class Contig
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
-        foreach ((long start, long end, var chrNo, var _, bool forward, var _) in _regions)
+        foreach ((long start, long end, string chrNo, bool _, bool forward, _) in _regions)
         {
             var geneList = geneLists[chrNo];
             if (forward && geneList.Count > 0)
@@ -178,6 +180,11 @@ public class Contig
         }
         return presentGenes;
     }
+
+    public List<(long start, long end)> GetCentromeres()
+        => throw new NotImplementedException("Get centromeres not implemented yet");
+
+
     public void MergeRegions()
         => _regions = RegionOps.MergeRegions(_regions);
 }

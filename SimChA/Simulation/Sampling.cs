@@ -147,10 +147,10 @@ public static class Sampling
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
-                var (armSeq, centromereIndex, pArm) = SampleContigByArms(rnd, kar);
-                return armSeq < 0 
+                var cents = kar.GetCentromeres(seq[0].id);
+                return cents.Count == 0 
                     ? null
-                    : new ArmEventData(rnd, cnEventPars, armSeq, centromereIndex, pArm);
+                    : new TailEventData(rnd, cnEventPars, seq[0].id, cents);
 
             // Internal events
             case CNEventType.InternalDuplication:

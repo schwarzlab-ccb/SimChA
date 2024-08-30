@@ -20,21 +20,22 @@ public record InternalEventData : ContigEventData
 
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.InternalDuplication)
+        switch (EventType)
         {
-            kar.ApplyInternalDuplication(ContigId, Start, End);
-        }
-        else if (EventType == CNEventType.InternalDeletion)
-        {
-            kar.ApplyInternalDeletion(ContigId, Start, End);
-        }
-        else if (EventType == CNEventType.InternalInversion)
-        {
-            kar.ApplyInternalInversion(ContigId, Start, End);
-        }
-        else if (EventType == CNEventType.InvertedDuplication)
-        {
-            kar.ApplyInvertedDuplication(ContigId, Start, End);
+            case CNEventType.InternalDuplication:
+                kar.ApplyInternalDuplication(ContigId, Start, End);
+                break;
+            case CNEventType.InternalDeletion:
+                kar.ApplyInternalDeletion(ContigId, Start, End);
+                break;
+            case CNEventType.InternalInversion:
+                kar.ApplyInternalInversion(ContigId, Start, End);
+                break;
+            case CNEventType.InvertedDuplication:
+                kar.ApplyInvertedDuplication(ContigId, Start, End);
+                break;
+            default:
+                throw new Exception($"Invalid event type {EventType} for InternalEventData");
         }
     }
 

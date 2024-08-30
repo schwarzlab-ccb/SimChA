@@ -15,20 +15,35 @@ public record TailEventData : ContigEventData
         Length = Sampling.GetPos(rnd, contigLen);
         Direction = rnd.CoinFlip();
     }
+    
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
+    {
+        var cent =  centromeres.Shuffle(rnd).First();
+        Length = rnd.CoinFlip() ? cent.start : cent.end;
+        Direction = rnd.CoinFlip();
+    }
 
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.TailDeletion)
+        switch (EventType)
         {
-            kar.ApplyTailDeletion(ContigId, Length, Direction);
-        }
-        else if (EventType == CNEventType.TailDuplication)
-        {
-            kar.ApplyTailDuplication(ContigId, Length, Direction);
-        }
-        else if (EventType == CNEventType.BreakageFusionBridge)
-        {
-            kar.ApplyBFB(ContigId, Length, Direction);
+            case CNEventType.TailDeletion:
+                kar.ApplyTailDeletion(ContigId, Length, Direction);
+                break;
+            case CNEventType.TailDuplication:
+                kar.ApplyTailDuplication(ContigId, Length, Direction);
+                break;
+            case CNEventType.BreakageFusionBridge:
+                kar.ApplyBFB(ContigId, Length, Direction);
+                break;
+            case CNEventType.ArmDeletion:
+                kar.ApplyTailDeletion(ContigId, Length, Direction);
+                break;
+            case CNEventType.ArmDuplication:
+                kar.ApplyTailDeletion(ContigId, Length, Direction);
+                break;
+            default:
+                throw new Exception($"Invalid event type {EventType} for TailEventData");
         }
     }
     
