@@ -11,6 +11,7 @@ public class Binner
     protected readonly GenRef GenRef;
     protected long BinWidth { get; }
     protected bool IncludeSexChromosomes { get; }
+    
     public Binner(GenRef genRef, long binWidth = 1000000, bool includeSexChromosomes = false)
     {
         GenRef = genRef;
@@ -18,6 +19,7 @@ public class Binner
         IncludeSexChromosomes = includeSexChromosomes;
         ChromosomeBins = GetChromosomeBins();
     }
+    
     public Dictionary<string, List<CopyNumber>> GetBinnedCNProfiles(List<Sample> samples)
     {
         var binnedCNPs = new Dictionary<string, List<CopyNumber>>();
