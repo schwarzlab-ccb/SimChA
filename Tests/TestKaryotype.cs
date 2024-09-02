@@ -312,7 +312,7 @@ public class TestKaryotype
         _kar.ApplySNV(contigID, loc, newNucleotide);
         Assert.AreEqual(46, _kar.CountContigs());
         
-        var regions = RegionOps.GlueNeighbours(_kar.GetContig(contigID).GetRegions());
+        var regions = _kar.GetContig(contigID).GetRegions();
         Assert.AreEqual(1, regions.Count);
 
         var SNVDict = regions[0].SNVDict;
@@ -328,7 +328,7 @@ public class TestKaryotype
         Assert.AreEqual(46, _kar.CountContigs());
         
         regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(3, regions.Count);
+        Assert.AreEqual(1, regions.Count);
 
         SNVDict = regions[0].SNVDict;
         Assert.NotNull(SNVDict);
