@@ -255,7 +255,7 @@ public static class Parsers
             int distance = int.Parse(lineSplit[columns[distanceKey]]);
             double fitness = parseFitness
                 ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
-                : 0.0;
+                : -1.0;
             var clone = new CloneIn(id, parentId, distance, fitness);
             cloneFitness.Add(clone);
         }

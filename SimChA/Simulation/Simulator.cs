@@ -11,9 +11,7 @@ public class Simulator
     protected readonly GenRef GenRef;
     protected int Counter;
 
-    public Simulator(
-        Random rnd,
-        GenRef genRef)
+    public Simulator(Random rnd, GenRef genRef)
     {
         Rnd = rnd;
         GenRef = genRef;
@@ -28,6 +26,7 @@ public class Simulator
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
+        // TODO: Check if 1 is the correct number of events!
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
     

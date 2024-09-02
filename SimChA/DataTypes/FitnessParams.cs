@@ -19,7 +19,7 @@ public class FitnessParams
 
     public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength, bool haploinsufficiency = false, bool normalizeGenes = false)
     {
-        var sum = stress + tsgOg + essentiality;
+        double sum = stress + tsgOg + essentiality;
         Stress = stress/sum;
         TsgOg = tsgOg/sum;
         Essentiality = 1.0 - Stress - TsgOg;
