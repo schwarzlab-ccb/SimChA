@@ -86,7 +86,7 @@ public static class RegionOps
                 var newRegion = OffsetStart(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
-            else // Both coordinates inside of the region
+            else // None coordinates inside of the region
             {
                 var firstRegion = OffsetEnd(region, start - seekPos);
                 AddIfNotEmpty(newRegions, firstRegion);
@@ -175,7 +175,7 @@ public static class RegionOps
                 var newRegion = OffsetEnd(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
-            else // Both coordinates inside of the region
+            else // None coordinates inside of the region
             {
                 var newRegion = OffsetBoth(region, start - seekPos, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);

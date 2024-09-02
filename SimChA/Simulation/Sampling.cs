@@ -66,7 +66,7 @@ public static class Sampling
     public static bool GetBinarySex(Random rnd, SexEnum sexEnum)
         => sexEnum switch
         {
-            SexEnum.Both => rnd.CoinFlip(),
+            SexEnum.None => rnd.CoinFlip(),
             SexEnum.Female => true,
             SexEnum.Male => false,
             _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)

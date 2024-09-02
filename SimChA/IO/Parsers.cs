@@ -67,6 +67,19 @@ public static class Parsers
         return result;
     }
 
+    private static SexEnum GetSexFromProfile(IReadOnlyDictionary<string, bool> present)
+    {
+        if (present["chrY"])
+        {
+            return SexEnum.Male;
+        }
+        if (present["chrX"])
+        {
+            return SexEnum.Female;
+        }
+        return SexEnum.None;
+    }
+
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
@@ -80,6 +93,7 @@ public static class Parsers
         var present = genRef.IncludeSexChromosomes
                     ? genRef.AllChrs.ToDictionary(c => c, _ => false)
                     : genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false);
+        
         string lastSample = "";
         string lastChr = genRef.AllChrs.First();
         long lastPos = 0L;
@@ -110,7 +124,7 @@ public static class Parsers
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
                     var newContigs = new List<Contig> { new(regionsA), new(regionsB) };
-                    var thisKar = new Karyotype(newContigs, missingRanges, genRef.Centromeres, !present[genRef.YChrName]);
+                    var thisKar = new Karyotype(newContigs, missingRanges, genRef.Centromeres, GetSexFromProfile(present));
                     result[lastSample] = thisKar;
                 }
                 // Reset
@@ -195,7 +209,7 @@ public static class Parsers
 
         // Add the last sample
         var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
-        var kar = new Karyotype(newRegs, missingRanges, genRef.Centromeres, !present[genRef.YChrName]);
+        var kar = new Karyotype(newRegs, missingRanges, genRef.Centromeres, GetSexFromProfile(present));
         result[lastSample] = kar;
         return result;
     }
@@ -374,7 +388,7 @@ public static class Parsers
         {
             _ when index == lines.Count - 1 => SexEnum.Male,
             _ when index == lines.Count - 2 => SexEnum.Female,
-            _ => SexEnum.Both
+            _ => SexEnum.None
         };
     }
     

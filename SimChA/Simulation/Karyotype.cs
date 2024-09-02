@@ -10,16 +10,16 @@ namespace SimChA.Simulation;
 public class Karyotype
 {
     public double FitnessVal { get; private set; }
-    public bool SexXX { get; }
+    public SexEnum Sex;
     private readonly List<Contig> _contigs;
     private readonly Dictionary<string, List<GenRange>> _missingRanges;
     private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
-    public Karyotype(GenRef genRef, bool sexXX)
+    public Karyotype(GenRef genRef, SexEnum sex)
     {
-        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
         _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
-        SexXX = sexXX;
+        Sex = sex;
         Centromeres = genRef.Centromeres;
     }
     
@@ -27,18 +27,18 @@ public class Karyotype
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
         _missingRanges = other._missingRanges;
-        SexXX = other.SexXX;
+        Sex = other.Sex;
         Centromeres = other.Centromeres;
     }
     
     public Karyotype(List<Contig> contigs, IEnumerable<GenRange> missingList, 
-        IImmutableDictionary<string, (long start, long end)> centromeres, bool sexXX)
+        IImmutableDictionary<string, (long start, long end)> centromeres, SexEnum sexEnum)
     {
         _missingRanges = missingList
             .GroupBy(range => range.ChrNo)
             .ToDictionary(group => group.Key, group => group.ToList());
         _contigs = contigs;
-        SexXX = sexXX;
+        Sex = sexEnum;
         Centromeres = centromeres;
     }
 

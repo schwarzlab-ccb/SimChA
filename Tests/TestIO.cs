@@ -18,17 +18,22 @@ namespace Tests;
 [TestFixture]
 public class TestIO
 {
+    public const string DATA_PATH = "./../../../../data/";
+    public const string HG_19_PATH = DATA_PATH + "./hg19";
+    public const string HG_38_PATH = DATA_PATH + "./hg38";
+    private GenRef _genRef;
 
     [SetUp]
     public void Setup()
     {
         _genRef = FileIO.GetGenRef(HG_19_PATH);
     }
-    public static string DATA_PATH = "./../../../../data/";
-    public static string HG_19_PATH => DATA_PATH + "./hg19";
-    public static string HG_38_PATH => DATA_PATH + "./hg38";
 
-    private GenRef _genRef;
+    [Test]
+    public void TestRef()
+    {
+        Console.WriteLine(_genRef);
+    }
 
     [Test]
     public void TestContig()
@@ -41,7 +46,7 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
-        var simParams = new SimParams(0, SexEnum.Both, 1, Distribution.Uniform, fit);
+        var simParams = new SimParams(0, SexEnum.None, 1, Distribution.Uniform, fit);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         var deserialized = JsonSerializer.Deserialize<SimParams>(serialized);
@@ -175,14 +180,14 @@ public class TestIO
         Assert.AreEqual(4, profiles["1"].FindRegionsOfChr("chr2").Count()); // 4 missing (split by null regions)
         Assert.AreEqual(9, profiles["1"].FindRegionsOfChr("chr3").Count()); // 5 existing + 4 missing
         Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr4").Count()); // 2 missing
-        Assert.AreEqual(false, profiles["2"].SexXX);
+        Assert.AreEqual(false, profiles["2"].Sex);
     }
 
     [Test]
     public void TestParseChromFile()
     {
         Assert.AreEqual("hg19", _genRef.Name);
-        Assert.AreEqual(22, _genRef.AutosomeCount);
+        Assert.AreEqual(22, _genRef.AutosomesCount);
         Assert.AreEqual(46, _genRef.ChrCount);
     }
 
