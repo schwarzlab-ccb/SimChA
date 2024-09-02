@@ -36,6 +36,7 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
 
+    // TODO: Should be moved to sim-params
     [Option('a', "autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
     public bool AutosomesOnly { get; set; }
 

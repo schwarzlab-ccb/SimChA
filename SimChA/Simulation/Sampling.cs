@@ -63,13 +63,11 @@ public static class Sampling
         };
     }
 
-    public static bool GetBinarySex(Random rnd, SexEnum sexEnum)
+    public static SexEnum GetSex(Random rnd, SexEnum sexEnum)
         => sexEnum switch
         {
-            SexEnum.None => rnd.CoinFlip(),
-            SexEnum.Female => true,
-            SexEnum.Male => false,
-            _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
+            SexEnum.None => rnd.CoinFlip() ? SexEnum.Male : SexEnum.Female,
+            _ => sexEnum
         };
 
     public static Nucleotide SampleBase(Random rnd) 

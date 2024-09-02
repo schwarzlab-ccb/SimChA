@@ -44,6 +44,7 @@ switch (execMode)
     {
         Console.WriteLine("Reading profiles:");
         var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+        // TODO: Needs to implement autosomes only
         samples = Simulator.SamplesFromProfiles(profiles);
         break;
     }
@@ -55,7 +56,8 @@ switch (execMode)
         var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
         var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
+        var sex = options.AutosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, simParams.Sex);
+        var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture);
         samples = new List<Sample> {treeSample};
         samples.ForEach(simulator.SampleEvents);
         break;
@@ -72,24 +74,28 @@ switch (execMode)
                 var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, fitnessList);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, fitnessList);
             }
             else
             {
                 var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, mcTarget);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, mcTarget);
             }
         }
         else
         {
             var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
             var eventCounts = options.EventCounts != "" ? FileIO.ReadEventCounts(options.EventCounts) : new Dictionary<string, int>();
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, mcTarget, eventCounts);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, mcTarget, eventCounts);
         }
 
         samples.ForEach(simulator.SampleEvents);
         break;
+    
+    case ExecMode.None:
+        throw new Exception("Error: No execution mode set.");
 }
+
 files.WriteSimParams(simParams);
 Console.WriteLine("");
 

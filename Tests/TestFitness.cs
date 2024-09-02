@@ -33,26 +33,26 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         genRef.IncludeSexChromosomes = false;
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), true));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), SexEnum.Female));
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, true));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, SexEnum.Female));
         
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
-        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testMissing, true));
+        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testMissing, SexEnum.Female));
 
         var testHaplosufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, testHaplosufficient, true));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testHaplosufficient, SexEnum.Female));
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
-        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, true));
+        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, SexEnum.Female));
 
         var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.5), 0), (MakeGene("chrY", 0.5), 0)};
-        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, true));
+        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female));
 
         genRef.IncludeSexChromosomes = true;
-        Assert.AreEqual(-0.5, Fitness.EssTerm(genRef, testSexChromosome, true));
-        Assert.AreEqual(-1.0, Fitness.EssTerm(genRef, testSexChromosome, false));
+        Assert.AreEqual(-0.5, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female));
+        Assert.AreEqual(-1.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Male));
     }
 
     [Test]
@@ -60,74 +60,74 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         genRef.IncludeSexChromosomes = false;
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), true, false, true));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), SexEnum.Female, false, true));
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, true, false, true));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, SexEnum.Female, false, true));
         
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
-        Assert.AreEqual(-0.2, Fitness.EssTerm(genRef, testMissing, true, false, true));
+        Assert.AreEqual(-0.2, Fitness.EssTerm(genRef, testMissing, SexEnum.Female, false, true));
 
         var testHaploinsufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
-        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testHaploinsufficient, true, false, true));
+        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testHaploinsufficient, SexEnum.Female, false, true));
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
-        Assert.AreEqual(-0.2 + -0.4, Fitness.EssTerm(genRef, testList, true, false, true));
+        Assert.AreEqual(-0.2 + -0.4, Fitness.EssTerm(genRef, testList, SexEnum.Female, false, true));
 
         var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.5), 0), (MakeGene("chrY", 0.5), 0)};
-        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, true, false, true));
+        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female, false, true));
 
         genRef.IncludeSexChromosomes = true;
-        Assert.AreEqual(-1.0 +  0.0, Fitness.EssTerm(genRef, testSexChromosome, true, false, true));
-        Assert.AreEqual(-0.5 + -0.5, Fitness.EssTerm(genRef, testSexChromosome, false, false, true));
+        Assert.AreEqual(-1.0 +  0.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female, false, true));
+        Assert.AreEqual(-0.5 + -0.5, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Male, false, true));
     }
 
     [Test]
     public void TestTsgOgTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), true));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), SexEnum.Female));
         
         var testNoEffect = new List<(Gene, int)> {(MakeGene("chr1", 0), 0)};
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testNoEffect, true));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testNoEffect, SexEnum.Female));
 
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1)};
-        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(genRef, testMissing, true));
+        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(genRef, testMissing, SexEnum.Female));
 
         var testMissingTwice = new List<(Gene, int)> {(MakeGene("chr1", 0.1), 0)};
-        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(genRef, testMissingTwice, true));
+        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(genRef, testMissingTwice, SexEnum.Female));
 
         var testList = new List<(Gene, int)> {
             (MakeGene("chr1", 0.1), 1), 
             (MakeGene("chr1", 0.2), 0), 
             (MakeGene("chr1", 0.3), 2)
         };
-        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(genRef, testList, true));
+        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
 
         testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.1), 2)
         };
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
-        Assert.AreEqual(0.1, Fitness.TsgOgTerm(genRef, testList, false));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
+        Assert.AreEqual(0.1, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
         testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.2), 2),
             (MakeGene("chrY", 0.1), 2)
         };
-        Assert.AreEqual(0.2, Fitness.TsgOgTerm(genRef, testList, true));
-        Assert.AreEqual(0.2 + 0.1, Fitness.TsgOgTerm(genRef, testList, false));
+        Assert.AreEqual(0.2, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
+        Assert.AreEqual(0.2 + 0.1, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
         // Autosomes only
         genRef.IncludeSexChromosomes = false;
                 testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.1), 2)
         };
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, false));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
         testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.2), 2),
             (MakeGene("chrY", 0.1), 2)
         };
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, true));
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, false));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
 
     }
     
@@ -135,17 +135,17 @@ public class TestFitness
     public void TestStressTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var xxKaryotype = new Karyotype(genRef, true);
-        var xyKaryotype = new Karyotype(genRef, false);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
-        Assert.AreNotEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xxKaryotype.GenomeLen()));
+        var xxKaryotype = new Karyotype(genRef, SexEnum.Female);
+        var xyKaryotype = new Karyotype(genRef, SexEnum.Male);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreNotEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xxKaryotype.GenomeLen()));
         xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
         xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
         foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
     }
 
     [Test]
@@ -153,18 +153,18 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         genRef.IncludeSexChromosomes = false;
-        var xxKaryotype = new Karyotype(genRef, true);
-        var xyKaryotype = new Karyotype(genRef, false);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xxKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(true), xyKaryotype.GenomeLen()), EPSILON);
+        var xxKaryotype = new Karyotype(genRef, SexEnum.Female);
+        var xyKaryotype = new Karyotype(genRef, SexEnum.Male);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xyKaryotype.GenomeLen()), EPSILON);
         xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
         xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(true), xxKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
         foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(false), xyKaryotype.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
     }
     
     [Test]
@@ -173,7 +173,7 @@ public class TestFitness
         // Seed 14 to get chr1 delete
         var genRef = _refs[refId];
         var rnd = new Random(14);
-        var karyotype = new Karyotype(genRef, true);
+        var karyotype = new Karyotype(genRef, SexEnum.Female);
         var deletion = new CNEventPars(CNEventType.ChromDeletion, 1);
         var dict = genRef.AllChrs.ToDictionary(c => c, _ => new List<Gene>());
         dict["chr1"] = new List<Gene> { MakeGene("chr1", 0.01) };
@@ -188,7 +188,7 @@ public class TestFitness
     public void TestCalculate([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var karyotype = new Karyotype(genRef, true);
+        var karyotype = new Karyotype(genRef, SexEnum.Female);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
@@ -198,12 +198,12 @@ public class TestFitness
     public void TestCalculateFromComponents([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var karyotype = new Karyotype(genRef, true);
+        var karyotype = new Karyotype(genRef, SexEnum.Female);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
-        double stress = Fitness.StressTerm(genRef.GetGenomeLen(true), karyotype.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), true);
-        double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), true);
-        double ess = Fitness.EssTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype), true);
+        double stress = Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), karyotype.GenomeLen());
+        double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), SexEnum.Female);
+        double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), SexEnum.Female);
+        double ess = Fitness.EssTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype), SexEnum.Female);
         double total = 1 + (stress*fit.Stress + (tsg + og)*fit.TsgOg + ess*fit.Essentiality) * fit.TotalStrength;
         Assert.AreEqual(total, Fitness.CalculateFromComponents(stress, tsg+og, ess, fit), EPSILON);
     }
@@ -213,14 +213,15 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         genRef.IncludeSexChromosomes = false;
-        var karyotype = new Karyotype(genRef, true);
+        var karyotype = new Karyotype(genRef, SexEnum.Female);
         karyotype.MergeRegions();
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
     }
+    
     [Test]
-    public void TestReferenceFitness([Values] bool sexXX, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
+    public void TestReferenceFitness([Values] SexEnum sexXX, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sexXX);
@@ -237,7 +238,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
-        var contigs = genRef.GetGenotype(false).Select(region => new Contig(region)).ToList();
+        var contigs = genRef.GetGenotype(SexEnum.Male).Select(region => new Contig(region)).ToList();
         foreach (string chrNo in genRef.AllChrs)
         {
             int chrToCont = chrNo != "chrY" ? genRef.AllChrs.FindIndex(c => c == chrNo) : 45;
@@ -248,18 +249,18 @@ public class TestFitness
     }
     
     [Test]
-    public void TestTsgOgSum([Values] bool sexXX, [Values] bool useTSG, [Values(0,1)] int refId)
+    public void TestTsgOgSum([Values] SexEnum sex, [Values] bool useTSG, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
         var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
         double sumHap1 = selectList.Where(pair => pair.Key != "chrY").Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
-        string missingChr = sexXX ? "chrY" : "chrX";
+        string missingChr = sex == SexEnum.Female ? "chrY" : "chrX";
         double sumHap2 = selectList.Where(pair => pair.Key != missingChr).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
         double total = sumHap1 + sumHap2;
-        var karyotype = new Karyotype(genRef, sexXX);
+        var karyotype = new Karyotype(genRef, sex);
         karyotype.ApplyWGD();
         var cnList = Fitness.CalcCNs(selectList, karyotype);
-        double sum = Fitness.TsgOgTerm(genRef, cnList, sexXX);
+        double sum = Fitness.TsgOgTerm(genRef, cnList, sex);
         Assert.AreEqual(total, sum, EPSILON);
     }
 }

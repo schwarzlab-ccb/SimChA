@@ -100,7 +100,7 @@ public class TestIO
         string? projectPath =
             Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
-        var kar = new Karyotype(_genRef, false);
+        var kar = new Karyotype(_genRef, SexEnum.Male);
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, 1_000_000, 10));
         var clone = new CloneIn(1, -1, 0, 1);
@@ -125,10 +125,10 @@ public class TestIO
         var clonesIn = new List<CloneIn>
             { new(0, -1, 0, 1), new(1, 0, 1, 1) };
 
-        var sample = new Sample("sample", false, clonesIn, eventPars, null);
+        var sample = new Sample("sample", SexEnum.Male, clonesIn, eventPars, null);
         var contigs = new List<Contig> { new(new Region(0, sequence.Length, "chr1", true)) };
         sample.EventDescs[0] = new List<CNEventDesc>();
-        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, false);
+        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
         sample.EventDescs[1] = new List<CNEventDesc>();
         sample.Kars[1] = new Karyotype(sample.Kars[0]);
 
@@ -230,11 +230,11 @@ public class TestIO
         var clonesIn = new List<CloneIn>
             { new(0, -1, 1, 1) };
 
-        var sample = new Sample("sample_1", false, clonesIn, eventPars, null);
+        var sample = new Sample("sample_1", SexEnum.Male, clonesIn, eventPars, null);
         var contigs = new List<Contig>
             { new(new Region(0, sequence1.Count(), "chr1", true)), new(new Region(0, sequence2.Length, "chr2", true)) };
         sample.EventDescs[0] = new List<CNEventDesc>();
-        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, false);
+        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
         // Apply an internal inversion
         var rnd = new Random(0);
         int contigID = 0;

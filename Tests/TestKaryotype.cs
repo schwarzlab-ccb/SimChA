@@ -32,7 +32,7 @@ public class TestKaryotype
     public void Setup()
     {
         _genRef = FileIO.GetGenRef(DATA_PATH);
-        _kar = new Karyotype(_genRef, false);
+        _kar = new Karyotype(_genRef, SexEnum.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
         _dup = new CNEventPars(CNEventType.ChromDuplication, 1);

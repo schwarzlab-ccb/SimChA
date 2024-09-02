@@ -60,11 +60,20 @@ public static class Fitness
     {
         if (chrNo == genRef.YChrName)
         {
-            return sex == SexEnum.Male ? 0 : 1;
+            return sex switch
+            {
+                SexEnum.Male => 1,
+                _ => 0
+            };
         }
         if (chrNo == genRef.XChrName)
         {
-            return sex == SexEnum.Female ? 2 : 1;
+            return sex switch
+            {
+                SexEnum.Female => 2,
+                SexEnum.Male => 1,
+                _ => 0
+            };
         }
         return 2;
     }
@@ -80,10 +89,10 @@ public static class Fitness
     public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexEnum sex, bool normalizeGenes = false, bool haploinsufficiency = false)
     {
         var genesList = genRef.IncludeSexChromosomes ? essCNs : essCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
-        var norm = normalizeGenes ? genesList.Count() : 1;
+        int norm = normalizeGenes ? genesList.Count() : 1;
         return haploinsufficiency
-            ? genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex), 0) * g.gene.DeltaFitness : 0) / norm
-            : genesList.Sum(g => !(sexXX && g.gene.Range.ChrNo == genRef.YChrName) ? Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness : 0) / norm;
+            ? genesList.Sum(g => Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex), 0) * g.gene.DeltaFitness) / norm
+            : genesList.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness) / norm;
     }
 
 
