@@ -1,0 +1,126 @@
+{
+  "Seed": -1,
+  "Sex": "Both",
+  "EventCount": 75,
+  "EventDist": "Exponential",
+  "Fitness": {
+    "Stress": 1,
+    "TsgOg": 1,
+    "Essentiality": 1,
+    "TotalStrength": 1,
+    "Haploinsufficiency": false,
+    "NormalizeGenes": true
+  },
+  "Signatures": {
+    "CNs": {
+      "Prob": 1,
+      "Events": [
+        {
+          "Type": "ChromDuplication",
+          "Prob": 2.12,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ChromDeletion",
+          "Prob": 2.73,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ArmDuplication",
+          "Prob": 1.9,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ArmDeletion",
+          "Prob": 2.47,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "TailDuplication",
+          "Prob": 6.01,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 5.93,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "InternalDuplication",
+          "Prob": 49.2,
+          "Size": 500000,
+          "Frag": 0
+        },
+        {
+          "Type": "InternalDeletion",
+          "Prob": 29.6,
+          "Size": 500000,
+          "Frag": 0
+        }
+      ]
+    },
+    "SNVs": {
+      "Prob": 0,
+      "Events": [
+        {
+          "Type": "SNV",
+          "Prob": 100,
+          "Size": 0,
+          "Frag": 0
+        }
+      ]
+    }
+  },
+  "MCParams": {
+    "NumSamplesMin": 100,
+    "NumSamplesTotal": 500,
+    "ThetaFitness": 10,
+    "SwapEventP": 1,
+    "ThresholdFit": 1E-16,
+    "IncludeSize": false
+  },
+  "MCTarget": {
+    "Mean": 1,
+    "Dist": "Exponential"
+  },
+  "OptimizationParams": {
+    "Mode": "Fitness",
+    "NumSamplesTotal": 500,
+    "StepSize": 0.2,
+    "MaxTries": 10,
+    "WriteIntermediate": false,
+    "WriteFrequency": 0,
+    "AcceptanceFactor": 10,
+    "EventWeightsOnly": false,
+    "ResetSeed": true,
+    "UseABC": false,
+    "UseSegLength": false,
+    "SegLengthType": null,
+    "SegmentCountWeighted": false,
+    "UsePloidy": true,
+    "UseBreakpoints": false,
+    "BreakpointsPerChrom": false,
+    "BreakpointsBinSize": 0,
+    "ParamVariationMode": 0,
+    "GCInterval": 25,
+    "PloidyCutoff": 8,
+    "SegLengthCutoff": 0,
+    "LogTransformSegLength": false,
+    "OptimizationMethod": "MetropolisHastings",
+    "StartTemp": 0,
+    "CoolingRate": 0,
+    "StepSizeDecayType": null,
+    "MinStepSize": 0,
+    "BoundedLengths": false,
+    "MaxLength": 0,
+    "MinLength": 0,
+    "UseHomozygousDeletion": true,
+    "UseCNAlongGenome": true
+  }
+}

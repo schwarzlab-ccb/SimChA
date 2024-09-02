@@ -1,0 +1,124 @@
+{
+	"Seed": -1,
+	"Sex": "Both",
+	"EventCount": 75,
+	"EventDist": "Exponential",
+	"Fitness": {
+	  "Stress": 0.93,
+	  "TsgOg": 0.05,
+	  "Essentiality": 0.05,
+	  "TotalStrength": 1,
+	  "Haploinsufficiency": false
+	},
+	"Signatures": {
+	  "CNs": {
+		"Prob": 1,
+		"Events": [
+		  {
+			"Type": "ChromDuplication",
+			"Prob": 12.5,
+			"Size": 0,
+			"Frag": 0
+		  },
+		  {
+			"Type": "ChromDeletion",
+			"Prob": 12.5,
+			"Size": 0,
+			"Frag": 0
+		  },
+		  {
+			"Type": "ArmDuplication",
+			"Prob": 12.5
+		  },
+		  {
+			"Type": "ArmDeletion",
+			"Prob": 12.5
+		  },
+		  {
+			"Type": "TailDuplication",
+			"Prob": 12.5
+		  },
+		  {
+			"Type": "TailDeletion",
+			"Prob": 12.5
+		  },
+		  {
+			"Type": "InternalDuplication",
+			"Prob": 12.5,
+			"Size": 5000000,
+			"Frag": 0
+		  },
+		  {
+			"Type": "InternalDeletion",
+			"Prob": 12.5,
+			"Size": 5000000,
+			"Frag": 0
+		  },
+		  {
+			"Type": "InternalDuplication",
+			"Prob": 12.5,
+			"Size": 100000,
+			"Frag": 0
+		  },
+		  {
+			"Type": "InternalDeletion",
+			"Prob": 12.5,
+			"Size": 100000,
+			"Frag": 0
+		  }
+		]
+	  },
+	  "SNVs": {
+		"Prob": 0,
+		"Events": [
+		  {
+			"Type": "SNV",
+			"Prob": 100,
+			"Size": 0,
+			"Frag": 0
+		  }
+		]
+	  }
+	},
+	"MCParams": {
+	  "NumSamplesMin": 100,
+	  "NumSamplesTotal": 2500,
+	  "ThetaFitness": 10,
+	  "SwapEventP": 1,
+	  "ThresholdFit": 1E-08,
+	  "IncludeSize": false
+	},
+	"MCTarget": {
+		"Mean": 1,
+		"Dist": "Exponential"
+	},
+	"OptimizationParams":{
+		"Mode": "Events",
+		"NumSamplesTotal": 15000,
+		"StepSize": 0.5,
+		"MaxTries": 10,
+		"WriteIntermediate": false,
+		"WriteFrequency": 50,
+		"AcceptanceFactor": 10,
+		"EventWeightsOnly": false,
+		"ParamVariationMode": 0,
+		"UseABC": false,
+		"UseSegLength": true,
+		"SegLengthType": "Stratified",
+		"UsePloidy" : false,
+		"UseBreakpoints" : false,
+		"ResetSeed": true,
+		"GCInterval" : 25,
+		"PloidyCutoff": -1,
+		"SegLengthCutoff" : -1,
+		"LogTransformSegLength": true,
+		"OptimizationMethod" : "MetropolisHastings",
+		"SegmentCountWeighted" : false,
+		"BoundedLengths": false,
+		"WriteScores" : true,
+		"PloidyBinCount": 10,
+		"BreakpointsBinCount": 10,
+		"SegLengthBinCount": 50,
+		"DeterministicAcceptance" : false
+	}
+  }
