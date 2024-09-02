@@ -97,6 +97,7 @@ switch (execMode)
         }
         break;
     }
+    
     case ExecMode.None:
     case ExecMode.Tree:
     case ExecMode.Repeats:

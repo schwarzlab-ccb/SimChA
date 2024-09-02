@@ -279,4 +279,6 @@ public class FitnessOptimizer : Optimizer
         var histBins = 50;
         return CalculateDistance(obsValues, simValues, histBins, histMin, histMax);
     }
+    
+    
 }
