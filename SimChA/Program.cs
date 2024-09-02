@@ -70,6 +70,7 @@ switch (execMode)
         Console.WriteLine("Optimization finished");
         return 0;
     }
+    
     case ExecMode.Profiles:
     {
         Console.WriteLine("Reading profiles:");
@@ -83,24 +84,29 @@ switch (execMode)
         break;
     }
     
-    case ExecMode.None:
     case ExecMode.Tree:
-    case ExecMode.Repeats:
-    case ExecMode.UseMCMC:
-    default:
-    {
-        var sigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
-        Validators.ValidateSignatures(simParams.Signatures);
-        Console.WriteLine("Computing mutations:");
-        if (execMode == ExecMode.Tree)
+        // TODO: Here be dragons
+        if (options.UseMCMC) 
         {
-            var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
-            var (cnEventPs, mixture) = Converters.PropagateSigs(simParams.Signatures);
-            string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-            var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
-            samples = new List<Sample> {treeSample};
+            throw new Exception("Error: MCMC sampling not supported for tree mode YET!");
         }
-        else if (execMode == ExecMode.UseMCMC)
+        var treeSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
+        Validators.ValidateSignatures(treeSigs);
+        Console.WriteLine("Computing mutations for tree:");
+        var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
+        var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
+        string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
+        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
+        samples = new List<Sample> {treeSample};
+        samples.ForEach(simulator.SampleEvents);
+        break;
+    
+    case ExecMode.Repeats:
+    default:
+        var repSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
+        Validators.ValidateSignatures(repSigs);
+        Console.WriteLine("Computing mutations for individual samples:");
+        if (options.UseMCMC)
         {
             var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MCMC sampling. Please set MCParams in the config file.");
             if (options.CNProfiles != "" && options.EventCounts != "")
@@ -108,12 +114,12 @@ switch (execMode)
                 var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, sigs, simParams.Sex, fitnessList);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, fitnessList);
             }
             else
             {
                 var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, sigs, simParams.Sex, mcTarget);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, mcTarget);
             }
             simulator = new MCSimulator(rnd, genRef, simParams.Fitness, mcParams);
         }
@@ -121,15 +127,11 @@ switch (execMode)
         {
             var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
             var eventCounts = options.EventCounts != "" ? FileIO.ReadEventCounts(options.EventCounts) : new Dictionary<string, int>();
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, sigs, simParams.Sex, mcTarget, eventCounts);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, mcTarget, eventCounts);
         }
 
-        foreach (var sample in samples)
-        {
-            simulator.SampleEvents(sample);
-        }
+        samples.ForEach(simulator.SampleEvents);
         break;
-    }
 }
 files.WriteSimParams(simParams);
 Console.WriteLine("");

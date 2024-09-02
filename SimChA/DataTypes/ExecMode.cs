@@ -9,5 +9,4 @@ public enum ExecMode
     Repeats,
     Profiles,
     RunOptimization,
-    UseMCMC
 }
