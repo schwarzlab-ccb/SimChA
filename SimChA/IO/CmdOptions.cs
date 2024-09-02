@@ -36,35 +36,38 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
 
-    [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
-    public bool RunOptimization { get; set; }
-
-    [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
+    [Option('a', "autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
     public bool AutosomesOnly { get; set; }
 
-    [Option("target-params", Required = false, Default = "", HelpText = "A json file with the target set of parameters for parameter inference.")]
-    public string TargetParams { get; set; }
-    
+    // TODO: Should be merged with a tree
     [Option("event-counts", Required = false, Default = "", HelpText = "A tsv file with the event counts for each sample for parameter inference.")]
     public string EventCounts { get; set; }
     
-    [Option("fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
+    [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
     public bool FitnessLandscape { get; set; }
     
     public ExecMode ExecMode
     {
         get
         {
-            if (RunOptimization)
+            if (CloneTreeFile != "" && CNProfiles != "")
             {
-                return ExecMode.RunOptimization;
+                throw new Exception("Cannot run both tree and profiles at the same time.");
             }
             if (CloneTreeFile != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run tree with repeats.");
+                }
                 return ExecMode.Tree;
             }
             if (CNProfiles != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run profiles with repeats.");
+                }
                 return ExecMode.Profiles;
             }
             return ExecMode.Repeats;

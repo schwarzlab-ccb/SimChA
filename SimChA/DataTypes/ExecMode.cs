@@ -8,5 +8,4 @@ public enum ExecMode
     Tree,
     Repeats,
     Profiles,
-    RunOptimization,
 }

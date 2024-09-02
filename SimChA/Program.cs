@@ -3,7 +3,6 @@ using System.Globalization;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
-using SimChA.Optimization;
 using SimChA.Simulation;
 using CommandLine;
 
@@ -41,56 +40,11 @@ else
 
 switch (execMode)
 {
-    case ExecMode.RunOptimization:
-    {
-        var optParams = simParams.OptimizationParams ?? throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
-        if (optParams.Mode != "Events" && optParams.Mode != "Fitness")
-        {
-            throw new Exception("Error: OptimizationParams.Mode not recognized. Please set OptimizationParams.Mode to either Events or Fitness.");
-        }
-    
-        var optimizer = simParams.OptimizationParams.Mode == "Events" 
-            ? new Optimizer(simParams, rnd, options.Repeats, genRef, !options.AutosomesOnly, files)
-            : new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, !options.AutosomesOnly, files);
-
-        if (options.TargetParams != "")
-        {
-            Console.WriteLine("Generating synthetic data");
-            var targetParams = FileIO.ReadSimParams(options.TargetParams);
-            optimizer.InitializeObservations(targetParams);
-        }
-        else if (options.CNProfiles != "" && options.EventCounts != "")
-        {
-            Console.WriteLine("Reading observed data:");
-            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-            var observedSamples = Simulator.SamplesFromProfiles(profiles);
-            var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
-            optimizer.InitializeObservations(observedSamples, eventCounts);
-        }
-        else 
-        {
-            throw new Exception("Error: No target parameters (synthetic data) or bootstrap file (observed data) provided. Cannot perform event optimization without a target data set.");
-        }
-    
-        // Perform the optimization
-        var outParams = optimizer.Optimize();
-        files.WriteSimParams(outParams);
-        watch.Stop();
-        Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-        Console.WriteLine("Optimization finished");
-        return 0;
-    }
-    
     case ExecMode.Profiles:
     {
         Console.WriteLine("Reading profiles:");
         var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
         samples = Simulator.SamplesFromProfiles(profiles);
-        if (options.FitnessLandscape)
-        {
-            Console.WriteLine("Computing fitness landscape:");
-            FitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
-        }
         break;
     }
     
@@ -150,6 +104,13 @@ foreach (var sample in samples)
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
         sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, fitParams, sample.Kars);
     }
+}
+
+// TODO split generation of fitness landscape and write to file
+if (options.FitnessLandscape)
+{
+    Console.WriteLine("Computing fitness landscape:");
+    FitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
 }
 
 // Write output
