@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
@@ -31,9 +32,7 @@ public class Contig
         => Length() > 0;
 
     public List<Region> GetRegions()
-    {
-        return _regions;
-    }
+        => _regions;
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -59,12 +58,6 @@ public class Contig
         _regions = keepFirst ? first : second;
         return new Contig(keepFirst ? second : first);
     }
-
-    public void DeleteArm(int centromereIndex, bool pArm, bool includeCentromere)
-        => _regions = RegionOps.DeleteArm(_regions, centromereIndex, pArm, includeCentromere);
-
-    public Contig GetArm(int centromereIndex, bool pArm, bool includeCentromere)
-        => new(RegionOps.GetArm(_regions, centromereIndex, pArm, includeCentromere));
 
     public void Join(Contig other)
         => _regions = RegionOps.ConcatRegions(_regions, other._regions);
@@ -181,9 +174,21 @@ public class Contig
         return presentGenes;
     }
 
-    public List<(long start, long end)> GetCentromeres()
-        => throw new NotImplementedException("Get centromeres not implemented yet");
-
+    public List<(long start, long end)> GetCentromeres(IImmutableDictionary<string, (long start, long end)> centromeres)
+    {
+        List<(long start, long end)> centromereList = new();
+        long currentPos = 0;
+        foreach (var reg in _regions)
+        {
+            (long centStart, long centEnd) = centromeres[reg.ChrNo];
+            if (reg.Start <= centStart && reg.End >= centEnd)
+            {
+                centromereList.Add((currentPos + centStart, currentPos + centEnd));
+            }
+            currentPos += reg.Length;
+        }
+        return centromereList;
+    }
 
     public void MergeRegions()
         => _regions = RegionOps.MergeRegions(_regions);

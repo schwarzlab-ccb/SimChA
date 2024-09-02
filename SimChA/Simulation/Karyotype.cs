@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
@@ -9,8 +10,37 @@ namespace SimChA.Simulation;
 public class Karyotype
 {
     public double FitnessVal { get; private set; }
+    public bool SexXX { get; }
+    private readonly List<Contig> _contigs;
+    private readonly Dictionary<string, List<GenRange>> _missingRanges;
+    private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
-    public bool SexXX { get;  }
+    public Karyotype(GenRef genRef, bool sexXX)
+    {
+        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
+        SexXX = sexXX;
+        Centromeres = genRef.Centromeres;
+    }
+    
+    public Karyotype(Karyotype other)
+    {
+        _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
+        _missingRanges = other._missingRanges;
+        SexXX = other.SexXX;
+        Centromeres = other.Centromeres;
+    }
+    
+    public Karyotype(List<Contig> contigs, IEnumerable<GenRange> missingList, 
+        IImmutableDictionary<string, (long start, long end)> centromeres, bool sexXX)
+    {
+        _missingRanges = missingList
+            .GroupBy(range => range.ChrNo)
+            .ToDictionary(group => group.Key, group => group.ToList());
+        _contigs = contigs;
+        SexXX = sexXX;
+        Centromeres = centromeres;
+    }
 
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
@@ -20,37 +50,7 @@ public class Karyotype
     
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
-
-    private readonly List<Contig> _contigs;
-    private readonly Dictionary<string, List<GenRange>> _missingRanges;
     
-    public Karyotype(GenRef genRef, bool sexXX)
-    {
-        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
-        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
-        SexXX = sexXX;
-    }
-    
-    public Karyotype(Karyotype other)
-    {
-        _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
-        _missingRanges = other._missingRanges;
-        SexXX = other.SexXX;
-    }
-    
-    public Karyotype(List<Contig> contigs, List<GenRange> missingList, bool sexXX)
-    {
-        _contigs = contigs;
-        _missingRanges = new Dictionary<string, List<GenRange>>();
-        foreach (var range in missingList)
-        {
-            if (!_missingRanges.ContainsKey(range.ChrNo))
-                _missingRanges[range.ChrNo] = new List<GenRange>();
-            _missingRanges[range.ChrNo].Add(range);
-        }
-        SexXX = sexXX;
-    }
-
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
@@ -78,7 +78,7 @@ public class Karyotype
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
     
     public List<(long start, long end)> GetCentromeres(int contigId)
-        => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres() : new List<(long, long)>();
+        => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres(Centromeres) : new List<(long, long)>();
     
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());

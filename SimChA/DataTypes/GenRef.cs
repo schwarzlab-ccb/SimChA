@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-using System.Linq;
+
+using System.Collections.Immutable;
 using System.Text;
 
 namespace SimChA.DataTypes;
@@ -9,6 +10,7 @@ public class GenRef
     public string Name { get; }
     public Dictionary<string, int> ChrLengths { get; }
     public Dictionary<string, SexEnum> ChrSex { get; }
+    public ImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     public int AutosomeCount { get; }
     public int ChrCount 
         => IncludeSexChromosomes ? AutosomeCount * 2 + (ChrSex.Count - AutosomeCount) : AutosomeCount * 2;
@@ -24,25 +26,16 @@ public class GenRef
     private List<string> XXChrs { get; }
     public List<string> AllChrs { get; }
     private List<string> AutosomeChrs { get; }
-    
     public string YChrName { get; }
-    
     public string XChrName { get; }
     
     public Dictionary<string, StringBuilder>? GenContentsDict { get; set;}
     
     public long GetGenomeLen(bool sexXX, bool diploid = true)
-    {
-        if (!IncludeSexChromosomes)
-        {
-            return diploid ? AutosomeLen : AutosomeLinLen;
-        }
-        else 
-        {
-            return diploid ? (sexXX ? XXGenomeLen : XYGenomeLen) : (sexXX ? XXLinLen : XYLinLen);
-        }
-    }
-    
+        => diploid 
+            ? IncludeSexChromosomes ? (sexXX ? XXGenomeLen : XYGenomeLen) : AutosomeLen 
+            : IncludeSexChromosomes ? (sexXX ? XXLinLen : XYLinLen) : AutosomeLinLen;
+
     public IEnumerable<string> ChrIDsForSex(bool sexXX)
         => sexXX ? XXChrs : XYChrs;
     
@@ -52,19 +45,26 @@ public class GenRef
     public long AutosomeLen {get;}
     public bool IncludeSexChromosomes { get; set;}
     
-
-    public List<List<Region>> GetGenotype(bool sexXX)
-        => IncludeSexChromosomes ? (sexXX ? XXGenome : XYGenome) : Autosomes;
+    public IEnumerable<List<Region>> GetGenotype(bool sexXX)
+        => IncludeSexChromosomes 
+            ? sexXX ? XXGenome : XYGenome 
+            : Autosomes;
 
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
 
-    public GenRef(string name, Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex,
-        (Dictionary<string, (int, int)> p, Dictionary<string, (int, int)> q) centromeres,
-        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, bool includeSexChromosomes, Dictionary<string, StringBuilder>? genContentsDict = null)
+    public GenRef(
+        string name, 
+        Dictionary<string, int> chrLengths, 
+        Dictionary<string, SexEnum> chrSex,
+        ImmutableDictionary<string, (long start, long end)> centromeres,
+        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList, 
+        bool includeSexChromosomes, 
+        Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
         ChrLengths = chrLengths;
         ChrSex = chrSex;
+        Centromeres = centromeres;
         AutosomeCount = chrSex.Count(x => x.Value == SexEnum.Both);
         IncludeSexChromosomes = includeSexChromosomes;
         XYChrs = chrSex.Select(pair => pair.Key).ToList();
@@ -97,12 +97,7 @@ public class GenRef
 
     private Region GetRegion(string chrNo, bool isFirstHaplotype, bool useSNV) => 
         new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
-
-    private IEnumerable<List<Region>> CreateAutosomeHaplotype(bool isFirstHaplotype, bool useSNV = false)
-    {
-        var autosomes = ChrSex.Select(x => x.Key).Where(x => ChrSex[x] == SexEnum.Both);
-        return autosomes.Select(num => new List<Region>{GetRegion(num, isFirstHaplotype, useSNV)});
-    }
+    
 
     private IEnumerable<List<Region>> CreateHaplotype(bool isFirstHaplotype, bool isFemale, bool autosomesOnly = false, bool useSNV = false)
     {

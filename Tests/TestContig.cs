@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -89,5 +90,18 @@ public class TestContig
         var copyOfContig1 = new Contig(_contig1);
         copyOfContig1.InsertContig(_contigX, _contig1.Length() / 2);
         Assert.AreEqual(_contig1.Length() + _contigX.Length(), copyOfContig1.Length());
+    }
+
+    [Test]
+    public void TestGetCentromeres()
+    {
+        var cents = _contig1.GetCentromeres(_genRef.Centromeres);
+        Assert.AreEqual(1, cents.Count);
+        Assert.AreEqual(121500000, cents[0].start);;
+        Assert.AreEqual(128900000, cents[0].end);
+        
+        _contig1.Bridge(1000, true);
+        cents = _contig1.GetCentromeres(_genRef.Centromeres);
+        Assert.AreEqual(2, cents.Count);
     }
 }

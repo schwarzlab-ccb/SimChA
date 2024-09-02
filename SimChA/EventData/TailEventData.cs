@@ -28,16 +28,12 @@ public record TailEventData : ContigEventData
         switch (EventType)
         {
             case CNEventType.TailDeletion:
-                kar.ApplyTailDeletion(ContigId, Length, Direction);
-                break;
-            case CNEventType.TailDuplication:
-                kar.ApplyTailDuplication(ContigId, Length, Direction);
-                break;
             case CNEventType.ArmDeletion:
                 kar.ApplyTailDeletion(ContigId, Length, Direction);
                 break;
+            case CNEventType.TailDuplication:
             case CNEventType.ArmDuplication:
-                kar.ApplyTailDeletion(ContigId, Length, Direction);
+                kar.ApplyTailDuplication(ContigId, Length, Direction);
                 break;
             case CNEventType.BreakageFusionBridge:
                 kar.ApplyBFB(ContigId, Length, Direction);
