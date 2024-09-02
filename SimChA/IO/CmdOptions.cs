@@ -41,10 +41,8 @@ public class CmdOptions
 
     [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
     public bool RunOptimization { get; set; }
-    [Option("bin-samples", Required = false, Default = false, HelpText = "Use SimChA to bin copy-number profiles into 1MB-sized bins")]
-    public bool BinSamples { get; set; }
-    [Option("binned-samples", Required = false, Default = "", HelpText = "Path to the binned data")]
-    public string BinnedSamples { get; set; }
+
+
     [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
     public bool AutosomesOnly { get; set; }
 
@@ -58,10 +56,6 @@ public class CmdOptions
     {
         get
         {
-            if (BinSamples)
-            {
-                return ExecMode.BinSamples;
-            }
             if (UseMCMC)
             {
                 return ExecMode.UseMCMC;
@@ -78,15 +72,9 @@ public class CmdOptions
             {
                 return ExecMode.Profiles;
             }
-            if (BootstrapFile != "")
-            {
-                return ExecMode.Bootstrap;
-            }
-            if (UseVariants || WriteFasta)
-            {
-                return ExecMode.ParseGenContents;
-            }
             return ExecMode.None;
         }
     }
+    public bool ShouldParseGenome 
+        => UseVariants || WriteFasta;
 }

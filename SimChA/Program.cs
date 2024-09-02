@@ -22,9 +22,7 @@ var simParams = FileIO.ReadSimParams(options.ConfigFile);
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-bool parseGenContents = execMode == ExecMode.ParseGenContents;
-bool includeSexChromosomes = !options.AutosomesOnly;
-var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
+var genRef = FileIO.GetGenRef(options.DataFolder, !options.AutosomesOnly, options.ShouldParseGenome);
 
 var watch = new Stopwatch();
 watch.Start();
@@ -33,19 +31,6 @@ var simulator = new Simulator(rnd, genRef);
 
 switch (execMode)
 {
-    case ExecMode.BinSamples:
-    {
-        string cnProfiles = options.CNProfiles ?? throw new Exception("Error: No CN profiles provided. Cannot bin samples.");
-        Console.WriteLine("Reading observed data:");
-        var profiles = FileIO.ReadProfiles(genRef, cnProfiles);
-        var observedSamples = Simulator.SamplesFromProfiles(profiles);
-        var binner = new Binner(genRef);
-        Console.WriteLine("Binning samples:");
-        var binnedSamples = binner.GetBinnedCNProfiles(observedSamples);
-        Console.WriteLine("Writing binned samples:");
-        files.WriteCopyNumbers(binnedSamples);
-        return 0;
-    }
     case ExecMode.RunOptimization:
     {
         var optParams = simParams.OptimizationParams ?? throw new Exception("Error: OptimizationParams not set. Cannot perform optimization. Please set OptimizationParams.");
@@ -55,8 +40,8 @@ switch (execMode)
         }
     
         var optimizer = simParams.OptimizationParams.Mode == "Events" 
-            ? new Optimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files)
-            : new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, includeSexChromosomes, files);
+            ? new Optimizer(simParams, rnd, options.Repeats, genRef, !options.AutosomesOnly, files)
+            : new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, !options.AutosomesOnly, files);
 
         if (options.TargetParams != "")
         {
@@ -101,8 +86,6 @@ switch (execMode)
     case ExecMode.None:
     case ExecMode.Tree:
     case ExecMode.Repeats:
-    case ExecMode.ParseGenContents:
-    case ExecMode.Bootstrap:
     case ExecMode.UseMCMC:
     default:
     {
