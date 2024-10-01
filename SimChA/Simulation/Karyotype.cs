@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
@@ -9,8 +10,37 @@ namespace SimChA.Simulation;
 public class Karyotype
 {
     public double FitnessVal { get; private set; }
+    public SexEnum Sex;
+    private readonly List<Contig> _contigs;
+    private readonly Dictionary<string, List<GenRange>> _missingRanges;
+    private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
-    public bool SexXX { get;  }
+    public Karyotype(GenRef genRef, SexEnum sex)
+    {
+        _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
+        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
+        Sex = sex;
+        Centromeres = genRef.Centromeres;
+    }
+    
+    public Karyotype(Karyotype other)
+    {
+        _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
+        _missingRanges = other._missingRanges;
+        Sex = other.Sex;
+        Centromeres = other.Centromeres;
+    }
+    
+    public Karyotype(List<Contig> contigs, IEnumerable<GenRange> missingList, 
+        IImmutableDictionary<string, (long start, long end)> centromeres, SexEnum sexEnum)
+    {
+        _missingRanges = missingList
+            .GroupBy(range => range.ChrNo)
+            .ToDictionary(group => group.Key, group => group.ToList());
+        _contigs = contigs;
+        Sex = sexEnum;
+        Centromeres = centromeres;
+    }
 
     public int CountContigs() 
         => _contigs.Count(c => c.Any());
@@ -18,40 +48,9 @@ public class Karyotype
     public long GenomeLen()
         => _contigs.Sum(c => c.Length());
     
-    
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
-
-    private readonly List<Contig> _contigs;
-    private readonly Dictionary<string, List<GenRange>> _missingRanges;
     
-    public Karyotype(GenRef genRef, bool sexXX, bool segmented = true)
-    {
-        _contigs = genRef.GetGenotype(sexXX, segmented).Select(region => new Contig(region)).ToList();
-        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
-        SexXX = sexXX;
-    }
-    
-    public Karyotype(Karyotype other)
-    {
-        _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
-        _missingRanges = other._missingRanges;
-        SexXX = other.SexXX;
-    }
-    
-    public Karyotype(List<Contig> contigs, List<GenRange> missingList, bool sexXX)
-    {
-        _contigs = contigs;
-        _missingRanges = new Dictionary<string, List<GenRange>>();
-        foreach (var range in missingList)
-        {
-            if (!_missingRanges.ContainsKey(range.ChrNo))
-                _missingRanges[range.ChrNo] = new List<GenRange>();
-            _missingRanges[range.ChrNo].Add(range);
-        }
-        SexXX = sexXX;
-    }
-
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
@@ -78,10 +77,12 @@ public class Karyotype
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
     
+    public List<(long start, long end)> GetCentromeres(int contigId)
+        => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres(Centromeres) : new List<(long, long)>();
+    
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
     
-    public List<Contig> GetAllContigs() => _contigs;
     public Contig GetContig(int contigID) => _contigs[contigID];
 
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
@@ -112,18 +113,6 @@ public class Karyotype
         var contig = _contigs[contigID];
         long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         contig.Bridge(tailSplit, fiveToThree);
-    }
-
-    public void ApplyArmDeletion(int contigId, int centromereIndex, bool pArm, bool includeCentromere)
-    {
-        var contig = _contigs[contigId];
-        contig.DeleteArm(centromereIndex, pArm, includeCentromere);
-    }
-    public void ApplyArmDuplication(int contigId, int centromereIndex, bool pArm, bool includeCentromere)
-    {
-        var contig = _contigs[contigId];
-        var armContig = contig.GetArm(centromereIndex, pArm, includeCentromere);
-        _contigs.Add(new Contig(armContig));
     }
     
     public void ApplyContigDeletion(int contigID)

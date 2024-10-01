@@ -27,7 +27,7 @@ public class TestSimulator
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
         _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0, false, true);
-        _kar = new Karyotype(_genRef, true);
+        _kar = new Karyotype(_genRef, SexEnum.Female);
     }
     
     [Test]

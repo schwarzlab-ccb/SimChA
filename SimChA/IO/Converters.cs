@@ -1,6 +1,5 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.Simulation;
@@ -43,7 +42,16 @@ public static class Converters
         return (events, mixture);    
     }
     
-    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, Dictionary<string, Signature> sigs, SexEnum sex, MCTarget mcTarget, Dictionary<string, int>? eventCounts = null)
+    public static List<Sample> MakeSamples(
+        Random rnd, 
+        int repeats, 
+        int meanDist, 
+        Distribution distribution, 
+        Dictionary<string, Signature> sigs, 
+        SexEnum sex, 
+        bool autosomesOnly,
+        MCTarget mcTarget, 
+        Dictionary<string, int>? eventCounts = null)
     {
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Value.Prob > 0).ToDictionary(s => s.Key, s => s.Value);
@@ -58,13 +66,21 @@ public static class Converters
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
-            var sample = new Sample($"sample_{i + 1}", Sampling.GetBinarySex(rnd, sex), new List<CloneIn> { clone }, events, mixture);
+            var sample = new Sample($"sample_{i + 1}", Sampling.GetSex(rnd, sex), new List<CloneIn> { clone }, events, mixture);
             samples.Add(sample);
         }
         return samples;
     }
 
-    public static List<Sample> MakeSamples(Random rnd, int repeats, int meanDist, Distribution distribution, Dictionary<string, Signature> sigs, SexEnum sex, List<(double fitness, int eventCount)> clonesList)
+    public static List<Sample> MakeSamples(
+        Random rnd, 
+        int repeats, 
+        int meanDist, 
+        Distribution distribution, 
+        Dictionary<string, Signature> sigs, 
+        SexEnum sex, 
+        bool autosomesOnly,
+        List<(double fitness, int eventCount)> clonesList)
     {
         var samples = new List<Sample>();
         var selectedSigs = sigs.Where(s => s.Value.Prob > 0).ToDictionary(s => s.Key, s => s.Value);
@@ -82,7 +98,7 @@ public static class Converters
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
-            var sample = new Sample($"sample_{i + 1}", Sampling.GetBinarySex(rnd, sex), new List<CloneIn> { clone }, events, mixture);
+            var sample = new Sample($"sample_{i + 1}", Sampling.GetSex(rnd, sex), new List<CloneIn> { clone }, events, mixture);
             samples.Add(sample);
         }
         return samples;

@@ -8,18 +8,22 @@ public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEvent
 {
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.ChromDeletion)
+        switch (EventType)
         {
-            kar.ApplyContigDeletion(ContigId);
-        }
-        else if (EventType == CNEventType.ChromDuplication)
-        {
-            kar.ApplyContigDuplication(ContigId);
+            case CNEventType.ChromDeletion:
+                kar.ApplyContigDeletion(ContigId);
+                break;
+            case CNEventType.ChromDuplication:
+                kar.ApplyContigDuplication(ContigId);
+                break;
+            default:
+                throw new Exception($"Invalid event type {EventType} for ContigEventData");
         }
     }
     
     public override string ToString() 
         => $"contig:{ContigId}";
+    
     public override double GetProb()
         => 1.0;
 }

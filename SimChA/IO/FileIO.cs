@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Immutable;
+using System.Globalization;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -74,7 +75,7 @@ public class FileIO
             foreach (var clone in sample.Clones)
             {
                 var kar = sample.Kars[clone.CloneId];
-                var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, kar, segs, sample.SexXX, true);
+                var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, kar, segs, sample.Sex, true);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
@@ -92,7 +93,7 @@ public class FileIO
         {
             foreach (var clone in sample.Clones)
             {
-                var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.SexXX);
+                var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.Sex);
                 string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
@@ -476,7 +477,7 @@ public class FileIO
         }
     }
     
-    public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ReadChromosomes(string folder)
+    private static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ReadChromosomes(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
         if (!File.Exists(fileFullPath))
@@ -494,7 +495,7 @@ public class FileIO
         }
     }
 
-    public static (Dictionary<string, (int, int)> p, Dictionary<string, (int, int)> q) ReadCentromeres(string folder)
+    private static ImmutableDictionary<string, (long start, long end)> ReadCentromeres(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CENTROMERES_TSV));
         if (!File.Exists(fileFullPath))
@@ -515,7 +516,7 @@ public class FileIO
     public static GenRef GetGenRef(string dataFolder, bool includeSexChromosomes = true, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
-        var (chrLengths, chrSex)  = ReadChromosomes(dataFolder);
+        var (chrLengths, chrSex) = ReadChromosomes(dataFolder);
         var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;

@@ -36,57 +36,44 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
 
-    [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
-    public string BootstrapFile { get; set; }
-
-    [Option("optimization", Required = false, Default = false, HelpText = "Run the optimization model.")]
-    public bool RunOptimization { get; set; }
-    [Option("bin-samples", Required = false, Default = false, HelpText = "Use SimChA to bin copy-number profiles into 1MB-sized bins")]
-    public bool BinSamples { get; set; }
-    [Option("binned-samples", Required = false, Default = "", HelpText = "Path to the binned data")]
-    public string BinnedSamples { get; set; }
-    [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
+    // TODO: Should be moved to sim-params
+    [Option('a', "autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
     public bool AutosomesOnly { get; set; }
 
-    [Option("target-params", Required = false, Default = "", HelpText = "A json file with the target set of parameters for parameter inference.")]
-    public string TargetParams { get; set; }
+    // TODO: Should be merged with a tree
     [Option("event-counts", Required = false, Default = "", HelpText = "A tsv file with the event counts for each sample for parameter inference.")]
     public string EventCounts { get; set; }
-    [Option("fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
+    
+    [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
     public bool FitnessLandscape { get; set; }
+    
     public ExecMode ExecMode
     {
         get
         {
-            if (BinSamples)
+            if (CloneTreeFile != "" && CNProfiles != "")
             {
-                return ExecMode.BinSamples;
-            }
-            if (UseMCMC)
-            {
-                return ExecMode.UseMCMC;
-            }
-            if (RunOptimization)
-            {
-                return ExecMode.RunOptimization;
+                throw new Exception("Cannot run both tree and profiles at the same time.");
             }
             if (CloneTreeFile != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run tree with repeats.");
+                }
                 return ExecMode.Tree;
             }
             if (CNProfiles != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run profiles with repeats.");
+                }
                 return ExecMode.Profiles;
             }
-            if (BootstrapFile != "")
-            {
-                return ExecMode.Bootstrap;
-            }
-            if (UseVariants || WriteFasta)
-            {
-                return ExecMode.ParseGenContents;
-            }
-            return ExecMode.None;
+            return ExecMode.Repeats;
         }
     }
+    public bool ShouldParseGenome 
+        => UseVariants || WriteFasta;
 }

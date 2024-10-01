@@ -304,30 +304,35 @@ public static class SummaryFeatures
         return meanCN;
     }
 
-    public static double GetMeanPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false)
-        => GetPloidy(genRef, cnProfiles, isFemaleDict, includeSexChromosomes, -1.0).DefaultIfEmpty(0).Average();
+    public static double GetMeanPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, SexEnum> sexes)
+        => GetPloidy(genRef, cnProfiles, sexes, -1.0).DefaultIfEmpty(0).Average();
 
-    public static List<double> GetPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, bool> isFemaleDict, bool includeSexChromosomes = false, double cutoff = 8.0)
-        => includeSexChromosomes
-                        ? cnProfiles.Select(kvp => CopyNumbers.CalcPloidy(genRef, kvp.Value, isFemaleDict[kvp.Key]))
-                                    .Where(ploidy => cutoff <= 0 || ploidy <= cutoff).ToList()
-                        : cnProfiles.Select(kvp => CopyNumbers.CalcAutosomePloidy(genRef, kvp.Value))
-                                    .Where(ploidy => cutoff <= 0 || ploidy <= cutoff).ToList();
+    public static List<double> GetPloidy(
+        GenRef genRef, 
+        Dictionary<string, List<CopyNumber>> cnProfiles,
+        Dictionary<string, SexEnum> sexes, 
+        double cutoff = 8.0)
+        => cnProfiles.Select(kvp => CopyNumbers
+                    .CalcPloidy(genRef, kvp.Value, sexes[kvp.Key]))
+                    .Where(ploidy => cutoff <= 0 || ploidy <= cutoff)
+                    .ToList();
                         
     // Produces a matrix of copy-number values for each chromosome in each sample
-    public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(List<string> chrs, Dictionary<string, List<CopyNumber>> cnProfiles)
+    public static Dictionary<string, Dictionary<string, double>> GetChrCopyNumberMatrix(
+        List<string> chrs, 
+        Dictionary<string, List<CopyNumber>> cnProfiles)
     {
         var matrix = new Dictionary<string, Dictionary<string, double>>();
-        foreach (var chr in chrs)
+        foreach (string chr in chrs)
         {
             var chrSpecificCN = new Dictionary<string, double>();
             foreach (var cnProfile in cnProfiles)
             {
                 var chrCNPs = cnProfile.Value.Where(cn => cn.Segment.ChrNo == chr && cn.CNH1 + cn.CNH2 > 0).ToList();
-                var val = 0.0;
+                double val = 0.0;
                 if (chrCNPs.Any())
                 {
-                    var weightedLen = chrCNPs.Select(cn => (cn.CNH1 + cn.CNH2)*cn.Segment.Length).Sum();
+                    double weightedLen = chrCNPs.Select(cn => (cn.CNH1 + cn.CNH2)*cn.Segment.Length).Sum();
                     val = weightedLen / chrCNPs.Select(cn => cn.Segment.Length).Sum();
                 }
                 chrSpecificCN.Add(cnProfile.Key, val);
@@ -348,7 +353,7 @@ public static class SummaryFeatures
         // Mean Karyotypic Variance is the variance of individual chromosomes across all samples
         // then averages across all chromosomes
         var chrVar = new Dictionary <string, double> ();
-        foreach (var chr in chrCNMatrix.Keys)
+        foreach (string chr in chrCNMatrix.Keys)
         {
             var chrVals = chrCNMatrix[chr].Values;
             chrVar.Add(chr, chrVals.Variance());

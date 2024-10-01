@@ -5,23 +5,23 @@ namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, bool isFemale)
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, SexEnum sex)
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(sex) : genRef.ChrIDsForAutosomes();
         karyotype.MergeRegions();
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
     } 
     
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool isFemale, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(sex) : genRef.ChrIDsForAutosomes();
         karyotype.MergeRegions();
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
 
-    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool isFemale, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
+        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(sex) : genRef.ChrIDsForAutosomes();
         return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
     }
 
@@ -87,17 +87,10 @@ public static class CopyNumbers
         return result;
     }
 
-    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, bool isFemale)
+    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexEnum sex)
     {
-        long totalLength = genRef.GetGenomeLen(isFemale) / 2;
+        long totalLength = genRef.GetGenomeLen(sex) / 2;
         return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
-    }
-
-    public static double CalcAutosomePloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers)
-    {
-        long totalLength = genRef.AutosomeLen / 2;
-        return copyNumbers.Where(cn => cn.Segment.ChrNo != genRef.XChrName && cn.Segment.ChrNo != genRef.YChrName)
-                          .Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
     }
 
     private static string Header(bool withSample, bool isFirst)

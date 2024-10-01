@@ -60,7 +60,16 @@ public class TestEventData
         Assert.LessOrEqual(eventData.PosB, lenB);
         Assert.IsFalse(eventData.Inverted);
     }
-
+    
+    [Test]
+    public void TestArmEvent()
+    {
+        var eventP = new CNEventPars(CNEventType.ArmDeletion, 1);
+        var cents = new List<(long start, long end)>() { (1_000_000L, 2_000_000L) };
+        var eventData = new TailEventData(_rnd, eventP, 0, cents);
+        Assert.AreEqual(1_000_000L, eventData.Length);
+    }
+    
     [Test]
     public void TestPyrgo()
     {

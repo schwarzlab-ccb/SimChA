@@ -9,5 +9,5 @@ public enum SexEnum
 {
     Female,
     Male,
-    Both
+    None
 }

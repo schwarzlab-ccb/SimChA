@@ -27,7 +27,7 @@ public class MCSimulator : Simulator
         }
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
+        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
     

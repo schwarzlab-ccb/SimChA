@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json;
 using SimChA.DataTypes;
@@ -66,6 +67,19 @@ public static class Parsers
         return result;
     }
 
+    private static SexEnum GetSexFromProfile(IReadOnlyDictionary<string, bool> present)
+    {
+        if (present["chrY"])
+        {
+            return SexEnum.Male;
+        }
+        if (present["chrX"])
+        {
+            return SexEnum.Female;
+        }
+        return SexEnum.None;
+    }
+
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
@@ -79,6 +93,7 @@ public static class Parsers
         var present = genRef.IncludeSexChromosomes
                     ? genRef.AllChrs.ToDictionary(c => c, _ => false)
                     : genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false);
+        
         string lastSample = "";
         string lastChr = genRef.AllChrs.First();
         long lastPos = 0L;
@@ -108,9 +123,8 @@ public static class Parsers
                         regionsA.Add(new Region(range.Start, range.End, range.ChrNo, true));
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
-                    var thisKar = genRef.IncludeSexChromosomes 
-                            ? new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, !present[genRef.YChrName])
-                            : new Karyotype(new List<Contig> { new(regionsA),  new(regionsB) }, missingRanges, false);
+                    var newContigs = new List<Contig> { new(regionsA), new(regionsB) };
+                    var thisKar = new Karyotype(newContigs, missingRanges, genRef.Centromeres, GetSexFromProfile(present));
                     result[lastSample] = thisKar;
                 }
                 // Reset
@@ -185,6 +199,7 @@ public static class Parsers
             present
                 .Where(pair => !pair.Value)
                 .Select(c => new GenRange(0, genRef.ChrLengths[lastChr], c.Key)));
+        
         // Consider missing to be haplotypes by default
         foreach (var range in missingRanges)
         {
@@ -194,9 +209,7 @@ public static class Parsers
 
         // Add the last sample
         var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
-        var kar = genRef.IncludeSexChromosomes 
-                ? new Karyotype(newRegs, missingRanges, !present[genRef.YChrName])
-                : new Karyotype(newRegs, missingRanges, false);
+        var kar = new Karyotype(newRegs, missingRanges, genRef.Centromeres, GetSexFromProfile(present));
         result[lastSample] = kar;
         return result;
     }
@@ -255,7 +268,7 @@ public static class Parsers
             int distance = int.Parse(lineSplit[columns[distanceKey]]);
             double fitness = parseFitness
                 ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
-                : 0.0;
+                : -1.0;
             var clone = new CloneIn(id, parentId, distance, fitness);
             cloneFitness.Add(clone);
         }
@@ -337,47 +350,46 @@ public static class Parsers
         return (chrLengths, chrSex);
     }
 
-    public static (Dictionary<string, (int, int)> p, Dictionary<string, (int, int)> q) ParseCentromeres(TextReader centromereFile)
+    // Set the centromeres to the boundaries of the centromere regions (given that p and q parts are separated)
+    public static ImmutableDictionary<string, (long start, long end)> ParseCentromeres(TextReader centromereFile)
     {   
         centromereFile.ReadLine(); // Skip header
-        Dictionary<string, (int, int)> pCentromeres = new();
-        Dictionary<string, (int, int)> qCentromeres = new();
-        var lastChr = "";
-        while (centromereFile.ReadLine() is {} line)
+        Dictionary<string, (long start, long end)> cents = new();
+
+        while (centromereFile.ReadLine() is { } line)
         {
-            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
-            string chrNo = lineSplit[0];
-            int start = int.Parse(lineSplit[1]);
-            int end = int.Parse(lineSplit[2]);
-            if (chrNo != lastChr)
+            string[] lineSplit = line.Split('\t');
+            string chr = lineSplit[0];
+            long start = long.Parse(lineSplit[1]);
+            long end = long.Parse(lineSplit[2]);
+
+            if (cents.ContainsKey(chr))
             {
-                lastChr = chrNo;
-                pCentromeres.Add(chrNo, (start, end));
+                var existing = cents[chr];
+                cents[chr] = (Math.Min(existing.start, start), Math.Max(existing.end, end));
             }
             else
             {
-                qCentromeres.Add(chrNo, (start, end));
+                cents[chr] = (start, end);
             }
         }
-        return (pCentromeres, qCentromeres);
+        
+        return cents.ToImmutableDictionary();
     }
 
-    private static SexEnum GetSexEnum(IList<string> lines, IReadOnlyList<string> lineSplit, int index)
+    private static SexEnum GetSexEnum(ICollection<string> lines, IReadOnlyList<string> lineSplit, int index)
     {
         if (lineSplit.Count > 2)
         {
             string sexString = lineSplit[2];
             return Enum.Parse<SexEnum>(sexString);
         }
-        if (index == lines.Count - 1)
+        return index switch
         {
-            return SexEnum.Male;
-        }
-        if (index == lines.Count - 2)
-        {
-            return SexEnum.Female;
-        }
-        return SexEnum.Both;
+            _ when index == lines.Count - 1 => SexEnum.Male,
+            _ when index == lines.Count - 2 => SexEnum.Female,
+            _ => SexEnum.None
+        };
     }
     
     public static IEnumerable<StringBuilder> ParseFasta(StreamReader fastaStream)
@@ -395,7 +407,7 @@ public static class Parsers
                 {
                     yield return sequence;
                 }
-                string pattern = @"^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
+                const string pattern = "^>chr([1-9]|1[0-9]|2[0-2]|X|Y)$";
                 var match = Regex.Match(line, pattern);
                 if (match.Value == "")
                 {
@@ -407,9 +419,9 @@ public static class Parsers
                 // TODO: optimize the string builder
                 sequence = new StringBuilder("");
             }
-            else if (sequence != null)
+            else
             {
-                sequence.Append(line);
+                sequence?.Append(line);
             }
         }
         if (sequence != null)

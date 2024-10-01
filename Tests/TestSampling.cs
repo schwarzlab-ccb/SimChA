@@ -73,35 +73,4 @@ public class TestSampling
             Assert.AreNotEqual(index, 3);
         }
     }
-    [Test]
-    public void TestSampleContigsByArms()
-    {
-        var regions = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true),
-            new Centromere(3, 4, "chr1", true, true),
-            new QArm(4, 5, "chr1", true, true),
-        };
-        var contigs = new List<Contig>(){new(regions)};
-        var kar = new Karyotype(contigs, new List<GenRange>(), false);
-        /*for (int i = 1; i < 46; i++)
-        {
-            kar.ApplyContigDeletion(i);
-        }*/
-        _rnd = new Random(0);
-        var (id, _, _) = Sampling.SampleContigByArms(_rnd, kar);
-        Assert.AreEqual(0, id);
-        // Delete the p-arm of the first chromosome
-        kar.ApplyArmDeletion(0, 1, true, false);
-        (id, _, _) = Sampling.SampleContigByArms(_rnd, kar);
-        Assert.AreEqual(0, id);
-        // Delete the new "p-arm" of the first chromosome, which is in position 2 now
-        kar.ApplyArmDeletion(0, 2, true, false);
-        (id, _, bool pArm) = Sampling.SampleContigByArms(_rnd, kar);
-        Assert.AreEqual(0, id);
-        // The p-arm must be false now
-        Assert.IsFalse(pArm);
-    }
 }

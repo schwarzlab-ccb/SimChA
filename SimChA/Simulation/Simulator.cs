@@ -11,9 +11,7 @@ public class Simulator
     protected readonly GenRef GenRef;
     protected int Counter;
 
-    public Simulator(
-        Random rnd,
-        GenRef genRef)
+    public Simulator(Random rnd, GenRef genRef)
     {
         Rnd = rnd;
         GenRef = genRef;
@@ -27,7 +25,8 @@ public class Simulator
         }
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.SexXX);
+        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
+        // TODO: Check if 1 is the correct number of events!
         ApplyCNEventsRec(sample, root, childLoopUp, 1);
     }
     
@@ -61,7 +60,7 @@ public class Simulator
     public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
         => (from profile in profiles
             let clones = new List<CloneIn> { new(0, -1, 0, 0) }
-            select new Sample(profile.Key, profile.Value.SexXX, clones, new List<CNEventPars>(), new Dictionary<string, double>())
+            select new Sample(profile.Key, profile.Value.Sex, clones, new List<CNEventPars>(), new Dictionary<string, double>())
             { Kars = { [0] = profile.Value } }).ToList();
 
     public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)

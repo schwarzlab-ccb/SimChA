@@ -8,7 +8,7 @@ namespace SimChA.DataTypes;
 public class Sample
 {
     public string SampleId { get; }
-    public bool SexXX { get; }
+    public SexEnum Sex { get; }
     public List<CloneIn> Clones { get; }
     public List<CNEventPars> EventPars { get;  }
     public Dictionary<int, Karyotype> Kars { get; }
@@ -16,12 +16,10 @@ public class Sample
     public Dictionary<int, CloneStat> Stats { get; }
     public Dictionary<string, double> Mixture { get; }
     
-    public static string SexStr(bool sexXX) => sexXX ? "XX" : "XY";
-
-    public Sample(string sampleId, bool sexXX, List<CloneIn> clones, List<CNEventPars> eventPars, Dictionary<string, double> mixture)
+    public Sample(string sampleId, SexEnum sex, List<CloneIn> clones, List<CNEventPars> eventPars, Dictionary<string, double> mixture)
     {
         SampleId = sampleId;
-        SexXX = sexXX;
+        Sex = sex;
         Clones = clones;
         EventPars = eventPars;
         Mixture = mixture;
@@ -33,7 +31,7 @@ public class Sample
     public static string Header() => "sample_id\tsex\tclone_count\tmixture";
     private string MixtureString() => EventPars.Any() ? string.Join(";", Mixture.Select(pair => $"{pair.Key}:{pair.Value:f4}")) : "-";
     public string ToTSV() => $"{SampleId}\t" +
-                             $"{SexStr(SexXX)}\t" +
+                             $"{Sex}\t" +
                              $"{Clones.Count}\t" +
                              $"{MixtureString()}";
 }

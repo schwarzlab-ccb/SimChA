@@ -19,9 +19,8 @@ public class TestKaryotype
     private CNEventPars _del;
     private CNEventPars _dup;
     private GenRef _genRef;
-    
-    
-    private int TEST_FRAC = 1000;
+    private const int TEST_FRAC = 1000;
+    const string DATA_PATH = "./../../../../data/hg19";
     
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
@@ -32,8 +31,8 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _kar = new Karyotype(_genRef, false);
+        _genRef = FileIO.GetGenRef(DATA_PATH);
+        _kar = new Karyotype(_genRef, SexEnum.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
         _dup = new CNEventPars(CNEventType.ChromDuplication, 1);
@@ -91,7 +90,7 @@ public class TestKaryotype
     public void TestInternalInversion()
     {
         long len = _kar.ContigLen(0);
-        var nRegions = _kar.GetContig(0).GetRegions().Count;
+        int nRegions = _kar.GetContig(0).GetRegions().Count;
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
         var regions = _kar.FindRegionsOfChr("chr1").ToList();
@@ -104,7 +103,7 @@ public class TestKaryotype
     public void TestInvertedDuplication()
     {
         long len = _kar.ContigLen(0);
-        var nRegions = _kar.GetContig(0).GetRegions().Count;
+        int nRegions = RegionOps.GlueNeighbours(_kar.GetContig(0).GetRegions()).Count;
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
         var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr("chr1").ToList());
@@ -134,7 +133,7 @@ public class TestKaryotype
         Assert.AreEqual(len, _kar.ContigLen(0));
         Assert.AreEqual(2*TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
     }
-
+    
     [Test]
     public void TestBFB()
     {
@@ -147,17 +146,13 @@ public class TestKaryotype
     [Test]
     public void TestBFBChain()
     {
-        for (int i = 1; i < 46; i++)
-        {
-            _kar.ApplyContigDeletion(i);
-        }
         for (int i = 0; i < 4; i++)
         {
-            _kar.ApplyBFB(0, 1_000_000, true);
-            Assert.AreEqual((int) Math.Pow(2, i+1), _kar.ToString().Split("~").Length);
+            long len = _kar.ContigLen(0);
+            _kar.ApplyBFB(0, TEST_FRAC, true);
+            Assert.AreEqual((len - TEST_FRAC) * 2, _kar.ContigLen(0));
         }
     }
-    
     
     [Test]
     public void TestTranslocation()
@@ -187,7 +182,8 @@ public class TestKaryotype
     {
         var eventP = new CNEventPars(eventType, 1, 1_000_000, 10);
         var eventData = Sampling.GenerateCNEventData(new Random((int) seed), _kar, eventP);
-        Assert.DoesNotThrow(() => eventData.ApplyEvent(_kar));
+        Assert.NotNull(eventData);
+        Assert.DoesNotThrow(() => eventData?.ApplyEvent(_kar));
     }
     
     [Test]
@@ -214,7 +210,7 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(_genRef.GetGenomeLen(_kar.SexXX), _kar.GenomeLen());
+        Assert.AreEqual(_genRef.GetGenomeLen(_kar.Sex), _kar.GenomeLen());
     }
     
     [Test]
@@ -308,8 +304,8 @@ public class TestKaryotype
     [Test]
     public void TestSNV()
     {
-        long loc = 100;
-        int contigID = 0;
+        const long loc = 100;
+        const int contigID = 0;
         var newNucleotide = Nucleotide.C;
 
         _kar.ApplySNV(contigID, loc, newNucleotide);
