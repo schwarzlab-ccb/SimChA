@@ -180,7 +180,7 @@ public class TestIO
         Assert.AreEqual(4, profiles["1"].FindRegionsOfChr("chr2").Count()); // 4 missing (split by null regions)
         Assert.AreEqual(9, profiles["1"].FindRegionsOfChr("chr3").Count()); // 5 existing + 4 missing
         Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr4").Count()); // 2 missing
-        Assert.AreEqual(false, profiles["2"].Sex);
+        Assert.AreEqual(SexEnum.Male, profiles["2"].Sex);
     }
 
     [Test]
