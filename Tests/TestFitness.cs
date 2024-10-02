@@ -180,10 +180,10 @@ public class TestFitness
     }
 
     [Test]
-    public void TestCalculate([Values(0,1)] int refId)
+    public void TestCalculate([Values] SexEnum sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var karyotype = new Karyotype(genRef, SexEnum.Female);
+        var karyotype = new Karyotype(genRef, sex);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
