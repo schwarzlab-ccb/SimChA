@@ -56,9 +56,18 @@ public class GenRef
     public Dictionary<string, SexEnum> ChrSex { get; }
     public ImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     public int AutosomesCount { get; }
-
-    public int ChrCount
-        => IncludeSexChromosomes ? AutosomesCount * 2 + (ChrSex.Count - AutosomesCount) : AutosomesCount * 2;
+    
+    public int ChrCount(SexEnum sex, bool diploid = true)
+        => (diploid, sex) switch
+        {
+            (true, SexEnum.None) => AutosomesCount * 2,
+            (true, SexEnum.Female) => 46,
+            (true, SexEnum.Male) => 46,
+            (false, SexEnum.None) => AutosomesCount,
+            (false, SexEnum.Female) => 23,
+            (false, SexEnum.Male) => 23,
+            _ => throw new ArgumentOutOfRangeException($"Missing chromosome counts for {sex}, {diploid}")
+        };
 
     private List<List<Region>> XYGenome { get; }
     private List<List<Region>> XXGenome { get; }
