@@ -80,7 +80,12 @@ public static class Fitness
 
     public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
     {
-        var genesList = genRef.IncludeSexChromosomes ? geneCNs : geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
+        var genesList = sex switch
+        {
+            SexEnum.Female => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.YChrName),
+            SexEnum.Male => geneCNs,
+            _ => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
+        };
         int norm = normalizeGenes ? genesList.Count() : 1;
         return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
     }
@@ -88,7 +93,12 @@ public static class Fitness
     // TODO: Verify the sex here
     public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexEnum sex, bool normalizeGenes = false, bool haploinsufficiency = false)
     {
-        var genesList = genRef.IncludeSexChromosomes ? essCNs : essCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
+        var genesList = sex switch
+        {
+            SexEnum.Female => essCNs.Where(g => g.gene.Range.ChrNo != genRef.YChrName),
+            SexEnum.Male => essCNs,
+            _ => essCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
+        };
         int norm = normalizeGenes ? genesList.Count() : 1;
         return haploinsufficiency
             ? genesList.Sum(g => Math.Min(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex), 0) * g.gene.DeltaFitness) / norm
