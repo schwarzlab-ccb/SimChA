@@ -32,7 +32,7 @@ public class TestFitness
     public void TestEssTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        genRef.IncludeSexChromosomes = false;
+
         Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), SexEnum.Female));
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
@@ -47,12 +47,11 @@ public class TestFitness
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
         Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, SexEnum.Female));
 
-        var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.5), 0), (MakeGene("chrY", 0.5), 0)};
-        Assert.AreEqual(0.0 + 0.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female));
+        var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.8), 0), (MakeGene("chrY", 0.3), 0)};
+        Assert.AreEqual(0.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.None));
 
-        genRef.IncludeSexChromosomes = true;
-        Assert.AreEqual(-0.5, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female));
-        Assert.AreEqual(-1.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Male));
+        Assert.AreEqual(-0.8, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female));
+        Assert.AreEqual(-1.1, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Male));
     }
 
     [Test]
@@ -144,7 +143,7 @@ public class TestFitness
         Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
         xxKaryotype.ApplyWGD(); // Double all
         Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
+        foreach (int i in Enumerable.Range(0, genRef.ChrCount(SexEnum.None, false))) { xyKaryotype.ApplyContigDeletion(i); }
         Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
     }
 
@@ -152,19 +151,15 @@ public class TestFitness
     public void TestAutosomeStressTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        genRef.IncludeSexChromosomes = false;
-        var xxKaryotype = new Karyotype(genRef, SexEnum.Female);
-        var xyKaryotype = new Karyotype(genRef, SexEnum.Male);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xxKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xyKaryotype.GenomeLen()), EPSILON);
-        xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        foreach (int i in Enumerable.Range(0, genRef.ChrCount)) { xyKaryotype.ApplyContigDeletion(i); }
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
+        var karA = new Karyotype(genRef, SexEnum.None);
+        var karB = new Karyotype(genRef, SexEnum.None);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.None), karA.GenomeLen()), EPSILON);
+        karA.ApplyWGD(); // Double all
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.None), karA.GenomeLen()), EPSILON);
+        karA.ApplyWGD(); // Double all
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.None), karA.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.ChrCount(SexEnum.None, false))) { karB.ApplyContigDeletion(i); }
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), karB.GenomeLen()), EPSILON);
     }
     
     [Test]

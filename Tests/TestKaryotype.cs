@@ -216,7 +216,7 @@ public class TestKaryotype
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.ChrCount; i++)
+        for (int i = 0; i < _genRef.ChrCount(SexEnum.Female, true); i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }

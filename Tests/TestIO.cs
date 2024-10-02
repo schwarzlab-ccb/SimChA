@@ -188,7 +188,7 @@ public class TestIO
     {
         Assert.AreEqual("hg19", _genRef.Name);
         Assert.AreEqual(22, _genRef.AutosomesCount);
-        Assert.AreEqual(46, _genRef.ChrCount);
+        Assert.AreEqual(46, _genRef.ChrCount(SexEnum.Female, true));
     }
 
     [Test]
