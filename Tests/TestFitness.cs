@@ -190,15 +190,15 @@ public class TestFitness
     }
 
     [Test]
-    public void TestCalculateFromComponents([Values(0,1)] int refId)
+    public void TestCalculateFromComponents([Values] SexEnum sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var karyotype = new Karyotype(genRef, SexEnum.Female);
+        var karyotype = new Karyotype(genRef, sex);
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
-        double stress = Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), karyotype.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), SexEnum.Female);
-        double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), SexEnum.Female);
-        double ess = Fitness.EssTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype), SexEnum.Female);
+        double stress = Fitness.StressTerm(genRef.GetGenomeLen(sex), karyotype.GenomeLen());
+        double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), sex);
+        double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), sex);
+        double ess = Fitness.EssTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype), sex);
         double total = 1 + (stress*fit.Stress + (tsg + og)*fit.TsgOg + ess*fit.Essentiality) * fit.TotalStrength;
         Assert.AreEqual(total, Fitness.CalculateFromComponents(stress, tsg+og, ess, fit), EPSILON);
     }
