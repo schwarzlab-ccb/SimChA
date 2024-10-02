@@ -131,20 +131,15 @@ public class TestFitness
     }
     
     [Test]
-    public void TestStressTerm([Values(0,1)] int refId)
+    public void TestStressTerm([Values] SexEnum sex,[Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var xxKaryotype = new Karyotype(genRef, SexEnum.Female);
-        var xyKaryotype = new Karyotype(genRef, SexEnum.Male);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
-        Assert.AreNotEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xxKaryotype.GenomeLen()));
-        xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        xxKaryotype.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Female), xxKaryotype.GenomeLen()), EPSILON);
-        foreach (int i in Enumerable.Range(0, genRef.ChrCount(SexEnum.None, false))) { xyKaryotype.ApplyContigDeletion(i); }
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexEnum.Male), xyKaryotype.GenomeLen()), EPSILON);
+        var kar = new Karyotype(genRef, sex);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(sex), kar.GenomeLen()), EPSILON);
+        kar.ApplyWGD(); // Double all
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(sex), kar.GenomeLen()), EPSILON);
+        kar.ApplyWGD(); // Double all
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(sex), kar.GenomeLen()), EPSILON);
     }
 
     [Test]
@@ -163,12 +158,12 @@ public class TestFitness
     }
     
     [Test]
-    public void TestCNCalulation([Values(0,1)] int refId)
+    public void TestCNCalulation([Values] SexEnum sex,[Values(0,1)] int refId)
     {
         // Seed 14 to get chr1 delete
         var genRef = _refs[refId];
         var rnd = new Random(14);
-        var karyotype = new Karyotype(genRef, SexEnum.Female);
+        var karyotype = new Karyotype(genRef, sex);
         var deletion = new CNEventPars(CNEventType.ChromDeletion, 1);
         var dict = genRef.AllChrs.ToDictionary(c => c, _ => new List<Gene>());
         dict["chr1"] = new List<Gene> { MakeGene("chr1", 0.01) };
