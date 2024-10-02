@@ -306,24 +306,32 @@ public class TestSummaryFeatures
     }
 
     [Test]
-    public void TestGetMeanPloidy()
+    public void TestGetMeanAutosomePloidy()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        // WGD and deletion of two copies of X chromosome
-        karXX.ApplyWGD();
-        karXX.ApplyContigDeletion(22);
-        karXX.ApplyContigDeletion(45);
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karA = new Karyotype(_genRef, SexEnum.None);
+        karA.ApplyWGD();
+        var karB = new Karyotype(_genRef, SexEnum.None);
         // Delete all contigs from chr1-22 (i.e. one copy of each autosome)
         for (int i = 0; i < 22; i++)
         {
-            karXY.ApplyContigDeletion(i);
+            karB.ApplyContigDeletion(i);
         }
-        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], SexEnum.Female }, { cnps.Keys.ToList()[1], SexEnum.Male } };
-        // Autosomes only
+        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
+        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karA.Sex }, { cnps.Keys.ToList()[1], karB.Sex } };
         var mean = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2.5, mean);
+    }
+
+    [Test]
+    public void TestGetMeanSexPloidy()
+    {
+        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        karXX.ApplyWGD();
+        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
+        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karXX.Sex}, { cnps.Keys.ToList()[1], karXY.Sex}};
+        var mean = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
+        Assert.AreEqual(3.0, mean);
     }
 
     [Test]
