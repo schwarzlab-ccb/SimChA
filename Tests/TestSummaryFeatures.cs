@@ -346,7 +346,25 @@ public class TestSummaryFeatures
     }
 
     [Test]
-    public void TestGetPloidy()
+    public void TestGetAutosomePloidy()
+    {
+        var karA = new Karyotype(_genRef, SexEnum.None);
+        karA.ApplyWGD();
+        var karB = new Karyotype(_genRef, SexEnum.None);
+        for (int i = 0; i < 22; i++)
+        {
+            karB.ApplyContigDeletion(i);
+        }
+        var cnps = GetCNPs(new List<Karyotype> { karA, karB });
+        var sexDict =  new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karA.Sex }, { cnps.Keys.ToList()[1], karB.Sex } };
+        var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
+        Assert.AreEqual(2, ploidies.Count);
+        Assert.AreEqual(4, ploidies[0]);
+        Assert.AreEqual(1, ploidies[1]);
+    }
+
+    [Test]
+    public void TestGetSexPloidy()
     {
         var karXX = new Karyotype(_genRef, SexEnum.Female);
         // WGD and deletion of two copies of X chromosome
@@ -360,14 +378,8 @@ public class TestSummaryFeatures
             karXY.ApplyContigDeletion(i);
         }
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], SexEnum.Female }, { cnps.Keys.ToList()[1], SexEnum.Male } };
-        // Autosomes only
+        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karXX.Sex }, { cnps.Keys.ToList()[1], karXY.Sex } };
         var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
-        Assert.AreEqual(2, ploidies.Count);
-        Assert.AreEqual(4, ploidies[0]);
-        Assert.AreEqual(1, ploidies[1]);
-        // Sex Chromosomes included
-        ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2, ploidies.Count);
         var expectedXX = (4.0 * _genRef.GetGenomeLen(SexEnum.Female, false) - 2.0 * _genRef.ChrLengths[_genRef.AllChrs[22]]) /
                          _genRef.GetGenomeLen(SexEnum.Female, false);
