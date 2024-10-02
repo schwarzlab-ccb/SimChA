@@ -248,6 +248,11 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
+        selectList = sex switch {
+            SexEnum.Female => selectList.Where(pair => pair.Key != "chrY").ToDictionary(pair => pair.Key, pair => pair.Value),
+            SexEnum.Male => selectList,
+            _ => selectList.Where(pair => pair.Key != "chrX" && pair.Key != "chrY").ToDictionary(pair => pair.Key, pair => pair.Value)
+        };
         double sumHap1 = selectList.Where(pair => pair.Key != "chrY").Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
         string missingChr = sex == SexEnum.Female ? "chrY" : "chrX";
         double sumHap2 = selectList.Where(pair => pair.Key != missingChr).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
