@@ -59,6 +59,38 @@ public class MCSimulator : Simulator
 
         return (potential, accept, newFitness);
     }
+
+    public double CalculatePotential(double proposedFitness, double targetFitness, List<BaseEventData> events)
+        => McParams.IncludeProb ? GetEventPotential(events) + GetFitnessPotential(proposedFitness, targetFitness) : GetFitnessPotential(proposedFitness, targetFitness);
+    
+    public double GetFitnessPotential(double fitness, double targetFitness)
+    {
+        double dFit = fitness - targetFitness;
+        return -McParams.ThetaFitness * Math.Abs(dFit/targetFitness);
+    }
+
+    public double GetEventPotential(List<BaseEventData> events)
+    {
+        double eventPotentialTotal = 0.0;
+        // Probability of picking each event and their corresponding signature
+        foreach (var eventData in events)
+        {
+            if (eventData.CNEventPars.Size > 0 && McParams.IncludeSize)
+            {
+                eventPotentialTotal += Math.Log(eventData.GetProb());
+            }
+            eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
+        }
+        return eventPotentialTotal;
+    }
+
+    public double CalculatePotential(double proposedFitness, List<BaseEventData> events)
+    {
+        double fitnessPotential = -McParams.ThetaFitness * proposedFitness;
+
+        return McParams.IncludeProb ? GetEventPotential(events) + fitnessPotential : fitnessPotential;
+    }
+
     public double GetFitness(Karyotype kar, List<BaseEventData> events)
     {
         // Probability of picking each event and their corresponding signature
@@ -89,19 +121,22 @@ public class MCSimulator : Simulator
         return proposedEvents;
     }
     
-    private List<BaseEventData> GetBestEvents(Sample sample, Karyotype kar, int nEvents, double targetFitness){
+    private List<BaseEventData> GetEventsFromTargetFitness(Sample sample, Karyotype kar, int nEvents, double targetFitness)
+    {
         // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, sample.EventPars);
-        double currentPotential = Potential(new Karyotype(kar), targetFitness, currentEvents).potential;
+        var currentFitness = GetFitness(new Karyotype(kar), currentEvents);
+        double currentPotential = CalculatePotential(currentFitness, targetFitness, currentEvents);
         var best_diff = 1000.0;
         var bestEvents = new List<BaseEventData>(currentEvents);
-        //double bestPotential = currentPotential;
-        //var bestEvents = new List<BaseEventData>(currentEvents);
+
         for (int i = 0; i < McParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
+            var fitness = GetFitness(new Karyotype(kar), proposedEvents);
+            var thresholdAccept = Math.Abs(1.0 - fitness/targetFitness) < McParams.ThresholdFit;
             // Calculate the new fitness of the proposed set of events on the clone
-            (double proposalPotential, bool thresholdAccept, double fitness) = Potential(new Karyotype(kar), targetFitness, proposedEvents);
+            double proposalPotential = CalculatePotential(currentFitness, targetFitness, proposedEvents);
             double acceptProb = proposalPotential - currentPotential;
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
@@ -113,22 +148,44 @@ public class MCSimulator : Simulator
                     best_diff = proposed_diff;
                     bestEvents = proposedEvents;
                 }
-                /*if (proposalPotential < bestPotential)
-                {
-                    bestPotential = proposalPotential;
-                    bestEvents = proposedEvents;
-                }*/
                 // Break out of the sampling if we have reached the threshold
                 // and have reached the minimum number of samples required
-                if (thresholdAccept && i > McParams.NumSamplesMin)
+                if (thresholdAccept && i > McParams.NumSamplesMin) break;
+            }
+        }
+        return bestEvents;
+    }
+
+    private List<BaseEventData> GetEventsFromMaximumFitness(Sample sample, Karyotype kar, int nEvents)
+    {
+        // Generate a starting set of mutations and its potential
+        var currentEvents = InitEvents(kar, nEvents, sample.EventPars);
+        var currentFitness = GetFitness(new Karyotype(kar), currentEvents);
+        double currentPotential = CalculatePotential(currentFitness, currentEvents);
+        var bestFitness = currentFitness;
+        var bestEvents = new List<BaseEventData>(currentEvents);
+
+        for (int i = 0; i < McParams.NumSamplesTotal; i++)
+        {
+            var proposedEvents = GetNewProposal(sample, kar, currentEvents);
+            var fitness = GetFitness(new Karyotype(kar), proposedEvents);
+            // Calculate the new fitness of the proposed set of events on the clone
+            double proposalPotential = CalculatePotential(currentFitness, proposedEvents);
+            double acceptProb = proposalPotential - currentPotential;
+            if (acceptProb >= Math.Log(Rnd.NextDouble()))
+            {
+                currentPotential = proposalPotential;
+                currentEvents = proposedEvents;
+                if (currentFitness > bestFitness)
                 {
-                    break;
-                    //return currentEvents;
+                    bestFitness = currentFitness;
+                    bestEvents = proposedEvents;
                 }
             }
         }
-        return bestEvents;//currentEvents;
+        return bestEvents;
     }
+
     private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
         List<CloneIn>> clones, int eventCount)
     {
@@ -143,7 +200,7 @@ public class MCSimulator : Simulator
             {
                 double oldFitness = childKar.FitnessVal;
                 
-                var bestEvents = GetBestEvents(sample, childKar, child.Distance, child.FitnessTarget);
+                var bestEvents = GetEventsFromTargetFitness(sample, childKar, child.Distance, child.FitnessTarget);
 
                 for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
                 {
