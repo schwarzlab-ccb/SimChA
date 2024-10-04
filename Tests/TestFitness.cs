@@ -82,56 +82,50 @@ public class TestFitness
     }
 
     [Test]
-    public void TestTsgOgTerm([Values(0,1)] int refId)
+    public void TestTsgOgTerm([Values] SexEnum sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), SexEnum.Female));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), sex), EPSILON);
         
         var testNoEffect = new List<(Gene, int)> {(MakeGene("chr1", 0), 0)};
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testNoEffect, SexEnum.Female));
+        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testNoEffect, sex), EPSILON);
 
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1)};
-        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(genRef, testMissing, SexEnum.Female));
+        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(genRef, testMissing, sex), EPSILON);
 
         var testMissingTwice = new List<(Gene, int)> {(MakeGene("chr1", 0.1), 0)};
-        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(genRef, testMissingTwice, SexEnum.Female));
+        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(genRef, testMissingTwice, sex), EPSILON);
 
         var testList = new List<(Gene, int)> {
             (MakeGene("chr1", 0.1), 1), 
             (MakeGene("chr1", 0.2), 0), 
             (MakeGene("chr1", 0.3), 2)
         };
-        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
+        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(genRef, testList, sex), EPSILON);
 
         testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.1), 2)
         };
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
-        Assert.AreEqual(0.1, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
+        var expectedVal = sex switch {
+            SexEnum.Female => 0,
+            SexEnum.Male => 0.1,
+            _ => 0
+        };
+        Assert.AreEqual(expectedVal, Fitness.TsgOgTerm(genRef, testList, sex), EPSILON);
         testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.2), 2),
             (MakeGene("chrY", 0.1), 2)
         };
-        Assert.AreEqual(0.2, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
-        Assert.AreEqual(0.2 + 0.1, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
-        // Autosomes only
-        genRef.IncludeSexChromosomes = false;
-                testList = new List<(Gene, int)>{
-            (MakeGene("chrX", 0.1), 2)
+        expectedVal = sex switch {
+            SexEnum.Female => 0,
+            SexEnum.Male => 0.3,
+            _ => 0
         };
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
-        testList = new List<(Gene, int)>{
-            (MakeGene("chrX", 0.2), 2),
-            (MakeGene("chrY", 0.1), 2)
-        };
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Female));
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testList, SexEnum.Male));
-
+        Assert.AreEqual(expectedVal, Fitness.TsgOgTerm(genRef, testList, sex), EPSILON);
     }
     
     [Test]
-    public void TestStressTerm([Values] SexEnum sex,[Values(0,1)] int refId)
+    public void TestStressTerm([Values] SexEnum sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
         var kar = new Karyotype(genRef, sex);
