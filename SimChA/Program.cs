@@ -76,6 +76,11 @@ switch (execMode)
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
                 samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, fitnessList);
             }
+            else if (options.EventCounts != "" && simParams.MCParams != null && !simParams.MCParams.MatchFitness)
+            {
+                var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly);
+            }
             else
             {
                 var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
