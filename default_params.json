@@ -1,6 +1,6 @@
 {
 	"Seed": -1,
-	"Sex": "Both",
+	"Sex": "None",
 	"EventCount": 75,
 	"EventDist": "Exponential",
 	"Fitness": {
