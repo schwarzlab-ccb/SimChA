@@ -195,11 +195,10 @@ public class TestFitness
     }
 
     [Test]
-    public void TestAutosomeCalculate([Values(0,1)] int refId)
+    public void TestAutosomeCalculate([Values] SexEnum sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        genRef.IncludeSexChromosomes = false;
-        var karyotype = new Karyotype(genRef, SexEnum.Female);
+        var karyotype = new Karyotype(genRef, sex);
         karyotype.MergeRegions();
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
@@ -207,15 +206,15 @@ public class TestFitness
     }
     
     [Test]
-    public void TestReferenceFitness([Values] SexEnum sexXX, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
+    public void TestReferenceFitness([Values] SexEnum sex, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
     {
         var genRef = _refs[refId];
-        var karyotype = new Karyotype(genRef, sexXX);
+        var karyotype = new Karyotype(genRef, sex);
         var tsgCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
-        double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, sexXX);
+        double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, sex);
         Assert.AreEqual(0, tsg, EPSILON);
         var ogsCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
-        double og = Fitness.TsgOgTerm(genRef, ogsCNs, sexXX);;
+        double og = Fitness.TsgOgTerm(genRef, ogsCNs, sex);;
         Assert.AreEqual(0, og, EPSILON);
     }
 

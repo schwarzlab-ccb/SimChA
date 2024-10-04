@@ -22,7 +22,7 @@ var fitParams = simParams.Fitness ?? throw new Exception("Error: Fitness paramet
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-var genRef = FileIO.GetGenRef(options.DataFolder, !options.AutosomesOnly, options.ShouldParseGenome);
+var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
 
 var watch = new Stopwatch();
 watch.Start();
@@ -43,7 +43,7 @@ switch (execMode)
     case ExecMode.Profiles:
     {
         Console.WriteLine("Reading profiles:");
-        var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+        var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, options.AutosomesOnly);
         // TODO: Needs to implement autosomes only
         samples = Simulator.SamplesFromProfiles(profiles);
         break;
@@ -71,7 +71,7 @@ switch (execMode)
         {
             if (options.CNProfiles != "" && options.EventCounts != "")
             {
-                var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
+                var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, options.AutosomesOnly);
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
                 samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, fitnessList);

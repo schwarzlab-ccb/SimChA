@@ -84,15 +84,15 @@ public static class Parsers
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
     // however it works so don't refactor unless needed
-    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile)
+    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, bool autosomesOnly)
     {
         Dictionary<string, Karyotype> result = new();
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        var present = genRef.IncludeSexChromosomes
-                    ? genRef.AllChrs.ToDictionary(c => c, _ => false)
-                    : genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false);
+        var present = autosomesOnly
+                    ? genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false)
+                    : genRef.AllChrs.ToDictionary(c => c, _ => false);
         
         string lastSample = "";
         string lastChr = genRef.AllChrs.First();

@@ -418,7 +418,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile)
+    public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile, bool includeSexChromosomes)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -428,7 +428,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile);
+            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, includeSexChromosomes);
             foreach (var pro in profiles)
             {
                 pro.Value.GlueNeighbours();
@@ -513,7 +513,7 @@ public class FileIO
         }
     }
 
-    public static GenRef GetGenRef(string dataFolder, bool includeSexChromosomes = true, bool useVariants = false)
+    public static GenRef GetGenRef(string dataFolder, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex) = ReadChromosomes(dataFolder);
@@ -521,6 +521,6 @@ public class FileIO
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
         var geneLists = ReadGeneLists(dataFolder, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, centromeres, geneLists, includeSexChromosomes, genContentsDict);
+        return new GenRef(refName, chrLengths, chrSex, centromeres, geneLists, genContentsDict);
     }
 }

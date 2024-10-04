@@ -13,7 +13,6 @@ public class GenRef
         Dictionary<string, SexEnum> chrSex,
         ImmutableDictionary<string, (long start, long end)> centromeres,
         Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList,
-        bool includeSexChromosomes,
         Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
@@ -21,7 +20,6 @@ public class GenRef
         ChrSex = chrSex;
         Centromeres = centromeres;
         AutosomesCount = chrSex.Count(x => x.Value == SexEnum.None);
-        IncludeSexChromosomes = includeSexChromosomes;
         YChrs = chrSex.Where(pair => pair.Value != SexEnum.Female).Select(pair => pair.Key).ToList();
         XChrs = chrSex.Where(pair => pair.Value != SexEnum.Male).Select(pair => pair.Key).ToList();
         AutChrs = chrSex.Where(pair => pair.Value == SexEnum.None).Select(pair => pair.Key).ToList();
@@ -84,7 +82,6 @@ public class GenRef
     private List<string> AutChrs { get; }
     public string YChrName { get; }
     public string XChrName { get; }
-    public bool IncludeSexChromosomes { get; set; } // TODO: This should not be part of a reference
 
     public Dictionary<string, StringBuilder>? GenContentsDict { get; set; }
 
