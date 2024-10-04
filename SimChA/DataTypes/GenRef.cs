@@ -60,12 +60,12 @@ public class GenRef
     public int ChrCount(SexEnum sex, bool diploid = true)
         => (diploid, sex) switch
         {
-            (true, SexEnum.None) => AutosomesCount * 2,
-            (true, SexEnum.Female) => 46,
-            (true, SexEnum.Male) => 46,
-            (false, SexEnum.None) => AutosomesCount,
-            (false, SexEnum.Female) => 23,
-            (false, SexEnum.Male) => 23,
+            (true, SexEnum.Female) => XChrs.Count*2,
+            (true, SexEnum.Male) => YChrs.Count*2,
+            (true, SexEnum.None) => AutChrs.Count*2,
+            (false, SexEnum.Female) => XChrs.Count,
+            (false, SexEnum.Male) => AllChrs.Count,
+            (false, SexEnum.None) => AutChrs.Count,
             _ => throw new ArgumentOutOfRangeException($"Missing chromosome counts for {sex}, {diploid}")
         };
 
@@ -114,6 +114,7 @@ public class GenRef
         => (diploid, sex) switch
         {
             (true, SexEnum.Female) => XChrs,
+            // TODO: is this bit of logic right?
             (true, SexEnum.Male) => XChrs,
             (true, SexEnum.None) => AutChrs,
             (false, SexEnum.Female) => XChrs,

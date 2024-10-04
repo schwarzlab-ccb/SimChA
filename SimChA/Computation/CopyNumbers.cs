@@ -7,22 +7,19 @@ public static class CopyNumbers
 {
     public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, SexEnum sex)
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(sex) : genRef.ChrIDsForAutosomes();
         karyotype.MergeRegions();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
+        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
     } 
     
     public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(sex) : genRef.ChrIDsForAutosomes();
         karyotype.MergeRegions();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
 
     public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(sex) : genRef.ChrIDsForAutosomes();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
+        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
     }
 
     public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
