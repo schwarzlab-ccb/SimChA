@@ -29,29 +29,31 @@ public class TestFitness
         => new($"G{chrNo}", new Region(0, 50, chrNo, false), deltaFitness);
 
     [Test]
-    public void TestEssTerm([Values(0,1)] int refId)
+    public void TestEssTerm([Values] SexEnum sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
 
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), SexEnum.Female));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), sex), EPSILON);
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, SexEnum.Female));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, sex), EPSILON);
         
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
-        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testMissing, SexEnum.Female));
+        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testMissing, sex), EPSILON);
 
         var testHaplosufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, testHaplosufficient, SexEnum.Female));
+        Assert.AreEqual(0, Fitness.EssTerm(genRef, testHaplosufficient, sex), EPSILON);
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
-        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, SexEnum.Female));
+        Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(genRef, testList, sex), EPSILON);
 
         var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.8), 0), (MakeGene("chrY", 0.3), 0)};
-        Assert.AreEqual(0.0, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.None));
-
-        Assert.AreEqual(-0.8, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Female));
-        Assert.AreEqual(-1.1, Fitness.EssTerm(genRef, testSexChromosome, SexEnum.Male));
+        var expectedVal = sex switch {
+            SexEnum.Female => -0.8,
+            SexEnum.Male => -1.1,
+            _ => 0
+        };
+        Assert.AreEqual(expectedVal, Fitness.EssTerm(genRef, testSexChromosome, sex), EPSILON);
     }
 
     [Test]
