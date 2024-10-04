@@ -66,7 +66,8 @@ public static class Converters
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
-            var sample = new Sample($"sample_{i + 1}", Sampling.GetSex(rnd, sex), new List<CloneIn> { clone }, events, mixture);
+            var sampleSex = autosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, sex);
+            var sample = new Sample($"sample_{i + 1}", sampleSex, new List<CloneIn> { clone }, events, mixture);
             samples.Add(sample);
         }
         return samples;
@@ -98,7 +99,8 @@ public static class Converters
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
-            var sample = new Sample($"sample_{i + 1}", Sampling.GetSex(rnd, sex), new List<CloneIn> { clone }, events, mixture);
+            var sampleSex = autosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, sex);
+            var sample = new Sample($"sample_{i + 1}", sampleSex, new List<CloneIn> { clone }, events, mixture);
             samples.Add(sample);
         }
         return samples;
