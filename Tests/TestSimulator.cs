@@ -34,7 +34,9 @@ public class TestSimulator
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams);
+        // TODO: Fix this thing about files
+        var files = new FileIO("./../out/");
+        var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams, files);
         double potential = sim.CalculatePotential(1, 1, events);
         Assert.AreEqual(0.0, potential,EPSILON);
     }

@@ -1,6 +1,7 @@
 ﻿using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
+using SimChA.IO;
 using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
@@ -9,14 +10,17 @@ public class MCSimulator : Simulator
 {
     private FitnessParams FitnessParams { get; }
     private MCParams McParams { get; }
+    private FileIO FileIO { get; }
     public MCSimulator(
         Random rnd,
         GenRef genRef,
         FitnessParams fitnessParams, 
-        MCParams mCParams) : base(rnd, genRef)
+        MCParams mCParams,
+        FileIO fileIO) : base(rnd, genRef)
     {
         FitnessParams = fitnessParams;
         McParams = mCParams;
+        FileIO = fileIO;
     }
     
     public override void SampleEvents(Sample sample)
@@ -135,10 +139,13 @@ public class MCSimulator : Simulator
         var bestFitness = currentFitness;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
+        var fitList = new List<double>{currentFitness};
+
         for (int i = 0; i < McParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
             var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
+            fitList.Add(proposedFitness);
             // Calculate the new fitness of the proposed set of events on the clone
             double proposalPotential = CalculatePotential(proposedFitness, proposedEvents);
             double acceptProb = proposalPotential - currentPotential;
@@ -152,6 +159,10 @@ public class MCSimulator : Simulator
                     bestEvents = proposedEvents;
                 }
             }
+        }
+        if (McParams.PrintFitnesses)
+        {
+            FileIO.WriteFitnesses(sample.SampleId, fitList);
         }
         return bestEvents;
     }

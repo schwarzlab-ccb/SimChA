@@ -31,7 +31,7 @@ Simulator simulator;
 if (options.UseMCMC)
 {
     var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
-    simulator = new MCSimulator(rnd, genRef, fitParams, mcParams);
+    simulator = new MCSimulator(rnd, genRef, fitParams, mcParams, files);
 }
 else
 {
