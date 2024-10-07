@@ -58,7 +58,7 @@ public class MCSimulator : Simulator
 
     public double CalculatePotential(double proposedFitness, List<BaseEventData> events)
     {
-        double fitnessPotential = -McParams.ThetaFitness * proposedFitness;
+        double fitnessPotential = McParams.ThetaFitness * proposedFitness;
         return McParams.IncludeProb ? GetEventPotential(events) + fitnessPotential : fitnessPotential;
     }
     public double CalculatePotential(double proposedFitness, double targetFitness, List<BaseEventData> events)
