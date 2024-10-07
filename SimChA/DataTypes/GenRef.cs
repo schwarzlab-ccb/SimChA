@@ -107,17 +107,16 @@ public class GenRef
             _ => AutChrs
         };
     
-    public List<string> ChrIDsForHap(SexEnum sex, bool diploid = true)
-        => (diploid, sex) switch
+    public List<string> ChrIDsForHap(SexEnum sex, bool firstHaplotype = true)
+        => (firstHaplotype, sex) switch
         {
             (true, SexEnum.Female) => XChrs,
-            // TODO: is this bit of logic right?
             (true, SexEnum.Male) => XChrs,
             (true, SexEnum.None) => AutChrs,
             (false, SexEnum.Female) => XChrs,
             (false, SexEnum.Male) => YChrs,
             (false, SexEnum.None) => AutChrs,
-            _ => throw new ArgumentOutOfRangeException($"Missing chr IDs for {sex}, {diploid}")
+            _ => throw new ArgumentOutOfRangeException($"Missing chr IDs for {sex}, {firstHaplotype}")
         };
 
     

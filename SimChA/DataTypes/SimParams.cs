@@ -10,5 +10,4 @@ public record SimParams(
     FitnessParams Fitness,
     Dictionary<string, Signature>? Signatures = null,
     MCParams? MCParams = null,
-    MCTarget? MCTarget = null,
-    OptimizationParams? OptimizationParams = null);
+    MCTarget? MCTarget = null);
