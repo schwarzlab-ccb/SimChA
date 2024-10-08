@@ -109,4 +109,29 @@ public static class Converters
         }
         return samples;
     }
+
+    public static List<Sample> MakeBlankSamples(
+        Random rnd, 
+        int repeats, 
+        Dictionary<string, Signature> sigs, 
+        SexEnum sex, 
+        bool autosomesOnly)
+    {
+        var samples = new List<Sample>();
+        var selectedSigs = sigs.Where(s => s.Value.Prob > 0).ToDictionary(s => s.Key, s => s.Value);
+        string[] sigNames = selectedSigs.Select(s => s.Key).ToArray();
+        double[] sigProbs = selectedSigs.Select(s => s.Value.Prob).ToArray();
+        for (int i = 0; i < repeats; i++)
+        {
+            var clone = new CloneIn(0, -1, -1, -1); 
+            var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
+            var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
+            var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
+            var sampleSex = autosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, sex);
+            var sample = new Sample($"sample_{i + 1}", sampleSex, new List<CloneIn> { clone }, events, mixture);
+            samples.Add(sample);
+        }
+        return samples;
+
+    }
 }

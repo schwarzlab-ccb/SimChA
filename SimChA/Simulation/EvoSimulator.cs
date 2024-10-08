@@ -120,7 +120,6 @@ public class EvoSimulator : Simulator
         {
             FileIO.WriteFitnesses(fitDict);
         }
-
         return currentEvents;
     }
 

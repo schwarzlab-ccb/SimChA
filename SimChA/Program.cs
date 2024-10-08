@@ -28,7 +28,12 @@ var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
 Simulator simulator;
-if (options.UseMCMC)
+if (options.EvolutionMode)
+{
+    var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
+    simulator = new EvoSimulator(rnd, genRef, fitParams, mcParams, files);
+}
+else if (options.UseMCMC)
 {
     var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
     simulator = new MCSimulator(rnd, genRef, fitParams, mcParams, files);
@@ -40,6 +45,15 @@ else
 
 switch (execMode)
 {
+    case ExecMode.Evolution:
+    {
+        var sigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
+        Validators.ValidateSignatures(sigs);
+        Console.WriteLine("Evolving individual samples forward:");
+        samples = Converters.MakeBlankSamples(rnd, options.Repeats, sigs, simParams.Sex, options.AutosomesOnly);
+        break;
+    }
+
     case ExecMode.Profiles:
     {
         Console.WriteLine("Reading profiles:");
