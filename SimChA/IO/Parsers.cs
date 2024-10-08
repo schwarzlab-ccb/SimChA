@@ -84,7 +84,7 @@ public static class Parsers
     // SampleID, Chr, Start, End, CN hap1, CN hap2
     // NOTE: This became quite unwieldy due to the missing regions calculation,
     // however it works so don't refactor unless needed
-    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, bool autosomesOnly)
+    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile)
     {
         Dictionary<string, Karyotype> result = new();
         var missingRanges = new List<GenRange>();

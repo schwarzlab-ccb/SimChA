@@ -43,7 +43,7 @@ switch (execMode)
     case ExecMode.Profiles:
     {
         Console.WriteLine("Reading profiles:");
-        var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, options.AutosomesOnly);
+        var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
         // TODO: Needs to implement autosomes only
         samples = Simulator.SamplesFromProfiles(profiles);
         break;
@@ -71,7 +71,7 @@ switch (execMode)
         {
             if (options.CNProfiles != "" && options.EventCounts != "")
             {
-                var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, options.AutosomesOnly);
+                var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
                 samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, fitnessList);
