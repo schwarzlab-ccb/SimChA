@@ -165,6 +165,19 @@ public class FileIO
         foreach (var fit in fitnesses)
             w.WriteLine($"{id}\t{fit}");
     }
+    public void WriteFitnesses(Dictionary<int, (int nEvents, double fit)> fitnesses)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FITNESSES_FILENAME);
+        using StreamWriter w = new(outPath);
+        w.WriteLine("iteration\tevent_count\tfitness");
+        foreach (var fitness in fitnesses)
+        {
+            var fit = fitness.Value.fit;
+            var nEvents = fitness.Value.nEvents;
+            var iteration = fitness.Key;
+            w.WriteLine($"{iteration}\t{nEvents}\t{fit}");
+        }
+    }
 
     public void WriteFitnessLandscape(string filename, List<List<double>> output)
     {
