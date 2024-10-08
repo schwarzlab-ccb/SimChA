@@ -132,6 +132,5 @@ public static class Converters
             samples.Add(sample);
         }
         return samples;
-
     }
 }

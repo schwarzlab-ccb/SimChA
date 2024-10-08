@@ -93,6 +93,7 @@ public class Simulator
 
     public virtual void EvolveSample(Sample sample)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("hello");
+        return;
     }
 }
