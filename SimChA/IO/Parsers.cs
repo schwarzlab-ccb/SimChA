@@ -90,9 +90,7 @@ public static class Parsers
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        var present = autosomesOnly
-                    ? genRef.ChrIDsForAutosomes().ToDictionary(c => c, _ => false)
-                    : genRef.AllChrs.ToDictionary(c => c, _ => false);
+        var present = genRef.AllChrs.ToDictionary(c => c, _ => false);
         
         string lastSample = "";
         string lastChr = genRef.AllChrs.First();

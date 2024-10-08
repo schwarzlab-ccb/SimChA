@@ -418,7 +418,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile, bool includeSexChromosomes)
+    public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -428,7 +428,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, includeSexChromosomes);
+            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, autosomesOnly);
             foreach (var pro in profiles)
             {
                 pro.Value.GlueNeighbours();
