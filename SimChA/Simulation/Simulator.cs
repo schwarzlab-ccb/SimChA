@@ -90,4 +90,9 @@ public class Simulator
         }
         return output;
     }
+
+    public virtual void EvolveSample(Sample sample)
+    {
+        throw new NotImplementedException();
+    }
 }

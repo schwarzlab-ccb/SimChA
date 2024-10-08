@@ -51,6 +51,7 @@ switch (execMode)
         Validators.ValidateSignatures(sigs);
         Console.WriteLine("Evolving individual samples forward:");
         samples = Converters.MakeBlankSamples(rnd, options.Repeats, sigs, simParams.Sex, options.AutosomesOnly);
+        samples.ForEach(simulator.EvolveSample);
         break;
     }
 

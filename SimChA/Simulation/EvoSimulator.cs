@@ -22,8 +22,8 @@ public class EvoSimulator : Simulator
         McParams = mCParams;
         FileIO = fileIO;
     }
-    
-    public override void SampleEvents(Sample sample)
+
+    public override void EvolveSample(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {
@@ -32,13 +32,7 @@ public class EvoSimulator : Simulator
         Counter = 1;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        ApplyCNEventsRec(sample, root, childLoopUp, 1);
-    }
-
-    public double GetFitnessPotential(double fitness, double targetFitness)
-    {
-        double dFit = fitness - targetFitness;
-        return -McParams.ThetaFitness * Math.Abs(dFit/targetFitness);
+        ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
     public double GetEventPotential(List<BaseEventData> events)
@@ -61,11 +55,7 @@ public class EvoSimulator : Simulator
         double fitnessPotential = McParams.ThetaFitness * proposedFitness;
         return McParams.IncludeProb ? GetEventPotential(events) + fitnessPotential : fitnessPotential;
     }
-    public double CalculatePotential(double proposedFitness, double targetFitness, List<BaseEventData> events)
-        => McParams.IncludeProb 
-        ? GetEventPotential(events) + GetFitnessPotential(proposedFitness, targetFitness) 
-        : GetFitnessPotential(proposedFitness, targetFitness);
-    
+
     public double GetFitness(Karyotype kar, List<BaseEventData> events)
     {
         // Probability of picking each event and their corresponding signature
@@ -123,7 +113,7 @@ public class EvoSimulator : Simulator
         return currentEvents;
     }
 
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
+    private void ApplyEvolutionRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
         List<CloneIn>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
@@ -133,29 +123,25 @@ public class EvoSimulator : Simulator
             var childEvs = new List<CNEventDesc>();
             sample.EventDescs[child.CloneId] = childEvs;
             
-            if (child.Distance > 0)
-            {
-                double oldFitness = childKar.FitnessVal;
-                
-                var bestEvents = Evolve(sample, childKar);
+            double oldFitness = Fitness.Calculate(childKar, GenRef, FitnessParams);
 
-                for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
-                {
-                    Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
-                    var eventData = bestEvents[mutNo];
-                    eventData.ApplyEvent(childKar);
-                    double newFitness = childKar.UpdateFitness(GenRef, FitnessParams);
-                    double dFit = newFitness - oldFitness;
-                    var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit,
-                        newFitness);
-                    childEvs.Add(abberation);
-                    oldFitness = newFitness;
-                }
-                Counter++;
-                if (child.CloneId != node.CloneId)
-                {
-                    ApplyCNEventsRec(sample, child, clones, eventCount + child.Distance);
-                }
+            var bestEvents = Evolve(sample, childKar);
+
+            for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
+            {
+                Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
+                var eventData = bestEvents[mutNo];
+                eventData.ApplyEvent(childKar);
+                double newFitness = childKar.UpdateFitness(GenRef, FitnessParams);
+                double dFit = newFitness - oldFitness;
+                var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit, newFitness);
+                childEvs.Add(abberation);
+                oldFitness = newFitness;
+            }
+            Counter++;
+            if (child.CloneId != node.CloneId)
+            {
+                ApplyEvolutionRec(sample, child, clones, eventCount + child.Distance);
             }
         }
     }
