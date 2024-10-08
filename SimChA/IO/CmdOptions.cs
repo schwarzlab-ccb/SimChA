@@ -14,7 +14,7 @@ public class CmdOptions
     [Option('T', "tree", Required = false, Default = "", HelpText = "A clone file that describes the tree to be built.")]
     public string CloneTreeFile { get; set; }
     
-    [Option('R', "repeats", Required = false, Default = 1, HelpText = "Number of repeats to generate if the distance parameter is used.")]
+    [Option('R', "repeats", Required = false, Default = 0, HelpText = "Number of repeats to generate if the distance parameter is used.")]
     public int Repeats { get; set; }
     
     [Option('P', "cnprofiles", Required = false, Default = "", HelpText = "File with CNAs, will cause the program to write a scoring file.")]
@@ -57,13 +57,13 @@ public class CmdOptions
             }
             if (CloneTreeFile != "")
             {
-                if (Repeats > 1)
+                if (Repeats > 0)
                 {
                     throw new Exception("Cannot run tree with repeats.");
                 }
                 return ExecMode.Tree;
             }
-            if (CNProfiles != "" && Repeats == 1)
+            if (CNProfiles != "" && Repeats == 0)
             {
                 return ExecMode.Profiles;
             }
