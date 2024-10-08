@@ -31,7 +31,7 @@ Simulator simulator;
 if (options.UseMCMC)
 {
     var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
-    simulator = new MCSimulator(rnd, genRef, fitParams, mcParams);
+    simulator = new MCSimulator(rnd, genRef, fitParams, mcParams, files);
 }
 else
 {
@@ -75,6 +75,11 @@ switch (execMode)
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
                 samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, fitnessList);
+            }
+            else if (options.EventCounts != "" && simParams.MCParams != null && !simParams.MCParams.MatchFitness)
+            {
+                var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly);
             }
             else
             {

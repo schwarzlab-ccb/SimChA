@@ -30,7 +30,7 @@ public class FileIO
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
     private const string FASTA_FILENAME = "genome.fa";
-    private const string SCORES_FILENAME = "optimization_scores.tsv";
+    private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
 
     
     private string Timestamp { get; }
@@ -158,20 +158,12 @@ public class FileIO
         }
     }
 
-    public void WriteScores(IEnumerable<Dictionary<string, double>> scores)
+    public void WriteFitnesses(string id, IEnumerable<double> fitnesses)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SCORES_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
-        var keyOrder = scores.First().Keys.ToList();
-        var header = string.Join("\t", keyOrder);
-        outputFile.WriteLine(header);
-        foreach (var score in scores)
-        {
-            // Use string.Join to concatenate the values for the current score dictionary
-            var scoreline = string.Join("\t", keyOrder.Select(key => score[key].ToString()));
-            outputFile.WriteLine(scoreline);
-        }
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FITNESSES_FILENAME);
+        using StreamWriter w = new(outPath, append: true);
+        foreach (var fit in fitnesses)
+            w.WriteLine($"{id}\t{fit}");
     }
 
     public void WriteFitnessLandscape(string filename, List<List<double>> output)

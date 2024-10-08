@@ -50,7 +50,7 @@ public static class Converters
         Dictionary<string, Signature> sigs, 
         SexEnum sex, 
         bool autosomesOnly,
-        MCTarget mcTarget, 
+        MCTarget? mcTarget = null, 
         Dictionary<string, int>? eventCounts = null)
     {
         var samples = new List<Sample>();
@@ -60,8 +60,12 @@ public static class Converters
         var eventCountsList = eventCounts != null ? eventCounts.Values.ToList() : new List<int>();
         for (int i = 0; i < repeats; i++)
         {
-            int mutCount = eventCountsList.Count > 0 ? eventCountsList[rnd.Next(eventCountsList.Count)] : (int) Math.Round(meanDist * Sampling.SampleDist(rnd, distribution));
-            double fitnessTarget = Sampling.SampleDist(rnd, mcTarget.Dist) * mcTarget.Mean + 1;
+            int mutCount = eventCountsList.Count > 0 
+                ? eventCountsList[rnd.Next(eventCountsList.Count)] 
+                : (int) Math.Round(meanDist * Sampling.SampleDist(rnd, distribution));
+            double fitnessTarget = mcTarget == null 
+                ? -1.0 
+                : Sampling.SampleDist(rnd, mcTarget.Dist) * mcTarget.Mean + 1;
             var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);

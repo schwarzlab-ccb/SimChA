@@ -3,13 +3,14 @@ namespace SimChA.DataTypes;
 // Parameters used in the MCMC sampling
 // Input: 
 
-
 public record MCParams(
     int NumSamplesMin, // Burn-in samples
     int NumSamplesTotal, // Number of true samples
     double ThetaFitness, // exponential multiplier for fitness
+    bool MatchFitness, // Match the fitness of the clone to a target fitness
     double SwapEventP, // Probability of completely swapping an event
     double ThresholdFit, // Percentage difference allowed between accepted and target fitness
     bool IncludeSize, // Include the size of the internal events during the fitness matching procedure
-    bool IncludeProb // Include the probability of the set of events during the fitness matching procedure
+    bool IncludeProb, // Include the probability of the set of events during the fitness matching procedure
+    bool PrintFitnesses// Print the fitnesses of the clone during the MCMC sampling
     );

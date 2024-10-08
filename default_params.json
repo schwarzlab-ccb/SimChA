@@ -145,56 +145,16 @@
 	},
 	"MCParams": {
 	  "NumSamplesMin": 100,
-	  "NumSamplesTotal": 2500,
+	  "NumSamplesTotal": 1000,
 	  "ThetaFitness": 10,
+	  "MatchFitness": true,
 	  "SwapEventP": 1,
 	  "ThresholdFit": 1E-08,
 	  "IncludeSize": false,
-	  "IncludeProb": true
+	  "IncludeProb": false
 	},
 	"MCTarget": {
 		"Mean": 1,
 		"Dist": "Exponential"
-	},
-	"OptimizationParams":{
-		"Mode": "Events",
-		"NumSamplesTotal": 5000,
-		"StepSize": 0.1,
-		"MaxTries": 10,
-		"WriteIntermediate": false,
-		"WriteFrequency": 50,
-		"AcceptanceFactor": 10,
-		"EventWeightsOnly": true,
-		"ParamVariationMode": 1,
-		"UseSegLength": true,
-		"SegLengthType": "Stratified",
-		"LogTransformSegLength": true,
-		"SegLengthBinCount": 100,
-		"SegLengthCutoff": -1,
-		"SegmentCountWeighted" : false,
-		"UsePloidy" : true,
-		"MeanPloidy": true,
-		"PloidyBinCount": 25,
-		"PloidyCutoff": -1,
-		"UseBreakpoints" : true,
-		"MeanBPs": true,
-		"BreakpointsBinCount": 25,
-		"BreakpointsPerChrom": false,
-		"BreakpointsBinSize": 10000000,
-		"ResetSeed": true,
-		"GCInterval" : 25,
-		"OptimizationMethod" : "MetropolisHastings",
-		"StartTemp" : 10.0,
-		"CoolingRate": 0.95,
-		"StepSizeDecayType": "Exponential",
-		"MinStepSize": 0.001,
-		"BoundedLengths" : false,
-		"MinLength": 50000,
-		"MaxLength": 5000000, 
-		"UseHomozygousDeletion": false,
-		"UseCNAlongGenome": false,
-		"IncludeTotalStrength": false,
-		"WriteScores": false
-		
 	}
-  }
+}
