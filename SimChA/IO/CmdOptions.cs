@@ -46,11 +46,16 @@ public class CmdOptions
     
     [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
     public bool FitnessLandscape { get; set; }
-    
+    [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
+    public bool EvolutionMode { get; set; }
     public ExecMode ExecMode
     {
         get
         {
+            if (EvolutionMode)
+            {
+                return ExecMode.Evolution;
+            }
             if (CloneTreeFile != "" && CNProfiles != "")
             {
                 throw new Exception("Cannot run both tree and profiles at the same time.");
