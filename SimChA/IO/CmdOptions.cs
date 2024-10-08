@@ -63,12 +63,8 @@ public class CmdOptions
                 }
                 return ExecMode.Tree;
             }
-            if (CNProfiles != "")
+            if (CNProfiles != "" && Repeats == 1)
             {
-                if (Repeats > 1)
-                {
-                    throw new Exception("Cannot run profiles with repeats.");
-                }
                 return ExecMode.Profiles;
             }
             return ExecMode.Repeats;
