@@ -14,6 +14,7 @@ public class Evolver
     protected readonly Random Rnd;
     protected readonly GenRef GenRef;
     protected int Counter;
+    protected List<CNEventPars> EventPars;
 
     public Evolver(
         Random rnd,
@@ -36,12 +37,13 @@ public class Evolver
             throw new Exception("No events to sample from.");
         }
         Counter = 1;
+        EventPars = sample.EventPars;
         var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
         ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
-    public double GetEventPotential(List<BaseEventData> events)
+    private double GetEventPotential(List<BaseEventData> events)
     {
         double eventPotentialTotal = 0.0;
         // Probability of picking each event and their corresponding signature
@@ -56,11 +58,66 @@ public class Evolver
         return eventPotentialTotal;
     }
 
-    public double CalculatePotential(double proposedFitness, List<BaseEventData> events)
+    private double CalculatePotential(double proposedFitness, List<BaseEventData> events)
     {
         double fitnessPotential = McParams.ThetaFitness * proposedFitness;
         return McParams.IncludeProb ? GetEventPotential(events) + fitnessPotential : fitnessPotential;
     }
+
+    private double InverseEventProb(BaseEventData eventData)
+    {
+        var inverseEvent = new CNEventType();
+        switch (eventData.CNEventPars.Type) {
+            case CNEventType.ChromDeletion:
+                inverseEvent = CNEventType.ChromDuplication;
+                break;
+            case CNEventType.ChromDuplication:
+                inverseEvent = CNEventType.ChromDeletion;
+                break;
+            case CNEventType.InternalDeletion:
+                inverseEvent = CNEventType.InternalDuplication;
+                break;
+            case CNEventType.InternalDuplication:
+                inverseEvent = CNEventType.InternalDeletion;
+                break;
+            case CNEventType.TailDeletion:
+                inverseEvent = CNEventType.TailDuplication;
+                break;
+            case CNEventType.TailDuplication:
+                inverseEvent = CNEventType.TailDeletion;
+                break;
+            case CNEventType.ArmDeletion:
+                inverseEvent = CNEventType.ArmDuplication;
+                break;
+            case CNEventType.ArmDuplication:
+                inverseEvent = CNEventType.ArmDeletion;
+                break;
+            case CNEventType.SNV:
+            case CNEventType.BreakageFusionBridge:
+            case CNEventType.TICycle:
+            case CNEventType.TIBridge:
+            case CNEventType.TIChain:
+            case CNEventType.Rigma:
+            case CNEventType.Pyrgo:
+            case CNEventType.Chromothripsis:
+            case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
+            case CNEventType.Chromoplexy:
+            case CNEventType.Translocation:
+            case CNEventType.WholeGenomeDoubling:
+                throw new Exception($"{eventData.CNEventPars.Type} does not currently have an inverse event implemented.");
+        }
+        var inverseEventData = EventPars.Find(e => e.Type == inverseEvent) ?? throw new Exception($"Could not find inverse event data in the input configuration file for {inverseEvent}.");
+        return inverseEventData.Prob;
+    }
+
+    private double CalculateTransition(BaseEventData proposedEvent)
+    {
+        double proposedProb = Math.Log(proposedEvent.CNEventPars.Prob);
+        double backwardsProb = Math.Log(InverseEventProb(proposedEvent));
+        return proposedProb - backwardsProb;
+    }
+    
 
     public double GetFitness(Karyotype kar, List<BaseEventData> events)
     {
