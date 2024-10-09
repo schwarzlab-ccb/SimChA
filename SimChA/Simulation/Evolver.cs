@@ -6,24 +6,30 @@ using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
-public class EvoSimulator : Simulator
+public class Evolver
 {
-    private FitnessParams FitnessParams { get; }
-    private MCParams McParams { get; }
-    private FileIO FileIO { get; }
-    public EvoSimulator(
+    protected readonly FitnessParams FitnessParams;
+    protected readonly MCParams McParams;
+    protected readonly FileIO FileIO;
+    protected readonly Random Rnd;
+    protected readonly GenRef GenRef;
+    protected int Counter;
+
+    public Evolver(
         Random rnd,
         GenRef genRef,
         FitnessParams fitnessParams, 
         MCParams mCParams,
-        FileIO fileIO) : base(rnd, genRef)
+        FileIO fileIO)
     {
+        Rnd = rnd;
+        GenRef = genRef;
         FitnessParams = fitnessParams;
         McParams = mCParams;
         FileIO = fileIO;
     }
 
-    public override void EvolveSample(Sample sample)
+    public void EvolveSample(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {

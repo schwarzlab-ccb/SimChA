@@ -90,10 +90,4 @@ public class Simulator
         }
         return output;
     }
-
-    public virtual void EvolveSample(Sample sample)
-    {
-        Console.WriteLine("hello");
-        return;
-    }
 }
