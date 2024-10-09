@@ -58,10 +58,10 @@ public class Evolver
         return eventPotentialTotal;
     }
 
-    private double CalculatePotential(double proposedFitness, List<BaseEventData> events)
+    private double CalculatePotential(double proposedFitness)
     {
         double fitnessPotential = McParams.ThetaFitness * proposedFitness;
-        return McParams.IncludeProb ? GetEventPotential(events) + fitnessPotential : fitnessPotential;
+        return fitnessPotential;
     }
 
     private double InverseEventProb(BaseEventData eventData)
@@ -113,17 +113,15 @@ public class Evolver
 
     private double CalculateTransition(BaseEventData proposedEvent)
     {
-        double proposedProb = Math.Log(proposedEvent.CNEventPars.Prob);
+        double forwardsProb = Math.Log(proposedEvent.CNEventPars.Prob);
         double backwardsProb = Math.Log(InverseEventProb(proposedEvent));
-        return proposedProb - backwardsProb;
+        return backwardsProb - forwardsProb;
     }
     
 
-    public double GetFitness(Karyotype kar, List<BaseEventData> events)
+    public double GetFitness(Karyotype kar, BaseEventData eventData)
     {
-        // Probability of picking each event and their corresponding signature
-        foreach (var eventData in events)
-            eventData.ApplyEvent(kar);
+        eventData.ApplyEvent(kar);
         return kar.UpdateFitness(GenRef, FitnessParams);
     }
 
@@ -138,10 +136,9 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-        var currentPotential = CalculatePotential(currentFitness, currentEvents);
+        var currentPotential = CalculatePotential(currentFitness);
 
         var bestFitness = currentFitness;
-        var bestEvents = new List<BaseEventData>(currentEvents);
 
         var fitDict = new Dictionary<int, (int, double)>{};
 
@@ -151,18 +148,16 @@ public class Evolver
         {
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
-            var proposedEvents = new List<BaseEventData>(currentEvents) { newEvent };
-            var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
-            var proposedPotential = CalculatePotential(proposedFitness, proposedEvents);
-            var acceptProb = proposedPotential - currentPotential;
+            var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
+            var proposedPotential = CalculatePotential(proposedFitness);
+            var acceptProb = proposedPotential - currentPotential + CalculateTransition(newEvent);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentPotential = proposedPotential;
-                currentEvents = proposedEvents;
+                currentEvents.Add(newEvent);
                 if (proposedFitness > bestFitness)
                 {
                     bestFitness = proposedFitness;
-                    bestEvents = proposedEvents;
                 }
                 fitDict[i] = (currentEvents.Count, proposedFitness);
                 // Apply the new event to the clone
