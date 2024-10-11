@@ -46,7 +46,8 @@ public class TestIO
     public void TestConfigSerialization()
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
-        var simParams = new SimParams(0, SexEnum.None, 1, Distribution.Uniform, fit);
+        bool autosomesOnly = false;
+        var simParams = new SimParams(0, SexEnum.None, autosomesOnly, 1, Distribution.Uniform, fit);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         var deserialized = JsonSerializer.Deserialize<SimParams>(serialized);

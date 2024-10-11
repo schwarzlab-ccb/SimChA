@@ -43,21 +43,6 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
-    private double GetEventPotential(List<BaseEventData> events)
-    {
-        double eventPotentialTotal = 0.0;
-        // Probability of picking each event and their corresponding signature
-        foreach (var eventData in events)
-        {
-            if (eventData.CNEventPars.Size > 0 && McParams.IncludeSize)
-            {
-                eventPotentialTotal += Math.Log(eventData.GetProb());
-            }
-            eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
-        }
-        return eventPotentialTotal;
-    }
-
     private double CalculatePotential(double proposedFitness)
     {
         double fitnessPotential = McParams.ThetaFitness * proposedFitness;
@@ -146,11 +131,12 @@ public class Evolver
 
         for (int i = 0; i < McParams.NumSamplesTotal; i++)
         {
+            Console.Write($"\rSample {sample.SampleId}. Event {i+1}/{McParams.NumSamplesTotal}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
             var proposedPotential = CalculatePotential(proposedFitness);
-            var acceptProb = proposedPotential - currentPotential + CalculateTransition(newEvent);
+            var acceptProb = Math.Min(0, proposedPotential - currentPotential + CalculateTransition(newEvent));
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentPotential = proposedPotential;
@@ -185,7 +171,7 @@ public class Evolver
 
             var bestEvents = Evolve(sample, childKar);
 
-            for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
+            /*for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
             {
                 Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
                 var eventData = bestEvents[mutNo];
@@ -195,7 +181,8 @@ public class Evolver
                 var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit, newFitness);
                 childEvs.Add(abberation);
                 oldFitness = newFitness;
-            }
+            }*/
+
             Counter++;
             if (child.CloneId != node.CloneId)
             {
