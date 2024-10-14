@@ -1,6 +1,7 @@
 {
 	"Seed": -1,
 	"Sex": "None",
+  "AutosomesOnly": false,
 	"EventCount": 75,
 	"EventDist": "Exponential",
 	"Fitness": {

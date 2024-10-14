@@ -5,6 +5,7 @@ namespace SimChA.DataTypes;
 public record SimParams(
     int Seed,
     SexEnum Sex,
+    bool AutosomesOnly,
     int EventCount,
     Distribution EventDist,
     FitnessParams Fitness,
