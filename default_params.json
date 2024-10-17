@@ -156,5 +156,11 @@
 	"MCTarget": {
 		"Mean": 1,
 		"Dist": "Exponential"
-	}
+	},
+  "EvoParams": {
+    "MutationRate": 0.1,
+    "NumIterations": 10000,
+    "ThetaFitness": 10,
+    "PrintFitnesses": true
+  }
 }

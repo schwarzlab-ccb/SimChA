@@ -9,24 +9,24 @@ namespace SimChA.Simulation;
 public class Evolver
 {
     protected readonly FitnessParams FitnessParams;
-    protected readonly MCParams McParams;
+    protected readonly EvoParams EvoParams;
     protected readonly FileIO FileIO;
     protected readonly Random Rnd;
     protected readonly GenRef GenRef;
     protected int Counter;
-    protected List<CNEventPars> EventPars;
+    protected List<CNEventPars>? EventPars = null;
 
     public Evolver(
         Random rnd,
         GenRef genRef,
         FitnessParams fitnessParams, 
-        MCParams mCParams,
+        EvoParams evoParams,
         FileIO fileIO)
     {
         Rnd = rnd;
         GenRef = genRef;
         FitnessParams = fitnessParams;
-        McParams = mCParams;
+        EvoParams = evoParams;
         FileIO = fileIO;
     }
 
@@ -45,64 +45,9 @@ public class Evolver
 
     private double CalculatePotential(double proposedFitness)
     {
-        double fitnessPotential = McParams.ThetaFitness * proposedFitness;
+        double fitnessPotential = EvoParams.ThetaFitness * proposedFitness;
         return fitnessPotential;
-    }
-
-    private double InverseEventProb(BaseEventData eventData)
-    {
-        var inverseEvent = new CNEventType();
-        switch (eventData.CNEventPars.Type) {
-            case CNEventType.ChromDeletion:
-                inverseEvent = CNEventType.ChromDuplication;
-                break;
-            case CNEventType.ChromDuplication:
-                inverseEvent = CNEventType.ChromDeletion;
-                break;
-            case CNEventType.InternalDeletion:
-                inverseEvent = CNEventType.InternalDuplication;
-                break;
-            case CNEventType.InternalDuplication:
-                inverseEvent = CNEventType.InternalDeletion;
-                break;
-            case CNEventType.TailDeletion:
-                inverseEvent = CNEventType.TailDuplication;
-                break;
-            case CNEventType.TailDuplication:
-                inverseEvent = CNEventType.TailDeletion;
-                break;
-            case CNEventType.ArmDeletion:
-                inverseEvent = CNEventType.ArmDuplication;
-                break;
-            case CNEventType.ArmDuplication:
-                inverseEvent = CNEventType.ArmDeletion;
-                break;
-            case CNEventType.SNV:
-            case CNEventType.BreakageFusionBridge:
-            case CNEventType.TICycle:
-            case CNEventType.TIBridge:
-            case CNEventType.TIChain:
-            case CNEventType.Rigma:
-            case CNEventType.Pyrgo:
-            case CNEventType.Chromothripsis:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-            case CNEventType.Chromoplexy:
-            case CNEventType.Translocation:
-            case CNEventType.WholeGenomeDoubling:
-                throw new Exception($"{eventData.CNEventPars.Type} does not currently have an inverse event implemented.");
-        }
-        var inverseEventData = EventPars.Find(e => e.Type == inverseEvent) ?? throw new Exception($"Could not find inverse event data in the input configuration file for {inverseEvent}.");
-        return inverseEventData.Prob;
-    }
-
-    private double CalculateTransition(BaseEventData proposedEvent)
-    {
-        double forwardsProb = Math.Log(proposedEvent.CNEventPars.Prob);
-        double backwardsProb = Math.Log(InverseEventProb(proposedEvent));
-        return backwardsProb - forwardsProb;
-    }
-    
+    }    
 
     public double GetFitness(Karyotype kar, BaseEventData eventData)
     {
@@ -117,7 +62,7 @@ public class Evolver
         return eventData ?? throw new Exception("Failed to generate new event data.");
     }
 
-    private List<BaseEventData> Evolve(Sample sample, Karyotype kar)
+    private List<BaseEventData> Evolve(Sample sample, Karyotype kar, int mutCount)
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
@@ -129,14 +74,14 @@ public class Evolver
 
         fitDict[-1] = (0, currentFitness);
 
-        for (int i = 0; i < McParams.NumSamplesTotal; i++)
+        for (int i = 0; i < EvoParams.NumIterations && currentEvents.Count < mutCount; i++)
         {
-            Console.Write($"\rSample {sample.SampleId}. Event {i+1}/{McParams.NumSamplesTotal}.".PadRight(80));
+            Console.Write($"\rSample {sample.SampleId}. Event {currentEvents.Count+1}/{EvoParams.NumIterations}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
             var proposedPotential = CalculatePotential(proposedFitness);
-            var acceptProb = Math.Min(0, proposedPotential - currentPotential + CalculateTransition(newEvent));
+            var acceptProb = Math.Min(0, proposedPotential - currentPotential);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentPotential = proposedPotential;
@@ -150,7 +95,7 @@ public class Evolver
                 newEvent.ApplyEvent(kar);
             }
         }
-        if (McParams.PrintFitnesses)
+        if (EvoParams.PrintFitnesses)
         {
             FileIO.WriteFitnesses(fitDict);
         }
@@ -169,7 +114,7 @@ public class Evolver
             
             double oldFitness = Fitness.Calculate(childKar, GenRef, FitnessParams);
 
-            var bestEvents = Evolve(sample, childKar);
+            var bestEvents = Evolve(sample, childKar, child.Distance);
 
             /*for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
             {
