@@ -136,7 +136,9 @@ public class Evolver
             
             double oldFitness = Fitness.Calculate(childKar, GenRef, FitnessParams);
 
-            var bestEvents = EvolveInEvents(sample, childKar, child.Distance);
+            var bestEvents = EvoParams.EvolveInTime 
+                ? EvolveInTime(sample, childKar)
+                : EvolveInEvents(sample, childKar, child.Distance);
             Console.WriteLine("Fetching the sampled events and calculating fitness changes");
             var dummyKar = new Karyotype(sample.Kars[node.CloneId]);
             for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
