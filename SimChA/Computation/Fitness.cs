@@ -53,6 +53,9 @@ public static class Fitness
     public static double Linear(double x)
         => x;
 
+    public static double Tanh(double x)
+        => Math.Tanh(x);
+
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double) refBaseCount);
 
@@ -78,7 +81,7 @@ public static class Fitness
         return 2;
     }
 
-    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
+    /*public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
     {
         var genesList = sex switch
         {
@@ -88,7 +91,34 @@ public static class Fitness
         };
         int norm = normalizeGenes ? genesList.Count() : 1;
         return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
+    }*/
+
+    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
+    {
+        var genesList = sex switch
+        {
+            SexEnum.Female => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.YChrName),
+            SexEnum.Male => geneCNs,
+            _ => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
+        };
+        int norm = normalizeGenes ? genesList.Count() : 1;
+
+        return genesList.Sum(g => Math.Tanh(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
     }
+
+    public static double OgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
+    {
+        var genesList = sex switch
+        {
+            SexEnum.Female => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.YChrName),
+            SexEnum.Male => geneCNs,
+            _ => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
+        };
+        int norm = normalizeGenes ? genesList.Count() : 1;
+
+        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
+    }
+
 
     // TODO: Verify the sex here
     public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexEnum sex, bool normalizeGenes = false, bool haploinsufficiency = false)
