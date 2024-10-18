@@ -83,6 +83,7 @@ public class Evolver
                 }
                 // Apply the new event to the clone
                 newEvent.ApplyEvent(kar);
+                kar.UpdateFitness(GenRef, FitnessParams);
             }
         }
         return currentEvents;
@@ -112,6 +113,7 @@ public class Evolver
                 }
                 // Apply the new event to the clone
                 newEvent.ApplyEvent(kar);
+                kar.UpdateFitness(GenRef, FitnessParams);
             }
         }
         return currentEvents;
