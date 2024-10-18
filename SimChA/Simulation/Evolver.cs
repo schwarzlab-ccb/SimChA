@@ -43,11 +43,8 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
-    private double CalculatePotential(double proposedFitness)
-    {
-        double fitnessPotential = EvoParams.ThetaFitness * proposedFitness;
-        return fitnessPotential;
-    }    
+    private double CalculateAcceptance(double newFitness, double oldFitness, double prob, double mutationRate = 1)
+        => Math.Min(0, EvoParams.ThetaFitness * (newFitness - oldFitness)/oldFitness + Math.Log(prob * mutationRate));
 
     public double GetFitness(Karyotype kar, BaseEventData eventData)
     {
@@ -66,21 +63,19 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-        var currentPotential = CalculatePotential(currentFitness);
 
         var bestFitness = currentFitness;
 
         for (int i = 0; i < EvoParams.NumIterations; i++)
         {
-            Console.Write($"\rSample {sample.SampleId}. Event {currentEvents.Count+1}/{EvoParams.NumIterations}.".PadRight(80));
+            Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
-            var proposedPotential = CalculatePotential(proposedFitness);
-            var acceptProb = Math.Min(0, proposedPotential - currentPotential) * EvoParams.MutationRate;
+            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, newEvent.CNEventPars.Prob, EvoParams.MutationRate);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
-                currentPotential = proposedPotential;
+                currentFitness = proposedFitness;
                 currentEvents.Add(newEvent);
                 if (proposedFitness > bestFitness)
                 {
@@ -97,21 +92,19 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-        var currentPotential = CalculatePotential(currentFitness);
 
         var bestFitness = currentFitness;
 
         for (int i = 0; i < EvoParams.NumIterations && currentEvents.Count < mutCount; i++)
         {
-            Console.Write($"\rSample {sample.SampleId}. Event {currentEvents.Count+1}/{EvoParams.NumIterations}.".PadRight(80));
+            Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}/{mutCount}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
-            var proposedPotential = CalculatePotential(proposedFitness);
-            var acceptProb = Math.Min(0, proposedPotential - currentPotential);
+            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, newEvent.CNEventPars.Prob);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
-                currentPotential = proposedPotential;
+                currentFitness = proposedFitness;
                 currentEvents.Add(newEvent);
                 if (proposedFitness > bestFitness)
                 {
@@ -130,6 +123,8 @@ public class Evolver
         foreach (var child in clones[node.CloneId])
         {
             var childKar = new Karyotype(sample.Kars[node.CloneId]);
+            // copy of karyotype for printing out the events & their individual effects
+            var dummyKar = new Karyotype(sample.Kars[node.CloneId]);
             sample.Kars[child.CloneId] = childKar;
             var childEvs = new List<CNEventDesc>();
             sample.EventDescs[child.CloneId] = childEvs;
@@ -140,7 +135,7 @@ public class Evolver
                 ? EvolveInTime(sample, childKar)
                 : EvolveInEvents(sample, childKar, child.Distance);
             Console.WriteLine("Fetching the sampled events and calculating fitness changes");
-            var dummyKar = new Karyotype(sample.Kars[node.CloneId]);
+            
             for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
             {
                 Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
