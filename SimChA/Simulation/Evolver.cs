@@ -44,7 +44,7 @@ public class Evolver
     }
 
     private double CalculateAcceptance(double newFitness, double oldFitness, double prob, double mutationRate = 1)
-        => Math.Min(0, EvoParams.ThetaFitness * (newFitness - oldFitness)/oldFitness + Math.Log(prob * mutationRate));
+        => Math.Min(0, EvoParams.ThetaFitness * (newFitness - oldFitness)/Math.Abs(oldFitness) + Math.Log(prob * mutationRate));
 
     public double GetFitness(Karyotype kar, BaseEventData eventData)
     {
