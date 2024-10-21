@@ -43,8 +43,9 @@ public class Simulator
                 Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
                 var eventP = Rnd.PickRndElem(sample.EventPars);
                 var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
+                // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
                 if (eventData == null)
-                    return;
+                    continue;
                 eventData.ApplyEvent(childKar);
                 var abberation = new CNEventDesc(eventP.Type, eventCount + mutNo, eventData.ToString());
                 childEvs.Add(abberation);
