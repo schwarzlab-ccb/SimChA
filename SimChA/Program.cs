@@ -105,7 +105,7 @@ switch (execMode)
         {
             var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
             var eventCounts = options.EventCounts != "" ? FileIO.ReadEventCounts(options.EventCounts) : new Dictionary<string, int>();
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, options.AutosomesOnly, mcTarget, eventCounts);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget, eventCounts);
         }
 
         samples.ForEach(simulator.SampleEvents);

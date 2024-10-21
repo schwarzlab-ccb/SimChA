@@ -90,7 +90,8 @@ Default parameters are found in the file: `default_params.json`. The exact param
 
 #### Simulation mode only (R, T)
 * `Seed: int` - The seed for the random number generator.
-* `Sex: ["Female", "Male", "Both"]` - Whether to simulate only female chromosome, male chromosome, or randomly select from the two.
+* `Sex: ["Female", "Male", "None"]` - Whether to simulate exclusively female chromosome, male chromosome, or randomly select from the two.
+* `AutosomesOnly: bool` - Choose whether to simulate sex chromosomes or not.
 
 #### Repeats mode only (R)
 * `EventCount: int` - The mean number of events per sample.
