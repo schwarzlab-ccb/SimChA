@@ -43,8 +43,8 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
-    private double CalculateAcceptance(double newFitness, double oldFitness, double prob, double mutationRate = 1)
-        => Math.Min(0, EvoParams.ThetaFitness * (newFitness - oldFitness)/Math.Abs(oldFitness) + Math.Log(prob * mutationRate));
+    private double CalculateAcceptance(double newFitness, double oldFitness, double mutationRate = 1)
+        => Math.Min(0, EvoParams.ThetaFitness * (newFitness - oldFitness)/Math.Abs(oldFitness) + Math.Log(mutationRate));
 
     public double GetFitness(Karyotype kar, BaseEventData eventData)
     {
@@ -72,7 +72,7 @@ public class Evolver
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
-            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, newEvent.CNEventPars.Prob, EvoParams.MutationRate);
+            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, EvoParams.MutationRate);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
@@ -102,7 +102,7 @@ public class Evolver
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
-            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, newEvent.CNEventPars.Prob);
+            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
