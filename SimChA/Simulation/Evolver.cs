@@ -43,9 +43,20 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
-    private double CalculateAcceptance(double newFitness, double oldFitness, double mutationRate = 1)
-        => Math.Min(0, EvoParams.ThetaFitness * (newFitness - oldFitness)/Math.Abs(oldFitness) + Math.Log(mutationRate));
-
+    private double CalculateAcceptance(double newFitness, double oldFitness, double temperature, double mutationRate = 1)
+    {
+        var fitPart = (newFitness - oldFitness)/Math.Abs(oldFitness);
+        var mutPart = Math.Log(mutationRate);
+        if (EvoParams.SimulatedAnnealing)
+        {
+            fitPart /= temperature;
+        }
+        else
+        {
+            fitPart *= EvoParams.ThetaFitness;
+        }
+        return Math.Min(0, fitPart + mutPart);
+    }
     public double GetFitness(Karyotype kar, BaseEventData eventData)
     {
         eventData.ApplyEvent(kar);
@@ -63,8 +74,7 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-
-        var bestFitness = currentFitness;
+        var currentTemp = EvoParams.Temperature;
 
         for (int i = 0; i < EvoParams.NumIterations; i++)
         {
@@ -72,19 +82,16 @@ public class Evolver
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
-            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, EvoParams.MutationRate);
+            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, EvoParams.MutationRate, currentTemp);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
                 currentEvents.Add(newEvent);
-                if (proposedFitness > bestFitness)
-                {
-                    bestFitness = proposedFitness;
-                }
                 // Apply the new event to the clone
                 newEvent.ApplyEvent(kar);
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
+            currentTemp *= EvoParams.CoolingRate;
         }
         return currentEvents;
     }
@@ -93,8 +100,8 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-
-        var bestFitness = currentFitness;
+        var currentTemp = EvoParams.Temperature;
+        //var bestFitness = currentFitness;
 
         for (int i = 0; i < EvoParams.NumIterations && currentEvents.Count < mutCount; i++)
         {
@@ -102,19 +109,16 @@ public class Evolver
             // Generate a new event and correspondingly add to list
             var newEvent = GetNewEvent(sample, new Karyotype(kar));
             var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
-            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness);
+            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, currentTemp);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
                 currentEvents.Add(newEvent);
-                if (proposedFitness > bestFitness)
-                {
-                    bestFitness = proposedFitness;
-                }
                 // Apply the new event to the clone
                 newEvent.ApplyEvent(kar);
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
+            currentTemp *= EvoParams.CoolingRate;
         }
         return currentEvents;
     }

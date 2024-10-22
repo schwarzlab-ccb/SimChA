@@ -160,9 +160,11 @@
 	},
   "EvoParams": {
     "EvolveInTime": false,
-    "MutationRate": 0.1,
+    "MutationRate": 1,
     "NumIterations": 10000,
     "ThetaFitness": 10,
-    "PrintFitnesses": true
+    "SimulatedAnnealing": false,
+    "Temperature": 1,
+    "CoolingRate": 0.01
   }
 }

@@ -103,7 +103,7 @@ public static class Fitness
         };
         int norm = normalizeGenes ? genesList.Count() : 1;
 
-        return genesList.Sum(g => Math.Tanh(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
+        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
     }
 
     public static double OgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
