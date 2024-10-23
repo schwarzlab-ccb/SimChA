@@ -30,9 +30,9 @@ public class MCSimulator : Simulator
             throw new Exception("No events to sample from.");
         }
         Counter = 1;
-        var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
+        var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        ApplyCNEventsRec(sample, root, childLoopUp, 1);
+        ApplyCNEventsRec(sample, root, childLookUp, 1);
     }
 
     public double GetFitnessPotential(double fitness, double targetFitness)
@@ -161,8 +161,8 @@ public class MCSimulator : Simulator
         return bestEvents;
     }
 
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
-        List<CloneIn>> clones, int eventCount)
+    private void ApplyCNEventsRec(Sample sample, CloneIn node, 
+        IReadOnlyDictionary<string, List<CloneIn>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
         {

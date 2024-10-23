@@ -38,7 +38,7 @@ public class TestIO
     [Test]
     public void TestContig()
     {
-        var clone = new CloneIn(-1, 0, 1, 1);
+        var clone = new CloneIn("-1", "0", 1, 1);
         Assert.DoesNotThrow(() => clone.ToString());
     }
 
@@ -104,7 +104,7 @@ public class TestIO
         var kar = new Karyotype(_genRef, SexEnum.Male);
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, 1_000_000, 10));
-        var clone = new CloneIn(1, -1, 0, 1);
+        var clone = new CloneIn("1", "-1", 0, 1);
     }
 
     [Test]
@@ -124,23 +124,23 @@ public class TestIO
             { new(CNEventType.SNV, 1.0) };
 
         var clonesIn = new List<CloneIn>
-            { new(0, -1, 0, 1), new(1, 0, 1, 1) };
+            { new("0", "-1", 0, 1), new("1", "0", 1, 1) };
 
         var sample = new Sample("sample", SexEnum.Male, clonesIn, eventPars, null);
         var contigs = new List<Contig> { new(new Region(0, sequence.Length, "chr1", true)) };
-        sample.EventDescs[0] = new List<CNEventDesc>();
-        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
-        sample.EventDescs[1] = new List<CNEventDesc>();
-        sample.Kars[1] = new Karyotype(sample.Kars[0]);
+        sample.EventDescs["0"] = new List<CNEventDesc>();
+        sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
+        sample.EventDescs["1"] = new List<CNEventDesc>();
+        sample.Kars["1"] = new Karyotype(sample.Kars["0"]);
 
         long loc = 5;
         int contigID = 0;
         var newNucleotide = Nucleotide.N;
-        sample.Kars[1].ApplySNV(contigID, loc, newNucleotide);
+        sample.Kars["1"].ApplySNV(contigID, loc, newNucleotide);
         var rnd = new Random(48);
         var eventData = new PointMutationData(rnd, eventPars[0], contigID, sequence.Length);
         var eventDesc = new CNEventDesc(CNEventType.SNV, 1, eventData.ToString());
-        sample.EventDescs[1].Add(eventDesc);
+        sample.EventDescs["1"].Add(eventDesc);
         var samples = new List<Sample> { sample };
         if (samples.Any(s => s.EventDescs.Any()))
         {
@@ -158,8 +158,8 @@ public class TestIO
                                  "6,1,1,423957,0,583948,3,0,1.728,0.4133";
         var clones = Parsers.ParseClones(new StringReader(clonesStr), true, ",");
         Assert.AreEqual(4, clones.Count);
-        Assert.AreEqual(0, clones[0].CloneId);
-        Assert.AreEqual(0, clones[1].ParentId);
+        Assert.AreEqual("0", clones[0].CloneId);
+        Assert.AreEqual("0", clones[1].ParentId);
         Assert.AreEqual(1, clones[2].Distance);
         Assert.AreEqual(1.728, clones[3].FitnessTarget, double.Epsilon * 10);
 
@@ -229,27 +229,27 @@ public class TestIO
             { new(CNEventType.InternalInversion, 1, 10) };
 
         var clonesIn = new List<CloneIn>
-            { new(0, -1, 1, 1) };
+            { new("0", "-1", 1, 1) };
 
         var sample = new Sample("sample_1", SexEnum.Male, clonesIn, eventPars, null);
         var contigs = new List<Contig>
             { new(new Region(0, sequence1.Count(), "chr1", true)), new(new Region(0, sequence2.Length, "chr2", true)) };
-        sample.EventDescs[0] = new List<CNEventDesc>();
-        sample.Kars[0] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
+        sample.EventDescs["0"] = new List<CNEventDesc>();
+        sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
         // Apply an internal inversion
         var rnd = new Random(0);
         int contigID = 0;
         var eventData = new InternalEventData(rnd, eventPars[0], contigID, sequence1.Count());
         var eventDesc = new CNEventDesc(CNEventType.InternalInversion, 1, eventData.ToString());
-        sample.EventDescs[0].Add(eventDesc);
-        sample.Kars[0].ApplyInternalInversion(contigID, 4, 8);
+        sample.EventDescs["0"].Add(eventDesc);
+        sample.Kars["0"].ApplyInternalInversion(contigID, 4, 8);
 
         contigID = 1;
         var snvEventPars = new CNEventPars(CNEventType.SNV, 1);
         var snvEventData = new PointMutationData(rnd, snvEventPars, contigID, sequence2.Count());
         var snvEventDesc = new CNEventDesc(CNEventType.SNV, 2, snvEventData.ToString());
-        sample.EventDescs[0].Append(snvEventDesc);
-        sample.Kars[0].ApplySNV(contigID, 10, Nucleotide.A);
+        sample.EventDescs["0"].Append(snvEventDesc);
+        sample.Kars["0"].ApplySNV(contigID, 10, Nucleotide.A);
 
         var samples = new List<Sample>
             { sample };

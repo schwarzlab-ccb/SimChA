@@ -267,8 +267,8 @@ public static class Parsers
         while (cloneStream.ReadLine() is { } line)
         {
             var lineSplit = line.Split(sep).Select(s => s.Trim()).ToList();
-            int id = int.Parse(lineSplit[columns[idKey]]);
-            int parentId = int.Parse(lineSplit[columns[parentIDKey]]);
+            string id = lineSplit[columns[idKey]];
+            string parentId = lineSplit[columns[parentIDKey]];
             int distance = int.Parse(lineSplit[columns[distanceKey]]);
             double fitness = parseFitness
                 ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)

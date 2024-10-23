@@ -66,7 +66,7 @@ public static class Converters
             double fitnessTarget = mcTarget == null 
                 ? -1.0 
                 : Sampling.SampleDist(rnd, mcTarget.Dist) * mcTarget.Mean + 1;
-            var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
+            var clone = new CloneIn("0", "-1", mutCount, fitnessTarget); 
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
@@ -99,7 +99,7 @@ public static class Converters
                 double sampledDistance = Sampling.SampleDist(rnd, distribution);
                 mutCount = (int) Math.Round(meanDist * sampledDistance);
             }
-            var clone = new CloneIn(0, -1, mutCount, fitnessTarget); 
+            var clone = new CloneIn("0", "-1", mutCount, fitnessTarget); 
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(selectedSigs, namedProbs);
