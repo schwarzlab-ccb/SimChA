@@ -32,6 +32,7 @@ public class FileIO
     private const string VCF_FILENAME = "vcf.tsv";
     private const string FASTA_FILENAME = "genome.fa";
     private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
+    private const string TREE_FILENAME = "tree.tsv";
 
     
     private string Timestamp { get; }
@@ -58,6 +59,18 @@ public class FileIO
         foreach (var sample in samples)
         {
             outputFile.WriteLine(sample.ToTSV());
+        }
+    }
+    
+    public void WriteTree(IEnumerable<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), TREE_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        outputFile.WriteLine(Sample.HeaderAsTree());
+        foreach (var sample in samples)
+        {
+            outputFile.WriteLine(sample.ToTSVAsTree());
         }
     }
     

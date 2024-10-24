@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using System.Text;
 using SimChA.EventData;
 using SimChA.Simulation;
 
@@ -34,4 +35,15 @@ public class Sample
                              $"{Sex}\t" +
                              $"{Clones.Count}\t" +
                              $"{MixtureString()}";
+
+    public static string HeaderAsTree() => "ID\tParentID\tDistance";
+    public string ToTSVAsTree()
+    {
+        var sb = new StringBuilder();
+        foreach (var clone in Clones)
+        {
+            sb.AppendLine($"{clone.CloneId}\t{clone.ParentId}\t{clone.Distance}");
+        }
+        return sb.ToString();
+    }
 }

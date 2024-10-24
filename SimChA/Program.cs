@@ -53,7 +53,7 @@ switch (execMode)
         var treeSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
         Validators.ValidateSignatures(treeSigs);
         Console.WriteLine("Computing mutations for tree:");
-        var inClones = options.SampleEventCounts 
+        var inClones = options.SampleEventCounts
             ? FileIO.ReadClonesWithRates(options.CloneTreeFile, options.UseMCMC, rnd, simParams.EventDist)
             : FileIO.ReadClonesWithEvents(options.CloneTreeFile, options.UseMCMC);
         var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
@@ -135,6 +135,10 @@ try
     if (options.CalcConsistentCNs)
     {
         files.WriteConsistentCNs(genRef, samples);
+    }
+    if (ExecMode.Tree == execMode)
+    {
+        files.WriteTree(samples);
     }
     files.WriteClones(samples);
     files.WriteKaryotypes(samples);
