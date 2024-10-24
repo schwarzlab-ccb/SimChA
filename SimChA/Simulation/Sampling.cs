@@ -1,4 +1,5 @@
-﻿using Extreme.Statistics.Distributions;
+﻿using System.ComponentModel.DataAnnotations;
+using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
@@ -53,12 +54,22 @@ public static class Sampling
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
     
-    public static double SampleDist(Random rnd, DataTypes.Distribution dist)
+    public static double SampleDist(Random rnd, DataTypes.Distribution dist, double mean = 1)
     {
         return dist switch
         {
-            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, 1),
-            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, .5),
+            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, mean, .5),
+            _ => 1
+        };
+    }
+
+    public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean = 1)
+    {   
+        return dist switch
+        {
+            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
             _ => 1
         };
     }

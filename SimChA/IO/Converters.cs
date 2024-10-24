@@ -48,7 +48,7 @@ public static class Converters
         int meanDist, 
         Distribution distribution, 
         Dictionary<string, Signature> sigs, 
-        SexEnum sex, 
+        SexEnum sex,
         bool autosomesOnly,
         MCTarget? mcTarget = null, 
         Dictionary<string, int>? eventCounts = null)

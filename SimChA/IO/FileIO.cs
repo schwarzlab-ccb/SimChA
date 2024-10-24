@@ -5,6 +5,7 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using System.Text;
+using CommandLine;
 
 namespace SimChA.IO;
 
@@ -281,8 +282,7 @@ public class FileIO
             }
         }
     }
-
-    public static List<CloneIn> ReadClones(string filePath, bool parseFitness)
+    public static List<CloneIn> ReadClonesWithRates(string filePath, bool parseFitness, Random rnd, Distribution dist)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         string fileFormat = filePath.Substring(filePath.Length - 3);
@@ -298,7 +298,31 @@ public class FileIO
         try
         {
             var cloneFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClones(cloneFile, parseFitness, separator);
+            return Parsers.ParseClonesWithRates(cloneFile, parseFitness, separator, rnd, dist);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
+    public static List<CloneIn> ReadClonesWithEvents(string filePath, bool parseFitness)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        string fileFormat = filePath.Substring(filePath.Length - 3);
+        if (fileFormat != "tsv" && fileFormat != "csv")
+        {
+            throw new Exception($"File {filePath} should be a tsv or csv.");
+        }
+        string separator = fileFormat == "tsv" ? "\t" : ",";
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var cloneFile = new StreamReader(fileFullPath);
+            return Parsers.ParseClonesWithEvents(cloneFile, parseFitness, separator);
         }
         catch (Exception e)
         {

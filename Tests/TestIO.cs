@@ -63,8 +63,8 @@ public class TestIO
     {
         var res = Parsers.ParseSimParams(@"{}");
         Assert.AreEqual(0, res.Seed);
-        res = Parsers.ParseSimParams(@"{""EventCount"": 10, ""EventDist"": ""Normal""}");
-        Assert.AreEqual(10, res.EventCount);
+        res = Parsers.ParseSimParams(@"{""EventCountMean"": 10, ""EventDist"": ""Normal""}");
+        Assert.AreEqual(10, res.EventCountMean);
         Assert.AreEqual(Distribution.Normal, res.EventDist);
         res = Parsers.ParseSimParams(@"{""Signatures"": {""test"" : { ""Prob"": 1 }}}");
         Assert.AreEqual("test", res.Signatures!.First().Key);
@@ -156,7 +156,7 @@ public class TestIO
                                  "1,0,1,149897,0,339690,2,0,1.44,0.8619\n" +
                                  "5,1,1,310270,0,426497,3,0,1.728,0.3025\n" +
                                  "6,1,1,423957,0,583948,3,0,1.728,0.4133";
-        var clones = Parsers.ParseClones(new StringReader(clonesStr), true, ",");
+        var clones = Parsers.ParseClonesWithEvents(new StringReader(clonesStr), true, ",");
         Assert.AreEqual(4, clones.Count);
         Assert.AreEqual("0", clones[0].CloneId);
         Assert.AreEqual("0", clones[1].ParentId);

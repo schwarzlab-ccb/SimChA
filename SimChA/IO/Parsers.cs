@@ -241,7 +241,50 @@ public static class Parsers
         return geneList;
     }
 
-    public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness, string sep)
+    public static List<CloneIn> ParseClonesWithRates(
+        TextReader cloneStream, bool parseFitness, string sep, Random rnd, Distribution dist
+    )
+    {
+        const string idKey = "ID";
+        const string parentIDKey = "ParentID";
+        const string distanceKey = "Distance";
+        const string fitnessKey = "Fitness";
+
+        string? firstLine = cloneStream.ReadLine() ?? throw new Exception("CloneIn file is empty.");
+        var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
+        var columns = new Dictionary<string, int> { { idKey, -1 }, { parentIDKey, -1 }, { distanceKey, -1 } };
+        if (parseFitness)
+        {
+            columns.Add(fitnessKey, -1);
+        }
+
+        foreach (var column in columns)
+        {
+            int idx = header.IndexOf(column.Key);
+            if (idx == -1) throw new Exception($"CloneIn file does not contain {column.Key} column.");
+            columns[column.Key] = idx;
+        }
+
+        var cloneFitness = new List<CloneIn>();
+        while (cloneStream.ReadLine() is { } line)
+        {
+            var lineSplit = line.Split(sep).Select(s => s.Trim()).ToList();
+            string id = lineSplit[columns[idKey]];
+            string parentId = lineSplit[columns[parentIDKey]];
+            double rate = double.Parse(lineSplit[columns[distanceKey]], CultureInfo.InvariantCulture.NumberFormat);
+            int distance = Sampling.SampleDistInt(rnd, dist, rate);
+            double fitness = parseFitness
+                ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
+                : -1.0;
+            var clone = new CloneIn(id, parentId, distance, fitness);
+            cloneFitness.Add(clone);
+        }
+        return cloneFitness;
+    }
+
+    public static List<CloneIn> ParseClonesWithEvents(
+        TextReader cloneStream, bool parseFitness, string sep
+    )
     {
         const string idKey = "ID";
         const string parentIDKey = "ParentID";
