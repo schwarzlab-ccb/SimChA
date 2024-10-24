@@ -45,8 +45,12 @@ public class Evolver
 
     private double CalculateAcceptance(double newFitness, double oldFitness, double temperature, double mutationRate = 1)
     {
-        var fitPart = (newFitness - oldFitness)/Math.Abs(oldFitness);
         var mutPart = Math.Log(mutationRate);
+        if (EvoParams.WithFitness)
+        {
+            return Math.Min(0, mutPart);
+        }
+        var fitPart = (newFitness - oldFitness)/Math.Abs(oldFitness);
         if (EvoParams.SimulatedAnnealing)
         {
             fitPart /= temperature;

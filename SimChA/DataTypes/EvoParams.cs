@@ -4,6 +4,7 @@ namespace SimChA.DataTypes;
 // Input: 
 
 public record EvoParams(
+    bool WithFitness, // Evolve with or without fitness
     bool EvolveInTime, // Evolve the clone in time
     double MutationRate, // Mutation rate
     int NumIterations, // Number of true samples

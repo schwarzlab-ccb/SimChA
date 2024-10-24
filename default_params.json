@@ -159,6 +159,7 @@
 		"Dist": "Exponential"
 	},
   "EvoParams": {
+    "WithFitness": true,
     "EvolveInTime": false,
     "MutationRate": 1,
     "NumIterations": 10000,
