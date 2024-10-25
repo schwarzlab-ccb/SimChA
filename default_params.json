@@ -161,6 +161,8 @@
   "EvoParams": {
     "WithFitness": true,
     "EvolveInTime": false,
+    "KSteps": 1,
+    "StepDistribution": "Unit",
     "MutationRate": 1,
     "NumIterations": 10000,
     "ThetaFitness": 10,
