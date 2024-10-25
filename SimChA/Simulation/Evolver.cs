@@ -78,13 +78,19 @@ public class Evolver
         }
         int nEvents = (int)Math.Min(1, EvoParams.KSteps*Sampling.SampleDist(Rnd, EvoParams.StepDistribution));
         var sampledEvents = new List<BaseEventData>();
-        for (int i = 0; i < nEvents; i++)
+        int iTries = 0;
+        for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
         {
             var cnEventP = Rnd.PickRndElem(sample.EventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
             if (eventData != null)
             {
                 sampledEvents.Add(eventData);
+                i++;
+            }
+            else
+            {
+                iTries++;
             }
         }
         return sampledEvents;

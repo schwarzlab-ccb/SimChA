@@ -13,5 +13,6 @@ public record EvoParams(
     double ThetaFitness, // exponential multiplier for fitness
     bool SimulatedAnnealing, // Flag to turn on and off simulated annealing of evolution
     double Temperature, // Initial temperature for simulated annealing
-    double CoolingRate // Cooling rate for simulated annealing
+    double CoolingRate, // Cooling rate for simulated annealing
+    int MaxTries // Maximum number of tries to generate a new set of event
     );
