@@ -93,6 +93,10 @@ public class Evolver
                 iTries++;
             }
         }
+        if (iTries >= EvoParams.MaxTries)
+        {
+            throw new Exception("Could not generate new events.");
+        }
         return sampledEvents;
     }
 
