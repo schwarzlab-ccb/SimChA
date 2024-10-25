@@ -61,17 +61,33 @@ public class Evolver
         }
         return Math.Min(0, fitPart + mutPart);
     }
-    public double GetFitness(Karyotype kar, BaseEventData eventData)
+    public double GetFitness(Karyotype kar, List<BaseEventData> eventData)
     {
-        eventData.ApplyEvent(kar);
+        foreach (var ev in eventData)
+        {
+            ev.ApplyEvent(kar);
+        }
         return kar.UpdateFitness(GenRef, FitnessParams);
     }
 
-    private BaseEventData GetNewEvent(Sample sample, Karyotype kar)
+    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar)
     {
-        var cnEventP = Rnd.PickRndElem(sample.EventPars);
-        var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
-        return eventData ?? throw new Exception("Failed to generate new event data.");
+        if (EvoParams.KSteps < 0)
+        {
+            throw new Exception("Invalid number of steps for evolution.");
+        }
+        int nEvents = (int)Math.Min(1, EvoParams.KSteps*Sampling.SampleDist(Rnd, EvoParams.StepDistribution));
+        var sampledEvents = new List<BaseEventData>();
+        for (int i = 0; i < nEvents; i++)
+        {
+            var cnEventP = Rnd.PickRndElem(sample.EventPars);
+            var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
+            if (eventData != null)
+            {
+                sampledEvents.Add(eventData);
+            }
+        }
+        return sampledEvents;
     }
 
     private List<BaseEventData> EvolveInTime(Sample sample, Karyotype kar)
@@ -84,15 +100,17 @@ public class Evolver
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}.".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvent = GetNewEvent(sample, new Karyotype(kar));
-            var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
+            var newEvents = GetNewEvents(sample, new Karyotype(kar));
+            var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
             var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, EvoParams.MutationRate, currentTemp);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
-                currentEvents.Add(newEvent);
-                // Apply the new event to the clone
-                newEvent.ApplyEvent(kar);
+                foreach (var ev in newEvents)
+                {
+                    currentEvents.Add(ev);
+                    ev.ApplyEvent(kar);
+                }
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
             currentTemp *= EvoParams.CoolingRate;
@@ -111,15 +129,17 @@ public class Evolver
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}/{mutCount}.".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvent = GetNewEvent(sample, new Karyotype(kar));
-            var proposedFitness = GetFitness(new Karyotype(kar), newEvent);
+            var newEvents = GetNewEvents(sample, new Karyotype(kar));
+            var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
             var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, currentTemp);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
-                currentEvents.Add(newEvent);
-                // Apply the new event to the clone
-                newEvent.ApplyEvent(kar);
+                foreach (var ev in newEvents)
+                {
+                    currentEvents.Add(ev);
+                    ev.ApplyEvent(kar);
+                }
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
             currentTemp *= EvoParams.CoolingRate;

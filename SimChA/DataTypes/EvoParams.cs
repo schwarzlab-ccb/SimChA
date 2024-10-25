@@ -5,6 +5,8 @@ namespace SimChA.DataTypes;
 
 public record EvoParams(
     bool WithFitness, // Evolve with or without fitness
+    int KSteps, // Number of steps to evolve between a time period
+    Distribution StepDistribution, // Distribution of steps (Exponential or Unit for fixed)
     bool EvolveInTime, // Evolve the clone in time
     double MutationRate, // Mutation rate
     int NumIterations, // Number of true samples
