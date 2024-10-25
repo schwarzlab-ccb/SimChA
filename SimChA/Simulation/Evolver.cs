@@ -46,7 +46,7 @@ public class Evolver
     private double CalculateAcceptance(double newFitness, double oldFitness, double temperature, double mutationRate = 1)
     {
         var mutPart = Math.Log(mutationRate);
-        if (EvoParams.WithFitness)
+        if (!EvoParams.WithFitness)
         {
             return Math.Min(0, mutPart);
         }
