@@ -90,7 +90,7 @@ public class FileIO
             {
                 var kar = sample.Kars[clone.CloneId];
                 var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, kar, segs, sample.Sex, true);
-                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                string name = sample.Clones.Count > 1 ? $"{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
@@ -108,7 +108,7 @@ public class FileIO
             foreach (var clone in sample.Clones)
             {
                 var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.Sex);
-                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                string name = sample.Clones.Count > 1 ? $"{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
@@ -146,7 +146,7 @@ public class FileIO
         {
             foreach (var kar in sample.Kars)
             {
-                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{kar.Key}" : $"{sample.SampleId}";
+                string sampleName = sample.Clones.Count > 1 ? $"{kar.Key}" : $"{sample.SampleId}";
                 outputFile.WriteLine($"{sampleName}\t{kar.Value}");
             }
         }
@@ -164,7 +164,7 @@ public class FileIO
             {
                 foreach (var cnEvent in clone.Value)
                 {   
-                    string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
+                    string sampleName = sample.Clones.Count > 1 ? $"{clone.Key}" : $"{sample.SampleId}";
                     outputFile.WriteLine($"{sampleName}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
                                          $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
                 }
@@ -207,7 +207,7 @@ public class FileIO
             foreach (var clone in sample.EventDescs)
             {
                 var kar = sample.Kars[clone.Key];
-                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
+                string sampleName = sample.Clones.Count > 1 ? $"{clone.Key}" : $"{sample.SampleId}";
                 var finalSNVs = kar.GetFinalSNVs();
 
                 foreach (var snv in finalSNVs)
@@ -289,7 +289,7 @@ public class FileIO
         {
             foreach (var stats in sample.Stats)
             {
-                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{stats.Key}" : $"{sample.SampleId}";
+                string sampleName = sample.Clones.Count > 1 ? $"{stats.Key}" : $"{sample.SampleId}";
                 var clone = stats.Value;
                 file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.FitnessTarget}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
             }
