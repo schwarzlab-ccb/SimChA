@@ -30,7 +30,7 @@ public class FileIO
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
-    private const string FASTA_FILENAME = "genome.fa";
+    //private const string FASTA_FILENAME = "genome.fa";
     private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
     private const string TREE_FILENAME = "tree.tsv";
 
@@ -229,9 +229,6 @@ public class FileIO
 
     public void WriteFasta(GenRef genRef, IEnumerable<Sample> samples)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FASTA_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
         // TODO: Do we want WriteFasta to work with multiple samples? Currently only set up for single samples
         var count = 0;
         if (genRef.GenContentsDict == null)
@@ -240,9 +237,12 @@ public class FileIO
         }
         foreach (var sample in samples)
         {
-            foreach (var clone in sample.EventDescs)
+            foreach (var clone in sample.Clones)
             {
-                var kar = sample.Kars[clone.Key];
+                string outPath = Path.Combine(Path.GetFullPath(OutFolder), $"{clone.CloneId}_genome.fa");
+                Console.WriteLine($"Writing to file {outPath}");
+                using var outputFile = new StreamWriter(outPath);
+                var kar = sample.Kars[clone.CloneId];
 
                 foreach (var contigId in kar.ContigIds())
                 {

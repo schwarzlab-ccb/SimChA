@@ -54,7 +54,7 @@ public class CmdOptions
             }
             if (CloneTreeFile != "")
             {
-                if (Repeats > 0)
+                if (Repeats > 1)
                 {
                     throw new Exception("Cannot run tree with repeats.");
                 }
