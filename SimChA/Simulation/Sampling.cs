@@ -63,6 +63,16 @@ public static class Sampling
         };
     }
 
+    public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean)
+    {
+        return dist switch
+        {
+            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Unit => (int)mean,
+            _ =>1
+        };
+    }
+
     public static SexEnum GetSex(Random rnd, SexEnum sexEnum)
         => sexEnum switch
         {

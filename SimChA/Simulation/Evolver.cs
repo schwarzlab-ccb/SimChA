@@ -43,12 +43,15 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLoopUp, 1);
     }
 
-    private double CalculateAcceptance(double newFitness, double oldFitness, double temperature, double mutationRate = 1)
+    private bool DidMutate()
+        => EvoParams.MutationRate <= 0 
+        || Rnd.NextDouble() < 1 - Math.Exp(-EvoParams.MutationRate);
+
+    private double CalculateLogAcceptance(double newFitness, double oldFitness, double temperature)
     {
-        var mutPart = Math.Log(mutationRate);
         if (!EvoParams.WithFitness)
         {
-            return Math.Min(0, mutPart);
+            return 0;
         }
         var fitPart = (newFitness - oldFitness)/Math.Abs(oldFitness);
         if (EvoParams.SimulatedAnnealing)
@@ -59,7 +62,7 @@ public class Evolver
         {
             fitPart *= EvoParams.ThetaFitness;
         }
-        return Math.Min(0, fitPart + mutPart);
+        return Math.Min(0, fitPart);
     }
     public double GetFitness(Karyotype kar, List<BaseEventData> eventData)
     {
@@ -70,13 +73,29 @@ public class Evolver
         return kar.UpdateFitness(GenRef, FitnessParams);
     }
 
-    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar)
+    private int GetEventCount()
     {
-        if (EvoParams.KSteps < 0)
+        int nEvents;
+        if (EvoParams.EventBlock)
         {
-            throw new Exception("Invalid number of steps for evolution.");
+            if (EvoParams.StepDistribution != Distribution.Poisson)
+            {
+                throw new Exception("Invalid distribution for event block.");
+            }
+            nEvents = Sampling.SampleDistInt(Rnd, EvoParams.StepDistribution, EvoParams.MutationRate);
         }
-        int nEvents = (int)Math.Min(1, EvoParams.KSteps*Sampling.SampleDist(Rnd, EvoParams.StepDistribution));
+        else
+        {
+            nEvents = DidMutate() ? 1 : 0;
+        }
+        return nEvents;
+    }
+
+    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int eventsLeft = 1_000_000)
+    {
+        // Want to sample a number of events.
+        int nEvents = GetEventCount();
+        nEvents = Math.Min(nEvents, eventsLeft);
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
         for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
@@ -111,8 +130,12 @@ public class Evolver
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             var newEvents = GetNewEvents(sample, new Karyotype(kar));
+            if (newEvents.Count == 0)
+            {
+                continue;
+            }
             var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
-            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, EvoParams.MutationRate, currentTemp);
+            var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, currentTemp);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
@@ -139,9 +162,13 @@ public class Evolver
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}/{mutCount}.".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvents = GetNewEvents(sample, new Karyotype(kar));
+            var newEvents = GetNewEvents(sample, new Karyotype(kar), mutCount - currentEvents.Count);
+            if (newEvents.Count == 0)
+            {
+                continue;
+            }
             var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
-            var acceptProb = CalculateAcceptance(proposedFitness, currentFitness, currentTemp);
+            var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, currentTemp);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;

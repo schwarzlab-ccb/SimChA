@@ -161,7 +161,7 @@
   "EvoParams": {
     "WithFitness": true,
     "EvolveInTime": false,
-    "KSteps": 1,
+    "EventBlock": false,
     "StepDistribution": "Unit",
     "MutationRate": 1,
     "NumIterations": 10000,
