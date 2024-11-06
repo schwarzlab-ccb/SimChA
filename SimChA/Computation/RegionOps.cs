@@ -44,7 +44,7 @@ public static class RegionOps
         {
             return region;
         }
-        var newSNVDict = region.SNVDict;
+        var newSNVDict = new Dictionary<long, Nucleotide>(region.SNVDict);
         foreach (var snv in region.SNVDict)
         {
             if (snv.Key <= region.Start || region.End <= snv.Key)

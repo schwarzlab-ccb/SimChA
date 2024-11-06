@@ -335,4 +335,42 @@ public class TestKaryotype
         Assert.AreEqual(loc, SNVDict.Keys.ToList()[0]);
         Assert.AreEqual(newNucleotide, SNVDict[loc]);
     }
+
+    [Test]
+    public void TestSNVWithDeletion()
+    {
+        const long loc = 100;
+        const int contigID = 0;
+        var newNucleotide = Nucleotide.C;
+        // Apply the SNV
+        _kar.ApplySNV(contigID, loc, newNucleotide);
+        // Apply a deletion that covers the SNV
+        _kar.ApplyInternalDeletion(contigID, 50, 200);
+        // Check that the SNV is not present
+        var regions = _kar.GetContig(contigID).GetRegions();
+        Assert.AreEqual(2, regions.Count);
+        foreach (var region in regions)
+        {
+            Assert.Null(region.SNVDict);
+        }
+    }
+
+    [Test]
+    public void TestSNVWithDuplication()
+    {
+        const long loc = 100;
+        const int contigID = 0;
+        var newNucleotide = Nucleotide.C;
+        // Apply the SNV
+        _kar.ApplySNV(contigID, loc, newNucleotide);
+        // Apply a deletion that covers the SNV
+        _kar.ApplyInternalDuplication(contigID, 50, 200);
+        // Check that the SNV is not present
+        var regions = _kar.GetContig(contigID).GetRegions();
+        Assert.AreEqual(3, regions.Count);
+        Assert.Null(regions[0].SNVDict);
+        Assert.NotNull(regions[1].SNVDict);
+        Assert.NotNull(regions[2].SNVDict);
+        Assert.AreEqual(regions[1].SNVDict, regions[2].SNVDict);
+    }
 }

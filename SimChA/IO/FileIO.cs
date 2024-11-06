@@ -259,7 +259,7 @@ public class FileIO
                             foreach (var snv in region.SNVDict)
                             {
                                 var loc = snv.Key - start;
-                                regionSeq[(int)(snv.Key-start)] = snv.Value.ToString()[0];
+                                regionSeq[(int)loc] = snv.Value.ToString()[0];
                             }
                         }
                         if (!region.Forward)
