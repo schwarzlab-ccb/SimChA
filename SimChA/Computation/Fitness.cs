@@ -108,7 +108,7 @@ public static class Fitness
         };
         int norm = normalizeGenes ? genesList.Count() : 1;
 
-        return genesList.Sum(g => CountFn(g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
+        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
     }
 
     // TODO: Verify the sex here

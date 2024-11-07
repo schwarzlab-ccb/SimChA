@@ -46,7 +46,7 @@ public class Karyotype
         => _contigs.Count(c => c.Any());
     
     public long GenomeLen()
-        => _contigs.Sum(c => c.Length());
+        => _contigs.Sum(c => c.Length());// - MissingLen();
     
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);

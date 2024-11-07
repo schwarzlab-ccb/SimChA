@@ -8,7 +8,7 @@ namespace SimChA.Computation;
 public abstract class CNProfile
 {
     public static double CalcPloidy(Karyotype kar, GenRef genRef)
-        => 2.0 * kar.GenomeLen() / genRef.GetGenomeLen(kar.Sex);
+        =>  kar.GenomeLen() / (double) genRef.GetGenomeLen(kar.Sex, false);
     
     public static double CalcCoverage(Karyotype kar, GenRef genRef) 
     =>  (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.Sex,false);
@@ -16,6 +16,8 @@ public abstract class CNProfile
     public static CloneStat GetCloneStats(Sample sample, CloneIn clone, GenRef genRef, FitnessParams fParams, Dictionary<int, Karyotype> karMap)
     {
         var kar = karMap[clone.CloneId];
+
+        var s = kar.GenomeLen();
 
         double ploidy = CalcPloidy(kar, genRef);
         double coverage = CalcCoverage(kar, genRef);
