@@ -17,8 +17,6 @@ public abstract class CNProfile
     {
         var kar = karMap[clone.CloneId];
 
-        var s = kar.GenomeLen();
-
         double ploidy = CalcPloidy(kar, genRef);
         double coverage = CalcCoverage(kar, genRef);
         
