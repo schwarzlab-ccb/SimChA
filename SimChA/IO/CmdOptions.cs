@@ -41,10 +41,10 @@ public class CmdOptions
     
     [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
     public bool FitnessLandscape { get; set; }
-    [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]
-    public bool SampleEventCounts { get; set; }
     [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
     public bool EvolutionMode { get; set; }
+    [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]
+    public bool SampleEventCounts { get; set; }
 
     public ExecMode ExecMode
     {
