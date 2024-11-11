@@ -14,5 +14,6 @@ public record EvoParams(
     bool SimulatedAnnealing, // Flag to turn on and off simulated annealing of evolution
     double Temperature, // Initial temperature for simulated annealing
     double CoolingRate, // Cooling rate for simulated annealing
-    int MaxTries // Maximum number of tries to generate a new set of events in a time step
+    int MaxTries, // Maximum number of tries to generate a new set of events in a time step
+    bool DynamicProb // Flag to turn on and off dynamic probabilities weighted by ploidy
     );
