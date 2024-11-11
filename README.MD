@@ -20,37 +20,36 @@ The program has been tested on:
 * Ubuntu 20
 * MacOS X 10 
 
+### Simulation
+
+The simulation code is written in **C# 8**. **.NET 8.0** is requred. We recommend installation using *Conda*:
+```
+conda install -c conda-forge dotnet git-lfs
+``` 
+
+### Data analysis
+
+The analysis code is written in **Python 3.11**. The following packages are required (either from *Conda* or *Pip*):
+```
+conda install -c conda-forge -c bioconda biopython matplotlib numpy pandas seaborn pillow lifelines
+```
+
 ### Gene Data
 
-The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so in order for SimChA to work, you will need to download Git LFS (https://git-lfs.com/) and once you have install Git LFS, inside the repo, run:
+The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so in order for SimChA to work, in the root directory of the project, run:
 ```
 git lfs pull
 ```
 
 ### Somatic Nucleotide Variants (SNVs)
 
-SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run as follows:
+SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run from the root directory of the project as follows:
 
 ```
-chmod +x DownloadRefData.sh && ./DownloadRefData.sh
+chmod +x scripts/DownloadRefData.sh && ./scripts/DownloadRefData.sh
 ```
 
 Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
-
-
-### Simulation
-
-The simulation code is written in **C# 8**. **.NET 6.1** is requred. We recommend installation using *Conda*:
-```
-conda install -c conda-forge dotnet
-``` 
-
-### Data analysis
-
-The analysis code is written in **Python 3.8**. The following packages are required (either from *Conda* or *Pip*):
-```
-conda install -c conda-forge -c bioconda biopython matplotlib numpy pandas seaborn pillow lifelines
-```
 
 ## Execution
 
