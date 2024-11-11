@@ -38,9 +38,9 @@ public class Evolver
         }
         Counter = 1;
         EventPars = sample.EventPars;
-        var (root, childLoopUp) = CloneComp.CreateLookUp(sample.Clones);
+        var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        ApplyEvolutionRec(sample, root, childLoopUp, 1);
+        ApplyEvolutionRec(sample, root, childLookUp, 1);
     }
 
     private bool DidMutate()
@@ -184,8 +184,9 @@ public class Evolver
         return currentEvents;
     }
 
-    private void ApplyEvolutionRec(Sample sample, CloneIn node, IReadOnlyDictionary<int, 
-        List<CloneIn>> clones, int eventCount)
+    private void ApplyEvolutionRec(Sample sample, CloneIn node, 
+        IReadOnlyDictionary<string, List<CloneIn>> clones, 
+        int eventCount)
     {
         foreach (var child in clones[node.CloneId])
         {

@@ -48,7 +48,7 @@ switch (execMode)
         Console.WriteLine("Evolving individual samples forward:");
         samples = evoParams.EvolveInTime
             ? Converters.MakeBlankSamples(rnd, options.Repeats, sigs, simParams.Sex, simParams.AutosomesOnly)
-            : Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, sigs, simParams.Sex, simParams.AutosomesOnly);
+            : Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, sigs, simParams.Sex, simParams.AutosomesOnly);
         var evolver = new Evolver(rnd, genRef, fitParams, evoParams, files);
         samples.ForEach(evolver.EvolveSample);
         break;

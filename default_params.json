@@ -2,7 +2,7 @@
 	"Seed": -1,
 	"Sex": "None",
   "AutosomesOnly": false,
-	"EventCount": 75,
+	"EventCountMean": 75,
 	"EventDist": "Exponential",
 	"Fitness": {
 	  "Stress": 0.9619,

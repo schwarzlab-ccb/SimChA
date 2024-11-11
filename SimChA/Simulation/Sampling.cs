@@ -64,20 +64,11 @@ public static class Sampling
         };
     }
 
-    public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean = 1)
-    {   
-        return dist switch
-        {
-            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
-            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
-            _ => 1
-        };
-    }
-
     public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean)
     {
         return dist switch
         {
+            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
             DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
             DataTypes.Distribution.Unit => (int)mean,
             _ =>1
