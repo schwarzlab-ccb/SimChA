@@ -245,7 +245,60 @@ public static class Parsers
         return geneList;
     }
 
-    public static List<CloneIn> ParseClones(TextReader cloneStream, bool parseFitness, string sep)
+    public static List<CloneIn> ParseClonesWithRates(
+        TextReader cloneStream, bool parseFitness, string sep, Random rnd, Distribution dist
+    )
+    {
+        const string idKey = "ID";
+        const string parentIDKey = "ParentID";
+        const string distanceKey = "Distance";
+        const string fitnessKey = "Fitness";
+
+        string? firstLine = cloneStream.ReadLine() ?? throw new Exception("CloneIn file is empty.");
+        var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
+        var columns = new Dictionary<string, int> { { idKey, -1 }, { parentIDKey, -1 }, { distanceKey, -1 } };
+        if (parseFitness)
+        {
+            columns.Add(fitnessKey, -1);
+        }
+
+        foreach (var column in columns)
+        {
+            int idx = header.IndexOf(column.Key);
+            if (idx == -1) throw new Exception($"CloneIn file does not contain {column.Key} column.");
+            columns[column.Key] = idx;
+        }
+        
+        var clones = new List<CloneIn>();
+        while (cloneStream.ReadLine() is { } line)
+        {
+            var lineSplit = line.Split(sep).Select(s => s.Trim()).ToList();
+            var id = lineSplit[columns[idKey]];
+            var parentId = lineSplit[columns[parentIDKey]];
+            var rate = double.Parse(lineSplit[columns[distanceKey]], CultureInfo.InvariantCulture.NumberFormat);
+            bool validRate = dist switch
+            {
+                Distribution.Geometric => rate > 0 && rate <= 1,
+                Distribution.Poisson => rate >= 0,
+                _ => throw new Exception($"Invalid distribution used {dist} for rates."),
+            };
+            if (!validRate)
+            {
+                throw new Exception($"Invalid rate {rate} for distribution {dist}.");
+            }
+            int distance = Sampling.SampleDistInt(rnd, dist, rate);
+            double fitness = parseFitness
+                ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
+                : -1.0;
+            var clone = new CloneIn(id, parentId, distance, fitness);
+            clones.Add(clone);
+        }
+        return clones;
+    }
+
+    public static List<CloneIn> ParseClonesWithEvents(
+        TextReader cloneStream, bool parseFitness, string sep
+    )
     {
         const string idKey = "ID";
         const string parentIDKey = "ParentID";
@@ -267,20 +320,20 @@ public static class Parsers
             columns[column.Key] = idx;
         }
 
-        var cloneFitness = new List<CloneIn>();
+        var clones = new List<CloneIn>();
         while (cloneStream.ReadLine() is { } line)
         {
             var lineSplit = line.Split(sep).Select(s => s.Trim()).ToList();
-            int id = int.Parse(lineSplit[columns[idKey]]);
-            int parentId = int.Parse(lineSplit[columns[parentIDKey]]);
+            string id = lineSplit[columns[idKey]];
+            string parentId = lineSplit[columns[parentIDKey]];
             int distance = int.Parse(lineSplit[columns[distanceKey]]);
             double fitness = parseFitness
                 ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
                 : -1.0;
             var clone = new CloneIn(id, parentId, distance, fitness);
-            cloneFitness.Add(clone);
+            clones.Add(clone);
         }
-        return cloneFitness;
+        return clones;
     }
 
     public static List<(double fitness, int eventCount)> ParseClones(TextReader fitnessStream, FitnessParams fParams)

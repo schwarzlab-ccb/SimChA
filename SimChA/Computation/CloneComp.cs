@@ -6,14 +6,14 @@ namespace SimChA.Computation;
 
 public static class CloneComp
 {
-    public static (CloneIn root, Dictionary<int, List<CloneIn>> lookUp) CreateLookUp(List<CloneIn> clones)
+    public static (CloneIn root, Dictionary<string, List<CloneIn>> lookUp) CreateLookUp(List<CloneIn> clones)
     {
         CloneIn? root = null;
-        var childLookUp = new Dictionary<int, List<CloneIn>>();
+        var childLookUp = new Dictionary<string, List<CloneIn>>();
         foreach (var clone in clones)
         {
-            int parentId = clone.ParentId;
-            if (parentId == -1 || parentId == clone.CloneId)
+            var parentId = clone.ParentId;
+            if (parentId == "-1" || parentId == clone.CloneId)
             {
                 root = clone;
                 parentId = clone.CloneId;

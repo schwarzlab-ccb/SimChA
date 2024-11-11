@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using System.Text;
 using SimChA.EventData;
 using SimChA.Simulation;
 
@@ -11,9 +12,9 @@ public class Sample
     public SexEnum Sex { get; }
     public List<CloneIn> Clones { get; }
     public List<CNEventPars> EventPars { get;  }
-    public Dictionary<int, Karyotype> Kars { get; }
-    public Dictionary<int, List<CNEventDesc>> EventDescs { get; }
-    public Dictionary<int, CloneStat> Stats { get; }
+    public Dictionary<string, Karyotype> Kars { get; }
+    public Dictionary<string, List<CNEventDesc>> EventDescs { get; }
+    public Dictionary<string, CloneStat> Stats { get; }
     public Dictionary<string, double> Mixture { get; }
     
     public Sample(string sampleId, SexEnum sex, List<CloneIn> clones, List<CNEventPars> eventPars, Dictionary<string, double> mixture)
@@ -23,9 +24,9 @@ public class Sample
         Clones = clones;
         EventPars = eventPars;
         Mixture = mixture;
-        Kars = new Dictionary<int, Karyotype>();
-        EventDescs = new Dictionary<int, List<CNEventDesc>>();
-        Stats = new Dictionary<int, CloneStat>();
+        Kars = new Dictionary<string, Karyotype>();
+        EventDescs = new Dictionary<string, List<CNEventDesc>>();
+        Stats = new Dictionary<string, CloneStat>();
     }
     
     public static string Header() => "sample_id\tsex\tclone_count\tmixture";
@@ -34,4 +35,15 @@ public class Sample
                              $"{Sex}\t" +
                              $"{Clones.Count}\t" +
                              $"{MixtureString()}";
+
+    public static string HeaderAsTree() => "ID\tParentID\tDistance";
+    public string ToTSVAsTree()
+    {
+        var sb = new StringBuilder();
+        foreach (var clone in Clones)
+        {
+            sb.AppendLine($"{clone.CloneId}\t{clone.ParentId}\t{clone.Distance}");
+        }
+        return sb.ToString();
+    }
 }

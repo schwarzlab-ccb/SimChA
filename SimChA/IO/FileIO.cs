@@ -5,6 +5,7 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using System.Text;
+using CommandLine;
 
 namespace SimChA.IO;
 
@@ -29,8 +30,9 @@ public class FileIO
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
-    private const string FASTA_FILENAME = "genome.fa";
+    //private const string FASTA_FILENAME = "genome.fa";
     private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
+    private const string TREE_FILENAME = "tree.tsv";
 
     
     private string Timestamp { get; }
@@ -60,6 +62,18 @@ public class FileIO
         }
     }
     
+    public void WriteTree(IEnumerable<Sample> samples)
+    {
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), TREE_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var outputFile = new StreamWriter(outPath);
+        outputFile.WriteLine(Sample.HeaderAsTree());
+        foreach (var sample in samples)
+        {
+            outputFile.WriteLine(sample.ToTSVAsTree());
+        }
+    }
+    
     public void WriteConsistentCNs(GenRef genRef, IList<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CONSISTENT_CNS_FILENAME);
@@ -76,7 +90,7 @@ public class FileIO
             {
                 var kar = sample.Kars[clone.CloneId];
                 var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, kar, segs, sample.Sex, true);
-                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                string name = sample.Clones.Count > 1 ? $"{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
@@ -94,7 +108,7 @@ public class FileIO
             foreach (var clone in sample.Clones)
             {
                 var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Kars[clone.CloneId], sample.Sex);
-                string name = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.CloneId}" : $"{sample.SampleId}";
+                string name = sample.Clones.Count > 1 ? $"{clone.CloneId}" : $"{sample.SampleId}";
                 outputFile.WriteLine(CopyNumbers.ToTSV(cns, name, false));
             }
         }
@@ -132,7 +146,7 @@ public class FileIO
         {
             foreach (var kar in sample.Kars)
             {
-                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{kar.Key}" : $"{sample.SampleId}";
+                string sampleName = sample.Clones.Count > 1 ? $"{kar.Key}" : $"{sample.SampleId}";
                 outputFile.WriteLine($"{sampleName}\t{kar.Value}");
             }
         }
@@ -150,7 +164,7 @@ public class FileIO
             {
                 foreach (var cnEvent in clone.Value)
                 {   
-                    string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
+                    string sampleName = sample.Clones.Count > 1 ? $"{clone.Key}" : $"{sample.SampleId}";
                     outputFile.WriteLine($"{sampleName}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
                                          $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
                 }
@@ -206,7 +220,7 @@ public class FileIO
             foreach (var clone in sample.EventDescs)
             {
                 var kar = sample.Kars[clone.Key];
-                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{clone.Key}" : $"{sample.SampleId}";
+                string sampleName = sample.Clones.Count > 1 ? $"{clone.Key}" : $"{sample.SampleId}";
                 var finalSNVs = kar.GetFinalSNVs();
 
                 foreach (var snv in finalSNVs)
@@ -228,9 +242,6 @@ public class FileIO
 
     public void WriteFasta(GenRef genRef, IEnumerable<Sample> samples)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FASTA_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
         // TODO: Do we want WriteFasta to work with multiple samples? Currently only set up for single samples
         var count = 0;
         if (genRef.GenContentsDict == null)
@@ -239,9 +250,12 @@ public class FileIO
         }
         foreach (var sample in samples)
         {
-            foreach (var clone in sample.EventDescs)
+            foreach (var clone in sample.Clones)
             {
-                var kar = sample.Kars[clone.Key];
+                string outPath = Path.Combine(Path.GetFullPath(OutFolder), $"{clone.CloneId}_genome.fa");
+                Console.WriteLine($"Writing to file {outPath}");
+                using var outputFile = new StreamWriter(outPath);
+                var kar = sample.Kars[clone.CloneId];
 
                 foreach (var contigId in kar.ContigIds())
                 {
@@ -258,7 +272,7 @@ public class FileIO
                             foreach (var snv in region.SNVDict)
                             {
                                 var loc = snv.Key - start;
-                                regionSeq[(int)(snv.Key-start)] = snv.Value.ToString()[0];
+                                regionSeq[(int)loc] = snv.Value.ToString()[0];
                             }
                         }
                         if (!region.Forward)
@@ -288,14 +302,13 @@ public class FileIO
         {
             foreach (var stats in sample.Stats)
             {
-                string sampleName = sample.Clones.Count > 1 ? $"{sample.SampleId}_{stats.Key}" : $"{sample.SampleId}";
+                string sampleName = sample.Clones.Count > 1 ? $"{stats.Key}" : $"{sample.SampleId}";
                 var clone = stats.Value;
                 file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.FitnessTarget}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
             }
         }
     }
-
-    public static List<CloneIn> ReadClones(string filePath, bool parseFitness)
+    public static List<CloneIn> ReadClonesWithRates(string filePath, bool parseFitness, Random rnd, Distribution dist)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         string fileFormat = filePath.Substring(filePath.Length - 3);
@@ -311,7 +324,31 @@ public class FileIO
         try
         {
             var cloneFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClones(cloneFile, parseFitness, separator);
+            return Parsers.ParseClonesWithRates(cloneFile, parseFitness, separator, rnd, dist);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
+
+    public static List<CloneIn> ReadClonesWithEvents(string filePath, bool parseFitness)
+    {
+        string fileFullPath = Path.GetFullPath(filePath);
+        string fileFormat = filePath.Substring(filePath.Length - 3);
+        if (fileFormat != "tsv" && fileFormat != "csv")
+        {
+            throw new Exception($"File {filePath} should be a tsv or csv.");
+        }
+        string separator = fileFormat == "tsv" ? "\t" : ",";
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var cloneFile = new StreamReader(fileFullPath);
+            return Parsers.ParseClonesWithEvents(cloneFile, parseFitness, separator);
         }
         catch (Exception e)
         {

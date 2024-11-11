@@ -67,7 +67,9 @@ switch (execMode)
         var treeSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
         Validators.ValidateSignatures(treeSigs);
         Console.WriteLine("Computing mutations for tree:");
-        var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
+        var inClones = options.SampleEventCounts
+            ? FileIO.ReadClonesWithRates(options.CloneTreeFile, options.UseMCMC, rnd, simParams.EventDist)
+            : FileIO.ReadClonesWithEvents(options.CloneTreeFile, options.UseMCMC);
         var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
         var sex = simParams.AutosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, simParams.Sex);
@@ -88,24 +90,24 @@ switch (execMode)
                 var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, simParams.AutosomesOnly);
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
                 var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, fitnessList);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, fitnessList);
             }
             else if (options.EventCounts != "" && simParams.MCParams != null && !simParams.MCParams.MatchFitness)
             {
                 var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly);
             }
             else
             {
                 var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
-                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget);
             }
         }
         else
         {
             var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
             var eventCounts = options.EventCounts != "" ? FileIO.ReadEventCounts(options.EventCounts) : new Dictionary<string, int>();
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget, eventCounts);
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget, eventCounts);
         }
 
         samples.ForEach(simulator.SampleEvents);
@@ -147,6 +149,10 @@ try
     if (options.CalcConsistentCNs)
     {
         files.WriteConsistentCNs(genRef, samples);
+    }
+    if (ExecMode.Tree == execMode)
+    {
+        files.WriteTree(samples);
     }
     files.WriteClones(samples);
     files.WriteKaryotypes(samples);
