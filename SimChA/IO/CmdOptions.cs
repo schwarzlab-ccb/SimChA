@@ -43,11 +43,17 @@ public class CmdOptions
     public bool FitnessLandscape { get; set; }
     [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]
     public bool SampleEventCounts { get; set; }
+    [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
+    public bool EvolutionMode { get; set; }
 
     public ExecMode ExecMode
     {
         get
         {
+            if (EvolutionMode)
+            {
+                return ExecMode.Evolution;
+            }
             if (CloneTreeFile != "" && CNProfiles != "")
             {
                 throw new Exception("Cannot run both tree and profiles at the same time.");
@@ -62,6 +68,10 @@ public class CmdOptions
             }
             if (CNProfiles != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run profiles with repeats.");
+                }
                 return ExecMode.Profiles;
             }
             return ExecMode.Repeats;

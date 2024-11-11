@@ -8,4 +8,5 @@ public enum ExecMode
     Tree,
     Repeats,
     Profiles,
+    Evolution
 }

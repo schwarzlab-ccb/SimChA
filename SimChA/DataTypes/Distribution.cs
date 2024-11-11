@@ -5,4 +5,4 @@ using System.Text.Json.Serialization;
 namespace SimChA.DataTypes;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum Distribution { Uniform, Exponential, Normal, Poisson, Geometric }
+public enum Distribution { Uniform, Exponential, Normal, Unit, Poisson, Geometric }

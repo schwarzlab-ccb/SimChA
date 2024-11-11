@@ -67,8 +67,12 @@ public static class Parsers
         return result;
     }
 
-    private static SexEnum GetSexFromProfile(IReadOnlyDictionary<string, bool> present)
+    private static SexEnum GetSexFromProfile(IReadOnlyDictionary<string, bool> present, bool autosomesOnly)
     {
+        if (autosomesOnly)
+        {
+            return SexEnum.None;
+        }
         if (present["chrY"])
         {
             return SexEnum.Male;
@@ -91,7 +95,7 @@ public static class Parsers
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
         var chrList = autosomesOnly ? genRef.ChrIDsForAutosomes() : genRef.AllChrs;
-        var present = genRef.AllChrs.ToDictionary(c => c, _ => false);
+        var present = chrList.ToDictionary(c => c, _ => false);
         
         string lastSample = "";
         string lastChr = chrList.First();
@@ -123,7 +127,7 @@ public static class Parsers
                         regionsB.Add(new Region(range.Start, range.End, range.ChrNo, false));
                     }
                     var newContigs = new List<Contig> { new(regionsA), new(regionsB) };
-                    var thisKar = new Karyotype(newContigs, missingRanges, genRef.Centromeres, GetSexFromProfile(present));
+                    var thisKar = new Karyotype(newContigs, missingRanges, genRef.Centromeres, GetSexFromProfile(present, autosomesOnly));
                     result[lastSample] = thisKar;
                 }
                 // Reset
@@ -213,7 +217,7 @@ public static class Parsers
 
         // Add the last sample
         var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
-        var kar = new Karyotype(newRegs, missingRanges, genRef.Centromeres, GetSexFromProfile(present));
+        var kar = new Karyotype(newRegs, missingRanges, genRef.Centromeres, GetSexFromProfile(present, autosomesOnly));
         result[lastSample] = kar;
         return result;
     }

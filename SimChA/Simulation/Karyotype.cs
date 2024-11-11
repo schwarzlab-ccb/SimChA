@@ -46,7 +46,7 @@ public class Karyotype
         => _contigs.Count(c => c.Any());
     
     public long GenomeLen()
-        => _contigs.Sum(c => c.Length());
+        => _contigs.Sum(c => c.Length());// - MissingLen();
     
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
@@ -76,7 +76,7 @@ public class Karyotype
     
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
-    
+    // TODO: Why do you need to check if the contigId is less than the count of contigs?
     public List<(long start, long end)> GetCentromeres(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres(Centromeres) : new List<(long, long)>();
     

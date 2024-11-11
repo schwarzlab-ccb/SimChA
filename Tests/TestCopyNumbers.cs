@@ -36,6 +36,31 @@ public class TestCopyNumbers
     }
 
     [Test]
+    public void TestCalcPloidyFitness([Values] SexEnum sex)
+    {
+        _kar = new Karyotype(_genRef, sex);
+        double ploidyRef = CNProfile.CalcPloidy(_kar, _genRef);
+        Assert.AreEqual(2, ploidyRef);
+    }
+
+    [Test]
+    public void TestCalcPloidyTetraploid([Values] SexEnum sex)
+    {
+        _kar = new Karyotype(_genRef, sex);
+        _kar.ApplyWGD();
+        if (sex == SexEnum.None)
+        {
+            Assert.AreEqual(88, _kar.CountContigs());
+        }
+        else
+        {
+            Assert.AreEqual(92, _kar.CountContigs());
+        }
+        double tetraploidy = CNProfile.CalcPloidy(_kar, _genRef);
+        Assert.AreEqual(4, tetraploidy);
+    }
+
+    [Test]
     public void TestCalcAutosomeCNs([Values] SexEnum sex)
     {
         var genRef = FileIO.GetGenRef(TestIO.HG_19_PATH, false);
