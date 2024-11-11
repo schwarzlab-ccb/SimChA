@@ -9,6 +9,12 @@ work/
 # Output files (anywhere)
 out*/
 results*
+img/
+temp*/
+test/
+scratch/
+*.code-workspace
+*.ipynb
 
 # Compiled python
 *.so
