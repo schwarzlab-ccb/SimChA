@@ -4,8 +4,8 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - dotnet>=6.0.201,<7
-  - python>=3.8
+  - dotnet
+  - python>=3.10
   - pandas
   - numpy
   - seaborn
