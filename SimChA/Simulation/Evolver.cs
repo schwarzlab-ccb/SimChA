@@ -73,7 +73,7 @@ public class Evolver
         return kar.UpdateFitness(GenRef, FitnessParams);
     }
 
-    private int GetEventCount()
+    private int GetEventCount(Karyotype kar)
     {
         int nEvents;
         if (EvoParams.EventBlock)
@@ -82,7 +82,10 @@ public class Evolver
             {
                 throw new Exception("Invalid distribution for event block.");
             }
-            nEvents = Sampling.SampleDistInt(Rnd, EvoParams.StepDistribution, EvoParams.MutationRate);
+            var mu = EvoParams.DynamicProb 
+                ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef)/2.0
+                : EvoParams.MutationRate;
+            nEvents = Sampling.SampleDistInt(Rnd, EvoParams.StepDistribution, mu);
         }
         else
         {
@@ -97,23 +100,18 @@ public class Evolver
         var factor = CNProfile.CalcPloidy(kar, GenRef)/2.0;
         foreach (var e in pars)
         {
-            var newProb = e.Prob;
-            switch (e.Type)
+            var newProb = e.Type switch
             {
-                case CNEventType.ChromDeletion:
-                case CNEventType.TailDeletion:
-                case CNEventType.ArmDeletion:
-                    newProb = Math.Max(0, e.Prob * factor);
-                    break;
-                case CNEventType.ChromDuplication:
-                case CNEventType.TailDuplication:
-                case CNEventType.ArmDuplication:
-                    newProb = Math.Max(0, e.Prob / factor);
-                    break;
-                default:
-                    newProb = e.Prob;
-                    break;
-            }
+                CNEventType.ChromDeletion 
+                or CNEventType.TailDeletion 
+                or CNEventType.ArmDeletion 
+                    => Math.Max(0, e.Prob * factor),
+                CNEventType.ChromDuplication 
+                or CNEventType.TailDuplication 
+                or CNEventType.ArmDuplication 
+                    => Math.Max(0, e.Prob / factor),
+                _ => e.Prob,
+            };
             newPars[newPars.IndexOf(e)] = e with { Prob = newProb };
         }
         return newPars;
@@ -122,15 +120,17 @@ public class Evolver
     private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int eventsLeft = 1_000_000)
     {
         // Want to sample a number of events.
-        int nEvents = GetEventCount();
+        int nEvents = GetEventCount(kar);
         nEvents = Math.Min(nEvents, eventsLeft);
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
         for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
         {
-            var pars = EvoParams.DynamicProb 
+            /*var pars = EvoParams.DynamicProb 
                 ? GetModifiedEventPars(sample.EventPars, kar)
                 : sample.EventPars;
+            */
+            var pars = sample.EventPars;
             var cnEventP = Rnd.PickRndElem(pars);
             var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
             if (eventData != null)
