@@ -199,7 +199,7 @@ public class Evolver
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvents = GetNewEvents(sample, new Karyotype(kar), mutCount - currentEvents.Count);
+            var newEvents = GetNewEvents(sample, new Karyotype(kar), nSteps - currentEvents.Count);
             if (newEvents.Count == 0)
             {
                 continue;
