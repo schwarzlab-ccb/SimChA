@@ -198,11 +198,11 @@ public class Evolver
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
         
-        var nSteps = GetNumSteps(EvoParams.NumIterations, kar);
+        var nSteps = GetNumSteps(mutCount, kar);
         int i = 0;
         for (; i < nSteps; i++)
         {
-            Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}/{mutCount}.".PadRight(80));
+            Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations};".PadRight(80));
             // Generate a new event and correspondingly add to list
             var newEvents = GetNewEvents(sample, new Karyotype(kar), mutCount - currentEvents.Count);
             if (newEvents.Count == 0)
