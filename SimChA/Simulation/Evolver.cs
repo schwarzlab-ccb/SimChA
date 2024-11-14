@@ -102,13 +102,8 @@ public class Evolver
             var newProb = e.Type switch
             {
                 CNEventType.ChromDeletion 
-                or CNEventType.TailDeletion 
                 or CNEventType.ArmDeletion 
                     => Math.Max(0, e.Prob * factor),
-                CNEventType.ChromDuplication 
-                or CNEventType.TailDuplication 
-                or CNEventType.ArmDuplication 
-                    => Math.Max(0, e.Prob / factor),
                 _ => e.Prob,
             };
             newPars[newPars.IndexOf(e)] = e with { Prob = newProb };
