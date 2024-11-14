@@ -195,7 +195,7 @@ public class Evolver
         
         var nSteps = GetNumSteps(mutCount, kar);
         int i = 0;
-        for (; i < nSteps; i++)
+        for (; i < nSteps && i < EvoParams.MaxTries; i++)
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
             // Generate a new event and correspondingly add to list
