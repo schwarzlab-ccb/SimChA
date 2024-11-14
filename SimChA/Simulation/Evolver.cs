@@ -43,9 +43,8 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLookUp, 1);
     }
 
-    private bool DidMutate()
-        => EvoParams.MutationRate <= 0 
-        || Rnd.NextDouble() < 1 - Math.Exp(-EvoParams.MutationRate);
+    private bool DidMutate(double mean)
+        => Rnd.NextDouble() < 1 - Math.Exp(-mean);
 
     private double CalculateLogAcceptance(double newFitness, double oldFitness, double temperature)
     {
@@ -76,20 +75,20 @@ public class Evolver
     private int GetEventCount(Karyotype kar)
     {
         int nEvents;
+        var mu = EvoParams.DynamicMutRate
+                ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
+                : EvoParams.MutationRate;
         if (EvoParams.EventBlock)
         {
             if (EvoParams.StepDistribution != Distribution.Poisson)
             {
                 throw new Exception("Invalid distribution for event block.");
             }
-            var mu = EvoParams.DynamicMutRate
-                ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef)/2.0
-                : EvoParams.MutationRate;
             nEvents = Sampling.SampleDistInt(Rnd, EvoParams.StepDistribution, mu);
         }
         else
         {
-            nEvents = DidMutate() ? 1 : 0;
+            nEvents = DidMutate(mu) ? 1 : 0;
         }
         return nEvents;
     }
@@ -126,7 +125,7 @@ public class Evolver
         int iTries = 0;
         for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
         {
-            var pars = EvoParams.EventCost 
+            var pars = EvoParams.EventCost
                 ? GetModifiedEventPars(sample.EventPars, kar)
                 : sample.EventPars;
             
@@ -183,7 +182,11 @@ public class Evolver
 
     private int GetNumSteps(int baseNum, Karyotype kar)
     {
-        var n = baseNum * EvoParams.MutationRate;
+        if (EvoParams.MutationRate < 0)
+        {
+            throw new Exception("Mutation rate must be positive.");
+        }
+        var n = baseNum / EvoParams.MutationRate;
         return EvoParams.DynamicMutRate
             ? (int)Math.Round(n * CNProfile.CalcPloidy(kar, GenRef) / 2.0)
             : (int)Math.Round(n);
@@ -263,6 +266,17 @@ public class Evolver
                 var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit, newFitness);
                 childEvs.Add(abberation);
                 oldFitness = newFitness;
+            }
+            // The sample's clone should have its distance updated
+            var cloneIndex = sample.Clones.FindIndex(c => c.CloneId == child.CloneId);
+            if (cloneIndex != -1)
+            {
+                var updatedClone = sample.Clones[cloneIndex] with { Distance = eventCount + bestEvents.Count };
+                sample.Clones[cloneIndex] = updatedClone;
+            }
+            else
+            {
+                throw new Exception("Error in Evolver.ApplyEvolutionRec: Clone not found in sample.");
             }
 
             Counter++;
