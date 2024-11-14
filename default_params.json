@@ -170,6 +170,7 @@
     "Temperature": 1,
     "CoolingRate": 0.01,
     "MaxTries": 20,
-    "DynamicProb": true
+    "EventCost": true,
+    "DynamicMutRate": true
   }
 }

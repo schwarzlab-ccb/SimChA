@@ -82,7 +82,7 @@ public class Evolver
             {
                 throw new Exception("Invalid distribution for event block.");
             }
-            var mu = EvoParams.DynamicProb 
+            var mu = EvoParams.DynamicMutRate
                 ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef)/2.0
                 : EvoParams.MutationRate;
             nEvents = Sampling.SampleDistInt(Rnd, EvoParams.StepDistribution, mu);
@@ -126,11 +126,10 @@ public class Evolver
         int iTries = 0;
         for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
         {
-            /*var pars = EvoParams.DynamicProb 
+            var pars = EvoParams.EventCost 
                 ? GetModifiedEventPars(sample.EventPars, kar)
                 : sample.EventPars;
-            */
-            var pars = sample.EventPars;
+            
             var cnEventP = Rnd.PickRndElem(pars);
             var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
             if (eventData != null)
@@ -187,7 +186,6 @@ public class Evolver
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
-        //var bestFitness = currentFitness;
 
         for (int i = 0; i < EvoParams.NumIterations && currentEvents.Count < mutCount; i++)
         {
