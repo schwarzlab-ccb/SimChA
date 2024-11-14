@@ -32,7 +32,7 @@ public class Evolver
 
     public void EvolveSample(Sample sample)
     {
-        if (sample.EventPars == null || !sample.EventPars.Any())
+        if (sample.EventPars == null || sample.EventPars.Count == 0)
         {
             throw new Exception("No events to sample from.");
         }
@@ -181,13 +181,23 @@ public class Evolver
         return currentEvents;
     }
 
+    private int GetNumSteps(int baseNum, Karyotype kar)
+    {
+        var n = baseNum * EvoParams.MutationRate;
+        return EvoParams.DynamicMutRate
+            ? (int)Math.Round(n * CNProfile.CalcPloidy(kar, GenRef) / 2.0)
+            : (int)Math.Round(n);
+    }
+
     private List<BaseEventData> EvolveInEvents(Sample sample, Karyotype kar, int mutCount)
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
-
-        for (int i = 0; i < EvoParams.NumIterations && currentEvents.Count < mutCount; i++)
+        
+        var nSteps = GetNumSteps(EvoParams.NumIterations, kar);
+        int i = 0;
+        for (; i < nSteps; i++)
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}/{mutCount}.".PadRight(80));
             // Generate a new event and correspondingly add to list
@@ -207,9 +217,19 @@ public class Evolver
                     ev.ApplyEvent(kar);
                 }
                 kar.UpdateFitness(GenRef, FitnessParams);
+                // Update the number of mutational events
+                if (EvoParams.DynamicMutRate)
+                {
+                    nSteps = GetNumSteps(EvoParams.NumIterations, kar);
+                }
             }
             currentTemp *= EvoParams.CoolingRate;
         }
+        if (i == EvoParams.NumIterations)
+        {
+            Console.WriteLine("Warning: Did not reach the desired number of events.");
+        }
+
         return currentEvents;
     }
 
