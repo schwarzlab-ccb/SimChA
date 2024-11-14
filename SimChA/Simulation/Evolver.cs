@@ -218,14 +218,10 @@ public class Evolver
                 // Update the number of mutational events
                 if (EvoParams.DynamicMutRate)
                 {
-                    nSteps = GetNumSteps(EvoParams.NumIterations, kar);
+                    nSteps = GetNumSteps(mutCount, kar);
                 }
             }
             currentTemp *= EvoParams.CoolingRate;
-        }
-        if (i == EvoParams.NumIterations)
-        {
-            Console.WriteLine("Warning: Did not reach the desired number of events.");
         }
 
         return currentEvents;
