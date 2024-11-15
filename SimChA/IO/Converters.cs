@@ -62,7 +62,7 @@ public static class Converters
         {
             int mutCount = eventCountsList.Count > 0 
                 ? eventCountsList[rnd.Next(eventCountsList.Count)] 
-                : (int) Math.Round(meanDist * Sampling.SampleDist(rnd, distribution));
+                : Sampling.SampleDistance(rnd, distribution, meanDist);
             double fitnessTarget = mcTarget == null 
                 ? -1.0 
                 : Sampling.SampleDist(rnd, mcTarget.Dist) * mcTarget.Mean + 1;
@@ -96,8 +96,7 @@ public static class Converters
             var (fitnessTarget, mutCount) = clonesList[rnd.Next(clonesList.Count)];
             if (mutCount <= 0)
             {
-                double sampledDistance = Sampling.SampleDist(rnd, distribution);
-                mutCount = (int) Math.Round(meanDist * sampledDistance);
+                double sampledDistance = Sampling.SampleDistance(rnd, distribution, meanDist);
             }
             var clone = new CloneIn("diploid", "diploid", mutCount, fitnessTarget); 
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);

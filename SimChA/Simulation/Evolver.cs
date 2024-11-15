@@ -97,6 +97,7 @@ public class Evolver
     {
         var newPars = new List<CNEventPars>(pars);
         var factor = CNProfile.CalcPloidy(kar, GenRef)/2.0;
+        var totalWeight = 0.0;
         foreach (var e in pars)
         {
             var newProb = e.Type switch
@@ -106,7 +107,13 @@ public class Evolver
                     => Math.Max(0, e.Prob * factor),
                 _ => e.Prob,
             };
+            totalWeight += newProb;
             newPars[newPars.IndexOf(e)] = e with { Prob = newProb };
+        }
+        
+        for (int i = 0; i < newPars.Count; i++)
+        {
+            newPars[i] = newPars[i] with { Prob = newPars[i].Prob / totalWeight };
         }
         return newPars;
     }
@@ -115,6 +122,10 @@ public class Evolver
     {
         // Want to sample a number of events.
         int nEvents = GetEventCount(kar);
+        if (nEvents == 0)
+        {
+            return new List<BaseEventData>();
+        }
         nEvents = Math.Min(nEvents, eventsLeft);
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
