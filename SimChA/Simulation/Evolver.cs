@@ -110,15 +110,16 @@ public class Evolver
             totalWeight += newProb;
             newPars[newPars.IndexOf(e)] = e with { Prob = newProb };
         }
-        
+        var w = 0.0;
         for (int i = 0; i < newPars.Count; i++)
         {
             newPars[i] = newPars[i] with { Prob = newPars[i].Prob / totalWeight };
+            w += newPars[i].Prob;
         }
         return newPars;
     }
 
-    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int eventsLeft = 1_000_000)
+    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar)
     {
         // Want to sample a number of events.
         int nEvents = GetEventCount(kar);
@@ -126,15 +127,13 @@ public class Evolver
         {
             return new List<BaseEventData>();
         }
-        nEvents = Math.Min(nEvents, eventsLeft);
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
-        for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
-        {
-            var pars = EvoParams.EventCost
+        var pars = EvoParams.EventCost
                 ? GetModifiedEventPars(sample.EventPars, kar)
                 : sample.EventPars;
-            
+        for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
+        {            
             var cnEventP = Rnd.PickRndElem(pars);
             var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
             if (eventData != null)
@@ -147,10 +146,10 @@ public class Evolver
                 iTries++;
             }
         }
-        if (iTries >= EvoParams.MaxTries)
+        /*if (iTries >= EvoParams.MaxTries)
         {
             throw new Exception("Could not generate new events.");
-        }
+        }*/
         return sampledEvents;
     }
 
@@ -181,7 +180,7 @@ public class Evolver
                 }
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
-            currentTemp *= EvoParams.CoolingRate;
+            currentTemp *= EvoParams.SimulatedAnnealing ? EvoParams.CoolingRate : 1.0;
         }
         return currentEvents;
     }
@@ -192,10 +191,7 @@ public class Evolver
         {
             throw new Exception("Mutation rate must be positive.");
         }
-        var n = baseNum / EvoParams.MutationRate;
-        return EvoParams.DynamicMutRate
-            ? (int)Math.Round(n * CNProfile.CalcPloidy(kar, GenRef) / 2.0)
-            : (int)Math.Round(n);
+        return (int)Math.Round(baseNum/EvoParams.MutationRate);
     }
 
     private List<BaseEventData> EvolveInEvents(Sample sample, Karyotype kar, int mutCount)
@@ -204,13 +200,13 @@ public class Evolver
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
         
-        var nSteps = GetNumSteps(mutCount, kar);
+        var nSteps = mutCount;//GetNumSteps(mutCount, kar);
         int i = 0;
-        for (; i < nSteps && i < EvoParams.MaxTries; i++)
+        for (; i < nSteps; i++)
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvents = GetNewEvents(sample, new Karyotype(kar), nSteps - currentEvents.Count);
+            var newEvents = GetNewEvents(sample, new Karyotype(kar));
             if (newEvents.Count == 0)
             {
                 continue;
@@ -226,13 +222,8 @@ public class Evolver
                     ev.ApplyEvent(kar);
                 }
                 kar.UpdateFitness(GenRef, FitnessParams);
-                // Update the number of mutational events
-                if (EvoParams.DynamicMutRate)
-                {
-                    nSteps = GetNumSteps(mutCount, kar);
-                }
             }
-            currentTemp *= EvoParams.CoolingRate;
+            currentTemp *= EvoParams.SimulatedAnnealing ? EvoParams.CoolingRate : 1.0;
         }
 
         return currentEvents;
