@@ -15,6 +15,7 @@ public class Evolver
     protected readonly GenRef GenRef;
     protected int Counter;
     protected List<CNEventPars>? EventPars = null;
+    
 
     public Evolver(
         Random rnd,
@@ -119,14 +120,8 @@ public class Evolver
         return newPars;
     }
 
-    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar)
+    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int nEvents)
     {
-        // Want to sample a number of events.
-        int nEvents = GetEventCount(kar);
-        if (nEvents == 0)
-        {
-            return new List<BaseEventData>();
-        }
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
         var pars = EvoParams.EventCost
@@ -134,8 +129,7 @@ public class Evolver
                 : sample.EventPars;
         for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
         {            
-            var cnEventP = Rnd.PickRndElem(pars);
-            var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
+            var eventData = GetNewEvent(sample, kar, pars);
             if (eventData != null)
             {
                 sampledEvents.Add(eventData);
@@ -153,6 +147,48 @@ public class Evolver
         return sampledEvents;
     }
 
+    private BaseEventData? GetNewEvent(Sample sample, Karyotype kar, List<CNEventPars> pars)
+    {
+        var cnEventP = Rnd.PickRndElem(pars);
+        return Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
+    }
+
+    private List<BaseEventData> EvolveInContinuousTime(Sample sample, Karyotype kar)
+    {
+        var currentEvents = new List<BaseEventData>();
+        var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
+        var tNow = new List<double>{0.0};
+        while (tNow.Last() < EvoParams.MaxTime)
+        {
+            // Sample the new time for the event
+            var u = Rnd.NextDouble();
+            var tNew = tNow.Last() - Math.Log(u) / EvoParams.MutationRate;
+            if (tNew > EvoParams.MaxTime)
+            {
+                break;
+            }
+            tNow.Add(tNew);
+            // Generate a new event and correspondingly add to list
+            var newEvents = GetNewEvents(sample, new Karyotype(kar), 1);
+            if (newEvents.Count != 1)
+            {
+                continue;
+            }
+            var ev = newEvents[0];
+            var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
+            var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, EvoParams.Temperature);
+            if (acceptProb >= Math.Log(Rnd.NextDouble()))
+            {
+                currentFitness = proposedFitness;
+                currentEvents.Add(ev);
+                ev.ApplyEvent(kar);
+                kar.UpdateFitness(GenRef, FitnessParams);
+            }
+        }
+
+        return currentEvents;
+    }
+
     private List<BaseEventData> EvolveInTime(Sample sample, Karyotype kar)
     {
         var currentEvents = new List<BaseEventData>();
@@ -163,7 +199,9 @@ public class Evolver
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}.".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvents = GetNewEvents(sample, new Karyotype(kar));
+            // Want to sample a number of events.
+            int nEvents = GetEventCount(kar);
+            var newEvents = GetNewEvents(sample, new Karyotype(kar), nEvents);
             if (newEvents.Count == 0)
             {
                 continue;
@@ -206,7 +244,8 @@ public class Evolver
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
             // Generate a new event and correspondingly add to list
-            var newEvents = GetNewEvents(sample, new Karyotype(kar));
+            int nEvents = GetEventCount(kar);
+            var newEvents = GetNewEvents(sample, new Karyotype(kar), nEvents);
             if (newEvents.Count == 0)
             {
                 continue;
