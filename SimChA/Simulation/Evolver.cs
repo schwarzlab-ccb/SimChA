@@ -15,7 +15,7 @@ public class Evolver
     protected readonly GenRef GenRef;
     protected int Counter;
     protected List<CNEventPars>? EventPars = null;
-    
+    protected List<double>? EventTimes = null;
 
     public Evolver(
         Random rnd,
@@ -157,17 +157,17 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-        var tNow = new List<double>{0.0};
-        while (tNow.Last() < EvoParams.MaxTime)
+        EventTimes = new List<double>{0.0};
+        while (EventTimes.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
-            var tNew = tNow.Last() - Math.Log(u) / EvoParams.MutationRate;
+            var tNew = EventTimes.Last() - Math.Log(u) / EvoParams.MutationRate;
             if (tNew > EvoParams.MaxTime)
             {
                 break;
             }
-            tNow.Add(tNew);
+            EventTimes.Add(tNew);
             // Generate a new event and correspondingly add to list
             var newEvents = GetNewEvents(sample, new Karyotype(kar), 1);
             if (newEvents.Count != 1)
@@ -185,7 +185,6 @@ public class Evolver
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
         }
-
         return currentEvents;
     }
 
@@ -295,7 +294,8 @@ public class Evolver
                 eventData.ApplyEvent(dummyKar);
                 double newFitness = dummyKar.UpdateFitness(GenRef, FitnessParams);
                 double dFit = newFitness - oldFitness;
-                var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit, newFitness);
+                var time = EvoParams.EvolveInTime && EventTimes != null ? EventTimes[mutNo+1] : 0;
+                var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit, newFitness, time);
                 childEvs.Add(abberation);
                 oldFitness = newFitness;
             }
