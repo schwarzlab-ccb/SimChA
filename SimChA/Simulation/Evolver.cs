@@ -163,7 +163,10 @@ public class Evolver
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
-            var tNew = timeList.Last() - Math.Log(u) / EvoParams.MutationRate;
+            var mu = EvoParams.DynamicMutRate 
+                ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
+                : EvoParams.MutationRate;
+            var tNew = timeList.Last() - Math.Log(u) / mu;
             if (tNew > EvoParams.MaxTime)
             {
                 break;
@@ -216,6 +219,7 @@ public class Evolver
                 {
                     currentEvents.Add(ev);
                     ev.ApplyEvent(kar);
+                    EventTimes.Add(i);
                 }
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
