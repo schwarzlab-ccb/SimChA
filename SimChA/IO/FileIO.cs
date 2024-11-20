@@ -157,7 +157,7 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("sample_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness");
+        outputFile.WriteLine("sample_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness\ttime");
         foreach (var sample in samples)
         {
             foreach (var clone in sample.EventDescs)
@@ -166,7 +166,7 @@ public class FileIO
                 {   
                     string sampleName = sample.Clones.Count > 1 ? $"{clone.Key}" : $"{sample.SampleId}";
                     outputFile.WriteLine($"{sampleName}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
-                                         $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
+                                         $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}\t{cnEvent.Time:f6}");
                 }
             }
         }

@@ -157,22 +157,23 @@ public class Evolver
     {
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
-        EventTimes = new List<double>{0.0};
-        while (EventTimes.Last() < EvoParams.MaxTime)
+        var timeList = new List<double>{0.0};
+        EventTimes = new List<double>();
+        while (timeList.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
-            var tNew = EventTimes.Last() - Math.Log(u) / EvoParams.MutationRate;
+            var tNew = timeList.Last() - Math.Log(u) / EvoParams.MutationRate;
             if (tNew > EvoParams.MaxTime)
             {
                 break;
             }
-            EventTimes.Add(tNew);
+            timeList.Add(tNew);
             // Generate a new event and correspondingly add to list
             var newEvents = GetNewEvents(sample, new Karyotype(kar), 1);
             if (newEvents.Count != 1)
             {
-                continue;
+                throw new Exception("Continuous time evolution should only sample one event at a time.");
             }
             var ev = newEvents[0];
             var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
@@ -182,6 +183,7 @@ public class Evolver
                 currentFitness = proposedFitness;
                 currentEvents.Add(ev);
                 ev.ApplyEvent(kar);
+                EventTimes.Add(tNew);
                 kar.UpdateFitness(GenRef, FitnessParams);
             }
         }
@@ -193,7 +195,7 @@ public class Evolver
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
-
+        EventTimes = new List<double>();
         for (int i = 0; i < EvoParams.NumIterations; i++)
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}.".PadRight(80));
@@ -282,9 +284,22 @@ public class Evolver
             
             double oldFitness = Fitness.Calculate(childKar, GenRef, FitnessParams);
 
-            var bestEvents = EvoParams.EvolveInTime 
-                ? EvolveInTime(sample, childKar)
-                : EvolveInEvents(sample, childKar, child.Distance);
+            var bestEvents = new List<BaseEventData>();
+            if (EvoParams.EvolveInTime)
+            {
+                if (EvoParams.ContinuousTime)
+                {
+                    bestEvents = EvolveInContinuousTime(sample, childKar);
+                }
+                else
+                {
+                    bestEvents = EvolveInTime(sample, childKar);
+                }
+            }
+            else
+            {
+                bestEvents = EvolveInEvents(sample, childKar, child.Distance);
+            }
             Console.WriteLine("Fetching the sampled events and calculating fitness changes");
             
             for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
@@ -294,7 +309,7 @@ public class Evolver
                 eventData.ApplyEvent(dummyKar);
                 double newFitness = dummyKar.UpdateFitness(GenRef, FitnessParams);
                 double dFit = newFitness - oldFitness;
-                var time = EvoParams.EvolveInTime && EventTimes != null ? EventTimes[mutNo+1] : 0;
+                var time = EvoParams.EvolveInTime && EventTimes != null ? EventTimes[mutNo] : 0;
                 var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit, newFitness, time);
                 childEvs.Add(abberation);
                 oldFitness = newFitness;

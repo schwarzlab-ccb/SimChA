@@ -17,5 +17,6 @@ public record EvoParams(
     int MaxTries, // Maximum number of tries to generate a new set of events in a time step
     bool EventCost, // Flag to turn on and off event parameters being weighted by ploidy
     bool DynamicMutRate, // Flag to turn on and off dynamic mutation rate weighted by ploidy
-    double MaxTime // Maximum time to evolve each clone
+    double MaxTime, // Maximum time to evolve each clone
+    bool ContinuousTime // Flag to turn on and off continuous time evolution
     );
