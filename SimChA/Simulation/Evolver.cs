@@ -199,9 +199,9 @@ public class Evolver
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
         EventTimes = new List<double>();
-        for (int i = 0; i < EvoParams.NumIterations; i++)
+        for (int i = 0; i < EvoParams.MaxTime; i++)
         {
-            Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.NumIterations}; Event Count {currentEvents.Count}.".PadRight(80));
+            Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.MaxTime}; Event Count {currentEvents.Count}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             // Want to sample a number of events.
             int nEvents = GetEventCount(kar);

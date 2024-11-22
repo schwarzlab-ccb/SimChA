@@ -9,7 +9,6 @@ public record EvoParams(
     Distribution StepDistribution, // Distribution of steps (Exponential or Unit for fixed)
     bool EvolveInTime, // Evolve the clone in time
     double MutationRate, // Mutation rate
-    int NumIterations, // Number of true samples
     double ThetaFitness, // exponential multiplier for fitness
     bool SimulatedAnnealing, // Flag to turn on and off simulated annealing of evolution
     double Temperature, // Initial temperature for simulated annealing
