@@ -5,9 +5,9 @@
   "EventCountMean": 75,
   "EventDist": "Exponential",
   "Fitness": {
-    "Stress": 0.5,
-    "TsgOg": 1,
-    "Essentiality": 1,
+    "Stress": 1,
+    "TsgOg": 0,
+    "Essentiality": 0,
     "TotalStrength": 1,
     "Haploinsufficiency": true,
     "NormalizeGenes": true
@@ -62,40 +62,31 @@
           "Prob": 49.2,
           "Size": 2000000,
           "Frag": 0
-        },
-        {
-          "Type": "WholeGenomeDoubling",
-          "Prob": 1
         }
-      ]
+      ] 
     },
-    "SNVs": {
+    "WGD": {
       "Prob": 0,
       "Events": [
-        {
-          "Type": "SNV",
-          "Prob": 100,
-          "Size": 0,
-          "Frag": 0
-        }
+	{
+	  "Type": "WholeGenomeDoubling",
+	  "Prob": 1
+	}
       ]
     }
-  },
-  "MCTarget": {
-    "Mean": 1,
-    "Dist": "Exponential"
   },
   "EvoParams": {
     "WithFitness": true,
     "EvolveInTime": true,
     "EventBlock": false,
     "StepDistribution": "Poisson",
-    "MutationRate": 0.1,
-    "ThetaFitness": 100,
+    "MutationRate": 0.5,
+    "ThetaFitness": 50,
     "MaxTries": 25,
     "DynamicMutRate": false,
-    "EventCost": true,
-    "MaxTime": 1000,
-    "ContinuousTime": true
+    "EventCost": false,
+    "MaxTime": 100,
+    "ContinuousTime": true,
+    "TetraploidStart": true
   }
 }
