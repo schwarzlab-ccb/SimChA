@@ -17,5 +17,6 @@ public record EvoParams(
     bool EventCost, // Flag to turn on and off event parameters being weighted by ploidy
     bool DynamicMutRate, // Flag to turn on and off dynamic mutation rate weighted by ploidy
     double MaxTime, // Maximum time to evolve each clone
-    bool ContinuousTime // Flag to turn on and off continuous time evolution
+    bool ContinuousTime, // Flag to turn on and off continuous time evolution
+    bool TetraploidStart // Flag to start the simulation from a tetraploid state
     );
