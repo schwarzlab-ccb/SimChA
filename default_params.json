@@ -169,6 +169,10 @@
     "SimulatedAnnealing": false,
     "Temperature": 1,
     "CoolingRate": 0.01,
-    "MaxTries": 20
+    "MaxTries": 10000,
+    "EventCost": true,
+    "DynamicMutRate": false,
+    "MaxTime": 1000,
+    "ContinuousTime": true
   }
 }

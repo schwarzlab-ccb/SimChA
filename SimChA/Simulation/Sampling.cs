@@ -64,6 +64,18 @@ public static class Sampling
         };
     }
 
+    public static int SampleDistance(Random rnd, DataTypes.Distribution dist, double mean)
+    {
+        return dist switch
+        {
+            DataTypes.Distribution.Exponential => (int) Math.Round(mean * ExponentialDistribution.Sample(rnd, 1.0)),
+            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Normal => throw new Exception("Normal distribution not supported for distance sampling"),
+            _ => (int) mean
+        };
+    }
+
     public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean)
     {
         return dist switch

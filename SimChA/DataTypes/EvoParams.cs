@@ -9,10 +9,13 @@ public record EvoParams(
     Distribution StepDistribution, // Distribution of steps (Exponential or Unit for fixed)
     bool EvolveInTime, // Evolve the clone in time
     double MutationRate, // Mutation rate
-    int NumIterations, // Number of true samples
     double ThetaFitness, // exponential multiplier for fitness
     bool SimulatedAnnealing, // Flag to turn on and off simulated annealing of evolution
     double Temperature, // Initial temperature for simulated annealing
     double CoolingRate, // Cooling rate for simulated annealing
-    int MaxTries // Maximum number of tries to generate a new set of events in a time step
+    int MaxTries, // Maximum number of tries to generate a new set of events in a time step
+    bool EventCost, // Flag to turn on and off event parameters being weighted by ploidy
+    bool DynamicMutRate, // Flag to turn on and off dynamic mutation rate weighted by ploidy
+    double MaxTime, // Maximum time to evolve each clone
+    bool ContinuousTime // Flag to turn on and off continuous time evolution
     );

@@ -157,7 +157,7 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("sample_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness");
+        outputFile.WriteLine("sample_id\tevent_type\tdepth\tevent_string\tdelta_fitness\ttotal_fitness\ttime");
         foreach (var sample in samples)
         {
             foreach (var clone in sample.EventDescs)
@@ -166,7 +166,7 @@ public class FileIO
                 {   
                     string sampleName = sample.Clones.Count > 1 ? $"{clone.Key}" : $"{sample.SampleId}";
                     outputFile.WriteLine($"{sampleName}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
-                                         $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}");
+                                         $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}\t{cnEvent.Time:f6}");
                 }
             }
         }
@@ -297,14 +297,15 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\tfitness_target\tstress\ttsg\tog\tess");
+        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\tfitness_target\tstress\ttsg\tog\tess\tdist");
         foreach (var sample in samples)
         {
             foreach (var stats in sample.Stats)
             {
                 string sampleName = sample.Clones.Count > 1 ? $"{stats.Key}" : $"{sample.SampleId}";
                 var clone = stats.Value;
-                file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.FitnessTarget}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}");
+                var cloneDist = sample.Clones.First(c => c.CloneId == stats.Key).Distance;
+                file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.FitnessTarget}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}\t{cloneDist}");
             }
         }
     }
