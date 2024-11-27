@@ -5,9 +5,9 @@
   "EventCountMean": 45,
   "EventDist": "Exponential",
   "Fitness": {
-    "Stress": 0.5,
-    "TsgOg": 1,
-    "Essentiality": 1,
+    "Stress": 1,
+    "TsgOg": 0,
+    "Essentiality": 0,
     "TotalStrength": 1,
     "Haploinsufficiency": true,
     "NormalizeGenes": true
@@ -21,17 +21,6 @@
 	  "Prob": 1
 	}
       ]
-    },
-    "SNVs": {
-      "Prob": 0,
-      "Events": [
-        {
-          "Type": "SNV",
-          "Prob": 100,
-          "Size": 0,
-          "Frag": 0
-        }
-      ]
     }
   },
   "EvoParams": {
@@ -42,7 +31,7 @@
     "MutationRate": 0.02,
     "NumIterations": 100,
     "MaxTries": 10,
-    "ThetaFitness": 50,
+    "ThetaFitness": 20,
     "EventCost": false,
     "DynamicMutRate": false,
     "ContinuousTime": true,
