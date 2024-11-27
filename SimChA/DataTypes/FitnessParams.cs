@@ -9,6 +9,7 @@ public class FitnessParams
     public double Essentiality { get; }
     public double TotalStrength { get; }
     public bool Haploinsufficiency { get; }
+    private const double EPSILON = 1e-8;
 
     public bool NormalizeGenes { get; }
 
@@ -20,6 +21,10 @@ public class FitnessParams
     public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength, bool haploinsufficiency = false, bool normalizeGenes = false)
     {
         double sum = stress + tsgOg + essentiality;
+        if (sum < EPSILON)
+        {
+          throw new Exception("FitnessParams must have non-zero entries");
+        }
         Stress = stress/sum;
         TsgOg = tsgOg/sum;
         Essentiality = 1.0 - Stress - TsgOg;
