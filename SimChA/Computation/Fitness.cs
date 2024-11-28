@@ -15,11 +15,21 @@ public static class Fitness
         var tsgCNs = CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
         var ogCNs = CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
         var essCNs = CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype);
+	
+	var EPSILON = 1e-6;
 
-        double stressTerm = StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen())*fParams.Stress;
-        double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.Sex, fParams.NormalizeGenes);
-        double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.Sex, fParams.NormalizeGenes);
-        double essTerm = EssTerm(genRef, essCNs, karyotype.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency)*fParams.Essentiality;
+        double stressTerm = fParams.Stress > EPSILON
+		? StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen())*fParams.Stress
+		: 0.0;
+	double ogTerm = fParams.TsgOg > EPSILON
+		? TsgOgTerm(genRef, ogCNs, karyotype.Sex, fParams.NormalizeGenes)
+		: 0.0;
+        double tsgTerm = fParams.TsgOg > EPSILON
+		? TsgOgTerm(genRef, tsgCNs, karyotype.Sex, fParams.NormalizeGenes)
+		: 0.0;
+        double essTerm = fParams.Essentiality > EPSILON 
+		? EssTerm(genRef, essCNs, karyotype.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency)*fParams.Essentiality
+		: 0.0;
         double tsgogTerm = (ogTerm - tsgTerm)*fParams.TsgOg;
         
         
