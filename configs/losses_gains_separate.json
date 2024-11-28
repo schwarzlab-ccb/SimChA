@@ -14,7 +14,7 @@
   },
   "Signatures": {
     "Losses":{
-      "Prob": 1,
+      "Prob": 10,
       "Events": [
         {
           "Type": "ChromDeletion",
@@ -23,16 +23,6 @@
         {
           "Type": "ArmDeletion",
           "Prob": 2.47
-        },
-        {
-          "Type": "TailDeletion",
-          "Prob": 5.93
-        },
-        {
-          "Type": "InternalDeletion",
-          "Prob": 29.6,
-          "Size": 2000000,
-          "Frag": 0
         }
       ]
     },
@@ -62,17 +52,18 @@
           "Prob": 49.2,
           "Size": 2000000,
           "Frag": 0
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 5.93
+        },
+        {
+          "Type": "InternalDeletion",
+          "Prob": 29.6,
+          "Size": 2000000,
+          "Frag": 0
         }
       ] 
-    },
-    "WGD": {
-      "Prob": 0,
-      "Events": [
-	{
-	  "Type": "WholeGenomeDoubling",
-	  "Prob": 1
-	}
-      ]
     }
   },
   "EvoParams": {
