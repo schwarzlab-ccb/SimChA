@@ -282,12 +282,12 @@ public class Evolver
             var childKar = new Karyotype(sample.Kars[node.CloneId]);
             // copy of karyotype for printing out the events & their individual effects
             var dummyKar = new Karyotype(sample.Kars[node.CloneId]);
-	    // Start with the tetraploid state
-	    if (EvoParams.TetraploidStart)
-	    {
-		childKar.ApplyWGD();
-		dummyKar.ApplyWGD();
-	    }
+            // Start with the tetraploid state
+            if (EvoParams.TetraploidStart)
+            {
+            childKar.ApplyWGD();
+            dummyKar.ApplyWGD();
+            }
             sample.Kars[child.CloneId] = childKar;
             var childEvs = new List<CNEventDesc>();
             sample.EventDescs[child.CloneId] = childEvs;
