@@ -23,7 +23,7 @@ print(mean_pcawg_ploidy)
 def err_func(mean_ploidy):
     return (mean_ploidy - mean_pcawg_ploidy)**2
 # %%
-sim_dir = "../out/nf/results_loss"
+sim_dir = "../out/nf/results_loss_theta_20"
 subdirs = [d for d in os.listdir(sim_dir) if os.path.isdir(join(sim_dir, d))]
 sim_res = []
 for subdir in subdirs:
@@ -55,5 +55,8 @@ plt.xlabel('Alpha')
 plt.ylabel('r_loss')
 plt.title(f'SimChA Error Surface - best r_loss: {best_r_loss}, best alpha: {best_alpha}')
 plt.legend()
-plt.savefig("simcha_error_surface.png")
+plt.savefig("simcha_error_surface_losses.png")
 plt.show()
+# %%
+df.to_csv("simcha_loss_scan_results.tsv", sep="\t", index=False)
+# %%
