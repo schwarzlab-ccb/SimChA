@@ -21,27 +21,18 @@ process SimChA {
 	script:
 	a = 0.1
 	delta = a/(1.0-ess)
-	mut_rate = 0.25
-	p_wgd = 0.035
-	w_wgd = 
 	
 	def new_config = config
-	new_config.Fitness.Haploinsufficiency = false
 	new_config.Fitness.TotalStrength = delta
 	new_config.Fitness.Stress = 1.0-ess
         new_config.Fitness.TsgOg = 0
         new_config.Fitness.Essentiality = ess
 	new_config.EvoParams.ThetaFitness = 20
-	new_config.EvoParams.MutationRate = mut_rate
-	new_config.Signatures.CNVs.Events.each { event ->
-		if (event.Type == "WholeGenomeDoubling") {
-			event.Prob = 
-		}
-	}	
+	//new_config.Fitness.Haploinsufficiency = false
 	def config_json = JsonOutput.toJson(new_config)
 	"""
 	echo '${config_json}' > config.json
-	dotnet run --no-build --project ${simcha_path} -- -C config.json -D ${workflow.launchDir}/data/hg19 -e -R 15000 -O "."
+	dotnet run --no-build --project ${simcha_path} -- -C config.json -D ${workflow.launchDir}/data/hg19 -e -R 4000 -O "."
 	"""
 }
 
@@ -50,6 +41,6 @@ workflow {
 	def max_vals_per_param = 170
 	def config = new JsonSlurper().parseText(params_file.text)
 	println config
-	def ess = Channel.from(params.ess).take(max_vals_per_param)
+	def ess = Channel.from(params.ess_1).take(max_vals_per_param)
 	SimChA(config, ess)
 }
