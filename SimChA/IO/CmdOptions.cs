@@ -46,6 +46,9 @@ public class CmdOptions
     [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]
     public bool SampleEventCounts { get; set; }
 
+    [Option("light", Required = false, Default = false, HelpText = "Flag to avoid printing out the output CNPs and karyotypes.")]
+    public bool LightweightOutput { get; set; }
+
     public ExecMode ExecMode
     {
         get

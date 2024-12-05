@@ -25,9 +25,12 @@ public class FitnessParams
         {
           throw new Exception("FitnessParams must have non-zero entries");
         }
-        Stress = stress/sum;
-        TsgOg = tsgOg/sum;
-        Essentiality = 1.0 - Stress - TsgOg;
+	else
+	{
+	  Stress = stress/sum;
+          TsgOg = tsgOg/sum;
+          Essentiality = 1.0 - Stress - TsgOg;
+	}
         TotalStrength = totalStrength;
         Haploinsufficiency = haploinsufficiency;
         NormalizeGenes = normalizeGenes;

@@ -145,7 +145,6 @@ try
 {
     Console.WriteLine("");
     files.WriteSamples(samples);
-    files.WriteCopyNumbers(genRef, samples);
     if (options.CalcConsistentCNs)
     {
         files.WriteConsistentCNs(genRef, samples);
@@ -155,7 +154,11 @@ try
         files.WriteTree(samples);
     }
     files.WriteClones(samples);
-    files.WriteKaryotypes(samples);
+    if (!options.LightweightOutput)
+    {
+	files.WriteCopyNumbers(genRef, samples);
+   	files.WriteKaryotypes(samples);
+    }
     if (samples.Any(s => s.EventDescs.Any()))
     {
         files.WriteEvents(samples);
