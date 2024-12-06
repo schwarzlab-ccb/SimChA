@@ -123,7 +123,7 @@ public class Evolver
         return newPars;
     }
 
-    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int nEvents)
+    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int nEvents, bool wgdPositive = false)
     {
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
@@ -163,16 +163,16 @@ public class Evolver
         var timeList = new List<double>{0.0};
         EventTimes = new List<double>();
         var hasDoubled = false;
-	while (timeList.Last() < EvoParams.MaxTime)
+	    while (timeList.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
             /*var mu = EvoParams.DynamicMutRate 
                 ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
                 : EvoParams.MutationRate;*/
-	    var mu = EvoParams.DynamicMutRate && hasDoubled
-		? EvoParams.MutationRate * 3.0
-		: EvoParams.MutationRate;
+            var mu = EvoParams.DynamicMutRate && hasDoubled
+                ? EvoParams.MutationRate * 2.0
+                : EvoParams.MutationRate;
             var tNew = timeList.Last() - Math.Log(u) / mu;
             if (tNew > EvoParams.MaxTime)
             {
@@ -185,10 +185,10 @@ public class Evolver
             {
                 throw new Exception("Continuous time evolution should only sample one event at a time.");
             }
-	    if (newEvents.Count == 0)
-	    {
-		continue;
-	    }
+            if (newEvents.Count == 0)
+            {
+                continue;
+            }
             var ev = newEvents[0];
             var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
             var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, EvoParams.Temperature);
@@ -199,13 +199,18 @@ public class Evolver
                 ev.ApplyEvent(kar);
                 EventTimes.Add(tNew);
                 kar.UpdateFitness(GenRef, FitnessParams);
-		if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
-		{
-		    hasDoubled = true;
-		}
+                if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
+                {
+                    SwitchEventPars(sample);
+                }
             }
         }
         return currentEvents;
+    }
+
+    private void SwitchEventPars(Sample sample)
+    {
+        var pars = sample.EventPars;
     }
 
     private List<BaseEventData> EvolveInTime(Sample sample, Karyotype kar)

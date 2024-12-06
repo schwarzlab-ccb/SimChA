@@ -73,7 +73,7 @@ switch (execMode)
         var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
         var sex = simParams.AutosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, simParams.Sex);
-        var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture);
+        var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture, treeSigs);
         samples = new List<Sample> {treeSample};
         samples.ForEach(simulator.SampleEvents);
         break;
