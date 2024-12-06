@@ -73,12 +73,15 @@ public class Evolver
         return kar.UpdateFitness(GenRef, FitnessParams);
     }
 
-    private int GetEventCount(Karyotype kar)
+    private int GetEventCount(Karyotype kar, bool hasDoubled = false)
     {
         int nEvents;
-        var mu = EvoParams.DynamicMutRate
+        /*var mu = EvoParams.DynamicMutRate
                 ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
-                : EvoParams.MutationRate;
+                : EvoParams.MutationRate; */
+	var mu = EvoParams.DynamicMutRate && hasDoubled
+		? EvoParams.MutationRate * 2.0
+		: EvoParams.MutationRate;
         if (EvoParams.EventBlock)
         {
             if (EvoParams.StepDistribution != Distribution.Poisson)
@@ -159,13 +162,17 @@ public class Evolver
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var timeList = new List<double>{0.0};
         EventTimes = new List<double>();
-        while (timeList.Last() < EvoParams.MaxTime)
+        var hasDoubled = false;
+	while (timeList.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
-            var mu = EvoParams.DynamicMutRate 
+            /*var mu = EvoParams.DynamicMutRate 
                 ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
-                : EvoParams.MutationRate;
+                : EvoParams.MutationRate;*/
+	    var mu = EvoParams.DynamicMutRate && hasDoubled
+		? EvoParams.MutationRate * 3.0
+		: EvoParams.MutationRate;
             var tNew = timeList.Last() - Math.Log(u) / mu;
             if (tNew > EvoParams.MaxTime)
             {
@@ -174,10 +181,14 @@ public class Evolver
             timeList.Add(tNew);
             // Generate a new event and correspondingly add to list
             var newEvents = GetNewEvents(sample, new Karyotype(kar), 1);
-            if (newEvents.Count != 1)
+            if (newEvents.Count > 1)
             {
                 throw new Exception("Continuous time evolution should only sample one event at a time.");
             }
+	    if (newEvents.Count == 0)
+	    {
+		continue;
+	    }
             var ev = newEvents[0];
             var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
             var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, EvoParams.Temperature);
@@ -188,6 +199,10 @@ public class Evolver
                 ev.ApplyEvent(kar);
                 EventTimes.Add(tNew);
                 kar.UpdateFitness(GenRef, FitnessParams);
+		if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
+		{
+		    hasDoubled = true;
+		}
             }
         }
         return currentEvents;
