@@ -11,7 +11,7 @@ public class Sample
     public string SampleId { get; }
     public SexEnum Sex { get; }
     public List<CloneIn> Clones { get; }
-    public List<CNEventPars> EventPars { get;  }
+    public List<CNEventPars> EventPars { get; set; }
     public Dictionary<string, Karyotype> Kars { get; }
     public Dictionary<string, List<CNEventDesc>> EventDescs { get; }
     public Dictionary<string, CloneStat> Stats { get; }

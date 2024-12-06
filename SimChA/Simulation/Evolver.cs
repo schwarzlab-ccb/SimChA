@@ -143,10 +143,6 @@ public class Evolver
                 iTries++;
             }
         }
-        /*if (iTries >= EvoParams.MaxTries)
-        {
-            throw new Exception("Could not generate new events.");
-        }*/
         return sampledEvents;
     }
 
@@ -210,7 +206,13 @@ public class Evolver
 
     private void SwitchEventPars(Sample sample)
     {
-        var pars = sample.EventPars;
+        // Check if the sample has the PostWGD event pars
+        if (!sample.Signatures.TryGetValue("PostWGD", out Signature? value))
+        {
+            throw new Exception("Sample does not have PostWGD signature required for the switching of event parameters.");
+        }
+        var postWGDPars = value.Events;
+        sample.EventPars = postWGDPars;
     }
 
     private List<BaseEventData> EvolveInTime(Sample sample, Karyotype kar)
