@@ -53,6 +53,10 @@
 	  "Type": "InternalDeletion",
 	  "Prob": 11.2277,
 	  "Size": 100000
+	},
+	{
+	  "Type": "WholeGenomeDoubling",
+	  "Prob": 0.146596
 	}
       ]
     },
