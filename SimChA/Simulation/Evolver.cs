@@ -165,11 +165,8 @@ public class Evolver
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
-            /*var mu = EvoParams.DynamicMutRate 
-                ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
-                : EvoParams.MutationRate;*/
             var mu = EvoParams.DynamicMutRate && hasDoubled
-                ? EvoParams.MutationRate * 2.0
+                ? EvoParams.MutationRate * EvoParams.WGDAccelerationFactor
                 : EvoParams.MutationRate;
             var tNew = timeList.Last() - Math.Log(u) / mu;
             if (tNew > EvoParams.MaxTime)
@@ -321,10 +318,10 @@ public class Evolver
                     {
                         PreWGDEventPars = Converters.NormalizeEvents(preWGDSig.Events);
                         PostWGDEventPars = Converters.NormalizeEvents(postWGDSig.Events);
-			if (EvoParams.TetraploidStart)
-			{
-			  PreWGDEventPars = PostWGDEventPars;
-			}
+                        if (EvoParams.TetraploidStart)
+                        {
+                        PreWGDEventPars = PostWGDEventPars;
+                        }
                     }
                     bestEvents = EvolveInContinuousTime(sample, childKar);
                 }

@@ -18,5 +18,6 @@ public record EvoParams(
     bool DynamicMutRate, // Flag to turn on and off dynamic mutation rate weighted by ploidy
     double MaxTime, // Maximum time to evolve each clone
     bool ContinuousTime, // Flag to turn on and off continuous time evolution
-    bool TetraploidStart // Flag to start the simulation from a tetraploid state
+    bool TetraploidStart, // Flag to start the simulation from a tetraploid state
+    double WGDAccelerationFactor // Factor to scale the mutation rates of WGD+ samples
     );
