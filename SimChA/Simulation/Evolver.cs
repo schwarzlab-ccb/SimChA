@@ -14,7 +14,8 @@ public class Evolver
     protected readonly Random Rnd;
     protected readonly GenRef GenRef;
     protected int Counter;
-    protected List<CNEventPars>? EventPars = null;
+    protected List<CNEventPars>? PreWGDEventPars = null;
+    protected List<CNEventPars>? PostWGDEventPars = null;
     protected List<double>? EventTimes = null;
 
     public Evolver(
@@ -38,7 +39,6 @@ public class Evolver
             throw new Exception("No events to sample from.");
         }
         Counter = 1;
-        EventPars = sample.EventPars;
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
         ApplyEvolutionRec(sample, root, childLookUp, 1);
@@ -79,9 +79,9 @@ public class Evolver
         /*var mu = EvoParams.DynamicMutRate
                 ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
                 : EvoParams.MutationRate; */
-	var mu = EvoParams.DynamicMutRate && hasDoubled
-		? EvoParams.MutationRate * 2.0
-		: EvoParams.MutationRate;
+        var mu = EvoParams.DynamicMutRate && hasDoubled
+            ? EvoParams.MutationRate * 2.0
+            : EvoParams.MutationRate;
         if (EvoParams.EventBlock)
         {
             if (EvoParams.StepDistribution != Distribution.Poisson)
@@ -123,16 +123,17 @@ public class Evolver
         return newPars;
     }
 
-    private List<BaseEventData> GetNewEvents(Sample sample, Karyotype kar, int nEvents, bool wgdPositive = false)
+    private List<BaseEventData> GetNewEvents(List<CNEventPars> eventPars, 
+        Karyotype kar, int nEvents, bool wgdPositive = false)
     {
         var sampledEvents = new List<BaseEventData>();
         int iTries = 0;
         var pars = EvoParams.EventCost
-                ? GetModifiedEventPars(sample.EventPars, kar)
-                : sample.EventPars;
+                ? GetModifiedEventPars(eventPars, kar)
+                : eventPars;
         for (int i = 0; i < nEvents && iTries < EvoParams.MaxTries; )
         {            
-            var eventData = GetNewEvent(sample, kar, pars);
+            var eventData = GetNewEvent(kar, pars);
             if (eventData != null)
             {
                 sampledEvents.Add(eventData);
@@ -146,7 +147,7 @@ public class Evolver
         return sampledEvents;
     }
 
-    private BaseEventData? GetNewEvent(Sample sample, Karyotype kar, List<CNEventPars> pars)
+    private BaseEventData? GetNewEvent(Karyotype kar, List<CNEventPars> pars)
     {
         var cnEventP = Rnd.PickRndElem(pars);
         return Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
@@ -159,6 +160,7 @@ public class Evolver
         var timeList = new List<double>{0.0};
         EventTimes = new List<double>();
         var hasDoubled = false;
+        var eventPars = PreWGDEventPars ?? sample.EventPars;
 	    while (timeList.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
@@ -176,7 +178,7 @@ public class Evolver
             }
             timeList.Add(tNew);
             // Generate a new event and correspondingly add to list
-            var newEvents = GetNewEvents(sample, new Karyotype(kar), 1);
+            var newEvents = GetNewEvents(eventPars, new Karyotype(kar), 1);
             if (newEvents.Count > 1)
             {
                 throw new Exception("Continuous time evolution should only sample one event at a time.");
@@ -197,23 +199,12 @@ public class Evolver
                 kar.UpdateFitness(GenRef, FitnessParams);
                 if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
                 {
-                    SwitchEventPars(sample);
+                    eventPars = PostWGDEventPars ?? sample.EventPars;
                     hasDoubled = true;
                 }
             }
         }
         return currentEvents;
-    }
-
-    private static void SwitchEventPars(Sample sample)
-    {
-        // Check if the sample has the PostWGD event pars
-        if (!sample.Signatures.TryGetValue("PostWGD", out Signature? value))
-        {
-            throw new Exception("Sample does not have PostWGD signature required for the switching of event parameters.");
-        }
-        var postWGDPars = value.Events;
-        sample.EventPars = postWGDPars;
     }
 
     private List<BaseEventData> EvolveInTime(Sample sample, Karyotype kar)
@@ -222,13 +213,14 @@ public class Evolver
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
         EventTimes = new List<double>();
+        var eventPars = sample.EventPars;
         for (int i = 0; i < EvoParams.MaxTime; i++)
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{EvoParams.MaxTime}; Event Count {currentEvents.Count}.".PadRight(80));
             // Generate a new event and correspondingly add to list
             // Want to sample a number of events.
             int nEvents = GetEventCount(kar);
-            var newEvents = GetNewEvents(sample, new Karyotype(kar), nEvents);
+            var newEvents = GetNewEvents(eventPars, new Karyotype(kar), nEvents);
             if (newEvents.Count == 0)
             {
                 continue;
@@ -267,13 +259,14 @@ public class Evolver
         var currentTemp = EvoParams.Temperature;
         
         var nSteps = mutCount;//GetNumSteps(mutCount, kar);
+        var eventPars = sample.EventPars;
         int i = 0;
         for (; i < nSteps; i++)
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
             // Generate a new event and correspondingly add to list
             int nEvents = GetEventCount(kar);
-            var newEvents = GetNewEvents(sample, new Karyotype(kar), nEvents);
+            var newEvents = GetNewEvents(eventPars, new Karyotype(kar), nEvents);
             if (newEvents.Count == 0)
             {
                 continue;
@@ -305,12 +298,12 @@ public class Evolver
             var childKar = new Karyotype(sample.Kars[node.CloneId]);
             // copy of karyotype for printing out the events & their individual effects
             var dummyKar = new Karyotype(sample.Kars[node.CloneId]);
-	    // Start with the tetraploid state
-	    if (EvoParams.TetraploidStart)
-	    {
-		childKar.ApplyWGD();
-		dummyKar.ApplyWGD();
-	    }
+            // Start with the tetraploid state
+            if (EvoParams.TetraploidStart)
+            {
+                childKar.ApplyWGD();
+                dummyKar.ApplyWGD();
+            }
             sample.Kars[child.CloneId] = childKar;
             var childEvs = new List<CNEventDesc>();
             sample.EventDescs[child.CloneId] = childEvs;
@@ -322,6 +315,13 @@ public class Evolver
             {
                 if (EvoParams.ContinuousTime)
                 {
+                    if (sample.Signatures.Count == 2 
+                        && sample.Signatures.TryGetValue("PostWGD", out Signature? postWGDSig) 
+                        && sample.Signatures.TryGetValue("PreWGD", out Signature? preWGDSig))
+                    {
+                        PreWGDEventPars = Converters.NormalizeEvents(preWGDSig.Events);
+                        PostWGDEventPars = Converters.NormalizeEvents(postWGDSig.Events);
+                    }
                     bestEvents = EvolveInContinuousTime(sample, childKar);
                 }
                 else

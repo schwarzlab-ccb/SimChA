@@ -41,6 +41,15 @@ public static class Converters
         }
         return (events, mixture);    
     }
+
+    public static List<CNEventPars> NormalizeEvents(List<CNEventPars> events)
+    {
+        double probSum = events.Sum(ev => ev.Prob);
+        return events.Select(ev => ev with
+        {
+            Prob = ev.Prob / probSum
+        }).ToList();
+    }
     
     public static List<Sample> MakeSamples(
         Random rnd, 
