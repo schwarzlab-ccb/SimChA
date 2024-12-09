@@ -198,13 +198,14 @@ public class Evolver
                 if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
                 {
                     SwitchEventPars(sample);
+                    hasDoubled = true;
                 }
             }
         }
         return currentEvents;
     }
 
-    private void SwitchEventPars(Sample sample)
+    private static void SwitchEventPars(Sample sample)
     {
         // Check if the sample has the PostWGD event pars
         if (!sample.Signatures.TryGetValue("PostWGD", out Signature? value))
