@@ -5,11 +5,11 @@
   "EventCountMean": 75,
   "EventDist": "Exponential",
   "Fitness": {
-    "Stress": 1,
-    "TsgOg": 0,
-    "Essentiality": 0,
+    "Stress": 0,
+    "TsgOg": 1,
+    "Essentiality": 1,
     "TotalStrength": 1,
-    "Haploinsufficiency": true,
+    "Haploinsufficiency": false,
     "NormalizeGenes": true
   },
   "Signatures": {
@@ -53,10 +53,6 @@
 	  "Type": "InternalDeletion",
 	  "Prob": 11.2277,
 	  "Size": 100000
-	},
-	{
-	  "Type": "WholeGenomeDoubling",
-	  "Prob": 0.146596
 	}
       ]
     },
@@ -105,10 +101,10 @@
     "EvolveInTime": true,
     "EventBlock": false,
     "StepDistribution": "Poisson",
-    "MutationRate": 1,
+    "MutationRate": 0.5,
     "ThetaFitness": 20,
     "MaxTries": 50,
-    "DynamicMutRate": false,
+    "DynamicMutRate": true,
     "EventCost": false,
     "MaxTime": 100,
     "ContinuousTime": true,

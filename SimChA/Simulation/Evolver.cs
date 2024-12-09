@@ -321,6 +321,10 @@ public class Evolver
                     {
                         PreWGDEventPars = Converters.NormalizeEvents(preWGDSig.Events);
                         PostWGDEventPars = Converters.NormalizeEvents(postWGDSig.Events);
+			if (EvoParams.TetraploidStart)
+			{
+			  PreWGDEventPars = PostWGDEventPars;
+			}
                     }
                     bestEvents = EvolveInContinuousTime(sample, childKar);
                 }
