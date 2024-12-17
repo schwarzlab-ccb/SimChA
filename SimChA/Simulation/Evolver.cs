@@ -255,21 +255,22 @@ public class Evolver
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         var currentTemp = EvoParams.Temperature;
         
-        var nSteps = mutCount;//GetNumSteps(mutCount, kar);
+        var nSteps = 9;//mutCount;//GetNumSteps(mutCount, kar);
         var eventPars = sample.EventPars;
         int i = 0;
-        for (; i < nSteps; i++)
+	var hasDoubled = false;
+        for (; i < nSteps; )
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
             // Generate a new event and correspondingly add to list
-            int nEvents = GetEventCount(kar);
+            int nEvents = 1;// GetEventCount(kar);
             var newEvents = GetNewEvents(eventPars, new Karyotype(kar), nEvents);
-            if (newEvents.Count == 0)
+            if (newEvents.Count != 1)
             {
                 continue;
             }
             var proposedFitness = GetFitness(new Karyotype(kar), newEvents);
-            var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, currentTemp);
+            var acceptProb = CalculateLogAcceptance(proposedFitness, currentFitness, 1);
             if (acceptProb >= Math.Log(Rnd.NextDouble()))
             {
                 currentFitness = proposedFitness;
@@ -277,10 +278,16 @@ public class Evolver
                 {
                     currentEvents.Add(ev);
                     ev.ApplyEvent(kar);
-                }
+                    if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
+		    {
+			    hasDoubled = true;
+			    nSteps = 35;
+		    }
+		}
                 kar.UpdateFitness(GenRef, FitnessParams);
+		
+		i++;
             }
-            currentTemp *= EvoParams.SimulatedAnnealing ? EvoParams.CoolingRate : 1.0;
         }
 
         return currentEvents;
@@ -334,11 +341,11 @@ public class Evolver
             {
                 bestEvents = EvolveInEvents(sample, childKar, child.Distance);
             }
-            Console.WriteLine("Fetching the sampled events and calculating fitness changes");
+            //Console.WriteLine("Fetching the sampled events and calculating fitness changes");
             
             for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
             {
-                Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
+                //Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
                 var eventData = bestEvents[mutNo];
                 eventData.ApplyEvent(dummyKar);
                 double newFitness = dummyKar.UpdateFitness(GenRef, FitnessParams);
