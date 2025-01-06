@@ -21,6 +21,18 @@
           "Prob": 1
         },
 	{
+	  "Type": "ArmDeletion",
+	  "Prob": 1
+	},
+        {
+          "Type": "ChromDuplication",
+          "Prob": 1
+        },
+	{
+	  "Type": "ArmDuplication",
+	  "Prob": 1
+	},
+	{
 	  "Type": "WholeGenomeDoubling",
 	  "Prob": 1
 	}
@@ -29,7 +41,7 @@
   },
   "EvoParams": {
     "WithFitness": true,
-    "EvolveInTime": true,
+    "EvolveInTime": false,
     "EventBlock": false,
     "StepDistribution": "Poisson",
     "MutationRate": 0.5,
@@ -39,6 +51,7 @@
     "EventCost": false,
     "MaxTime": 100,
     "ContinuousTime": true,
-    "TetraploidStart": false
+    "TetraploidStart": false,
+    "WGDAccelerationFactor": 1
   }
 }

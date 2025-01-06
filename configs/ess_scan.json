@@ -18,19 +18,19 @@
       "Events": [
         {
           "Type": "ChromDeletion",
-          "Prob": 33.2
+          "Prob": 35.6
   	},
 	{
 	  "Type": "ArmDeletion",
-	  "Prob": 33.2
+	  "Prob": 35.6
 	},
 	{
 	  "Type": "ChromDuplication",
-	  "Prob": 16.6
+	  "Prob": 14.2
 	},
 	{
 	  "Type": "ArmDuplication",
-	  "Prob": 16.6
+	  "Prob": 14.2
 	},
 	{
 	  "Type": "WholeGenomeDoubling",
