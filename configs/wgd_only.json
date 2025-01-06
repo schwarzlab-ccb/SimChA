@@ -36,6 +36,6 @@
     "ContinuousTime": true,
     "MaxTime": 100,
     "TetraploidStart": false,
-    "WGDAccelerationFactor": 3
+    "WGDAccelerationFactor": 1
   }
 }
