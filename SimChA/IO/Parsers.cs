@@ -349,7 +349,7 @@ public static class Parsers
             var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
             double tsgogTerm = (og + tsg) * fParams.TsgOg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
-            double totalFitness = 1.0 + (stressTerm + tsgogTerm + essTerm)*fParams.TotalStrength;
+            double totalFitness = 1.0 + (stressTerm + tsgogTerm + essTerm);
             // If the file includes data on how many chromosomal events the sample underwent
             int eventCount = lineSplit.Count >= 9 ? int.Parse(lineSplit[8]) : -1;
             output.Add((totalFitness, eventCount));

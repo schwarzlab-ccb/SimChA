@@ -45,7 +45,7 @@ public class TestIO
     [Test]
     public void TestConfigSerialization()
     {
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1f);
+        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
         var autosomesOnly = false;
         var simParams = new SimParams(0, SexEnum.None, autosomesOnly, 1, Distribution.Uniform, fit);
         var options = new JsonSerializerOptions { WriteIndented = true };
@@ -54,7 +54,6 @@ public class TestIO
         Assert.NotNull(deserialized);
         // Assure that the deserialized object is the same as the original, including the nested objects
         Assert.AreEqual(simParams.Seed, deserialized!.Seed);
-        Assert.AreEqual(simParams.Fitness.TotalStrength, deserialized.Fitness.TotalStrength);
         Assert.AreEqual(simParams.Signatures, deserialized.Signatures);
     }
 
