@@ -5,11 +5,10 @@
   "EventCountMean": 45,
   "EventDist": "Exponential",
   "Fitness": {
-    "Stress": 1,
+    "Stress": 0,
     "TsgOg": 0,
     "Essentiality": 0,
-    "TotalStrength": 1,
-    "Haploinsufficiency": true,
+    "Haploinsufficiency": false,
     "NormalizeGenes": true
   },
   "Signatures": {
@@ -28,13 +27,15 @@
     "EvolveInTime": true,
     "EventBlock": false,
     "StepDistribution": "Poisson",
-    "MutationRate": 0.02,
+    "MutationRate": 0.1,
     "NumIterations": 100,
     "MaxTries": 10,
-    "ThetaFitness": 20,
+    "ThetaFitness": 1,
     "EventCost": false,
-    "DynamicMutRate": false,
+    "DynamicMutRate": true,
     "ContinuousTime": true,
-    "MaxTime": 100
+    "MaxTime": 100,
+    "TetraploidStart": false,
+    "WGDAccelerationFactor": 3
   }
 }
