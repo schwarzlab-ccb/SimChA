@@ -112,6 +112,18 @@ public static class Fitness
         return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness))/norm;
     }
 
+    public static double Zygosity(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, int count)
+    {
+        // TODO: This only works for autosomes currently.
+        if (!geneCNs.Any())
+        {
+            return 0;
+        }
+        var genesList = geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName);
+        var zygosityCount = genesList.Where(g => g.CN == count).Count();
+        return zygosityCount / (double) genesList.Count();
+    }
+
     public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexEnum sex, bool normalizeGenes = false, bool haploinsufficiency = false)
     {
         if (!essCNs.Any())
