@@ -8,7 +8,6 @@
     "Stress": 1,
     "TsgOg": 0,
     "Essentiality": 0,
-    "TotalStrength": 1,
     "Haploinsufficiency": true,
     "NormalizeGenes": true
   },
@@ -49,12 +48,13 @@
     "EventBlock": false,
     "StepDistribution": "Poisson",
     "MutationRate": 0.5,
-    "ThetaFitness": 50,
+    "ThetaFitness": 1,
     "MaxTries": 40,
     "DynamicMutRate": false,
     "EventCost": false,
     "MaxTime": 100,
     "ContinuousTime": true,
-    "TetraploidStart": true
+    "TetraploidStart": true,
+    "WGDAccelerationFactor": 1
   }
 }
