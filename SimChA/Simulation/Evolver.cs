@@ -152,7 +152,8 @@ public class Evolver
         EventTimes = new List<double>();
         var hasDoubled = false;
         var eventPars = PreWGDEventPars ?? sample.EventPars;
-	    while (timeList.Last() < EvoParams.MaxTime)
+	var wgdCount = 0;
+	while (timeList.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
@@ -190,7 +191,16 @@ public class Evolver
                     eventPars = PostWGDEventPars ?? sample.EventPars;
                     hasDoubled = true;
                 }
+		if (ev.EventType == CNEventType.WholeGenomeDoubling)
+		{
+		    wgdCount += 1;
+		}
             }
+	    // Short-circuit the evolution process if we already have too many WGDs
+	    if (wgdCount >= 6)
+	    {
+		break;
+	    }
         }
         return currentEvents;
     }
@@ -243,7 +253,7 @@ public class Evolver
         var currentEvents = new List<BaseEventData>();
         var currentFitness = Fitness.Calculate(new Karyotype(kar), GenRef, FitnessParams);
         
-        var nSteps = 9;//mutCount;//GetNumSteps(mutCount, kar);
+        var nSteps = mutCount;//GetNumSteps(mutCount, kar);
         var eventPars = sample.EventPars;
         int i = 0;
 	var hasDoubled = false;
@@ -333,7 +343,7 @@ public class Evolver
             
             for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
             {
-                //Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
+                Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{bestEvents.Count}.");
                 var eventData = bestEvents[mutNo];
                 eventData.ApplyEvent(dummyKar);
                 double newFitness = dummyKar.UpdateFitness(GenRef, FitnessParams);
