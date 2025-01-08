@@ -4,7 +4,7 @@ simcha_path = workflow.launchDir + "/SimChA"
 params.simcha_params_file =  "/projects/ag-schwarzr/project-simcha/simcha/configs/wgd_only.json"
 
 process SimChA {
-	publishDir "${workflow.launchDir}/results_wgd_and_alpha/${mut_rate}_${alpha}", mode: 'move'
+	publishDir "${workflow.launchDir}/results_wgd_and_alpha_no_dyn/${mut_rate}_${alpha}", mode: 'move'
 	
 	input:
 	tuple val(mut_rate), val(alpha)
@@ -27,7 +27,8 @@ process SimChA {
 	config['EvoParams']['MutationRate'] = ${mut_rate}
 	config['EvoParams']['EvolveInTime'] = True
 	config['EvoParams']['MaxTime'] = 100
-	config['EvoParams']['WGDAccelerationFactor'] = 4
+	config['EvoParams']['DynamicMutRate'] = False
+	config['EvoParams']['WGDAccelerationFactor'] = 1
 	with open('config.json', 'w') as f:
 		json.dump(config, f, indent=4)
         "
