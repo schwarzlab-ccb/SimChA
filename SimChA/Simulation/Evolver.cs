@@ -256,7 +256,7 @@ public class Evolver
         var nSteps = mutCount;//GetNumSteps(mutCount, kar);
         var eventPars = sample.EventPars;
         int i = 0;
-	var hasDoubled = false;
+	    var hasDoubled = false;
         for (; i < nSteps; )
         {
             Console.Write($"\rSample {sample.SampleId}. Iteration {i+1}/{nSteps};".PadRight(80));
@@ -277,14 +277,12 @@ public class Evolver
                     currentEvents.Add(ev);
                     ev.ApplyEvent(kar);
                     if (!hasDoubled && ev.EventType == CNEventType.WholeGenomeDoubling)
-		    {
-			    hasDoubled = true;
-			    nSteps = 35;
-		    }
-		}
+                    {
+                        hasDoubled = true;
+                    }
+		        }
                 kar.UpdateFitness(GenRef, FitnessParams);
-		
-		i++;
+		        i++;
             }
         }
 
