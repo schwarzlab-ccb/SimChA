@@ -152,8 +152,8 @@ public class Evolver
         EventTimes = new List<double>();
         var hasDoubled = false;
         var eventPars = PreWGDEventPars ?? sample.EventPars;
-	var wgdCount = 0;
-	while (timeList.Last() < EvoParams.MaxTime)
+        var wgdCount = 0;
+        while (timeList.Last() < EvoParams.MaxTime)
         {
             // Sample the new time for the event
             var u = Rnd.NextDouble();
@@ -191,16 +191,16 @@ public class Evolver
                     eventPars = PostWGDEventPars ?? sample.EventPars;
                     hasDoubled = true;
                 }
-		if (ev.EventType == CNEventType.WholeGenomeDoubling)
-		{
-		    wgdCount += 1;
-		}
+                if (ev.EventType == CNEventType.WholeGenomeDoubling)
+                {
+                    wgdCount += 1;
+                }
             }
-	    // Short-circuit the evolution process if we already have too many WGDs
-	    if (wgdCount >= 6)
-	    {
-		break;
-	    }
+            // Short-circuit the evolution process if we already have too many WGDs
+            if (wgdCount >= 6)
+            {
+            break;
+            }
         }
         return currentEvents;
     }
