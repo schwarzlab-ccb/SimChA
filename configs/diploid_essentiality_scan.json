@@ -30,7 +30,7 @@
                 {
                     "Type": "InternalDeletion",
                     "Prob": 21.175900268473196,
-                    "Size": 200000
+                    "Size": 8126702
                 },
                 {
                     "Type": "ChromDuplication",
@@ -47,7 +47,7 @@
                 {
                     "Type": "InternalDuplication",
                     "Prob": 50.4674145024824,
-                    "Size": 200000
+                    "Size": 4511707
                 }
             ]
         }
