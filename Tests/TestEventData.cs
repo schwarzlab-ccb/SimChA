@@ -60,6 +60,19 @@ public class TestEventData
         Assert.LessOrEqual(eventData.PosB, lenB);
         Assert.IsFalse(eventData.Inverted);
     }
+
+    [Test]
+    public void TestCentromereBoundEventData()
+    {
+        const long len = 10_000_000;
+        var cents = new List<(long start, long end)>() { (1_000_000L, 2_000_000L) };
+        var eventP = new CNEventPars(CNEventType.CentromereBoundDeletion, 1, 1_000_000);
+        var eventData = new InternalEventData(_rnd, eventP, 0, len, cents);
+        Assert.LessOrEqual(eventData.Start, cents[0].end);
+        Assert.Less(eventData.Start, len);
+        Assert.Greater(eventData.End, eventData.Start);
+        Assert.Greater(eventData.End, cents[0].start);
+    }
     
     [Test]
     public void TestArmEvent()
