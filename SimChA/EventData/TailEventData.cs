@@ -16,7 +16,8 @@ public record TailEventData : ContigEventData
         Direction = rnd.CoinFlip();
     }
     
-    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, 
+        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
     {
         var cent =  centromeres.Shuffle(rnd).First();
         Length = rnd.CoinFlip() ? cent.start : cent.end;
