@@ -15,7 +15,4 @@ public record BaseEventData(CNEventPars CNEventPars)
 
     public override string ToString()
         => "";
-    
-    public virtual double GetProb()
-        => 1.0;
 }

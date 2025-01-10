@@ -47,10 +47,6 @@ public class MCSimulator : Simulator
         // Probability of picking each event and their corresponding signature
         foreach (var eventData in events)
         {
-            if (eventData.CNEventPars.Size > 0 && McParams.IncludeSize)
-            {
-                eventPotentialTotal += Math.Log(eventData.GetProb());
-            }
             eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
         }
         return eventPotentialTotal;

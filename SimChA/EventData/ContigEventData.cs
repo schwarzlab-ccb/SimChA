@@ -23,7 +23,4 @@ public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEvent
     
     public override string ToString() 
         => $"contig:{ContigId}";
-    
-    public override double GetProb()
-        => 1.0;
 }

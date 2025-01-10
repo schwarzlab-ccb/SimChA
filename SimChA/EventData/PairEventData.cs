@@ -12,7 +12,6 @@ public record PairEventData : BaseEventData
     public readonly long PosA = -1;
     public readonly long PosB = -1;
     public readonly bool Inverted;
-    public readonly double Prob;
     
     // Constructor used for Translocation
     public PairEventData(Random rnd, CNEventPars cnEventPars, int contigA, long lenA, int contigB, long lenB) : base(cnEventPars)
@@ -22,7 +21,6 @@ public record PairEventData : BaseEventData
         ContigIdB = contigB;
         PosB = Sampling.GetPos(rnd, lenB);
         Inverted = rnd.CoinFlip();
-        Prob = 1.0/lenA + 1.0/lenB;
     }
     
     public override void ApplyEvent(Karyotype kar)
@@ -30,7 +28,4 @@ public record PairEventData : BaseEventData
     
     public override string ToString()
         => $"contigA:{ContigIdA};contigB:{ContigIdB};posA:{PosA};posB:{PosB};dir:{Inverted}";
-
-    public override double GetProb()
-        => Prob;
 }

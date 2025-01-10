@@ -23,9 +23,11 @@ public record InternalEventData : ContigEventData
         switch (EventType)
         {
             case CNEventType.InternalDuplication:
+            case CNEventType.CentromereBoundDuplication:
                 kar.ApplyInternalDuplication(ContigId, Start, End);
                 break;
             case CNEventType.InternalDeletion:
+            case CNEventType.CentromereBoundDeletion:
                 kar.ApplyInternalDeletion(ContigId, Start, End);
                 break;
             case CNEventType.InternalInversion:
@@ -41,6 +43,4 @@ public record InternalEventData : ContigEventData
 
     public override string ToString()
         => $"contig:{ContigId};start:{Start};end:{End}";
-    public override double GetProb()
-        => Prob;
 }
