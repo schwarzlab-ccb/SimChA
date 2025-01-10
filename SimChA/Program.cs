@@ -158,11 +158,12 @@ try
     {
 	files.WriteCopyNumbers(genRef, samples);
    	files.WriteKaryotypes(samples);
-        if (samples.Any(s => s.EventDescs.Any()))
-        {
-	    files.WriteEvents(samples);
-        }
     }
+    if (samples.Any(s => s.EventDescs.Any()))
+    {
+        files.WriteEvents(samples);
+    }
+
     if (options.UseVariants)
     {
         files.WriteVCF(genRef, samples);
