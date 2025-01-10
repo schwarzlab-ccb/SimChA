@@ -27,6 +27,8 @@ public enum CNEventType
     Rigma,
     SNV,
     ArmDeletion,
-    ArmDuplication
+    ArmDuplication,
+    CentromereBoundDuplication,
+    CentromereBoundDeletion
     // Tyfonas
 }

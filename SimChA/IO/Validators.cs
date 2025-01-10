@@ -15,8 +15,6 @@ public static class Validators
             case CNEventType.ChromDuplication:
             case CNEventType.WholeGenomeDoubling:
             case CNEventType.BreakageFusionBridge:
-            case CNEventType.TailDeletion:
-            case CNEventType.TailDuplication:
             case CNEventType.SNV:
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
@@ -29,6 +27,10 @@ public static class Validators
             case CNEventType.Translocation:
             case CNEventType.Chromothripsis:
             case CNEventType.Chromoplexy:
+            case CNEventType.CentromereBoundDeletion:
+            case CNEventType.CentromereBoundDuplication:
+            case CNEventType.TailDeletion:
+            case CNEventType.TailDuplication:
                 if (cnEventPars.Size <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
                 break;
