@@ -33,7 +33,7 @@ process SimChA {
 	with open('config.json', 'w') as f:
 		json.dump(config, f, indent=4)
 	"
-	dotnet run --no-build --project ${simcha_path} -- -C config.json -D ${workflow.launchDir}/data/hg19 -e -R 20000 -O "." --light
+	dotnet run --no-build --project ${simcha_path} -- -C config.json -D ${workflow.launchDir}/data/hg19 -e -R 10000 -O "." --light
         """
 }
 

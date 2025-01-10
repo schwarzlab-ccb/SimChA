@@ -37,7 +37,7 @@ process SimChA {
 }
 
 workflow {
-	def max_vals_per_param = 100
+	def max_vals_per_param = 1000
 	def ess = Channel.from(params.ess).take(max_vals_per_param)
 	SimChA(ess)
 }
