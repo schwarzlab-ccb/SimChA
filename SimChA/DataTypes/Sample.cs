@@ -11,13 +11,15 @@ public class Sample
     public string SampleId { get; }
     public SexEnum Sex { get; }
     public List<CloneIn> Clones { get; }
-    public List<CNEventPars> EventPars { get;  }
+    public List<CNEventPars> EventPars { get; set; }
     public Dictionary<string, Karyotype> Kars { get; }
     public Dictionary<string, List<CNEventDesc>> EventDescs { get; }
     public Dictionary<string, CloneStat> Stats { get; }
     public Dictionary<string, double> Mixture { get; }
+    public Dictionary<string, Signature> Signatures { get; }
     
-    public Sample(string sampleId, SexEnum sex, List<CloneIn> clones, List<CNEventPars> eventPars, Dictionary<string, double> mixture)
+    public Sample(string sampleId, SexEnum sex, List<CloneIn> clones, List<CNEventPars> eventPars, 
+        Dictionary<string, double> mixture, Dictionary<string, Signature> signatures)
     {
         SampleId = sampleId;
         Sex = sex;
@@ -27,6 +29,8 @@ public class Sample
         Kars = new Dictionary<string, Karyotype>();
         EventDescs = new Dictionary<string, List<CNEventDesc>>();
         Stats = new Dictionary<string, CloneStat>();
+        Signatures = signatures;
+
     }
     
     public static string Header() => "sample_id\tsex\tclone_count\tmixture";

@@ -8,7 +8,6 @@
 	  "Stress": 0.9619,
 	  "TsgOg": 0.0355,
 	  "Essentiality": 0.0026,
-	  "TotalStrength": 1,
 	  "Haploinsufficiency" : false,
     "NormalizeGenes": false
 	},
@@ -173,6 +172,7 @@
     "EventCost": true,
     "DynamicMutRate": false,
     "MaxTime": 1000,
-    "ContinuousTime": true
+    "ContinuousTime": true,
+    "WGDAccelerationFactor": 2
   }
 }

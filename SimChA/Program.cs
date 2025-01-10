@@ -73,7 +73,7 @@ switch (execMode)
         var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
         var sex = simParams.AutosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, simParams.Sex);
-        var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture);
+        var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture, treeSigs);
         samples = new List<Sample> {treeSample};
         samples.ForEach(simulator.SampleEvents);
         break;
@@ -145,7 +145,6 @@ try
 {
     Console.WriteLine("");
     files.WriteSamples(samples);
-    files.WriteCopyNumbers(genRef, samples);
     if (options.CalcConsistentCNs)
     {
         files.WriteConsistentCNs(genRef, samples);
@@ -155,11 +154,16 @@ try
         files.WriteTree(samples);
     }
     files.WriteClones(samples);
-    files.WriteKaryotypes(samples);
+    if (!options.LightweightOutput)
+    {
+	files.WriteCopyNumbers(genRef, samples);
+   	files.WriteKaryotypes(samples);
+    }
     if (samples.Any(s => s.EventDescs.Any()))
     {
         files.WriteEvents(samples);
     }
+
     if (options.UseVariants)
     {
         files.WriteVCF(genRef, samples);

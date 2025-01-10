@@ -62,7 +62,8 @@ public class Simulator
     public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
         => (from profile in profiles
             let clones = new List<CloneIn> { new("0", "-1", 0, 0) }
-            select new Sample(profile.Key, profile.Value.Sex, clones, new List<CNEventPars>(), new Dictionary<string, double>())
+            select new Sample(profile.Key, profile.Value.Sex, clones, new List<CNEventPars>(),
+                new Dictionary<string, double>(), new Dictionary<string, Signature>())
             { Kars = { ["0"] = profile.Value } }).ToList();
 
     public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
