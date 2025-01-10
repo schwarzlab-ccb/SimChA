@@ -53,7 +53,7 @@ public class Evolver
         {
             return 0;
         }
-        var fitPart = EvoParams.ThetaFitness * (newFitness - oldFitness)/Math.Abs(oldFitness);
+        var fitPart = EvoParams.ThetaFitness * (newFitness - oldFitness);
         return Math.Min(0, fitPart);
     }
     public double GetFitness(Karyotype kar, List<BaseEventData> eventData)
