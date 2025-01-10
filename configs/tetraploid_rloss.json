@@ -25,7 +25,8 @@
         },
         {
           "Type": "TailDeletion",
-          "Prob": 1
+          "Prob": 1,
+          "Size": 44731200
         },
         {
           "Type": "ChromDuplication",
@@ -37,7 +38,8 @@
         },
         {
           "Type": "TailDuplication",
-          "Prob": 1
+          "Prob": 1,
+          "Size": 40012400 
         }
       ]
     }
