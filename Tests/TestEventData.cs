@@ -82,7 +82,17 @@ public class TestEventData
         var eventData = new TailEventData(_rnd, eventP, 0, cents);
         Assert.AreEqual(1_000_000L, eventData.Length);
     }
-    
+
+    [Test]
+    public void TestTailEvent()
+    {
+        const long len = 10_000_000L;
+        var eventP = new CNEventPars(CNEventType.TailDeletion, 1, 1_000L);
+        var eventData = new TailEventData(_rnd, eventP, 0, len);
+
+        Assert.LessOrEqual(eventData.Length, len);
+    }
+
     [Test]
     public void TestPyrgo()
     {
