@@ -136,6 +136,13 @@ public static class Sampling
                     ? null
                     : new TailEventData(rnd, cnEventPars, seq[0].id, cents);
 
+            case CNEventType.CentromereBoundDeletion:
+            case CNEventType.CentromereBoundDuplication:
+                cents = kar.GetCentromeres(seq[0].id);
+                return cents.Count == 0
+                    ? null
+                    : new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len, cents);
+
             // Internal events
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:

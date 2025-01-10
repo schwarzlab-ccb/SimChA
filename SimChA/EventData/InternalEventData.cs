@@ -11,7 +11,7 @@ public record InternalEventData : ContigEventData
 
     // Constructor used for internal events
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
-    {
+    {   
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
         //Start = rnd.NextInt64(segLen, contigLen-segLen);
         Start = Sampling.GetPos(rnd, contigLen - segLen); 
@@ -22,18 +22,18 @@ public record InternalEventData : ContigEventData
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen,
         IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
     {
-        var cent = centromeres.Shuffle(rnd).First();
+        var (start, end) = centromeres.Shuffle(rnd).First();
+        var pos = rnd.NextInt64(start, end);
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
-        var pos = rnd.NextInt64(cent.start, cent.end);
         if (rnd.CoinFlip())
         {
-            Start = Math.Max(0, pos);
+            Start = pos;
             End = Math.Min(pos + segLen, contigLen);
         }
         else
         {
             Start = Math.Max(0, pos - segLen);
-            End = Math.Min(pos, contigLen);
+            End = pos;
         }
     }
 
