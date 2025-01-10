@@ -19,26 +19,26 @@
           "Type": "ChromDeletion",
           "Prob": 1
         },
-	{
-	  "Type": "ArmDeletion",
-	  "Prob": 1
-	},
-	{
-	  "Type": "TailDeletion",
-	  "Prob": 1
-	},
-	{
-	  "Type": "ChromDuplication",
-	  "Prob": 1
-	},
-	{
-	  "Type": "ArmDuplication",
-	  "Prob": 1
-	},
-	{
-	  "Type": "TailDuplication",
-	  "Prob": 1
-	}
+        {
+          "Type": "ArmDeletion",
+          "Prob": 1
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 1
+        },
+        {
+          "Type": "ChromDuplication",
+          "Prob": 1
+        },
+        {
+          "Type": "ArmDuplication",
+          "Prob": 1
+        },
+        {
+          "Type": "TailDuplication",
+          "Prob": 1
+        }
       ]
     }
   },
