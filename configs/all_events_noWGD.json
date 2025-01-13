@@ -26,23 +26,23 @@
                 {
                     "Type": "TailDeletion",
                     "Prob": 0.0974,
-		    "Size": 44731200 
+		            "Size": 44731200 
                 },
                 {
                     "Type": "InternalDeletion",
                     "Prob": 0.1253,
                     "Size": 604000
                 },
-		{
-		    "Type": "InternalDeletion",
-		    "Prob": 0.0786,
-		    "Size": 20160800
-		},
-		{
-		    "Type": "CentromereBoundDeletion",
-		    "Prob": 0.0119,
-		    "Size": 18691000
-		},
+                {
+                    "Type": "InternalDeletion",
+                    "Prob": 0.0786,
+                    "Size": 20160800
+                },
+                {
+                    "Type": "CentromereBoundDeletion",
+                    "Prob": 0.0119,
+                    "Size": 18691000
+                },
                 {
                     "Type": "ChromDuplication",
                     "Prob": 0.0253
@@ -54,7 +54,7 @@
                 {
                     "Type": "TailDuplication",
                     "Prob": 0.101,
-		    "Size": 40012400 
+		            "Size": 40012400 
                 },
                 {
                     "Type": "InternalDuplication",
@@ -66,11 +66,11 @@
                     "Prob": 0.1349,
                     "Size": 13547000
                 },
-		{
-		    "Type": "CentromereBoundDuplication",
-		    "Prob": 0.0202,
-		    "Size": 12751200
-		}
+                {
+                    "Type": "CentromereBoundDuplication",
+                    "Prob": 0.0202,
+                    "Size": 12751200
+                }
             ]
         }
     },
