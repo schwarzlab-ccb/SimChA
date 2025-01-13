@@ -156,8 +156,8 @@ try
     files.WriteClones(samples);
     if (!options.LightweightOutput)
     {
-	files.WriteCopyNumbers(genRef, samples);
-   	files.WriteKaryotypes(samples);
+        files.WriteCopyNumbers(genRef, samples);
+        files.WriteKaryotypes(samples);
     }
     if (samples.Any(s => s.EventDescs.Any()))
     {
