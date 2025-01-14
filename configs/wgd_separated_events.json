@@ -101,13 +101,14 @@
     "EvolveInTime": true,
     "EventBlock": false,
     "StepDistribution": "Poisson",
-    "MutationRate": 0.5,
+    "MutationRate": 1,
     "ThetaFitness": 20,
     "MaxTries": 50,
     "DynamicMutRate": true,
     "EventCost": false,
     "MaxTime": 100,
     "ContinuousTime": true,
-    "TetraploidStart": false
+    "TetraploidStart": false,
+    "WGDAccelerationFactor": 4
   }
 }
