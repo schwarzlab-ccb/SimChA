@@ -72,7 +72,7 @@ public class Evolver
                 ? EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef) / 2.0
                 : EvoParams.MutationRate; */
         var mu = EvoParams.DynamicMutRate && hasDoubled
-            ? EvoParams.MutationRate * 2.0
+            ? EvoParams.MutationRate * EvoParams.WGDAccelerationFactor
             : EvoParams.MutationRate;
         if (EvoParams.EventBlock)
         {
@@ -203,7 +203,7 @@ public class Evolver
             // Short-circuit the evolution process if we already have too many WGDs
             if (wgdCount >= 6)
             {
-            break;
+                break;
             }
         }
         return currentEvents;
