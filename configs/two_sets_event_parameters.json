@@ -7,7 +7,7 @@
     "Fitness": {
         "Stress": 1.8,
         "TsgOg": 0,
-        "Essentiality": 0,
+        "Essentiality": 100,
         "Haploinsufficiency": false,
         "NormalizeGenes": true
     },
@@ -70,7 +70,11 @@
                     "Type": "CentromereBoundDuplication",
                     "Prob": 0.0189,
                     "Size": 16087400
-                }
+                },
+		{
+		    "Type": "WholeGenomeDoubling",
+		    "Prob": 0.07429391622963268
+		}
             ]
         },
         "PostWGD": {
