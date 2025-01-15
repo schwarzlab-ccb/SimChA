@@ -11,7 +11,7 @@ public class Sample
     public string SampleId { get; }
     public SexEnum Sex { get; }
     public List<CloneIn> Clones { get; }
-    public List<CNEventPars> EventPars { get; set; }
+    public List<CNEventPars> EventPars { get; }
     public Dictionary<string, Karyotype> Kars { get; }
     public Dictionary<string, List<CNEventDesc>> EventDescs { get; }
     public Dictionary<string, CloneStat> Stats { get; }
@@ -26,21 +26,26 @@ public class Sample
         Clones = clones;
         EventPars = eventPars;
         Mixture = mixture;
+        Signatures = signatures;
+        
         Kars = new Dictionary<string, Karyotype>();
         EventDescs = new Dictionary<string, List<CNEventDesc>>();
         Stats = new Dictionary<string, CloneStat>();
-        Signatures = signatures;
-
     }
     
-    public static string Header() => "sample_id\tsex\tclone_count\tmixture";
-    private string MixtureString() => EventPars.Any() ? string.Join(";", Mixture.Select(pair => $"{pair.Key}:{pair.Value:f4}")) : "-";
+    public static string Header() 
+        => "sample_id\tsex\tclone_count\tmixture";
+    private string MixtureString() 
+        => EventPars.Any() ? string.Join(";", Mixture.Select(pair => $"{pair.Key}:{pair.Value:f4}")) : "-";
+    
     public string ToTSV() => $"{SampleId}\t" +
                              $"{Sex}\t" +
                              $"{Clones.Count}\t" +
                              $"{MixtureString()}";
 
-    public static string HeaderAsTree() => "ID\tParentID\tDistance";
+    public static string HeaderAsTree() 
+        => "ID\tParentID\tDistance";
+    
     public string ToTSVAsTree()
     {
         var sb = new StringBuilder();
