@@ -54,7 +54,7 @@ public static class Converters
     public static List<Sample> MakeSamples(
         Random rnd, 
         int repeats, 
-        int meanDist, 
+        double meanDist, 
         Distribution distribution, 
         Dictionary<string, Signature> sigs, 
         SexEnum sex,
@@ -89,7 +89,7 @@ public static class Converters
     public static List<Sample> MakeSamples(
         Random rnd, 
         int repeats, 
-        int meanDist, 
+        double meanDist, 
         Distribution distribution, 
         Dictionary<string, Signature> sigs, 
         SexEnum sex, 

@@ -2,10 +2,10 @@
   "Seed": -1,
   "Sex": "None",
   "AutosomesOnly": true,
-  "EventCountMean": 35,
+  "EventCountMean": 90,
   "EventDist": "Unit",
   "Fitness": {
-    "Stress": 2.424,
+    "Stress": 3,
     "TsgOg": 0,
     "Essentiality": 0,
     "Haploinsufficiency": false,
@@ -73,7 +73,7 @@
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.07429391622963268
+          "Prob": 0.101
         }
       ]
     },
@@ -141,7 +141,7 @@
   },
   "EvoParams": {
     "WithFitness": true,
-    "EvolveInTime": true,
+    "EvolveInTime": false,
     "EventBlock": false,
     "StepDistribution": "Poisson",
     "MutationRate": 1,
@@ -149,9 +149,9 @@
     "MaxTries": 25,
     "DynamicMutRate": true,
     "EventCost": false,
-    "MaxTime": 57.219910672308416,
-    "ContinuousTime": true,
+    "MaxTime": 90,
+    "ContinuousTime": false,
     "TetraploidStart": false,
-    "WGDAccelerationFactor": 4
+    "WGDAccelerationFactor": 1
   }
 }
