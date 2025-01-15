@@ -73,7 +73,7 @@
                 },
 		{
 		    "Type": "WholeGenomeDoubling",
-		    "Prob": 0.02163
+		    "Prob": 0.07429391622963268
 		}
             ]
         },
