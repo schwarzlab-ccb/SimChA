@@ -57,12 +57,30 @@
 			"Size": 0,
 			"Frag": 0
 		  },
+      {
+      "Type": "TailDuplication",
+      "Prob": 0,
+      "Size": 1000000,
+      "Frag": 0
+      },
 		  {
 			"Type": "TailDeletion",
 			"Prob": 0,
-			"Size": 0,
+			"Size": 1000000,
 			"Frag": 0
 		  },
+      {
+      "Type": "CentromereBoundDeletion",
+      "Prob": 0,
+      "Size": 1000000,
+      "Frag": 0
+      },
+      {
+      "Type": "CentromereBoundDuplication",
+      "Prob": 0,
+      "Size": 1000000,
+      "Frag": 0
+      },
 		  {
 			"Type": "ArmDeletion",
 			"Prob": 16.66,
