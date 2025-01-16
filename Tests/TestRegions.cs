@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Extreme.DataAnalysis.Models;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.DataTypes;
@@ -95,6 +96,149 @@ public class TestRegions
             _cRegion with { Start = 3, End = 4 }
         };
         Assert.AreEqual(res, RegionOps.DeleteRange(regions, 1, 3));
+    }
+    
+    [Test]
+    public void TestDeleteArm()
+    {
+        var regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        var pArm = new List<Region>
+        {
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(pArm, RegionOps.DeleteArm(regions, 1, true, false));
+        regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        var qArm = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true)
+        };
+        Assert.AreEqual(qArm, RegionOps.DeleteArm(regions, 1, false, false));
+        regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        var pArmWithCentromere = new List<Region>
+        {
+            new QArm(2, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(pArmWithCentromere, RegionOps.DeleteArm(regions, 1, true, true));
+        regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        var qArmWithCentromere = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true)
+        };
+        Assert.AreEqual(qArmWithCentromere, RegionOps.DeleteArm(regions, 1, false, true));
+    }
+
+    [Test]
+    public void TestGetArm()
+    {
+        var regions = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        var qArm = new List<Region>
+        {
+            new QArm(2, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(qArm, RegionOps.GetArm(regions, 1, false, false));
+        var pArm = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true)
+        };
+        Assert.AreEqual(pArm, RegionOps.GetArm(regions, 1, true, false));
+        var qArmWithCentromere = new List<Region>
+        {
+            new Centromere(1, 2, "chr1", true, true),
+            new QArm(2, 3, "chr1", true, true)
+        };
+        Assert.AreEqual(qArmWithCentromere, RegionOps.GetArm(regions, 1, false, true));
+        var pArmWithCentromere = new List<Region>
+        {
+            new PArm(0, 1, "chr1", true, true),
+            new Centromere(1, 2, "chr1", true, true)
+        };
+        Assert.AreEqual(pArmWithCentromere, RegionOps.GetArm(regions, 1, true, true));        
+    }
+
+    [Test]
+    public void TestMergeRegions()
+    {
+        var regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3 },
+            _cRegion with { Start = 3, End = 4 }
+        };
+        var mergeAll = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 4 },
+        };
+        Assert.AreEqual(mergeAll, RegionOps.MergeRegions(regions));
+
+        regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3, Forward = false },
+            _cRegion with { Start = 3, End = 4, Forward = false }
+        };
+        var mergeAllInverted = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 2},
+            _cRegion with { Start = 2, End = 4, Forward = false },
+        };
+        Assert.AreEqual(mergeAllInverted, RegionOps.MergeRegions(regions));
+
+        regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 2, End = 3, Forward = false },
+            _cRegion with { Start = 3, End = 4}
+        };
+        var mergeOneInverted = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 2},
+            _cRegion with { Start = 2, End = 3, Forward = false },
+            _cRegion with { Start = 3, End = 4}
+        };
+        Assert.AreEqual(mergeOneInverted, RegionOps.MergeRegions(regions));
+
+        regions = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 1 },
+            _cRegion with { Start = 1, End = 2 },
+            _cRegion with { Start = 3, End = 4}
+        };
+        var mergeGapped = new List<Region>
+        {
+            _cRegion with { Start = 0, End = 2},
+            _cRegion with { Start = 3, End = 4}
+        };
+        Assert.AreEqual(mergeGapped, RegionOps.MergeRegions(regions));
     }
 
     [Test]

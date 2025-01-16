@@ -8,9 +8,5 @@ public enum ExecMode
     Tree,
     Repeats,
     Profiles,
-    ParseGenContents,
-    Bootstrap,
-    OptimizeEvents,
-    OptimizeFitness,
-    BinSamples
+    Evolution
 }

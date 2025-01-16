@@ -44,7 +44,7 @@ public static class RegionOps
         {
             return region;
         }
-        var newSNVDict = region.SNVDict;
+        var newSNVDict = new Dictionary<long, Nucleotide>(region.SNVDict);
         foreach (var snv in region.SNVDict)
         {
             if (snv.Key <= region.Start || region.End <= snv.Key)
@@ -86,7 +86,7 @@ public static class RegionOps
                 var newRegion = OffsetStart(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
-            else // Both coordinates inside of the region
+            else // None coordinates inside of the region
             {
                 var firstRegion = OffsetEnd(region, start - seekPos);
                 AddIfNotEmpty(newRegions, firstRegion);
@@ -99,6 +99,53 @@ public static class RegionOps
         }
 
         return newRegions;
+    }
+
+    public static List<Region> DeleteArm(List<Region> regions, int index, bool pArm, bool includeCentromere)
+    {
+        if (index < 0 || index >= regions.Count)
+        {
+            return new List<Region> { };
+        }
+        if (pArm)
+        {
+            if (includeCentromere)
+            {
+                regions.RemoveRange(0, index + 1);
+            }
+            else 
+            {
+                regions.RemoveRange(0, index);
+            }
+        }
+        else
+        {
+            if (includeCentromere)
+            {
+                regions.RemoveRange(index, regions.Count - index);
+            }
+            else
+            {
+                regions.RemoveRange(index + 1, regions.Count - index - 1);
+            }
+        }
+        return regions;
+    }
+    
+    public static List<Region> GetArm(List<Region> regions, int index, bool pArm, bool includeCentromere)
+    {
+        if (index < 0 || index >= regions.Count)
+        {
+            return new List<Region> { };
+        }
+        if (pArm)
+        {   
+            return includeCentromere ? regions.GetRange(0, index + 1) : regions.GetRange(0, index);
+        }
+        else
+        {
+            return includeCentromere ? regions.GetRange(index, regions.Count - index) : regions.GetRange(index + 1, regions.Count - index - 1);
+        }
     }
 
     public static List<Region> CopyRange(List<Region> regions, long start, long end)
@@ -128,7 +175,7 @@ public static class RegionOps
                 var newRegion = OffsetEnd(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
-            else // Both coordinates inside of the region
+            else // None coordinates inside of the region
             {
                 var newRegion = OffsetBoth(region, start - seekPos, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
@@ -192,28 +239,36 @@ public static class RegionOps
 
     public static List<Region> GlueNeighbours(List<Region> regions)
     {
-        var newRegions = new List<Region>();
-        bool[] merged = new bool[regions.Count];
-        for (int i = 0; i < regions.Count; i++)
+        // Step 1: Sort the regions
+        var sortedRegions = regions.OrderBy(r => r.ChrNo).ThenBy(r => r.Start).ThenBy(r => r.End).ToList();
+
+        var mergedRegions = new List<Region>();
+        foreach (var currentRegion in sortedRegions)
         {
-            if (merged[i])
+            bool isMerged = false;
+            for (int i = 0; i < mergedRegions.Count; i++)
             {
-                continue;
+                var existingRegion = mergedRegions[i];
+                // Check if the current region can be merged with the existing one
+                if (existingRegion.ChrNo == currentRegion.ChrNo &&
+                    existingRegion.Forward == currentRegion.Forward &&
+                    (existingRegion.End == currentRegion.Start))
+                {
+                    // Merge regions by updating the existing region to encompass both
+                    mergedRegions[i] = existingRegion with { End = currentRegion.End };
+                    isMerged = true;
+                    break;
+                }
             }
-            var newRegion = regions[i];
-            int j = i + 1; 
-            if (j < regions.Count
-                && !merged[j] 
-                && regions[j].ChrNo == newRegion.ChrNo 
-                && regions[j].Start == newRegion.End 
-                && regions[j].Forward == newRegion.Forward)
+            // If the current region wasn't merged, add it as a new entry
+            if (!isMerged)
             {
-                newRegion = newRegion with {End = regions[j].End};
-                merged[j] = true;
+                mergedRegions.Add(currentRegion);
             }
-            newRegions.Add(newRegion);
         }
-        return newRegions;
+
+        // Return the merged and glued regions
+        return mergedRegions;
     }
 
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
@@ -230,7 +285,7 @@ public static class RegionOps
     
     public static List<List<Region>> Scatter(List<long> locs, List<Region> regions)
     {
-        if (!locs.Any()) 
+        if (locs.Count == 0) 
         {
             return new List<List<Region>> { regions };
         }
@@ -268,5 +323,30 @@ public static class RegionOps
             seekPos += region.Length;
         }
         throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
+    }
+
+    public static List<Region> MergeRegions(List<Region> regions)
+    {
+        var newRegions = new List<Region>();
+        for (int i = 0; i < regions.Count; i++)
+        {
+            if (i == 0)
+            {
+                newRegions.Add(regions[i]);
+            }
+            else
+            {
+                var last = newRegions[^1];
+                if (last.ChrNo == regions[i].ChrNo && last.End == regions[i].Start && last.Forward == regions[i].Forward)
+                {
+                    newRegions[^1] = last with {End = regions[i].End};
+                }
+                else
+                {
+                    newRegions.Add(regions[i]);
+                }
+            }
+        }
+        return newRegions;
     }
 }

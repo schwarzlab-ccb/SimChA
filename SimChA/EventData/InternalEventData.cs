@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using SimChA.Computation;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -9,29 +11,52 @@ public record InternalEventData : ContigEventData
 
     // Constructor used for internal events
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
-    {
+    {   
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
-        Start = Sampling.GetPos(rnd, contigLen - segLen);
+        //Start = rnd.NextInt64(segLen, contigLen-segLen);
+        Start = Sampling.GetPos(rnd, contigLen - segLen); 
         End = Start + segLen;
+    }
+
+    // Constructor for Centromere-bound events
+    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen,
+        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
+    {
+        var (start, end) = centromeres.Shuffle(rnd).First();
+        var pos = rnd.NextInt64(start, end);
+        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
+        if (rnd.CoinFlip())
+        {
+            Start = pos;
+            End = Math.Min(pos + segLen, contigLen);
+        }
+        else
+        {
+            Start = Math.Max(0, pos - segLen);
+            End = pos;
+        }
     }
 
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.InternalDuplication)
+        switch (EventType)
         {
-            kar.ApplyInternalDuplication(ContigId, Start, End);
-        }
-        else if (EventType == CNEventType.InternalDeletion)
-        {
-            kar.ApplyInternalDeletion(ContigId, Start, End);
-        }
-        else if (EventType == CNEventType.InternalInversion)
-        {
-            kar.ApplyInternalInversion(ContigId, Start, End);
-        }
-        else if (EventType == CNEventType.InvertedDuplication)
-        {
-            kar.ApplyInvertedDuplication(ContigId, Start, End);
+            case CNEventType.InternalDuplication:
+            case CNEventType.CentromereBoundDuplication:
+                kar.ApplyInternalDuplication(ContigId, Start, End);
+                break;
+            case CNEventType.InternalDeletion:
+            case CNEventType.CentromereBoundDeletion:
+                kar.ApplyInternalDeletion(ContigId, Start, End);
+                break;
+            case CNEventType.InternalInversion:
+                kar.ApplyInternalInversion(ContigId, Start, End);
+                break;
+            case CNEventType.InvertedDuplication:
+                kar.ApplyInvertedDuplication(ContigId, Start, End);
+                break;
+            default:
+                throw new Exception($"Invalid event type {EventType} for InternalEventData");
         }
     }
 

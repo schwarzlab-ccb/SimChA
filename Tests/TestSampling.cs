@@ -4,6 +4,8 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Simulation;
+using SimChA.IO;
+using SimChA.DataTypes;
 
 namespace Tests;
 

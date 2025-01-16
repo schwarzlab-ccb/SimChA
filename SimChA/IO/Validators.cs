@@ -15,8 +15,9 @@ public static class Validators
             case CNEventType.ChromDuplication:
             case CNEventType.WholeGenomeDoubling:
             case CNEventType.BreakageFusionBridge:
-            case CNEventType.TailDeletion:
             case CNEventType.SNV:
+            case CNEventType.ArmDeletion:
+            case CNEventType.ArmDuplication:
                 break;
                 
             case CNEventType.InternalDeletion:
@@ -26,6 +27,10 @@ public static class Validators
             case CNEventType.Translocation:
             case CNEventType.Chromothripsis:
             case CNEventType.Chromoplexy:
+            case CNEventType.CentromereBoundDeletion:
+            case CNEventType.CentromereBoundDuplication:
+            case CNEventType.TailDeletion:
+            case CNEventType.TailDuplication:
                 if (cnEventPars.Size <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
                 break;
@@ -49,6 +54,10 @@ public static class Validators
     // Removes signatures with probability <=0 and validates the rest
     public static void ValidateSignatures(Dictionary<string, Signature> signatures)
     {
+        if (signatures.Count == 0)
+        {
+            throw new Exception("No signatures were provided.");
+        }
         foreach (var sig in signatures.Where(sig => sig.Value.Prob > 0 && sig.Value.Events.Any(e => e.Prob > 0)))
         {
             if (sig.Value.Events is null || sig.Value.Events.Count == 0)

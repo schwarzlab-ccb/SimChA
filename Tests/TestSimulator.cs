@@ -23,19 +23,21 @@ public class TestSimulator
     public void Setup()
     {
         _rnd = new Random(0);
-        _fitness = new FitnessParams(0.9, 0.05, 2, 5);
+        _fitness = new FitnessParams(0.9, 0.05, 2);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _mcParams = new MCParams(0, 0, 1.0, 1.0, 0.0);
-        _kar = new Karyotype(_genRef, true);
+        _mcParams = new MCParams(0, 0, 1.0, true, 1.0, 0.0, false, true, false);
+        _kar = new Karyotype(_genRef, SexEnum.Female);
     }
     
     [Test]
     public void TestPotential()
     {
         var events = new List<BaseEventData>();
-        var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams);
-        double potential = sim.Potential(_kar, 1, events).potential;
+        // TODO: Fix this thing about files
+        var files = new FileIO("./../out/");
+        var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams, files);
+        double potential = sim.CalculatePotential(1, 1);
         Assert.AreEqual(0.0, potential,EPSILON);
     }
 

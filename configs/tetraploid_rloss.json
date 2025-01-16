@@ -1,0 +1,62 @@
+{
+  "Seed": -1,
+  "Sex": "None",
+  "AutosomesOnly": true,
+  "EventCountMean": 35,
+  "EventDist": "Unit",
+  "Fitness": {
+    "Stress": 1,
+    "TsgOg": 0,
+    "Essentiality": 0,
+    "Haploinsufficiency": true,
+    "NormalizeGenes": true
+  },
+  "Signatures": {
+    "CNVs":{
+      "Prob": 1,
+      "Events": [
+        {
+          "Type": "ChromDeletion",
+          "Prob": 1
+        },
+        {
+          "Type": "ArmDeletion",
+          "Prob": 1
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 1,
+          "Size": 44731200
+        },
+        {
+          "Type": "ChromDuplication",
+          "Prob": 1
+        },
+        {
+          "Type": "ArmDuplication",
+          "Prob": 1
+        },
+        {
+          "Type": "TailDuplication",
+          "Prob": 1,
+          "Size": 40012400 
+        }
+      ]
+    }
+  },
+  "EvoParams": {
+    "WithFitness": true,
+    "EvolveInTime": false,
+    "EventBlock": false,
+    "StepDistribution": "Poisson",
+    "MutationRate": 0.5,
+    "ThetaFitness": 1,
+    "MaxTries": 40,
+    "DynamicMutRate": false,
+    "EventCost": false,
+    "MaxTime": 100,
+    "ContinuousTime": true,
+    "TetraploidStart": true,
+    "WGDAccelerationFactor": 1
+  }
+}

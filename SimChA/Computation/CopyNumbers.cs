@@ -5,23 +5,28 @@ namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, bool isFemale)
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, SexEnum sex)
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
+        karyotype.MergeRegions();
+        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
     } 
     
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool isFemale, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.ChrIDsForSex(isFemale) : genRef.ChrIDsForAutosomes();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+        karyotype.MergeRegions();
+        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
-            
 
-    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool keepMissing = false)
+    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
     {
-        var chrIDs = genRef.IncludeSexChromosomes ? genRef.AllChrs : genRef.ChrIDsForAutosomes();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
+    }
+
+    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
+    {
+        var chrIDs = bins.Keys;
+        karyotype.MergeRegions();
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), bins[c], c, keepMissing, false));
     }
     public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, string chrNo, bool keepMissing = false)
     {
@@ -32,7 +37,7 @@ public static class CopyNumbers
         return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo, keepMissing);
     }
     
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing)
+    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing, bool joinSegments = true)
     {
         var result = new List<CopyNumber>();
         for (int i = 0; i < segs.Count - 1; i++)
@@ -51,14 +56,37 @@ public static class CopyNumbers
             {
                 result.Add(new CopyNumber(seg, -1, -1, -1));
             }
-            
+        }
+        if (joinSegments)
+        {
+            // Merge the result list such that adjacent segments with the same copy number are combined
+            result = result.Aggregate(new List<CopyNumber>(), (acc, cn) =>
+            {
+                if (acc.Count == 0)
+                {
+                    acc.Add(cn);
+                }
+                else
+                {
+                    var last = acc[^1];
+                    if (last.CNH1 == cn.CNH1 && last.CNH2 == cn.CNH2)
+                    {
+                        acc[^1] = new CopyNumber(new GenRange(last.Segment.Start, cn.Segment.End, last.Segment.ChrNo), last.CNH1, last.CNH2, last.NSNVs + cn.NSNVs);
+                    }
+                    else
+                    {
+                        acc.Add(cn);
+                    }
+                }
+                return acc;
+            });
         }
         return result;
     }
 
-    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, bool isFemale)
+    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexEnum sex)
     {
-        long totalLength = genRef.GetGenomeLen(isFemale) / 2;
+        long totalLength = genRef.GetGenomeLen(sex) / 2;
         return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
     }
 

@@ -7,14 +7,21 @@ public class FitnessParams
     public double Stress { get; }
     public double TsgOg { get; }
     public double Essentiality { get; }
-    public double TotalStrength { get; }
+    public bool Haploinsufficiency { get; }
+    
+    private const double EPSILON = 1e-8;
 
-    public FitnessParams(double stress, double tsgOg, double essentiality, double totalStrength)
+    public bool NormalizeGenes { get; }
+
+    public List<double> ParamsList()
+        => new() { Stress, TsgOg, Essentiality};
+
+    public FitnessParams(double stress, double tsgOg, double essentiality, bool haploinsufficiency = false, bool normalizeGenes = false)
     {
-        var sum = stress + tsgOg + essentiality;
-        Stress = stress/sum;
-        TsgOg = tsgOg/sum;
-        Essentiality = 1.0 - Stress - TsgOg;
-        TotalStrength = totalStrength;
+        Stress = stress;
+	TsgOg  = tsgOg;
+	Essentiality = essentiality;
+        Haploinsufficiency = haploinsufficiency;
+        NormalizeGenes = normalizeGenes;
     }
 }

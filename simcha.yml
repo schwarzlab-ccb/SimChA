@@ -5,13 +5,13 @@ channels:
   - defaults
 dependencies:
   - dotnet>=6.0.201,<7
-  - python>=3.8
+  - git-lfs
+  - python>=3.10
   - pandas
   - numpy
   - seaborn
   - graphviz
   - biopython
   - numba
-  - cython
   - gcc
   - nextflow

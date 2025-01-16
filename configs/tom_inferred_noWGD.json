@@ -1,0 +1,108 @@
+{
+  "Seed": -1,
+  "Sex": "None",
+  "AutosomesOnly": true,
+  "EventCountMean": 75,
+  "EventDist": "Exponential",
+  "Fitness": {
+    "Stress": 1,
+    "TsgOg": 1,
+    "Essentiality": 1,
+    "TotalStrength": 1,
+    "Haploinsufficiency": false,
+    "NormalizeGenes": true
+  },
+  "Signatures": {
+    "CNs": {
+      "Prob": 1,
+      "Events": [
+        {
+          "Type": "ChromDuplication",
+          "Prob": 2.12,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ChromDeletion",
+          "Prob": 2.73,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ArmDuplication",
+          "Prob": 1.9,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ArmDeletion",
+          "Prob": 2.47,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "TailDuplication",
+          "Prob": 6.01,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 5.93,
+          "Size": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "InternalDuplication",
+          "Prob": 49.2,
+          "Size": 2000000,
+          "Frag": 0
+        },
+        {
+          "Type": "InternalDeletion",
+          "Prob": 29.6,
+          "Size": 2000000,
+          "Frag": 0
+        }
+      ]
+    },
+    "SNVs": {
+      "Prob": 0,
+      "Events": [
+        {
+          "Type": "SNV",
+          "Prob": 100,
+          "Size": 0,
+          "Frag": 0
+        }
+      ]
+    }
+  },
+  "MCParams": {
+    "NumSamplesMin": 100,
+    "NumSamplesTotal": 2000,
+    "ThetaFitness": 100,
+    "SwapEventP": 1,
+    "ThresholdFit": 1E-16,
+    "IncludeSize": false,
+    "IncludeProb": false
+  },
+  "MCTarget": {
+    "Mean": 1,
+    "Dist": "Exponential"
+  },
+  "EvoParams": {
+    "WithFitness": true,
+    "EvolveInTime": false,
+    "EventBlock": false,
+    "StepDistribution": "Unit",
+    "MutationRate": 1,
+    "NumIterations": 10000,
+    "ThetaFitness": 10,
+    "SimulatedAnnealing": false,
+    "Temperature": 1,
+    "CoolingRate": 0.01,
+    "MaxTries": 20,
+    "DynamicProb": true
+  }
+}

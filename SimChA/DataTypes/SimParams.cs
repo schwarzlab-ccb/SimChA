@@ -5,9 +5,11 @@ namespace SimChA.DataTypes;
 public record SimParams(
     int Seed,
     SexEnum Sex,
-    int EventCount,
+    bool AutosomesOnly,
+    double EventCountMean,
     Distribution EventDist,
     FitnessParams Fitness,
     Dictionary<string, Signature>? Signatures = null,
     MCParams? MCParams = null,
-    MCTarget? MCTarget = null);
+    MCTarget? MCTarget = null,
+    EvoParams? EvoParams = null);

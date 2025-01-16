@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
@@ -31,9 +32,7 @@ public class Contig
         => Length() > 0;
 
     public List<Region> GetRegions()
-    {
-        return _regions;
-    }
+        => _regions;
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -138,10 +137,12 @@ public class Contig
     {
         _regions = RegionOps.ConcatRegions(_regions, other._regions);
     }
-    
+
     public void GlueNeighbours()
-        => _regions = RegionOps.GlueNeighbours(_regions);
-    
+    {
+        _regions = RegionOps.GlueNeighbours(_regions);
+    }
+
     public void SNV(long location, Nucleotide newNucleotide)
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
@@ -153,7 +154,7 @@ public class Contig
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
-        foreach ((long start, long end, var chrNo, var _, bool forward, var _) in _regions)
+        foreach ((long start, long end, string chrNo, bool _, bool forward, _) in _regions)
         {
             var geneList = geneLists[chrNo];
             if (forward && geneList.Count > 0)
@@ -172,4 +173,23 @@ public class Contig
         }
         return presentGenes;
     }
+
+    public List<(long start, long end)> GetCentromeres(IImmutableDictionary<string, (long start, long end)> centromeres)
+    {
+        List<(long start, long end)> centromereList = new();
+        long currentPos = 0;
+        foreach (var reg in _regions)
+        {
+            (long centStart, long centEnd) = centromeres[reg.ChrNo];
+            if (reg.Start <= centStart && reg.End >= centEnd)
+            {
+                centromereList.Add((currentPos + centStart, currentPos + centEnd));
+            }
+            currentPos += reg.Length;
+        }
+        return centromereList;
+    }
+
+    public void MergeRegions()
+        => _regions = RegionOps.MergeRegions(_regions);
 }

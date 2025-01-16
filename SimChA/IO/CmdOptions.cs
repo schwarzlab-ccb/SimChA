@@ -35,52 +35,51 @@ public class CmdOptions
 
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
+    // TODO: Should be merged with a tree
+    [Option("event-counts", Required = false, Default = "", HelpText = "A tsv file with the event counts for each sample for parameter inference.")]
+    public string EventCounts { get; set; }
+    
+    [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
+    public bool FitnessLandscape { get; set; }
+    [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
+    public bool EvolutionMode { get; set; }
+    [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]
+    public bool SampleEventCounts { get; set; }
 
-    [Option('B', "bootstrap", Required = false, Default = "", HelpText = "Bootstrap sampling of provided fitness from the input file.")]
-    public string BootstrapFile { get; set; }
-
-    [Option("optimization", Required = false, Default = "", HelpText = "Run the optimization model.")]
-    public string OptimizationType { get; set; }
-    [Option("bin-samples", Required = false, Default = false, HelpText = "Use SimChA to bin copy-number profiles into 1MB-sized bins")]
-    public bool BinSamples { get; set; }
-    [Option("binned-samples", Required = false, Default = "", HelpText = "Path to the binned data")]
-    public string BinnedSamples { get; set; }
-    [Option("autosomes-only", Required = false, Default = false, HelpText = "Only consider autosomes for fitness calculations")]
-    public bool AutosomesOnly { get; set; }
+    [Option("light", Required = false, Default = false, HelpText = "Flag to avoid printing out the output CNPs and karyotypes.")]
+    public bool LightweightOutput { get; set; }
 
     public ExecMode ExecMode
     {
         get
         {
-            if (BinSamples)
+            if (EvolutionMode)
             {
-                return ExecMode.BinSamples;
+                return ExecMode.Evolution;
             }
-            if (OptimizationType != "")
+            if (CloneTreeFile != "" && CNProfiles != "")
             {
-                if (OptimizationType != "events" && OptimizationType != "fitness")
-                {
-                    throw new ArgumentException("optimization must be either 'events' or 'fitness'");
-                }
-                return OptimizationType == "events" ? ExecMode.OptimizeEvents : ExecMode.OptimizeFitness;
+                throw new Exception("Cannot run both tree and profiles at the same time.");
             }
             if (CloneTreeFile != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run tree with repeats.");
+                }
                 return ExecMode.Tree;
             }
             if (CNProfiles != "")
             {
+                if (Repeats > 1)
+                {
+                    throw new Exception("Cannot run profiles with repeats.");
+                }
                 return ExecMode.Profiles;
             }
-            if (BootstrapFile != "")
-            {
-                return ExecMode.Bootstrap;
-            }
-            if (UseVariants || WriteFasta)
-            {
-                return ExecMode.ParseGenContents;
-            }
-            return ExecMode.None;
+            return ExecMode.Repeats;
         }
     }
+    public bool ShouldParseGenome 
+        => UseVariants || WriteFasta;
 }

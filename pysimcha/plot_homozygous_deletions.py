@@ -1,13 +1,10 @@
+#!/usr/bin/env python3
+
 import pandas as pd
 import argparse
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 from os.path import join
-from utils import load_dataset
-import sys
-sys.path.append('..')
-from pycna.utils.assembiles import hg19_chr_lengths
+from cns.utils.assemblies import hg19_chr_lengths
 
 
 def genome_length_init():

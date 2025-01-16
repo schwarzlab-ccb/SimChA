@@ -9,6 +9,7 @@ public enum CNEventType
 {
     ChromDeletion,
     ChromDuplication,
+    TailDuplication,
     TailDeletion,
     InternalDeletion,
     InternalDuplication,
@@ -24,6 +25,10 @@ public enum CNEventType
     TIBridge,
     Pyrgo,
     Rigma,
-    SNV
+    SNV,
+    ArmDeletion,
+    ArmDuplication,
+    CentromereBoundDuplication,
+    CentromereBoundDeletion
     // Tyfonas
 }

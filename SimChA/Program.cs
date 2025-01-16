@@ -1,11 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
-using CommandLine;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.IO;
-using SimChA.Optimization;
 using SimChA.Simulation;
+using CommandLine;
 
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 var cmdOptions = Parser.Default.ParseArguments<CmdOptions>(args);
@@ -18,123 +17,108 @@ cmdOptions.WithNotParsed(o =>
 var options = cmdOptions.Value;
 var execMode = options.ExecMode;
 
-SimParams simParams = FileIO.ReadSimParams(options.ConfigFile);
+var simParams = FileIO.ReadSimParams(options.ConfigFile);
+var fitParams = simParams.Fitness ?? throw new Exception("Error: Fitness parameters are missing. Please set Fitness in the config file.");
 
 var rnd = new Random(simParams.Seed);
 var files = new FileIO(options.OutputPath);
-bool parseGenContents = execMode == ExecMode.ParseGenContents;
-var includeSexChromosomes = !options.AutosomesOnly;
-var genRef = FileIO.GetGenRef(options.DataFolder, includeSexChromosomes, parseGenContents);
-files.WriteSimParams(simParams);
+var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
 
 var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
-if (execMode == ExecMode.BinSamples)
+Simulator simulator;
+if (options.UseMCMC)
 {
-    if (options.CNProfiles == "")
-    {
-        throw new Exception("Error: No CN profiles provided. Cannot bin samples.");
-    }
-    Console.WriteLine("Reading observed data:");
-    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-    var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    var binner = new Binner(genRef);
-    Console.WriteLine("Binning samples:");
-    var binnedSamples = binner.GetBinnedCNProfiles(observedSamples);
-    Console.WriteLine("Writing binned samples:");
-    files.WriteCopyNumbers(binnedSamples);
-    return 0;
-}
-else if (execMode == ExecMode.OptimizeFitness || execMode == ExecMode.OptimizeEvents)
-{
-    Console.WriteLine("Optimization model -------- ");
-    Console.WriteLine("Reading observed data:");
-    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-    var observedSamples = Simulator.SamplesFromProfiles(profiles);
-    double totalDist = 0.0;
-    if (execMode == ExecMode.OptimizeEvents)
-    {
-        var optimizer = new Optimizer(simParams, rnd, options.Repeats, genRef, observedSamples);
-        Console.WriteLine("Generating Simulated Data");
-        totalDist = optimizer.Optimize();
-    }
-    else if (execMode == ExecMode.OptimizeFitness)
-    {
-        if (options.BootstrapFile == "")
-        {
-            throw new Exception("Error: No bootstrap file provided. Cannot perform fitness optimization.");
-        }
-        if (options.BinnedSamples == "")
-        {
-            throw new Exception("Error: No binned samples provided. Cannot perform fitness optimization.");
-        }
-        var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
-        var optimizer = new FitnessOptimizer(simParams, rnd, options.Repeats, genRef, observedSamples, options.BinnedSamples, fitnessList);
-        Console.WriteLine("Generating Simulated Data");
-        totalDist = optimizer.Optimize();
-    }
-    watch.Stop();
-    //Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-    Console.WriteLine();
-    Console.WriteLine($"Total distance: {totalDist}");
-    return 0;
-}
-if (execMode == ExecMode.Profiles)
-{
-    Console.WriteLine("Reading profiles:");
-    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles);
-    samples = Simulator.SamplesFromProfiles(profiles);
+    var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
+    simulator = new MCSimulator(rnd, genRef, fitParams, mcParams, files);
 }
 else
 {
-    if (simParams.Signatures is null || simParams.Signatures.Count == 0)
+    simulator = new Simulator(rnd, genRef);
+}
+
+switch (execMode)
+{
+    case ExecMode.Evolution:
     {
-        throw new Exception("No signatures were provided.");
-    }
-    Validators.ValidateSignatures(simParams.Signatures);
-    Console.WriteLine("Computing mutations:");
-    var simulator = new Simulator(rnd, genRef);
-    if (execMode == ExecMode.Tree)
-    {
-        var inClones = FileIO.ReadClones(options.CloneTreeFile, options.UseMCMC);
-        var (cnEventPs, mixture) = Converters.PropagateSigs(simParams.Signatures);
-        string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-        var treeSample = new Sample(sampleName, Sampling.GetBinarySex(rnd, simParams.Sex), inClones, cnEventPs, mixture);
-        samples = new List<Sample> {treeSample};
-    }
-    else
-    {
-        if (simParams.MCTarget is null && options.UseMCMC)
+        var sigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
+        var evoParams = simParams.EvoParams ?? throw new Exception("Error: EvoParams not set. Cannot perform evolution without evolution parameters. Please set EvoParams in the config file.");
+        Validators.ValidateSignatures(sigs);
+        Console.WriteLine("Evolving individual samples forward:");
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, sigs, simParams.Sex, simParams.AutosomesOnly);
+        var evolver = new Evolver(rnd, genRef, fitParams, evoParams);
+        foreach (var sample in samples)
         {
-            throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
+            evolver.EvolveSample(sample);
         }
-        if (execMode == ExecMode.Bootstrap)
+        break;
+    }
+
+    case ExecMode.Profiles:
+    {
+        Console.WriteLine("Reading profiles:");
+        var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, simParams.AutosomesOnly);
+        // TODO: Needs to implement autosomes only
+        samples = Simulator.SamplesFromProfiles(profiles);
+        break;
+    }
+    
+    case ExecMode.Tree:
+        var treeSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
+        Validators.ValidateSignatures(treeSigs);
+        Console.WriteLine("Computing mutations for tree:");
+        var inClones = options.SampleEventCounts
+            ? FileIO.ReadClonesWithRates(options.CloneTreeFile, options.UseMCMC, rnd, simParams.EventDist)
+            : FileIO.ReadClonesWithEvents(options.CloneTreeFile, options.UseMCMC);
+        var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
+        string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
+        var sex = simParams.AutosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, simParams.Sex);
+        var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture, treeSigs);
+        samples = new List<Sample> {treeSample};
+        samples.ForEach(simulator.SampleEvents);
+        break;
+    
+    case ExecMode.Repeats:
+    default:
+        var repSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
+        Validators.ValidateSignatures(repSigs);
+        Console.WriteLine("Computing mutations for individual samples:");
+        if (options.UseMCMC)
         {
-            var fitnessList = FileIO.ReadFitnesses(options.BootstrapFile, simParams.Fitness);
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, fitnessList);
+            if (options.CNProfiles != "" && options.EventCounts != "")
+            {
+                var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, simParams.AutosomesOnly);
+                var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+                var fitnessList = simulator.FitnessListFromSamples(simParams, profiles, eventCounts);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, fitnessList);
+            }
+            else if (options.EventCounts != "" && simParams.MCParams != null && !simParams.MCParams.MatchFitness)
+            {
+                var eventCounts = FileIO.ReadEventCounts(options.EventCounts);
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly);
+            }
+            else
+            {
+                var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
+                samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget);
+            }
         }
         else
         {
-            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCount, simParams.EventDist, simParams.Signatures, simParams.Sex, simParams.MCTarget);
+            var mcTarget =  simParams.MCTarget ?? throw new Exception("Error: MCTarget not set. Cannot perform MC sampling. Please set MCTarget in the config file.");
+            var eventCounts = options.EventCounts != "" ? FileIO.ReadEventCounts(options.EventCounts) : new Dictionary<string, int>();
+            samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, repSigs, simParams.Sex, simParams.AutosomesOnly, mcTarget, eventCounts);
         }
-    }
 
-    foreach (var sample in samples)
-    {
-        if (options.UseMCMC)
-        {
-            if (simParams.MCParams == null)
-            {
-                throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams.");
-            }
-
-            simulator = new MCSimulator(rnd, genRef, simParams.Fitness, simParams.MCParams);
-        }
-        simulator.SampleEvents(sample);
-    }
+        samples.ForEach(simulator.SampleEvents);
+        break;
+    
+    case ExecMode.None:
+        throw new Exception("Error: No execution mode set.");
 }
 
+files.WriteSimParams(simParams);
 Console.WriteLine("");
 
 // Fitness data
@@ -146,25 +130,41 @@ foreach (var sample in samples)
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
+        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, fitParams, sample.Kars);
     }
 }
 
+// TODO split generation of fitness landscape and write to file
+if (options.FitnessLandscape)
+{
+    Console.WriteLine("Computing fitness landscape:");
+    FitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
+}
+
+// Write output
 try
 {
     Console.WriteLine("");
     files.WriteSamples(samples);
-    files.WriteCopyNumbers(genRef, samples);
     if (options.CalcConsistentCNs)
     {
         files.WriteConsistentCNs(genRef, samples);
     }
+    if (ExecMode.Tree == execMode)
+    {
+        files.WriteTree(samples);
+    }
     files.WriteClones(samples);
-    files.WriteKaryotypes(samples);
+    if (!options.LightweightOutput)
+    {
+        files.WriteCopyNumbers(genRef, samples);
+        files.WriteKaryotypes(samples);
+    }
     if (samples.Any(s => s.EventDescs.Any()))
     {
         files.WriteEvents(samples);
     }
+
     if (options.UseVariants)
     {
         files.WriteVCF(genRef, samples);

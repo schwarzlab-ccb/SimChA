@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
@@ -9,48 +10,47 @@ namespace SimChA.Simulation;
 public class Karyotype
 {
     public double FitnessVal { get; private set; }
-    
-    public bool SexXX { get;  }
-
-    public int CountContigs() 
-        => _contigs.Count(c => c.Any());
-    
-    public long GenomeLen() 
-        => _contigs.Sum(c => c.Length());
-    
-    public IEnumerable<int> ContigIds() 
-        => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
-
+    public SexEnum Sex;
     private readonly List<Contig> _contigs;
     private readonly Dictionary<string, List<GenRange>> _missingRanges;
+    private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
-    public Karyotype(GenRef genRef, bool sexXX)
+    public Karyotype(GenRef genRef, SexEnum sex)
     {
-        _contigs = genRef.GetGenotype(sexXX).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
         _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
-        SexXX = sexXX;
+        Sex = sex;
+        Centromeres = genRef.Centromeres;
     }
     
     public Karyotype(Karyotype other)
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
         _missingRanges = other._missingRanges;
-        SexXX = other.SexXX;
+        Sex = other.Sex;
+        Centromeres = other.Centromeres;
     }
     
-    public Karyotype(List<Contig> contigs, List<GenRange> missingList, bool sexXX)
+    public Karyotype(List<Contig> contigs, IEnumerable<GenRange> missingList, 
+        IImmutableDictionary<string, (long start, long end)> centromeres, SexEnum sexEnum)
     {
+        _missingRanges = missingList
+            .GroupBy(range => range.ChrNo)
+            .ToDictionary(group => group.Key, group => group.ToList());
         _contigs = contigs;
-        _missingRanges = new Dictionary<string, List<GenRange>>();
-        foreach (var range in missingList)
-        {
-            if (!_missingRanges.ContainsKey(range.ChrNo))
-                _missingRanges[range.ChrNo] = new List<GenRange>();
-            _missingRanges[range.ChrNo].Add(range);
-        }
-        SexXX = sexXX;
+        Sex = sexEnum;
+        Centromeres = centromeres;
     }
 
+    public int CountContigs() 
+        => _contigs.Count(c => c.Any());
+    
+    public long GenomeLen()
+        => _contigs.Sum(c => c.Length());// - MissingLen();
+    
+    public IEnumerable<int> ContigIds() 
+        => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
+    
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
 
@@ -76,11 +76,13 @@ public class Karyotype
     
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
+    // TODO: Why do you need to check if the contigId is less than the count of contigs?
+    public List<(long start, long end)> GetCentromeres(int contigId)
+        => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres(Centromeres) : new List<(long, long)>();
     
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
     
-    public List<Contig> GetAllContigs() => _contigs;
     public Contig GetContig(int contigID) => _contigs[contigID];
 
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
@@ -95,6 +97,15 @@ public class Karyotype
         long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.DeleteRange(tailStart, tailEnd);
+    }
+
+    public void ApplyTailDuplication(int contigID, long tailLen, bool fiveToThree)
+    {
+        var contig = _contigs[contigID];
+        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
+        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        var newTail = new Contig(contig.GetSubContig(tailStart, tailEnd));
+        _contigs.Add(newTail);
     }
 
     public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
@@ -279,4 +290,8 @@ public class Karyotype
         return snvList;
     }
     
+    public void MergeRegions()
+    {
+        _contigs.ForEach(c => c.MergeRegions());
+    }
 }

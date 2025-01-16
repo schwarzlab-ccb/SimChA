@@ -7,4 +7,5 @@ public record CNEventDesc(
     int Depth,
     string Description = "",
     double DeltaFitness = 0, 
-    double TotalFitness = 0);
+    double TotalFitness = 0,
+    double Time = 0);

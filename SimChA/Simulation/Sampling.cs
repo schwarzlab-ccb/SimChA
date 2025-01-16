@@ -1,4 +1,5 @@
-﻿using Extreme.Statistics.Distributions;
+﻿using System.ComponentModel.DataAnnotations;
+using Extreme.Statistics.Distributions;
 using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
@@ -15,7 +16,10 @@ public static class Sampling
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen));
-
+    
+    public static double GetExpProb(long segLen, double scale)
+        => Math.Exp(-segLen / scale) / scale;
+    
     public static long GetPos(Random rnd, long contigLen)
         => rnd.NextInt64(0, contigLen);
     
@@ -52,42 +56,63 @@ public static class Sampling
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
     
-    public static double SampleDist(Random rnd, DataTypes.Distribution dist)
+    public static double SampleDist(Random rnd, DataTypes.Distribution dist, double mean = 1)
     {
         return dist switch
         {
-            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, 1),
-            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, 1, .5),
+            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, mean, .5),
             _ => 1
         };
     }
 
-    public static bool GetBinarySex(Random rnd, SexEnum sexEnum)
+    public static int SampleDistance(Random rnd, DataTypes.Distribution dist, double mean)
+    {
+        return dist switch
+        {
+            DataTypes.Distribution.Exponential => (int) Math.Round(mean * ExponentialDistribution.Sample(rnd, 1.0)),
+            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Normal => throw new Exception("Normal distribution not supported for distance sampling"),
+            _ => (int) mean
+        };
+    }
+
+    public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean)
+    {
+        return dist switch
+        {
+            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
+            DataTypes.Distribution.Unit => (int)mean,
+            _ =>1
+        };
+    }
+
+    public static SexEnum GetSex(Random rnd, SexEnum sexEnum)
         => sexEnum switch
         {
-            SexEnum.Both => rnd.CoinFlip(),
-            SexEnum.Female => true,
-            SexEnum.Male => false,
-            _ => throw new ArgumentOutOfRangeException(nameof(sexEnum), sexEnum, null)
+            SexEnum.None => rnd.CoinFlip() ? SexEnum.Male : SexEnum.Female,
+            _ => sexEnum
         };
 
     public static Nucleotide SampleBase(Random rnd) 
         => (Nucleotide) rnd.Next(4);
 
-    public static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
+    private static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
     {
         // Karyotype stores 0-length contigs for contig-ID-preservation, so we need to filter them out
         var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0).ToList();
         long totalLength = contigIds.Sum(kar.ContigLen);
         var pArray = contigIds.Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
-        var idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
+        int idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
         return (idSelected, kar.ContigLen(idSelected));
     }
     
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
-        if (!seq.Any())
+        if (seq.Count == 0)
             return null;
         
         switch (cnEventPars.Type)
@@ -102,8 +127,23 @@ public static class Sampling
             
             // Tail events
             case CNEventType.TailDeletion:
+            case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
                 return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
+
+            case CNEventType.ArmDeletion:
+            case CNEventType.ArmDuplication:
+                var cents = kar.GetCentromeres(seq[0].id);
+                return cents.Count == 0 
+                    ? null
+                    : new TailEventData(rnd, cnEventPars, seq[0].id, cents);
+
+            case CNEventType.CentromereBoundDeletion:
+            case CNEventType.CentromereBoundDuplication:
+                cents = kar.GetCentromeres(seq[0].id);
+                return cents.Count == 0
+                    ? null
+                    : new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len, cents);
 
             // Internal events
             case CNEventType.InternalDuplication:
@@ -112,7 +152,7 @@ public static class Sampling
             case CNEventType.InvertedDuplication:
                 return new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
             
-            case CNEventType.Translocation:        
+            case CNEventType.Translocation:
                 return seq.Count < 2 
                     ? null 
                     : new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len);

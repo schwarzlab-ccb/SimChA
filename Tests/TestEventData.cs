@@ -48,18 +48,6 @@ public class TestEventData
     }
 
     [Test]
-    public void TestTailEventData()
-    {
-        const long len = 1_000_000;
-        var eventP = new CNEventPars(CNEventType.TailDeletion, 1, 1_000_000);
-        var eventData = new InternalEventData(_rnd, eventP, 0, len);
-        Assert.GreaterOrEqual(eventData.Start, 0);
-        Assert.LessOrEqual(eventData.Start, len);
-        Assert.Greater(eventData.End,eventData.Start);
-        Assert.LessOrEqual(eventData.Start, len);
-    }
-
-    [Test]
     public void TestPairEventData()
     {
         const long lenA = 1_000_000;
@@ -71,6 +59,38 @@ public class TestEventData
         Assert.GreaterOrEqual(eventData.PosB, 0);
         Assert.LessOrEqual(eventData.PosB, lenB);
         Assert.IsFalse(eventData.Inverted);
+    }
+
+    [Test]
+    public void TestCentromereBoundEventData()
+    {
+        const long len = 10_000_000;
+        var cents = new List<(long start, long end)>() { (1_000_000L, 2_000_000L) };
+        var eventP = new CNEventPars(CNEventType.CentromereBoundDeletion, 1, 1_000_000);
+        var eventData = new InternalEventData(_rnd, eventP, 0, len, cents);
+        Assert.LessOrEqual(eventData.Start, cents[0].end);
+        Assert.Less(eventData.Start, len);
+        Assert.Greater(eventData.End, eventData.Start);
+        Assert.Greater(eventData.End, cents[0].start);
+    }
+    
+    [Test]
+    public void TestArmEvent()
+    {
+        var eventP = new CNEventPars(CNEventType.ArmDeletion, 1);
+        var cents = new List<(long start, long end)>() { (1_000_000L, 2_000_000L) };
+        var eventData = new TailEventData(_rnd, eventP, 0, cents);
+        Assert.AreEqual(1_000_000L, eventData.Length);
+    }
+
+    [Test]
+    public void TestTailEvent()
+    {
+        const long len = 10_000_000L;
+        var eventP = new CNEventPars(CNEventType.TailDeletion, 1, 1_000L);
+        var eventData = new TailEventData(_rnd, eventP, 0, len);
+
+        Assert.LessOrEqual(eventData.Length, len);
     }
 
     [Test]

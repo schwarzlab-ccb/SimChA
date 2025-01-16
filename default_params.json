@@ -1,13 +1,15 @@
 {
 	"Seed": -1,
-	"Sex": "Both",
-	"EventCount": 75,
+	"Sex": "None",
+  "AutosomesOnly": false,
+	"EventCountMean": 75,
 	"EventDist": "Exponential",
 	"Fitness": {
-	  "Stress": 0.93,
-	  "TsgOg": 0.05,
-    "Essentiality": 0.05,
-	  "TotalStrength": 1
+	  "Stress": 0.9619,
+	  "TsgOg": 0.0355,
+	  "Essentiality": 0.0026,
+	  "Haploinsufficiency" : false,
+    "NormalizeGenes": false
 	},
 	"Signatures": {
 	  "CNs": {
@@ -15,61 +17,73 @@
 		"Events": [
 		  {
 			"Type": "ChromDeletion",
-			"Prob": 1,
+			"Prob": 16.66,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "ChromDuplication",
-			"Prob": 1,
+			"Prob": 16.66,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDuplication",
-			"Prob": 8,
+			"Prob": 16.66,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalDeletion",
-			"Prob": 8,
+			"Prob": 16.66,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InternalInversion",
-			"Prob": 8,
+			"Prob": 0,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "InvertedDuplication",
-			"Prob": 10,
+			"Prob": 0,
 			"Size": 2000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "BreakageFusionBridge",
-			"Prob": 4,
+			"Prob": 0,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "TailDeletion",
-			"Prob": 4,
+			"Prob": 0,
+			"Size": 0,
+			"Frag": 0
+		  },
+		  {
+			"Type": "ArmDeletion",
+			"Prob": 16.66,
+			"Size": 0,
+			"Frag": 0
+		  },
+		  {
+			"Type": "ArmDuplication",
+			"Prob": 16.66,
 			"Size": 0,
 			"Frag": 0
 		  },
 		  {
 			"Type": "Translocation",
-			"Prob": 2,
+			"Prob": 0,
 			"Size": 10000000,
 			"Frag": 0
 		  },
 		  {
 			"Type": "WholeGenomeDoubling",
-			"Prob": 0.05,
+			"Prob": 0.09,
 			"Size": 0,
 			"Frag": 0
 		  },
@@ -131,13 +145,34 @@
 	},
 	"MCParams": {
 	  "NumSamplesMin": 100,
-	  "NumSamplesTotal": 2500,
+	  "NumSamplesTotal": 1000,
 	  "ThetaFitness": 10,
+	  "MatchFitness": true,
 	  "SwapEventP": 1,
-	  "ThresholdFit": 1E-08
+	  "ThresholdFit": 1E-08,
+	  "IncludeSize": false,
+	  "IncludeProb": false
 	},
 	"MCTarget": {
 		"Mean": 1,
 		"Dist": "Exponential"
-	}
+	},
+  "EvoParams": {
+    "WithFitness": true,
+    "EvolveInTime": false,
+    "EventBlock": false,
+    "StepDistribution": "Unit",
+    "MutationRate": 1,
+    "NumIterations": 10000,
+    "ThetaFitness": 10,
+    "SimulatedAnnealing": false,
+    "Temperature": 1,
+    "CoolingRate": 0.01,
+    "MaxTries": 10000,
+    "EventCost": true,
+    "DynamicMutRate": false,
+    "MaxTime": 1000,
+    "ContinuousTime": true,
+    "WGDAccelerationFactor": 2
   }
+}

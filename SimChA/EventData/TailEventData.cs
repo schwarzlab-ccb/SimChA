@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using SimChA.Computation;
 using SimChA.Simulation;
 
@@ -5,28 +6,45 @@ namespace SimChA.EventData;
 
 public record TailEventData : ContigEventData
 {
-    public long DelFraction { get; }
+    public long Length { get; }
     public bool Direction { get; }
     
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
-        DelFraction = Sampling.GetPos(rnd, contigLen);
+        //Length = Sampling.GetPos(rnd, contigLen, CN);
+        Length = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
+        Direction = rnd.CoinFlip();
+    }
+    
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, 
+        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
+    {
+        var cent =  centromeres.Shuffle(rnd).First();
+        Length = rnd.CoinFlip() ? cent.start : cent.end;
         Direction = rnd.CoinFlip();
     }
 
     public override void ApplyEvent(Karyotype kar)
     {
-        if (EventType == CNEventType.TailDeletion)
+        switch (EventType)
         {
-            kar.ApplyTailDeletion(ContigId, DelFraction, Direction);
-        }
-        else if (EventType == CNEventType.BreakageFusionBridge)
-        {
-            kar.ApplyBFB(ContigId, DelFraction, Direction);
+            case CNEventType.TailDeletion:
+            case CNEventType.ArmDeletion:
+                kar.ApplyTailDeletion(ContigId, Length, Direction);
+                break;
+            case CNEventType.TailDuplication:
+            case CNEventType.ArmDuplication:
+                kar.ApplyTailDuplication(ContigId, Length, Direction);
+                break;
+            case CNEventType.BreakageFusionBridge:
+                kar.ApplyBFB(ContigId, Length, Direction);
+                break;
+            default:
+                throw new Exception($"Invalid event type {EventType} for TailEventData");
         }
     }
     
     public override string ToString()
-        => $"contig:{ContigId};delFraction:{DelFraction};dir:{Direction}";
+        => $"contig:{ContigId};length:{Length};dir:{Direction}";
 }

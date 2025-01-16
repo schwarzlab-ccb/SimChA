@@ -6,15 +6,13 @@ import numpy as np
 import matplotlib.patches as mpatches
 import pandas as pd
 import math
-import sys
-sys.path.append('../scripts')
-from utils import chromosome_colors
+from cns.utils.assemblies import human_chr_colors
 
 # a plot with rectangles between start-end on a line given by the copy number
 def plot_hap(ax, chr_data, chr, hap):    
     if (len(chr_data) == 0):
         return
-    for index, row in chr_data.iterrows():
+    for _, row in chr_data.iterrows():
         start = row["start"] / 1000000
         end = row["end"] / 1000000
         height = .2
@@ -31,9 +29,10 @@ def plot_hap(ax, chr_data, chr, hap):
             y_pos = row["cn_both"] - .1        
             hatch = None            
             alpha = 1
-        fc = chromosome_colors[chr]
+        fc = human_chr_colors[chr]
         rect = mpatches.Rectangle((start, y_pos), width, height, fc=fc, alpha=alpha, hatch=hatch)   
         ax.add_patch(rect)           
+
 
 def plot_chr(ax, data, chr, start = 0, end = 0, join_haps = False):
     ax.set_ylabel(f"CN {chr}")
@@ -55,7 +54,7 @@ def plot_chr(ax, data, chr, start = 0, end = 0, join_haps = False):
 
 
 def plot_CNs(data, sample, join_haps = False, dpi=150):
-    chr_names = chromosome_colors.keys()
+    chr_names = human_chr_colors.keys()
     # set 24 subplots vertically stacked
     fig, axs = plt.subplots(len(chr_names), 1)
     fig.set_size_inches(1920 / dpi, 1080 / dpi * 8)
@@ -72,6 +71,7 @@ def get_data(input_file, sample_name):
     sample_data = df.loc[[sample_name]]
     return sample_data, sample_name
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot haplotype specific Copy Numbers for a sample")
     parser.add_argument("-I", "--input", default="copynumbers.tsv", help="The file with copynumbers.")
@@ -83,4 +83,4 @@ if __name__ == "__main__":
     sample_data, sample_name = get_data(args.input, args.sample)
     plot_CNs(sample_data, sample_name, join_haps = args.joint, dpi=150)
     # save using tight layout
-    plt.savefig(args.output, dpi=150)
+    plt.savefig(args.output, dpi=150, bbox_inches="tight")
