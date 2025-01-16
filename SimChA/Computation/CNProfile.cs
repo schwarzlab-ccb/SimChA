@@ -24,8 +24,6 @@ public abstract class CNProfile
         var ogCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar);
         var essCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar);
 
-        double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
-        double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
         
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
         double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.NormalizeGenes);
@@ -33,6 +31,12 @@ public abstract class CNProfile
         double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
-        return  new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, clone.FitnessTarget, stress, tsg, og, ess, hemizygosity, nullizygosity);
+        var events = sample.EventDescs[clone.CloneId];
+        int mutCount = events.Count > 0 ? sample.EventDescs[clone.CloneId].Last().Depth : 0;
+        
+        double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
+        double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
+
+        return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, clone.FitnessTarget, stress, tsg, og, ess, mutCount, hemizygosity, nullizygosity);
     }
 }

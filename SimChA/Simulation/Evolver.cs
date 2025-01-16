@@ -90,7 +90,7 @@ public class Evolver
             }
             var abberation = new CNEventDesc(
                 newEvent.EventType,
-                eventCount + childEvs.Count,
+                eventCount + childEvs.Count + 1,
                 newEvent.ToString(),
                 dFit,
                 proposedFitness,
@@ -115,7 +115,6 @@ public class Evolver
     {
         foreach (var child in clones[node.CloneId])
         {
-            // copy of karyotype for printing out the events & their individual effects
             // Start with the tetraploid state
             if (EvoParams.TetraploidStart)
             {
@@ -126,18 +125,6 @@ public class Evolver
             sample.EventDescs[node.CloneId] = newEvents;
             sample.Kars[node.CloneId] = newKaryotype;
             
-            // The sample's clone should have its distance updated
-            int cloneIndex = sample.Clones.FindIndex(c => c.CloneId == child.CloneId);
-            if (cloneIndex != -1)
-            {
-                var updatedClone = sample.Clones[cloneIndex] with { Distance = eventCount + sample.EventDescs[node.CloneId].Count };
-                sample.Clones[cloneIndex] = updatedClone;
-            }
-            else
-            {
-                throw new Exception("Error in Evolver. ApplyEvolutionRec: Clone not found in sample.");
-            }
-
             if (child.CloneId != node.CloneId)
             {
                 ApplyEvolutionRec(sample, child, clones, eventCount + child.Distance);

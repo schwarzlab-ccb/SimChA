@@ -14,7 +14,7 @@ public class Sample
     public List<CNEventPars> EventPars { get; }
     public Dictionary<string, Karyotype> Kars { get; }
     public Dictionary<string, List<CNEventDesc>> EventDescs { get; }
-    public Dictionary<string, CloneStat> Stats { get; }
+    public Dictionary<string, CloneStat> CloneStats { get; }
     public Dictionary<string, double> Mixture { get; }
     public Dictionary<string, Signature> Signatures { get; }
     
@@ -30,7 +30,7 @@ public class Sample
         
         Kars = new Dictionary<string, Karyotype>();
         EventDescs = new Dictionary<string, List<CNEventDesc>>();
-        Stats = new Dictionary<string, CloneStat>();
+        CloneStats = new Dictionary<string, CloneStat>();
     }
     
     public static string Header() 

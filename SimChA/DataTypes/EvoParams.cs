@@ -1,7 +1,6 @@
 namespace SimChA.DataTypes;
 
 // Parameters used in the Evolution Modeling
-// Input: 
 
 public record EvoParams(
     bool WithFitness, // Evolve with or without fitness

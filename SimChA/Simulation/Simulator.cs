@@ -87,8 +87,8 @@ public class Simulator
             int total = sample.Clones.Count;
             foreach (var clone in sample.Clones)
             {
-                sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, GenRef, simParams.Fitness, sample.Kars);
-                output.Add((sample.Stats[clone.CloneId].Fitness, eventCounts[sample.SampleId]));
+                sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, GenRef, simParams.Fitness, sample.Kars);
+                output.Add((sample.CloneStats[clone.CloneId].Fitness, eventCounts[sample.SampleId]));
             }
         }
         return output;

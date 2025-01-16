@@ -13,7 +13,7 @@ public static class FitnessLandscape
         {
             foreach (var clone in sample.Clones)
             {
-                var stats = sample.Stats[clone.CloneId];
+                var stats = sample.CloneStats[clone.CloneId];
                 var stress = stats.Stress;
                 var tsgog = stats.Tsg + stats.Og;
                 var ess = stats.Ess;
@@ -46,7 +46,7 @@ public static class FitnessLandscape
             foreach (var clone in sample.Clones)
             {
                 Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-                sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
+                sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.Fitness, sample.Kars);
             }
         }
     }

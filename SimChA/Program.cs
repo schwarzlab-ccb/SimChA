@@ -130,7 +130,7 @@ foreach (var sample in samples)
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.Stats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, fitParams, sample.Kars);
+        sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, fitParams, sample.Kars);
     }
 }
 

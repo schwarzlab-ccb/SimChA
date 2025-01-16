@@ -73,24 +73,15 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.1
+                    "Prob": 0.115
                 }
             ]
         }
     },
     "EvoParams": {
         "WithFitness": true,
-        "EvolveInTime": false,
-        "EventBlock": false,
-        "StepDistribution": "Poisson",
-        "MutationRate": 1,
-        "ThetaFitness": 1,
         "MaxTries": 25,
-        "DynamicMutRate": false,
         "EventCost": false,
-        "MaxTime": 57.219910672308416,
-        "ContinuousTime": false,
-        "TetraploidStart": false,
-        "WGDAccelerationFactor": 1
+        "TetraploidStart": false
     }
 }
