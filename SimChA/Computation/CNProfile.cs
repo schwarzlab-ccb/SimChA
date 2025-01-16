@@ -34,7 +34,7 @@ public abstract class CNProfile
         // Get mutation count
         // sample.EventDescs might be empty
         var found_events = sample.EventDescs.TryGetValue(clone.CloneId, out var events);
-        int mutCount = found_events ? events.Last().Depth : 0;
+        int mutCount = found_events && events != null ? events.Last().Depth : 0;
         
         double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
         double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
