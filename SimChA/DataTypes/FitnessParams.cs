@@ -8,6 +8,7 @@ public class FitnessParams
     public double TsgOg { get; }
     public double Essentiality { get; }
     public bool Haploinsufficiency { get; }
+    
     private const double EPSILON = 1e-8;
 
     public bool NormalizeGenes { get; }

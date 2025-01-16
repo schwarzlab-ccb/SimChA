@@ -2,10 +2,10 @@
     "Seed": -1,
     "Sex": "None",
     "AutosomesOnly": true,
-    "EventCountMean": 35,
-    "EventDist": "Unit",
+    "EventCountMean": 89.28,
+    "EventDist": "Exponential",
     "Fitness": {
-        "Stress": 1.8,
+        "Stress": 3,
         "TsgOg": 0,
         "Essentiality": 0,
         "Haploinsufficiency": false,
@@ -17,80 +17,71 @@
             "Events": [
                 {
                     "Type": "ChromDeletion",
-                    "Prob": 0.051
+                    "Prob": 0.0465
                 },
                 {
                     "Type": "ArmDeletion",
-                    "Prob": 0.0117
+                    "Prob": 0.0107
                 },
                 {
                     "Type": "TailDeletion",
-                    "Prob": 0.0974,
-		    "Size": 44731200 
+                    "Prob": 0.0809,
+                    "Size": 41067200
                 },
                 {
                     "Type": "InternalDeletion",
-                    "Prob": 0.1253,
-                    "Size": 604000
+                    "Prob": 0.0589,
+                    "Size": 19888700
                 },
-		{
-		    "Type": "InternalDeletion",
-		    "Prob": 0.0786,
-		    "Size": 20160800
-		},
-		{
-		    "Type": "CentromereBoundDeletion",
-		    "Prob": 0.0119,
-		    "Size": 18691000
-		},
+                {
+                    "Type": "InternalDeletion",
+                    "Prob": 0.1445,
+                    "Size": 624000
+                },
+                {
+                    "Type": "CentromereBoundDeletion",
+                    "Prob": 0.0084,
+                    "Size": 18691000
+                },
                 {
                     "Type": "ChromDuplication",
-                    "Prob": 0.0253
+                    "Prob": 0.0304
                 },
                 {
                     "Type": "ArmDuplication",
-                    "Prob": 0.012
+                    "Prob": 0.0121
                 },
                 {
                     "Type": "TailDuplication",
-                    "Prob": 0.101,
-		    "Size": 40012400 
+                    "Prob": 0.1029,
+                    "Size": 41401000
                 },
                 {
                     "Type": "InternalDuplication",
-                    "Prob": 0.3263,
-                    "Size": 798800
+                    "Prob": 0.3563,
+                    "Size": 707500
                 },
                 {
                     "Type": "InternalDuplication",
-                    "Prob": 0.1349,
-                    "Size": 13547000
+                    "Prob": 0.1295,
+                    "Size": 13767400
                 },
-		{
-		    "Type": "CentromereBoundDuplication",
-		    "Prob": 0.0202,
-		    "Size": 12751200
-		},
-		{
-		    "Type": "WholeGenomeDoubling",
-		    "Prob": 0.02
-		}
+                {
+                    "Type": "CentromereBoundDuplication",
+                    "Prob": 0.0189,
+                    "Size": 16087400
+                },
+                {
+                    "Type": "WholeGenomeDoubling",
+                    "Prob": 0.115
+                }
             ]
         }
     },
     "EvoParams": {
         "WithFitness": true,
-        "EvolveInTime": true,
-        "EventBlock": false,
-        "StepDistribution": "Poisson",
-        "MutationRate": 1,
-        "ThetaFitness": 1,
         "MaxTries": 25,
-        "DynamicMutRate": false,
         "EventCost": false,
-        "MaxTime": 57.219910672308416,
-        "ContinuousTime": true,
-        "TetraploidStart": false,
-        "WGDAccelerationFactor": 4
+        "TetraploidStart": false
     }
 }

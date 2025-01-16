@@ -6,7 +6,7 @@ public record SimParams(
     int Seed,
     SexEnum Sex,
     bool AutosomesOnly,
-    int EventCountMean,
+    double EventCountMean,
     Distribution EventDist,
     FitnessParams Fitness,
     Dictionary<string, Signature>? Signatures = null,

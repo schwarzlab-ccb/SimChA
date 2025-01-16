@@ -5,7 +5,6 @@ using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using System.Text;
-using CommandLine;
 
 namespace SimChA.IO;
 
@@ -179,6 +178,7 @@ public class FileIO
         foreach (var fit in fitnesses)
             w.WriteLine($"{id}\t{fit}");
     }
+    
     public void WriteFitnesses(Dictionary<int, (int nEvents, double fit)> fitnesses)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), FITNESSES_FILENAME);
@@ -297,15 +297,12 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        file.WriteLine("sample_id\tploidy\tcoverage\tfitness\tfitness_target\tstress\ttsg\tog\tess\tdist\themizygosity\tnullizygosity");
+        file.WriteLine(CloneStat.Header());
         foreach (var sample in samples)
         {
-            foreach (var stats in sample.Stats)
+            foreach ((string cloneId, var cStat) in sample.CloneStats)
             {
-                string sampleName = sample.Clones.Count > 1 ? $"{stats.Key}" : $"{sample.SampleId}";
-                var clone = stats.Value;
-                var cloneDist = sample.Clones.First(c => c.CloneId == stats.Key).Distance;
-                file.WriteLine($"{sampleName}\t{clone.Ploidy}\t{clone.Coverage}\t{clone.Fitness}\t{clone.FitnessTarget}\t{clone.Stress}\t{clone.Tsg}\t{clone.Og}\t{clone.Ess}\t{cloneDist}\t{clone.Hemizygosity}\t{clone.Nullizygosity}");
+                file.WriteLine(cStat.ToString());
             }
         }
     }

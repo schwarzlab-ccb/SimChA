@@ -16,8 +16,10 @@ public static class Sampling
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
         => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen));
+    
     public static double GetExpProb(long segLen, double scale)
         => Math.Exp(-segLen / scale) / scale;
+    
     public static long GetPos(Random rnd, long contigLen)
         => rnd.NextInt64(0, contigLen);
     
