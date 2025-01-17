@@ -12,11 +12,7 @@ public class Evolver
     private GenRef GenRef { get; }
     private Random Rnd { get; }
 
-    public Evolver(
-        Random rnd,
-        GenRef genRef,
-        FitnessParams fitnessParams,
-        EvoParams evoParams)
+    public Evolver(Random rnd, GenRef genRef, FitnessParams fitnessParams, EvoParams evoParams)
     {
         Rnd = rnd;
         GenRef = genRef;
@@ -41,26 +37,18 @@ public class Evolver
         ApplyEvolutionRec(sample, root, childLookUp, 0);
     }
     
-    private List<CNEventPars> GetEventPars(List<CNEventPars> pars)
+    private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {
-        if (!EvoParams.EventCost)
+        if (EvoParams.EventCost <= 0 || !hasWGD)
         {
             return pars;
         }
 
         var newPars = new List<CNEventPars>(pars);
-        //var factor = CNProfile.CalcPloidy(kar, GenRef)/2.0;
-        foreach (var e in pars)
+        foreach (var e in pars.Where(e => e.Type.ToString().EndsWith("Deletion")))
         {
-            double newProb = e.Type switch
-            {
-                CNEventType.ChromDeletion => Math.Max(0, e.Prob * 4), //* EvoParams.ChromLossEnhancementFactor),
-                CNEventType.ArmDeletion => Math.Max(0, e.Prob * 2), //* EvoParams.ChromLossEnhancementFactor),
-                _ => e.Prob
-            };
-            newPars[newPars.IndexOf(e)] = e with { Prob = newProb };
+            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * EvoParams.EventCost };
         }
-
         var normalized = Converters.NormalizeEvents(newPars);
         return normalized;
     }
@@ -90,6 +78,7 @@ public class Evolver
             int mutCount = child.Distance;
             var childEvs = new List<CNEventDesc>();
             double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitnessParams);
+            bool hasWGD = false;
             for (int j = 0; 
                  j < mutCount * EvoParams.MaxTries && childEvs.Count < mutCount;
                  j = Math.Max(j + 1, childEvs.Count * EvoParams.MaxTries))
@@ -97,12 +86,12 @@ public class Evolver
                 Console.Write($"\rSample {sample.SampleId}. Iteration {j}/{mutCount};".PadRight(80));
                 
                 var proposedKar = new Karyotype(sample.Kars[node.CloneId]);
-                var cnEventPars = GetEventPars(sample.EventPars);
+                var cnEventPars = GetEventPars(sample.EventPars, hasWGD);
                 var newEvent = GetNewEvent(cnEventPars, proposedKar);
                 newEvent.ApplyEvent(proposedKar);
                 double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
                 double dFit = proposedFitness - currentFitness;
-                if (EvoParams.WithFitness && dFit < Math.Log(Rnd.NextDouble()))
+                if (EvoParams.WithFitness && Math.Exp(dFit) < Rnd.NextDouble())
                 {
                     continue;
                 }
@@ -113,6 +102,7 @@ public class Evolver
                     dFit,
                     proposedFitness,
                     childEvs.Count + 1);
+                hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
                 childEvs.Add(abberation);
                 sample.Kars[node.CloneId] = proposedKar;
                 currentFitness = proposedFitness;
