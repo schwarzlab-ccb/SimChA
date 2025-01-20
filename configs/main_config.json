@@ -6,9 +6,8 @@
     "EventDist": "Exponential",
     "Fitness": {
         "Stress": 3,
-        "TsgOg": 0,
-        "Essentiality": 0,
-        "Haploinsufficiency": false,
+        "TsgOg": 0.1,
+        "Essentiality": 10,
         "NormalizeGenes": true
     },
     "Signatures": {
@@ -81,7 +80,7 @@
     "EvoParams": {
         "WithFitness": true,
         "MaxTries": 25,
-        "EventCost": 4,
+        "EventCost": 2,
         "TetraploidStart": false
     }
 }

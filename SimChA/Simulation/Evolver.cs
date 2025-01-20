@@ -79,11 +79,13 @@ public class Evolver
             var childEvs = new List<CNEventDesc>();
             double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitnessParams);
             bool hasWGD = false;
-            for (int j = 0; 
-                 j < mutCount * EvoParams.MaxTries && childEvs.Count < mutCount;
-                 j = Math.Max(j + 1, childEvs.Count * EvoParams.MaxTries))
+            int j = 0;
+            double rand = Rnd.NextDouble();
+            while (j < EvoParams.MaxTries && childEvs.Count < mutCount)
             {
-                Console.Write($"\rSample {sample.SampleId}. Iteration {j}/{mutCount};".PadRight(80));
+                Console.Write($"\rSample: {sample.SampleId}. " +
+                              $"Mutation: {childEvs.Count+1}/{mutCount}. " +
+                              $"Attempt: {j+1}/{EvoParams.MaxTries};".PadRight(80));
                 
                 var proposedKar = new Karyotype(sample.Kars[node.CloneId]);
                 var cnEventPars = GetEventPars(sample.EventPars, hasWGD);
@@ -91,21 +93,26 @@ public class Evolver
                 newEvent.ApplyEvent(proposedKar);
                 double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
                 double dFit = proposedFitness - currentFitness;
-                if (EvoParams.WithFitness && Math.Exp(dFit) < Rnd.NextDouble())
+                if (EvoParams.WithFitness && Math.Exp(dFit) <= rand)
                 {
-                    continue;
+                    j++;
                 }
-                var abberation = new CNEventDesc(
-                    newEvent.EventType,
-                    eventCount + childEvs.Count + 1,
-                    newEvent.ToString(),
-                    dFit,
-                    proposedFitness,
-                    childEvs.Count + 1);
-                hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
-                childEvs.Add(abberation);
-                sample.Kars[node.CloneId] = proposedKar;
-                currentFitness = proposedFitness;
+                else
+                {
+                    var abberation = new CNEventDesc(
+                        newEvent.EventType,
+                        eventCount + childEvs.Count + 1,
+                        newEvent.ToString(),
+                        dFit,
+                        proposedFitness,
+                        childEvs.Count + 1);
+                    hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
+                    childEvs.Add(abberation);
+                    sample.Kars[node.CloneId] = proposedKar;
+                    currentFitness = proposedFitness;
+                    j = 0;
+                    rand = Rnd.NextDouble();
+                }
             }
             if (childEvs.Count < mutCount)
             {
