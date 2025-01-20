@@ -106,8 +106,12 @@ public class Evolver
                 childEvs.Add(abberation);
                 sample.Kars[node.CloneId] = proposedKar;
                 currentFitness = proposedFitness;
+		if (proposedKar.GenomeLen() == 0)
+		{
+			break;
+		}
             }
-            if (childEvs.Count < mutCount)
+            if (childEvs.Count < mutCount && sample.Kars[node.CloneId].GenomeLen() > 0)
             {
                 throw new Exception("Failed to generate the required number of events for sample " + sample.SampleId);
             }
