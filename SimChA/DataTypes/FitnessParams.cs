@@ -19,8 +19,8 @@ public class FitnessParams
     public FitnessParams(double stress, double tsgOg, double essentiality, bool haploinsufficiency = false, bool normalizeGenes = false)
     {
         Stress = stress;
-	TsgOg  = tsgOg;
-	Essentiality = essentiality;
+	    TsgOg  = tsgOg;
+	    Essentiality = essentiality;
         Haploinsufficiency = haploinsufficiency;
         NormalizeGenes = normalizeGenes;
     }
