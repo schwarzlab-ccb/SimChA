@@ -114,7 +114,7 @@ public class Evolver
                     rand = Rnd.NextDouble();
                 }
             }
-            if (childEvs.Count < mutCount)
+            if (childEvs.Count < mutCount && sample.Kars[node.CloneId].GenomeLen() > 0)
             {
                 throw new Exception("Failed to generate the required number of events for sample " + sample.SampleId);
             }
