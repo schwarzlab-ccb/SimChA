@@ -76,6 +76,10 @@
                     "Type": "CentromereBoundDuplication",
                     "Prob": 0.0189,
                     "Size": 16087400
+                },
+                {
+                    "Type": "WholeGenomeDoubling",
+                    "Prob": 0.045
                 }
             ]
         }

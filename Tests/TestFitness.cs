@@ -201,7 +201,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
+        var fit = new FitnessParams(0.001, 0.01, 0.000_1, 1);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
     }
@@ -211,7 +211,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
+        var fit = new FitnessParams(0.001, 0.01, 0.000_1, 1);
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(sex), karyotype.GenomeLen());
         double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), sex);
         double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), sex);
@@ -226,7 +226,7 @@ public class TestFitness
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
         karyotype.MergeRegions();
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f);
+        var fit = new FitnessParams(0.001, 0.01, 0.000_1, 1);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
         // TODO: Test the linear combination
     }

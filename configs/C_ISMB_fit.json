@@ -5,9 +5,10 @@
     "EventCountMean": 89.28,
     "EventDist": "Exponential",
     "Fitness": {
-        "Stress": 0,
+        "Stress": 1.5,
         "TsgOg": 1,
-        "Essentiality": 1,
+        "Essentiality": 1000,
+        "Delta": 1.5,
         "NormalizeGenes": true
     },
     "EvoParams": {
@@ -80,6 +81,10 @@
                     "Type": "CentromereBoundDuplication",
                     "Prob": 0.0189,
                     "Size": 16087400
+                },
+                {
+                    "Type": "WholeGenomeDoubling",
+                    "Prob": 0.045
                 }
             ]
         }

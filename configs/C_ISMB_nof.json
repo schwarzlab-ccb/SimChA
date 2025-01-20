@@ -5,9 +5,9 @@
     "EventCountMean": 89.28,
     "EventDist": "Exponential",
     "Fitness": {
-        "Stress": 0,
+        "Stress": 0.1,
         "TsgOg": 1,
-        "Essentiality": 1,
+        "Essentiality": 10,
         "NormalizeGenes": true
     },
     "EvoParams": {
@@ -16,6 +16,10 @@
         "EventCost": 2,
         "TetraploidStart": false,
         "PWGD": 0.0039
+    },
+    "MCTarget": {
+        "Mean": 0.55,
+        "Dist": "Exponential"
     },
     "Signatures": {
         "CNVs": {
@@ -76,6 +80,10 @@
                     "Type": "CentromereBoundDuplication",
                     "Prob": 0.0189,
                     "Size": 16087400
+                },
+                {
+                    "Type": "WholeGenomeDoubling",
+                    "Prob": 0.25
                 }
             ]
         }

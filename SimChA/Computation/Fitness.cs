@@ -24,22 +24,21 @@ public static class Fitness
             ? CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype)
             : new List<(Gene, int)>();
 
-
         double stressTerm = fParams.Stress > EPSILON
             ? StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen()) * fParams.Stress
             : 0.0;
         double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.Sex, fParams.NormalizeGenes);
         double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.Sex, fParams.NormalizeGenes);
         double essTerm = EssTerm(genRef, essCNs, karyotype.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency);
-        return stressTerm * fParams.Stress + (ogTerm - tsgTerm) * fParams.TsgOg + essTerm *  fParams.Essentiality;
+        return 1 + stressTerm * fParams.Stress + (ogTerm - tsgTerm) * fParams.TsgOg + essTerm * fParams.Essentiality;
     }
 
     public static double CalculateFromComponents(
         double stressTerm,
         double tsgogTerm,
         double essTerm,
-        FitnessParams fParams) =>
-        stressTerm * fParams.Stress + tsgogTerm * fParams.TsgOg + essTerm * fParams.Essentiality;
+        FitnessParams fParams) 
+        => 1 + stressTerm * fParams.Stress + tsgogTerm * fParams.TsgOg + essTerm * fParams.Essentiality;
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
     {

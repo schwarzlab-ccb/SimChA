@@ -53,7 +53,7 @@ public class Evolver
         return normalized;
     }
 
-    private BaseEventData GetNewEvent(List<CNEventPars> cnEventPars, Karyotype kar, double fitnessTarget)
+    private BaseEventData GetNewEvent(List<CNEventPars> cnEventPars, Karyotype kar, double currentFitness)
     {
         List<(double, BaseEventData)> events = new();
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
@@ -71,7 +71,11 @@ public class Evolver
             var proposedKar = new Karyotype(kar);
             eventData.ApplyEvent(proposedKar);
             double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
-            events.Add((-Math.Abs(proposedFitness - fitnessTarget), eventData));
+            if (Math.Exp(proposedFitness - currentFitness - FitnessParams.Delta) > Rnd.NextDouble())
+            {
+                return eventData;
+            }
+            events.Add((proposedFitness, eventData));
         }
         if (events.Count == 0)
         {
@@ -103,9 +107,10 @@ public class Evolver
                               $"Mutation: {childEvs.Count+1}/{mutCount}.");
                 
                 var cnEventPars = GetEventPars(sample.EventPars, hasWGD);
-                var newEvent =  hasWGD == false && Rnd.NextDouble() < EvoParams.PWGD 
-                        ? GetWGD(EvoParams.PWGD)
-                        : GetNewEvent(cnEventPars, sample.Kars[node.CloneId], child.FitnessTarget);
+                // var newEvent =  hasWGD == false && Rnd.NextDouble() < EvoParams.PWGD 
+                //         ? GetWGD(EvoParams.PWGD)
+                //         : GetNewEvent(cnEventPars, sample.Kars[node.CloneId], currentFitness);
+                var newEvent = GetNewEvent(cnEventPars, sample.Kars[node.CloneId], currentFitness);
 
                 var newKar = new Karyotype(sample.Kars[node.CloneId]);
                 newEvent.ApplyEvent(newKar);
