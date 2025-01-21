@@ -39,7 +39,7 @@ process SimChA {
 
 workflow {
 	def max_vals_per_param = 50
-	def e_cost = Channel.from(params.e_cost).take(max_vals_per_param)
+	def e_cost = Channel.from(params.e_cost).take(100)
 	def alpha = Channel.from(params.alpha).take(max_vals_per_param)
 	def product = e_cost.combine(alpha)
 	SimChA(product)
