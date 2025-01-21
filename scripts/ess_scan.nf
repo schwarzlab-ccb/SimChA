@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 simcha_path = workflow.launchDir + "/SimChA"
-params.simcha_params_file = "/projects/ag-schwarzr/project-simcha/simcha/configs/tetraploid_rloss.json"
+params.simcha_params_file = "/projects/ag-schwarzr/project-simcha/simcha/configs/C_ISMB_fit.json"
 
 process SimChA {
-	publishDir "${workflow.launchDir}/results_diploid_ess_scan/${ess}", mode: 'move'
+	publishDir "${workflow.launchDir}/results_ISMB_ess_scan/${ess}", mode: 'move'
 	
 	input:
 	val ess
@@ -22,13 +22,7 @@ process SimChA {
 	config['Fitness']['Stress'] = 1.680
 	config['Fitness']['TsgOg'] = 0
 	config['Fitness']['Essentiality'] = ${ess}
-	config['Fitness']['Haploinsufficiency'] = False
-	config['Signatures']['CNVs']['Events'][0]['Prob'] = 4.5
-	config['Signatures']['CNVs']['Events'][1]['Prob'] = 4.5
-	config['Signatures']['CNVs']['Events'][2]['Prob'] = 4.5
-	config['EvoParams']['TetraploidStart'] = False
-	config['EvoParams']['EvolveInTime'] = False
-	config['EventCountMean'] = 9
+	config['Signatures']['CNVs']['Events'][-1]['Prob'] = 0
 	with open('config.json', 'w') as f:
 		json.dump(config, f, indent=4)
 	"
@@ -38,6 +32,6 @@ process SimChA {
 
 workflow {
 	def max_vals_per_param = 1000
-	def ess = Channel.from(params.ess).take(max_vals_per_param)
+	def ess = Channel.from(params.ess_1000).take(max_vals_per_param)
 	SimChA(ess)
 }
