@@ -7,6 +7,7 @@ public class FitnessParams
     public double Stress { get; }
     public double TsgOg { get; }
     public double Essentiality { get; }
+    public double Delta { get;  }
     public bool Haploinsufficiency { get; }
     
     private const double EPSILON = 1e-8;
@@ -16,11 +17,12 @@ public class FitnessParams
     public List<double> ParamsList()
         => new() { Stress, TsgOg, Essentiality};
 
-    public FitnessParams(double stress, double tsgOg, double essentiality, bool haploinsufficiency = false, bool normalizeGenes = false)
+    public FitnessParams(double stress, double tsgOg, double essentiality, double delta, bool haploinsufficiency = false, bool normalizeGenes = false)
     {
         Stress = stress;
-	TsgOg  = tsgOg;
-	Essentiality = essentiality;
+	    TsgOg  = tsgOg;
+	    Essentiality = essentiality;
+        Delta = delta;
         Haploinsufficiency = haploinsufficiency;
         NormalizeGenes = normalizeGenes;
     }
