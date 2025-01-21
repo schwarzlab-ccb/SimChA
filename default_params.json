@@ -177,16 +177,8 @@
 	},
   "EvoParams": {
     "WithFitness": true,
-    "EvolveInTime": false,
-    "EventBlock": false,
-    "StepDistribution": "Unit",
-    "MutationRate": 1,
-    "ThetaFitness": 1,
-    "MaxTries": 10,
-    "EventCost": false,
-    "DynamicMutRate": false,
-    "MaxTime": 1000,
-    "ContinuousTime": true,
-    "WGDAccelerationFactor": 2
+    "MaxTries": 10000,
+    "EventCost": 1,
+    "TetraploidStart": false
   }
 }

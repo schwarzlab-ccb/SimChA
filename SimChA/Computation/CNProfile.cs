@@ -31,8 +31,10 @@ public abstract class CNProfile
         double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
-        var events = sample.EventDescs[clone.CloneId];
-        int mutCount = events.Count > 0 ? sample.EventDescs[clone.CloneId].Last().Depth : 0;
+        // Get mutation count
+        // sample.EventDescs might be empty
+        var found_events = sample.EventDescs.TryGetValue(clone.CloneId, out var events);
+        int mutCount = found_events && events != null && events.Count > 0 ? events.Last().Depth : 0;
         
         double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
         double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);

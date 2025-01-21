@@ -3,7 +3,7 @@
     "Sex": "None",
     "AutosomesOnly": true,
     "EventCountMean": 89.28,
-    "EventDist": "Geometric",
+    "EventDist": "Exponential",
     "Fitness": {
         "Stress": 3,
         "TsgOg": 1,
@@ -72,15 +72,15 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.11
+                    "Prob": 0.0039
                 }
             ]
         }
     },
     "EvoParams": {
-        "WithFitness": true,
+        "WithFitness": false,
         "MaxTries": 25,
-        "EventCost": 10,
+        "EventCost": 2,
         "TetraploidStart": false
     }
 }

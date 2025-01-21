@@ -154,8 +154,8 @@ public static class Parsers
                 present[chrNo] = true;
                 int start = int.Parse(lineSplit[2]) - 1;
                 int end = int.Parse(lineSplit[3]);
-                int majorCN = int.Parse(lineSplit[4]);
-                int minorCN = int.Parse(lineSplit[5]);
+                int majorCN = (int) float.Parse(lineSplit[4]);
+                int minorCN = (int) float.Parse(lineSplit[5]);
 
                 // Check for missing ranges
                 if (chrNo == lastChr)

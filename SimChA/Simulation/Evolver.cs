@@ -7,16 +7,12 @@ namespace SimChA.Simulation;
 
 public class Evolver
 {
-    protected readonly EvoParams EvoParams;
-    protected readonly FitnessParams FitnessParams;
-    protected readonly GenRef GenRef;
-    protected readonly Random Rnd;
+    private EvoParams EvoParams { get; }
+    private FitnessParams FitnessParams { get; }
+    private GenRef GenRef { get; }
+    private Random Rnd { get; }
 
-    public Evolver(
-        Random rnd,
-        GenRef genRef,
-        FitnessParams fitnessParams,
-        EvoParams evoParams)
+    public Evolver(Random rnd, GenRef genRef, FitnessParams fitnessParams, EvoParams evoParams)
     {
         Rnd = rnd;
         GenRef = genRef;
@@ -32,22 +28,26 @@ public class Evolver
         }
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
+        // Start with the tetraploid state
+        if (EvoParams.TetraploidStart)
+        {
+            sample.Kars[root.CloneId].ApplyWGD();
+            sample.Kars[root.CloneId].UpdateFitness(GenRef, FitnessParams);
+        }
         ApplyEvolutionRec(sample, root, childLookUp, 0);
     }
     
-    private List<CNEventPars> GetModifiedEventPars(List<CNEventPars> pars)
+    private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {
-        var newPars = new List<CNEventPars>(pars);
-        //var factor = CNProfile.CalcPloidy(kar, GenRef)/2.0;
-        foreach (var e in pars)
+        if (EvoParams.EventCost <= 0 || !hasWGD)
         {
-            double newProb = e.Type switch
-            {
-                CNEventType.ChromDeletion => Math.Max(0, e.Prob * 4), //* EvoParams.ChromLossEnhancementFactor),
-                CNEventType.ArmDeletion => Math.Max(0, e.Prob * 2), //* EvoParams.ChromLossEnhancementFactor),
-                _ => e.Prob
-            };
-            newPars[newPars.IndexOf(e)] = e with { Prob = newProb };
+            return pars;
+        }
+
+        var newPars = new List<CNEventPars>(pars);
+        foreach (var e in pars.Where(e => e.Type.ToString().EndsWith("Deletion")))
+        {
+            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * EvoParams.EventCost };
         }
         var normalized = Converters.NormalizeEvents(newPars);
         return normalized;
@@ -66,46 +66,6 @@ public class Evolver
         }
         throw new Exception($"Could not generate a new event. In {EvoParams.MaxTries} tries.");
     }
-
-    private (List<CNEventDesc>, Karyotype) EvolveInEvents(Sample sample, Karyotype kar, int eventCount, int mutCount)
-    {
-        var childEvs = new List<CNEventDesc>();
-        double currentFitness = Fitness.Calculate(kar, GenRef, FitnessParams);
-        for (int j = 0; 
-             j < mutCount * EvoParams.MaxTries && childEvs.Count < mutCount;
-             j = Math.Max(j + 1, childEvs.Count * EvoParams.MaxTries))
-        {
-            var proposedKar = new Karyotype(kar);
-            Console.Write($"\rSample {sample.SampleId}. Iteration {j/mutCount}/{mutCount};".PadRight(80));
-            var cnEventPars = EvoParams.EventCost 
-                ? GetModifiedEventPars(sample.EventPars) 
-                : sample.EventPars;
-            var newEvent = GetNewEvent(cnEventPars, proposedKar);
-            newEvent.ApplyEvent(proposedKar);
-            double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
-            double dFit = proposedFitness - currentFitness;
-            if (EvoParams.WithFitness && dFit < Math.Log(Rnd.NextDouble()))
-            {
-                continue;
-            }
-            var abberation = new CNEventDesc(
-                newEvent.EventType,
-                eventCount + childEvs.Count + 1,
-                newEvent.ToString(),
-                dFit,
-                proposedFitness,
-                childEvs.Count + 1);
-            childEvs.Add(abberation);
-            kar = proposedKar;
-            currentFitness = proposedFitness;
-        }
-        if (childEvs.Count < mutCount)
-        {
-            throw new Exception("Failed to generate the required number of events for sample " + sample.SampleId);
-        }
-
-        return (childEvs, kar);
-    }
     
     private void ApplyEvolutionRec(
         Sample sample,
@@ -115,16 +75,50 @@ public class Evolver
     {
         foreach (var child in clones[node.CloneId])
         {
-            // Start with the tetraploid state
-            if (EvoParams.TetraploidStart)
+            int mutCount = child.Distance;
+            var childEvs = new List<CNEventDesc>();
+            double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitnessParams);
+            bool hasWGD = false;
+            int j = 0;
+            double rand = Rnd.NextDouble();
+            while (j < EvoParams.MaxTries && childEvs.Count < mutCount)
             {
-                sample.Kars[node.CloneId].ApplyWGD();
+                Console.Write($"\rSample: {sample.SampleId}. " +
+                              $"Mutation: {childEvs.Count+1}/{mutCount}. " +
+                              $"Attempt: {j+1}/{EvoParams.MaxTries};".PadRight(80));
+                
+                var proposedKar = new Karyotype(sample.Kars[node.CloneId]);
+                var cnEventPars = GetEventPars(sample.EventPars, hasWGD);
+                var newEvent = GetNewEvent(cnEventPars, proposedKar);
+                newEvent.ApplyEvent(proposedKar);
+                double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
+                double dFit = proposedFitness - currentFitness;
+                if (EvoParams.WithFitness && Math.Exp(dFit) <= rand)
+                {
+                    j++;
+                }
+                else
+                {
+                    var abberation = new CNEventDesc(
+                        newEvent.EventType,
+                        eventCount + childEvs.Count + 1,
+                        newEvent.ToString(),
+                        dFit,
+                        proposedFitness,
+                        childEvs.Count + 1);
+                    hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
+                    childEvs.Add(abberation);
+                    sample.Kars[node.CloneId] = proposedKar;
+                    currentFitness = proposedFitness;
+                    j = 0;
+                    rand = Rnd.NextDouble();
+                }
             }
-
-            var (newEvents, newKaryotype) = EvolveInEvents(sample, sample.Kars[node.CloneId], eventCount, child.Distance);
-            sample.EventDescs[node.CloneId] = newEvents;
-            sample.Kars[node.CloneId] = newKaryotype;
-            
+            if (childEvs.Count < mutCount && sample.Kars[node.CloneId].GenomeLen() > 0)
+            {
+                throw new Exception("Failed to generate the required number of events for sample " + sample.SampleId);
+            }
+            sample.EventDescs[node.CloneId] = childEvs;
             if (child.CloneId != node.CloneId)
             {
                 ApplyEvolutionRec(sample, child, clones, eventCount + child.Distance);

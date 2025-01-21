@@ -3,11 +3,11 @@
     "Sex": "None",
     "AutosomesOnly": true,
     "EventCountMean": 89.28,
-    "EventDist": "Geometric",
+    "EventDist": "Exponential",
     "Fitness": {
         "Stress": 3,
-        "TsgOg": 1,
-        "Essentiality": 1,
+        "TsgOg": 0.1,
+        "Essentiality": 10,
         "NormalizeGenes": true
     },
     "Signatures": {
@@ -80,7 +80,7 @@
     "EvoParams": {
         "WithFitness": true,
         "MaxTries": 25,
-        "EventCost": 10,
+        "EventCost": 2,
         "TetraploidStart": false
     }
 }
