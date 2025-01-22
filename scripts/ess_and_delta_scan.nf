@@ -19,6 +19,7 @@ process SimChA {
 	import json 
 	with open('config.json', 'r') as f:
 		config = json.load(f)
+	config['Fitness']['Stress'] = 0
 	config['Fitness']['TsgOg'] = 0
 	config['Fitness']['Essentiality'] = ${ess}
 	config['Fitness']['Delta'] = ${delta}
