@@ -25,7 +25,7 @@ public static class Fitness
             : new List<(Gene, int)>();
 
         double stressTerm = fParams.Stress > EPSILON
-            ? StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen()) * fParams.Stress
+            ? StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen())
             : 0.0;
         double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.Sex, fParams.NormalizeGenes);
         double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.Sex, fParams.NormalizeGenes);

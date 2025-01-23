@@ -5,17 +5,17 @@
     "EventCountMean": 89.28,
     "EventDist": "Exponential",
     "Fitness": {
-        "Stress": 0.1,
+        "Stress": 1.4,
         "TsgOg": 1,
-        "Essentiality": 10,
+        "Essentiality": 1000,
+        "Delta": 1.5,
         "NormalizeGenes": true
     },
     "EvoParams": {
-        "WithFitness": false,
+        "WithFitness": false    ,
         "MaxTries": 5,
-        "EventCost": 2,
-        "TetraploidStart": false,
-        "PWGD": 0.0039
+        "EventCost": 1.6,
+        "TetraploidStart": false
     },
     "MCTarget": {
         "Mean": 0.55,
@@ -83,7 +83,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.25
+                    "Prob": 0.0039
                 }
             ]
         }

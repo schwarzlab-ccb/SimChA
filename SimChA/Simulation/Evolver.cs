@@ -71,7 +71,7 @@ public class Evolver
             var proposedKar = new Karyotype(kar);
             eventData.ApplyEvent(proposedKar);
             double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
-            if (Math.Exp(proposedFitness - currentFitness - FitnessParams.Delta) > Rnd.NextDouble())
+            if (Math.Exp(proposedFitness - currentFitness - FitnessParams.Delta) >= Rnd.NextDouble())
             {
                 return eventData;
             }

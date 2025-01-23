@@ -5,7 +5,7 @@
     "EventCountMean": 89.28,
     "EventDist": "Exponential",
     "Fitness": {
-        "Stress": 1.5,
+        "Stress": 1.4,
         "TsgOg": 1,
         "Essentiality": 1000,
         "Delta": 1.5,
@@ -14,7 +14,7 @@
     "EvoParams": {
         "WithFitness": true,
         "MaxTries": 5,
-        "EventCost": 2,
+        "EventCost": 1.6,
         "TetraploidStart": false,
         "PWGD": 0.0039
     },
