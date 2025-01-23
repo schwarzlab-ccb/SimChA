@@ -34,8 +34,8 @@ def get_cnps(subdir, status):
     return cnps
 
 # %%
-df_1 = pd.read_csv(pjoin(base_dir, "out", "tsgog_tet_results_mean.tsv"), sep="\t")
-df_0 = pd.read_csv(pjoin(base_dir, "out", "tsgog_dip_results_mean.tsv"), sep="\t")
+df_1 = pd.read_csv(pjoin(base_dir, "out", "tsgog_tet_results.tsv"), sep="\t")
+df_0 = pd.read_csv(pjoin(base_dir, "out", "tsgog_dip_results.tsv"), sep="\t")
 results_df = pd.concat([df_1, df_0])#pd.read_csv("tsg_og_optimization_results.tsv", sep="\t")
 wgd_1_df = results_df.query("status == 1")
 wgd_0_df = results_df.query("status == 0")
@@ -53,9 +53,22 @@ cns_0 = get_cnps(f"{int(beta_0)}_{delta_0}", 0)
 #cns_0 = groups_df[0][f"{beta_0}_{delta_0}"]
 cns_0["sample_id"] = "Dip. - " + r"$\beta$: " + f"{beta_0:.2f}, " + r"$\delta$: "+ f"{delta_0:.2f}"
 
-d = {"Obs WGD+": group_obs_dict[1], "Obs WGD-": group_obs_dict[0], "Tet. Syn.": cns_1, "Diploid Syn.": cns_0}
+d = {"Observed WGD-": group_obs_dict[1], "Observed WGD+": group_obs_dict[0], "Diploid Simulated": cns_1, "Tetraploid Simulated": cns_0}
 combined_df = pd.concat(d.values())
-cns.fig_lines(combined_df, cn_columns="total_cn")
+colors = ["#1b9e77","#7570b3","#e7298a","#d95f02"]
+#colors = ["#66c2a5",  "#8da0cb", "#fc8d62","#e78ac3"]
+fig, ax = cns.fig_lines(combined_df, cn_columns="total_cn", colors=colors, size=1.5)
+plt.ylim(1,6.5)
+ax.legend().remove()
+fig.set_size_inches(16,2)
+ax.set_title("Comparison of observed and simulated copy number profiles for WGD+ and WGD- samples (3MB bins)")
+
+ax.set_xlabel("Chromosomes")
+ax.set_ylabel("Total CN")
+handles, labels = ax.get_legend_handles_labels()
+new_labels = [l for l in d.keys()]
+ax.legend(handles, new_labels, ncols=4, loc="upper left")
+
 plt.savefig(pjoin(base_dir, "img/cnps_tsg_best.png"), dpi=300, bbox_inches="tight")
 plt.savefig(pjoin(base_dir, "img/cnps_tsg_best.pdf"), bbox_inches="tight")
 
@@ -74,7 +87,7 @@ label = r'Best score: $\beta$ - ' +f"{best_beta:.2f}, " +r"$\delta$ - " + f"{bes
 ax.plot(best_beta, best_delta, 'r*', markersize=12, label=label)
 ax.set_xlabel(r'TSG/OG parameter - $\beta$')
 ax.set_ylabel(r'Acceptance Modulator - $\delta$')
-ax.set_title(r'Error Surface for $\beta$ and $\delta$ for Tetraploid Samples')
+ax.set_title(r'Effect of $\beta$ and $\delta$ on Tetraploid Samples')
 ax.legend()
 fig.savefig(pjoin(base_dir, "img/tet_tsg_and_delta_scan.png"), dpi=300, bbox_inches="tight")
 fig.savefig(pjoin(base_dir, "img/tet_tsg_and_delta_scan.pdf"), bbox_inches="tight")
@@ -95,7 +108,7 @@ label = r'Best score: $\beta$ - ' +f"{best_beta:.2f}, " +r"$\delta$ - " + f"{bes
 ax.plot(best_beta, best_delta, 'r*', markersize=12, label=label)
 ax.set_xlabel(r'TSG/OG parameter - $\beta$')
 ax.set_ylabel(r'Acceptance Modulator - $\delta$')
-ax.set_title(r'Error Surface for $\beta$ and $\delta$ for Diploid Samples')
+ax.set_title(r'Effect of $\beta$ and $\delta$ on Diploid Samples')
 ax.legend()
 fig.savefig(pjoin(base_dir, "img/dip_tsg_and_delta_scan.png"), dpi=300, bbox_inches="tight")
 fig.savefig(pjoin(base_dir, "img/dip_tsg_and_delta_scan.pdf"), bbox_inches="tight")
@@ -143,12 +156,14 @@ cns_0["sample_id"] = "Dip. - " + r"$\beta$: " + f"{int(best_beta)}, " + r"$\delt
 d = {"Observed WGD+": group_obs_dict[1], "Observed WGD-": group_obs_dict[0], "Tetraploid Synthetic": cns_1, "Diploid Synthetic": cns_0}
 combined_df = pd.concat(d.values())
 import matplotlib as mpl
-colors = ["#66c2a5",  "#8da0cb", "#fc8d62","#e78ac3"]
-fig, ax = cns.fig_lines(combined_df, cn_columns="total_cn", colors=colors)
+colors = ["#1b9e77","#7570b3","#e7298a","#d95f02"]
+#colors = ["#66c2a5",  "#8da0cb", "#fc8d62","#e78ac3"]
+fig, ax = cns.fig_lines(combined_df, cn_columns="total_cn", colors=colors, size=1.5)
 plt.ylim(1,6.5)
 ax.legend().remove()
 fig.set_size_inches(16,2)
-ax.set_title("Copy number profiles on the linear genome, grouped by 3MB bins")
+ax.set_title("Comparison of observed and simulated copy number profiles for WGD+ and WGD- samples (3MB bins)")
+
 ax.set_xlabel("Chromosomes")
 ax.set_ylabel("Total CN")
 handles, labels = ax.get_legend_handles_labels()
