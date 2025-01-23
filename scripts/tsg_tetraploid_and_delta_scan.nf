@@ -14,6 +14,12 @@ process SimChA {
 	
 	script:
 	"""
+	# Check if the folder and the target file exist
+	if [ -d "${workflow.launchDir}/results_ISMB_tsg_tetraploid_and_delta_scan/${tsg}_${delta}" ] && [ -f "${workflow.launchDir}/results_ISMB_tsg_tetraploid_and_delta_scan/${tsg}_${delta}/copynumbers.tsv" ]; then
+		echo "Skipping process "
+		touch "./skipped.txt"
+        	exit 0
+	fi
 	cp ${params.simcha_params_file} config.json
 	~/.conda/envs/simcha/bin/python -c "
 	import json 
@@ -26,16 +32,18 @@ process SimChA {
 	config['Signatures']['CNVs']['Events'][-1]['Prob'] = 0
 	config['EvoParams']['PWGD'] = 0
 	config['EvoParams']['TetraploidStart'] = True
+	config['EvoParams']['EventCost'] = 1.6
+	config['EvoParams']['MaxTries'] = 100
 	with open('config.json', 'w') as f:
 		json.dump(config, f, indent=4)
 	"
-	~/.conda/envs/simcha/lib/dotnet/dotnet run --no-build --project ${simcha_path} -- -C config.json -D ${workflow.launchDir}/data/hg19 -e -R 5000 -O "."
+	~/.conda/envs/simcha/lib/dotnet/dotnet run --no-build --project ${simcha_path} -- -C config.json -D ${workflow.launchDir}/data/hg19 -e -R 1000 -O "."
         """
 }
 
 workflow {
-	def tsg = Channel.from(params.tsg).take(25)
-	def delta = Channel.from(params.delta).take(25)
+	def tsg = Channel.from(params.tsg).take(50)
+	def delta = Channel.from(params.delta).take(50)
 	def product = tsg.combine(delta)
 	SimChA(product)
 }

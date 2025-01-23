@@ -48,9 +48,10 @@ def run_cns_aggregate(base_path, exp_path, segments_path):
 wgd_status = [0, 1]
 
 #%%
+ 
+curr_dir = pjoin("/projects/ag-schwarzr/project-simcha/simcha","results_ISMB_tsg_diploid_and_delta_scan")
+segments = pjoin("/projects/ag-schwarzr/project-simcha/simcha", "pysimcha", "segs_3MB.bed")
 
-curr_dir = pjoin("../", "results_ISMB_tsg_diploid_and_delta_scan")
-segments = "segs_3MB.bed"
 
 subdirs = [d for d in os.listdir(curr_dir) if os.path.isdir(pjoin(curr_dir, d))]
 for subdir in subdirs:
