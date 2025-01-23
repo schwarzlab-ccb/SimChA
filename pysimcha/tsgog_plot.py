@@ -140,7 +140,7 @@ cns_1["sample_id"] = "Tet. - " + r"$\beta$: " + f"{int(best_beta)}, " + r"$\delt
 cns_0 = get_cnps(f"{int(best_beta)}_{best_delta}", 0)
 cns_0["sample_id"] = "Dip. - " + r"$\beta$: " + f"{int(best_beta)}, " + r"$\delta$: "+ f"{best_delta:.2f}"
 
-d = {"Obs WGD+": group_obs_dict[1], "Obs WGD-": group_obs_dict[0], "Tet. Syn.": cns_1, "Diploid Syn.": cns_0}
+d = {"Observed WGD+": group_obs_dict[1], "Observed WGD-": group_obs_dict[0], "Tetraploid Synthetic": cns_1, "Diploid Synthetic": cns_0}
 combined_df = pd.concat(d.values())
 import matplotlib as mpl
 colors = ["#66c2a5",  "#8da0cb", "#fc8d62","#e78ac3"]
