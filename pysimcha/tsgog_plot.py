@@ -73,7 +73,7 @@ fig.colorbar(contour, ax=ax)
 label = r'Best score: $\beta$ - ' +f"{best_beta:.2f}, " +r"$\delta$ - " + f"{best_delta:.2f}"
 ax.plot(best_beta, best_delta, 'r*', markersize=12, label=label)
 ax.set_xlabel(r'TSG/OG parameter - $\beta$')
-ax.set_ylabel(r'$\delta$')
+ax.set_ylabel(r'Acceptance Modulator - $\delta$')
 ax.set_title(r'Error Surface for $\beta$ and $\delta$ for Tetraploid Samples')
 ax.legend()
 fig.savefig(pjoin(base_dir, "img/tet_tsg_and_delta_scan.png"), dpi=300, bbox_inches="tight")
@@ -94,7 +94,7 @@ fig.colorbar(contour, ax=ax)
 label = r'Best score: $\beta$ - ' +f"{best_beta:.2f}, " +r"$\delta$ - " + f"{best_delta:.2f}"
 ax.plot(best_beta, best_delta, 'r*', markersize=12, label=label)
 ax.set_xlabel(r'TSG/OG parameter - $\beta$')
-ax.set_ylabel(r'$\delta$')
+ax.set_ylabel(r'Acceptance Modulator - $\delta$')
 ax.set_title(r'Error Surface for $\beta$ and $\delta$ for Diploid Samples')
 ax.legend()
 fig.savefig(pjoin(base_dir, "img/dip_tsg_and_delta_scan.png"), dpi=300, bbox_inches="tight")
@@ -123,13 +123,13 @@ best_beta = pivot_df.columns[min_error_location[1]]
 square_fig = (7,4)
 fig, ax = plt.subplots(1, figsize=square_fig)
 contour = ax.contourf(pivot_df.columns, pivot_df.index, pivot_df.values, levels=25, linestyles=None)
-#contour.set_clim(-0.2, 0.2)
+#contour.set_clim(4,12)
 fig.colorbar(contour, ax=ax)
 label = r'Best score: $\beta$ - ' +f"{best_beta:.2f}, " +r"$\delta$ - " + f"{best_delta:.2f}"
 ax.plot(best_beta, best_delta, 'r*', markersize=12, label=label)
 ax.set_xlabel(r'TSG/OG parameter - $\beta$')
-ax.set_ylabel(r'$\delta$')
-ax.set_title(r'Error Surface for $\beta$ and $\delta$ for All Samples')
+ax.set_ylabel(r'Acceptance Modulator - $\delta$')
+ax.set_title(r'Effect of $\beta$ and $\delta$ for Diploid and Tetraploid Samples')
 ax.legend()
 fig.savefig(pjoin(base_dir, "img/all_tsg_and_delta_scan.png"), dpi=300, bbox_inches="tight")
 fig.savefig(pjoin(base_dir, "img/all_tsg_and_delta_scan.pdf"), bbox_inches="tight")
@@ -142,6 +142,19 @@ cns_0["sample_id"] = "Dip. - " + r"$\beta$: " + f"{int(best_beta)}, " + r"$\delt
 
 d = {"Obs WGD+": group_obs_dict[1], "Obs WGD-": group_obs_dict[0], "Tet. Syn.": cns_1, "Diploid Syn.": cns_0}
 combined_df = pd.concat(d.values())
-cns.fig_lines(combined_df, cn_columns="total_cn")
+import matplotlib as mpl
+colors = ["#66c2a5",  "#8da0cb", "#fc8d62","#e78ac3"]
+fig, ax = cns.fig_lines(combined_df, cn_columns="total_cn", colors=colors)
+plt.ylim(1,6.5)
+ax.legend().remove()
+fig.set_size_inches(16,2)
+ax.set_title("Copy number profiles on the linear genome, grouped by 3MB bins")
+ax.set_xlabel("Chromosomes")
+ax.set_ylabel("Total CN")
+handles, labels = ax.get_legend_handles_labels()
+new_labels = [l for l in d.keys()]
+ax.legend(handles, new_labels, ncols=4, loc="upper left")
+
+#fig, ax = cns.fig_lines(combined_df, cn_columns="total_cn", colors=)
 plt.savefig(pjoin(base_dir, "img/cnps_tsg_best_joint_dist.png"), dpi=300, bbox_inches="tight")
 plt.savefig(pjoin(base_dir, "img/cnps_tsg_best_joint_dist.pdf"), bbox_inches="tight")

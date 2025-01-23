@@ -14,6 +14,13 @@ process SimChA {
 	
 	script:
 	"""
+	# Check if the folder and the target file exist
+	if [ -d "${workflow.launchDir}/results_ISMB_tsg_diploid_and_delta_scan/${tsg}_${delta}" ] && [ -f "${workflow.launchDir}/results_ISMB_tsg_diploid_and_delta_scan/${tsg}_${delta}/copynumbers.tsv" ]; then
+		echo "Skipping process "
+		touch "./skipped.txt"
+		exit 0
+	fi
+
 	cp ${params.simcha_params_file} config.json
 	~/.conda/envs/simcha/bin/python -c "
 	import json 
