@@ -24,28 +24,21 @@ public static class Fitness
             ? CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype)
             : new List<(Gene, int)>();
 
-
         double stressTerm = fParams.Stress > EPSILON
-            ? StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen()) * fParams.Stress
+            ? StressTerm(genRef.GetGenomeLen(karyotype.Sex), karyotype.GenomeLen())
             : 0.0;
         double ogTerm = TsgOgTerm(genRef, ogCNs, karyotype.Sex, fParams.NormalizeGenes);
         double tsgTerm = TsgOgTerm(genRef, tsgCNs, karyotype.Sex, fParams.NormalizeGenes);
-        double essTerm = EssTerm(genRef, essCNs, karyotype.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency) *
-                         fParams.Essentiality;
-        double tsgogTerm = (ogTerm - tsgTerm) * fParams.TsgOg;
-
-
-        return 1 + (stressTerm + tsgogTerm + essTerm);
+        double essTerm = EssTerm(genRef, essCNs, karyotype.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency);
+        return 1 + stressTerm * fParams.Stress + (ogTerm - tsgTerm) * fParams.TsgOg + essTerm * fParams.Essentiality;
     }
 
     public static double CalculateFromComponents(
         double stressTerm,
         double tsgogTerm,
         double essTerm,
-        FitnessParams fParams)
-    {
-        return 1 + (stressTerm * fParams.Stress + tsgogTerm * fParams.TsgOg + essTerm * fParams.Essentiality);
-    }
+        FitnessParams fParams) 
+        => 1 + stressTerm * fParams.Stress + tsgogTerm * fParams.TsgOg + essTerm * fParams.Essentiality;
 
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
     {
@@ -100,8 +93,7 @@ public static class Fitness
             ? -Math.Log(1.0 - x / 2.0)
             : Math.Log(1.0 + x);
 
-    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex,
-        bool normalizeGenes = false)
+    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexEnum sex, bool normalizeGenes = false)
     {
         if (!geneCNs.Any())
         {
@@ -115,8 +107,7 @@ public static class Fitness
             _ => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
         };
         int norm = normalizeGenes ? genesList.Count() : 1;
-        return genesList.Sum(g => (g.CN - ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * Linear(g.gene.DeltaFitness)) /
-               norm;
+        return genesList.Sum(g => Math.Log2(1+g.CN/ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * g.gene.DeltaFitness) / norm;
     }
 
     public static double Zygosity(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, int count)

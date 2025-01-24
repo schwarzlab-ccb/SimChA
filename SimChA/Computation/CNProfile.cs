@@ -28,7 +28,7 @@ public abstract class CNProfile
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
         double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.NormalizeGenes);
         double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.NormalizeGenes);
-        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.NormalizeGenes, fParams.Haploinsufficiency);
+        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.NormalizeGenes);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
         // Get mutation count

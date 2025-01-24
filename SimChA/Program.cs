@@ -46,7 +46,8 @@ switch (execMode)
         var evoParams = simParams.EvoParams ?? throw new Exception("Error: EvoParams not set. Cannot perform evolution without evolution parameters. Please set EvoParams in the config file.");
         Validators.ValidateSignatures(sigs);
         Console.WriteLine("Evolving individual samples forward:");
-        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, sigs, simParams.Sex, simParams.AutosomesOnly);
+        var mcTarget = new MCTarget(0.55, Distribution.Exponential);
+        samples = Converters.MakeSamples(rnd, options.Repeats, simParams.EventCountMean, simParams.EventDist, sigs, simParams.Sex, simParams.AutosomesOnly, mcTarget);
         var evolver = new Evolver(rnd, genRef, fitParams, evoParams);
         foreach (var sample in samples)
         {
