@@ -2,10 +2,10 @@
     "Seed": -1,
     "Sex": "None",
     "AutosomesOnly": true,
-    "EventCountMean": 89.28,
+    "EventCountMean": 89.82,
     "EventDist": "Exponential",
     "Fitness": {
-        "Stress": 2.5758,
+        "Stress": 2.6,
         "TsgOg": 0,
         "Essentiality": 0,
         "Delta": 0,
@@ -28,7 +28,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.0495
+                    "Prob": 0.052
                 }
             ]
         }

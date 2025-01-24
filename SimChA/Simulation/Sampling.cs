@@ -70,7 +70,7 @@ public static class Sampling
     {
         return dist switch
         {
-            DataTypes.Distribution.Exponential => (int) Math.Round(mean * ExponentialDistribution.Sample(rnd, 1.0)),
+            DataTypes.Distribution.Exponential => (int) Math.Round( ExponentialDistribution.Sample(rnd, mean)),
             DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
             DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
             DataTypes.Distribution.Normal => throw new Exception("Normal distribution not supported for distance sampling"),
