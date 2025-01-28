@@ -13,6 +13,7 @@ public static class Validators
         {
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
+            case CNEventType.Pass:
             case CNEventType.WholeGenomeDoubling:
             case CNEventType.BreakageFusionBridge:
             case CNEventType.SNV:

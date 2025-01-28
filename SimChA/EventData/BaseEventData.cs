@@ -11,7 +11,6 @@ public record BaseEventData(CNEventPars CNEventPars)
     // TODO: This should be immutable, i.e. should return new Karyotype
     public virtual void ApplyEvent(Karyotype kar)
     {
-        kar.ApplyWGD();
     }
 
     public override string ToString()

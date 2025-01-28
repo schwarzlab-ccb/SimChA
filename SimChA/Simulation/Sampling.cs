@@ -122,6 +122,7 @@ public static class Sampling
             case CNEventType.ChromDuplication:
                 return new ContigEventData(cnEventPars, seq[0].id);
             
+            case CNEventType.Pass:
             case CNEventType.WholeGenomeDoubling:
                 return new BaseEventData(cnEventPars);
             
