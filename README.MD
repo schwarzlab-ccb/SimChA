@@ -84,6 +84,7 @@ Use `dotnet run -- [options]` to specify any of the following:
 
 Default parameters are found in the file: `default_params.json`. The exact parameters are dependent on the execution mode. The parameters are:
 
+
 #### Common (R, T, P)
 * `Fitness: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
 
@@ -93,8 +94,8 @@ Default parameters are found in the file: `default_params.json`. The exact param
 * `AutosomesOnly: bool` - Choose whether to simulate sex chromosomes or not.
 
 #### Repeats mode only (R)
-* `EventCount: int` - The mean number of events per sample.
-* `EventDist: ["Uniform", "Exponential", "Normal"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
+* `EventCount: double` - The mean number of events per sample.
+* `EventDist: ["Uniform", "Geometric", "Poisson"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
 
 #### MCMC mode (M)
 TODO

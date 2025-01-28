@@ -3,7 +3,7 @@
     "Sex": "None",
     "AutosomesOnly": true,
     "EventCountMean": 89.28,
-    "EventDist": "Exponential",
+    "EventDist": "Geometric",
     "Fitness": {
         "Stress": 2.5758,
         "TsgOg": 20,
