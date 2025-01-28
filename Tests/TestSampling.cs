@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Statistics;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Simulation;
@@ -18,6 +19,15 @@ public class TestSampling
     public void Setup()
     {
         _rnd = new Random(0);
+    }
+
+    [Test]
+    public void TestDistSampling([Values] Distribution dist)
+    {
+        var reps = Enumerable.Range(0, 100).ToList();
+        var res = reps.Select(i => Sampling.SampleDist(_rnd, dist, 100)).Mean();
+        Assert.GreaterOrEqual(res, 50);
+        Assert.LessOrEqual(res, 150);
     }
 
     [Test]

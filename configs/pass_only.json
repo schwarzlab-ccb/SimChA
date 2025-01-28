@@ -2,8 +2,8 @@
   "Seed": -1,
   "Sex": "None",
   "AutosomesOnly": true,
-  "EventCountMean": 100,
-  "EventDist": "Exponential",
+  "EventCountMean": 50,
+  "EventDist": "Geometric",
   "Fitness": {
       "Stress": 2.6,
       "TsgOg": 0,

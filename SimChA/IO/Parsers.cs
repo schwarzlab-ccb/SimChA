@@ -286,7 +286,7 @@ public static class Parsers
             {
                 throw new Exception($"Invalid rate {rate} for distribution {dist}.");
             }
-            var distance = Sampling.SampleDistance(rnd, dist, rate);
+            var distance = Sampling.SampleDistInt(rnd, dist, rate);
             var fitness = parseFitness
                 ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
                 : -1.0;
