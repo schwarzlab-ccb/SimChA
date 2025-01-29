@@ -2,7 +2,7 @@
     "Seed": -1,
     "Sex": "None",
     "AutosomesOnly": true,
-    "EventCountMean": 50,
+    "EventCountMean": 89.82,
     "EventDist": "Geometric",
     "Fitness": {
         "Stress": 2.6,
@@ -12,7 +12,7 @@
         "NormalizeGenes": true
     },
     "EvoParams": {
-        "WithFitness": true,
+        "WithFitness": false,
         "MaxTries": 5,
         "EventCost": 1,
         "TetraploidStart": false
@@ -23,11 +23,11 @@
             "Events": [
                 {
                     "Type": "Pass",
-                    "Prob": 1
+                    "Prob": 0.99446
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.052
+                    "Prob": 0.00554
                 }
             ]
         }
