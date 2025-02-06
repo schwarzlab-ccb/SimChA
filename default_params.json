@@ -159,8 +159,11 @@
 	},
   "EvoParams": {
     "WithFitness": true,
-    "MaxTries": 10000,
+    "MaxTries": 100,
     "EventCost": 1,
-    "TetraploidStart": false
+    "TetraploidStart": false,
+    "EvolveInTime": false,
+    "MaxTime": 100,
+    "MutationRate": 1
   }
 }

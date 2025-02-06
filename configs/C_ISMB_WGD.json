@@ -12,7 +12,7 @@
         "NormalizeGenes": true
     },
     "EvoParams": {
-        "WithFitness": false,
+        "WithFitness": true,
         "MaxTries": 5,
         "EventCost": 1,
         "TetraploidStart": false
@@ -27,7 +27,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.007074905465888097
+                    "Prob": 0.052
                 }
             ]
         }

@@ -86,8 +86,14 @@ public class Evolver
         return best.Item2;
     }
 
-    BaseEventData GetWGD(double prob) 
-        => new(new CNEventPars(CNEventType.WholeGenomeDoubling, prob));
+    bool MetBreakCondition(int time, int nEventsLeft)
+        => !EvoParams.EvolveInTime ? nEventsLeft == 0 : time >= EvoParams.MaxTime; 
+
+    double GetMutRate(Karyotype kar)
+        => EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef);
+
+    bool DidMutate(Karyotype kar)
+        => !EvoParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
     
     private void ApplyEvolutionRec(
         Sample sample,
@@ -101,28 +107,32 @@ public class Evolver
             var childEvs = new List<CNEventDesc>();
             double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitnessParams);
             bool hasWGD = false;
-            while (childEvs.Count < mutCount)
+            int time = 0;
+            while (!MetBreakCondition(time, mutCount - childEvs.Count))
             {
+                time++;
+                if (!DidMutate(new Karyotype(sample.Kars[node.CloneId])))
+                {
+                    continue;
+                }
                 Console.Write($"\rSample: {sample.SampleId}. " +
                               $"Mutation: {childEvs.Count+1}/{mutCount}.");
                 
                 var cnEventPars = GetEventPars(sample.EventPars, hasWGD);
-                // var newEvent =  hasWGD == false && Rnd.NextDouble() < EvoParams.PWGD 
-                //         ? GetWGD(EvoParams.PWGD)
-                //         : GetNewEvent(cnEventPars, sample.Kars[node.CloneId], currentFitness);
                 var newEvent = GetNewEvent(cnEventPars, sample.Kars[node.CloneId], currentFitness);
 
                 var newKar = new Karyotype(sample.Kars[node.CloneId]);
                 newEvent.ApplyEvent(newKar);
                 double proposedFitness = newKar.UpdateFitness(GenRef, FitnessParams);
                 double dFit = proposedFitness - currentFitness;
+                var eventTime = EvoParams.EvolveInTime ? time : childEvs.Count + 1;
                 var abberation = new CNEventDesc(
                     newEvent.EventType,
                     eventCount + childEvs.Count + 1,
                     newEvent.ToString(),
                     dFit,
                     proposedFitness,
-                    childEvs.Count + 1);
+                    eventTime);
                 hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
                 childEvs.Add(abberation);
                 sample.Kars[node.CloneId] = newKar;
