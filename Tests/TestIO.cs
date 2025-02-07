@@ -47,7 +47,7 @@ public class TestIO
     {
         var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1);
         var autosomesOnly = false;
-        var simParams = new SimParams(0, SexEnum.None, autosomesOnly, 1, Distribution.Uniform, fit);
+        var simParams = new SimParams(0, SexEnum.None, autosomesOnly, 1, Distribution.Uniform, 1, Distribution.Exponential, fit);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         var deserialized = JsonSerializer.Deserialize<SimParams>(serialized);
@@ -125,7 +125,7 @@ public class TestIO
         var clonesIn = new List<CloneIn>
             { new("0", "-1", 0, 1), new("1", "0", 1, 1) };
 
-        var sample = new Sample("sample", SexEnum.Male, clonesIn, eventPars, null, null);
+        var sample = new Sample("sample", SexEnum.Male, clonesIn, eventPars);
         var contigs = new List<Contig> { new(new Region(0, sequence.Length, "chr1", true)) };
         sample.EventDescs["0"] = new List<CNEventDesc>();
         sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
@@ -230,7 +230,7 @@ public class TestIO
         var clonesIn = new List<CloneIn>
             { new("0", "-1", 1, 1) };
 
-        var sample = new Sample("sample_1", SexEnum.Male, clonesIn, eventPars, null, null);
+        var sample = new Sample("sample_1", SexEnum.Male, clonesIn, eventPars);
         var contigs = new List<Contig>
             { new(new Region(0, sequence1.Count(), "chr1", true)), new(new Region(0, sequence2.Length, "chr2", true)) };
         sample.EventDescs["0"] = new List<CNEventDesc>();

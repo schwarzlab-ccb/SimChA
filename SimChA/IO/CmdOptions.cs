@@ -27,7 +27,7 @@ public class CmdOptions
     [Option('M', "mcmc-mode", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
     public bool MHMode { get; set; }
     
-    [Option('s', Required = false, Default = false, HelpText = "Calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.")]
+    [Option('s', Required = false, Default = false, HelpText = "Also calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.")]
     public bool CalcConsistentCNs { get; set; }
 
     [Option('V', "variants", Required = false, Default = false, HelpText = "Use the included FASTA reference files for SNVs.")]
@@ -35,11 +35,7 @@ public class CmdOptions
 
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
-    // TODO: Should be merged with a tree
-    [Option("event-counts", Required = false, Default = "", HelpText = "A tsv file with the event counts for each sample for parameter inference.")]
-    public string EventCounts { get; set; }
-    [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
-    public bool FitnessLandscape { get; set; }
+    
     [Option('E', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
     public bool EvolutionMode { get; set; }
     [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]

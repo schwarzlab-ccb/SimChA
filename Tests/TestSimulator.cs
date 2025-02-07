@@ -26,7 +26,7 @@ public class TestSimulator
         _fitness = new FitnessParams(0.9, 0.05, 2, 1);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _mcParams = new MCParams(0, 0, 1.0, true, 1.0, 0.0, false, true, false);
+        _mcParams = new MCParams(0, 0, 1.0, true, 1.0, 0.0);
         _kar = new Karyotype(_genRef, SexEnum.Female);
     }
     
@@ -35,8 +35,7 @@ public class TestSimulator
     {
         var events = new List<BaseEventData>();
         // TODO: Fix this thing about files
-        var files = new FileIO("./../out/");
-        var sim = new MCSimulator(_rnd, _genRef, _fitness,_mcParams, files);
+        var sim = new MHSimulator(_rnd, _genRef, _fitness,_mcParams);
         double potential = sim.CalculatePotential(1, 1);
         Assert.AreEqual(0.0, potential,EPSILON);
     }
@@ -44,7 +43,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _genRef);
+        var sim = new Simulator(_rnd, _genRef, _fitness);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)

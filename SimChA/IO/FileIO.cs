@@ -170,41 +170,7 @@ public class FileIO
             }
         }
     }
-
-    public void WriteFitnesses(string id, IEnumerable<double> fitnesses)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FITNESSES_FILENAME);
-        using var w = new StreamWriter(outPath);
-        foreach (var fit in fitnesses)
-            w.WriteLine($"{id}\t{fit}");
-    }
     
-    public void WriteFitnesses(Dictionary<int, (int nEvents, double fit)> fitnesses)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), FITNESSES_FILENAME);
-        using var w = new StreamWriter(outPath);
-        w.WriteLine("iteration\tevent_count\tfitness");
-        foreach (var fitness in fitnesses)
-        {
-            var fit = fitness.Value.fit;
-            var nEvents = fitness.Value.nEvents;
-            var iteration = fitness.Key;
-            w.WriteLine($"{iteration}\t{nEvents}\t{fit}");
-        }
-    }
-
-    public void WriteFitnessLandscape(string filename, List<List<double>> output)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), filename);
-        Console.WriteLine($"\nWriting to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("alpha\tbeta\tfitness");
-        foreach (var line in output)
-        {
-            outputFile.WriteLine($"{line[0]}\t{line[1]}\t{line[2]}");
-        }
-    }
-
     public void WriteVCF(GenRef genRef, IEnumerable<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), VCF_FILENAME);
@@ -306,31 +272,8 @@ public class FileIO
             }
         }
     }
-    public static List<CloneIn> ReadClonesWithRates(string filePath, bool parseFitness, Random rnd, Distribution dist)
-    {
-        string fileFullPath = Path.GetFullPath(filePath);
-        string fileFormat = filePath.Substring(filePath.Length - 3);
-        if (fileFormat != "tsv" && fileFormat != "csv")
-        {
-            throw new Exception($"File {filePath} should be a tsv or csv.");
-        }
-        string separator = fileFormat == "tsv" ? "\t" : ",";
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        try
-        {
-            var cloneFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClonesWithRates(cloneFile, parseFitness, separator, rnd, dist);
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
-        }
-    }
 
-    public static List<CloneIn> ReadClonesWithEvents(string filePath, bool parseFitness)
+    public static List<CloneIn> ReadCloneTree(string filePath, bool parseFitness)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         string fileFormat = filePath.Substring(filePath.Length - 3);

@@ -1,20 +1,23 @@
 ﻿using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
-using EDists = Extreme.Statistics.Distributions;
+using SimChA.IO;
 
 namespace SimChA.Simulation;
 
 public class Simulator
 {
-    protected readonly Random Rnd;
-    protected readonly GenRef GenRef;
+    protected Random Rnd  { get; }
+    public GenRef GenRef  { get; }
+    public FitnessParams FitnessParams  { get; }
+    
     protected int Counter;
 
-    public Simulator(Random rnd, GenRef genRef)
+    public Simulator(Random rnd, GenRef genRef, FitnessParams fitnessParams)
     {
         Rnd = rnd;
         GenRef = genRef;
+        FitnessParams = fitnessParams;
     }
 
     public virtual void SampleEvents(Sample sample)
@@ -30,8 +33,7 @@ public class Simulator
         ApplyCNEventsRec(sample, root, childLookUp, 1);
     }
     
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, 
-        IReadOnlyDictionary<string, List<CloneIn>> clones, int eventCount)
+    private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<string, List<CloneIn>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
         {
@@ -59,13 +61,6 @@ public class Simulator
         }
     }
 
-    public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
-        => (from profile in profiles
-            let clones = new List<CloneIn> { new("0", "-1", 0, 0) }
-            select new Sample(profile.Key, profile.Value.Sex, clones, new List<CNEventPars>(),
-                new Dictionary<string, double>(), new Dictionary<string, Signature>())
-            { Kars = { ["0"] = profile.Value } }).ToList();
-
     public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
     {
         var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
@@ -78,10 +73,11 @@ public class Simulator
             }
         ).ToList();
     }
+    
     public List<(double fitness, int eventCount)> FitnessListFromSamples(SimParams simParams, Dictionary<string, Karyotype> profiles, Dictionary<string, int> eventCounts)
     {
         var output = new List<(double fitness, int eventCount)>();
-        var samples = SamplesFromProfiles(profiles);
+        var samples = Converters.SamplesFromProfiles(profiles);
         foreach (var sample in samples)
         {
             int total = sample.Clones.Count;

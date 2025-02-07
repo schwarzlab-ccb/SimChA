@@ -6,21 +6,17 @@ using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
-public class MCSimulator : Simulator
+public class MHSimulator : Simulator
 {
-    private FitnessParams FitnessParams { get; }
     private MCParams McParams { get; }
-    private FileIO FileIO { get; }
-    public MCSimulator(
+    
+    public MHSimulator(
         Random rnd,
         GenRef genRef,
         FitnessParams fitnessParams, 
-        MCParams mCParams,
-        FileIO fileIO) : base(rnd, genRef)
+        MCParams mCParams) : base(rnd, genRef, fitnessParams)
     {
-        FitnessParams = fitnessParams;
         McParams = mCParams;
-        FileIO = fileIO;
     }
     
     public override void SampleEvents(Sample sample)
@@ -40,20 +36,10 @@ public class MCSimulator : Simulator
         double dFit = fitness - targetFitness;
         return -McParams.ThetaFitness * Math.Abs(dFit/targetFitness);
     }
-
-    public double GetEventPotential(List<BaseEventData> events)
-    {
-        double eventPotentialTotal = 0.0;
-        // Probability of picking each event and their corresponding signature
-        foreach (var eventData in events)
-        {
-            eventPotentialTotal += Math.Log(eventData.CNEventPars.Prob);
-        }
-        return eventPotentialTotal;
-    }
-
+    
     public double CalculatePotential(double proposedFitness)
         => McParams.ThetaFitness * proposedFitness;
+    
     public double CalculatePotential(double proposedFitness, double targetFitness)
         => GetFitnessPotential(proposedFitness, targetFitness);
 
@@ -149,10 +135,6 @@ public class MCSimulator : Simulator
                     bestEvents = proposedEvents;
                 }
             }
-        }
-        if (McParams.PrintFitnesses)
-        {
-            FileIO.WriteFitnesses(sample.SampleId, fitList);
         }
         return bestEvents;
     }

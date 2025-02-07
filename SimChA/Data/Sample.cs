@@ -11,22 +11,19 @@ public class Sample
     public string SampleId { get; }
     public SexEnum Sex { get; }
     public List<CloneIn> Clones { get; }
-    public List<CNEventPars> EventPars { get; }
+    public List<CNEventPars>? EventPars { get; }
+    public Dictionary<string, double>? Mixture { get; }
     public Dictionary<string, Karyotype> Kars { get; }
     public Dictionary<string, List<CNEventDesc>> EventDescs { get; }
     public Dictionary<string, CloneStat> CloneStats { get; }
-    public Dictionary<string, double> Mixture { get; }
-    public Dictionary<string, Signature> Signatures { get; }
     
-    public Sample(string sampleId, SexEnum sex, List<CloneIn> clones, List<CNEventPars> eventPars, 
-        Dictionary<string, double> mixture, Dictionary<string, Signature> signatures)
+    public Sample(string sampleId, SexEnum sex, List<CloneIn> clones, List<CNEventPars>? eventPars = null, Dictionary<string, double>? mixture = null)
     {
         SampleId = sampleId;
         Sex = sex;
         Clones = clones;
         EventPars = eventPars;
         Mixture = mixture;
-        Signatures = signatures;
         
         Kars = new Dictionary<string, Karyotype>();
         EventDescs = new Dictionary<string, List<CNEventDesc>>();
@@ -42,7 +39,6 @@ public class Sample
                              $"{Sex}\t" +
                              $"{Clones.Count}\t" +
                              $"{MixtureString()}";
-
     public static string HeaderAsTree() 
         => "ID\tParentID\tDistance";
     

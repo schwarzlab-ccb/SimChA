@@ -2,25 +2,19 @@
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
-
 namespace SimChA.Simulation;
 
-public class Evolver
+public class SASimulator : Simulator
 {
     private EvoParams EvoParams { get; }
-    private FitnessParams FitnessParams { get; }
-    private GenRef GenRef { get; }
     private Random Rnd { get; }
 
-    public Evolver(Random rnd, GenRef genRef, FitnessParams fitnessParams, EvoParams evoParams)
+    public SASimulator(Random rnd, GenRef genRef, FitnessParams fitnessParams, EvoParams evoParams) :base(rnd, genRef, fitnessParams)
     {
-        Rnd = rnd;
-        GenRef = genRef;
-        FitnessParams = fitnessParams;
         EvoParams = evoParams;
     }
 
-    public void EvolveSample(Sample sample)
+    public override void SampleEvents(Sample sample)
     {
         if (sample.EventPars == null || sample.EventPars.Count == 0)
         {

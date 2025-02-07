@@ -11,7 +11,6 @@ public class FitnessParams
     public bool Haploinsufficiency { get; }
     
     private const double EPSILON = 1e-8;
-
     public bool NormalizeGenes { get; }
 
     public List<double> ParamsList()

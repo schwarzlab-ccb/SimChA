@@ -8,8 +8,9 @@ public record SimParams(
     bool AutosomesOnly,
     double EventCountMean,
     Distribution EventDist,
+    double FitnessMean,
+    Distribution FitnessDist,
     FitnessParams Fitness,
     Dictionary<string, Signature>? Signatures = null,
     MCParams? MCParams = null,
-    MCTarget? MCTarget = null,
     EvoParams? EvoParams = null);

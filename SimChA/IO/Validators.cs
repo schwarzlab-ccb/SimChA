@@ -53,12 +53,14 @@ public static class Validators
     }
     
     // Removes signatures with probability <=0 and validates the rest
-    public static void ValidateSignatures(Dictionary<string, Signature> signatures)
+    public static Dictionary<string, Signature> ValidateSignatures(Dictionary<string, Signature>? signatures)
     {
-        if (signatures.Count == 0)
+        if (signatures is null)
         {
-            throw new Exception("No signatures were provided.");
+            throw new Exception("No signatures found.");
         }
+        var validSigs = new Dictionary<string, Signature>();
+        
         foreach (var sig in signatures.Where(sig => sig.Value.Prob > 0 && sig.Value.Events.Any(e => e.Prob > 0)))
         {
             if (sig.Value.Events is null || sig.Value.Events.Count == 0)
@@ -74,6 +76,12 @@ public static class Validators
             {
                 ValidateEvent(cnEventP);
             }
+            validSigs[sig.Key] = sig.Value;
         }
+        if (signatures.Count == 0)
+        {
+            throw new Exception("No valid signatures found.");
+        }
+        return validSigs;
     }
 }
