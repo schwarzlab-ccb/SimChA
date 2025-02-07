@@ -24,8 +24,8 @@ public class CmdOptions
                                                                                " The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.")]
     public string DataFolder { get; set; }
 
-    [Option('M', "mcmc", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
-    public bool UseMCMC { get; set; }
+    [Option('M', "mcmc-mode", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
+    public bool MHMode { get; set; }
     
     [Option('s', Required = false, Default = false, HelpText = "Calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.")]
     public bool CalcConsistentCNs { get; set; }
@@ -38,10 +38,9 @@ public class CmdOptions
     // TODO: Should be merged with a tree
     [Option("event-counts", Required = false, Default = "", HelpText = "A tsv file with the event counts for each sample for parameter inference.")]
     public string EventCounts { get; set; }
-    
     [Option('f', "fitness-landscape", Required = false, Default = false, HelpText = "Flag to generate a fitness landscape of given copy-number profiles.")]
     public bool FitnessLandscape { get; set; }
-    [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
+    [Option('E', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
     public bool EvolutionMode { get; set; }
     [Option("sample-event-counts", Required = false, Default = false, HelpText = "Flag to use the branch lengths in the input tree file as parameters to sample the number of SimChA events to apply.")]
     public bool SampleEventCounts { get; set; }
@@ -53,10 +52,6 @@ public class CmdOptions
     {
         get
         {
-            if (EvolutionMode)
-            {
-                return ExecMode.Evolution;
-            }
             if (CloneTreeFile != "" && CNProfiles != "")
             {
                 throw new Exception("Cannot run both tree and profiles at the same time.");
@@ -80,6 +75,23 @@ public class CmdOptions
             return ExecMode.Repeats;
         }
     }
+
+    public SelectionMode SelectionMode
+    {
+        get
+        {
+            if (MHMode)
+            {
+                return SelectionMode.MetroplisHastings;
+            }
+            if (EvolutionMode)
+            {
+                return SelectionMode.SimulatedAnnealing;
+            }
+            return SelectionMode.MonteCarlo;
+        }
+    }
+    
     public bool ShouldParseGenome 
         => UseVariants || WriteFasta;
 }

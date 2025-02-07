@@ -28,7 +28,7 @@ var watch = new Stopwatch();
 watch.Start();
 List<Sample> samples;
 Simulator simulator;
-if (options.UseMCMC)
+if (options.MHMode)
 {
     var mcParams = simParams.MCParams ?? throw new Exception("Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
     simulator = new MCSimulator(rnd, genRef, fitParams, mcParams, files);
@@ -69,8 +69,8 @@ switch (execMode)
         Validators.ValidateSignatures(treeSigs);
         Console.WriteLine("Computing mutations for tree:");
         var inClones = options.SampleEventCounts
-            ? FileIO.ReadClonesWithRates(options.CloneTreeFile, options.UseMCMC, rnd, simParams.EventDist)
-            : FileIO.ReadClonesWithEvents(options.CloneTreeFile, options.UseMCMC);
+            ? FileIO.ReadClonesWithRates(options.CloneTreeFile, options.MHMode, rnd, simParams.EventDist)
+            : FileIO.ReadClonesWithEvents(options.CloneTreeFile, options.MHMode);
         var (cnEventPs, mixture) = Converters.PropagateSigs(treeSigs);
         string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
         var sex = simParams.AutosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, simParams.Sex);
@@ -84,7 +84,7 @@ switch (execMode)
         var repSigs = simParams.Signatures ?? throw new Exception("Error: Signatures not set. Cannot perform simulation without signatures. Please set Signatures in the config file.");
         Validators.ValidateSignatures(repSigs);
         Console.WriteLine("Computing mutations for individual samples:");
-        if (options.UseMCMC)
+        if (options.MHMode)
         {
             if (options.CNProfiles != "" && options.EventCounts != "")
             {
@@ -134,12 +134,6 @@ foreach (var sample in samples)
     }
 }
 
-// TODO split generation of fitness landscape and write to file
-if (options.FitnessLandscape)
-{
-    Console.WriteLine("Computing fitness landscape:");
-    FitnessLandscape.GenerateFitnessLandscape(genRef, simParams, samples, files);
-}
 
 // Write output
 try
