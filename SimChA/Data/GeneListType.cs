@@ -1,4 +1,4 @@
-﻿namespace SimChA.DataTypes;
+﻿namespace SimChA.Data;
 
 public enum GeneListType
 {   

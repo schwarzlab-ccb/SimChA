@@ -7,6 +7,7 @@ using NUnit.Framework;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.Computation;
+using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
 
@@ -27,7 +28,7 @@ public class TestSummaryFeatures
         _genRef = FileIO.GetGenRef(TestIO.HG_19_PATH);
         _rnd = new Random(0);
         _chrs = new List<string> { _genRef.AllChrs[0], _genRef.AllChrs[1] };
-        _kar = new Karyotype(_genRef, SexEnum.Female);
+        _kar = new Karyotype(_genRef, SexType.Female);
     }
 
     private Dictionary<string, List<CopyNumber>> GetCNPs(List<Karyotype> kars)
@@ -46,7 +47,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultMeanSegLength()
     {
-        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexEnum.Female) });
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexType.Female) });
         var meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps);
         // One genome returned with 0 average segment length
         Assert.AreEqual(1, meanSegLengths.Count);
@@ -62,17 +63,17 @@ public class TestSummaryFeatures
         // Count the CN-normal segments & LoH segments of all chromosomes
         meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true);
         Assert.AreEqual(1, meanSegLengths.Count);
-        Assert.AreEqual(_genRef.GetGenomeLen( SexEnum.Female, false) / 23.0, meanSegLengths[0]);
+        Assert.AreEqual(_genRef.GetGenomeLen( SexType.Female, false) / 23.0, meanSegLengths[0]);
         // Mean segment length weighted by copy-number
         meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true, true);
         Assert.AreEqual(1, meanSegLengths.Count);
-        Assert.AreEqual(_genRef.GetGenomeLen( SexEnum.Female, false) / 23.0, meanSegLengths[0]);
+        Assert.AreEqual(_genRef.GetGenomeLen( SexType.Female, false) / 23.0, meanSegLengths[0]);
     }
 
     [Test]
     public void TestMeanSegLength()
     {
-        var karXX = new Karyotype(_genRef,  SexEnum.Female);
+        var karXX = new Karyotype(_genRef,  SexType.Female);
         // make the genome haploid, except 4 copies of chr1-h1, and 2 copies of chr2-h1
         for (int i = 0; i < 3; i++)
         {
@@ -105,13 +106,13 @@ public class TestSummaryFeatures
         // Count the CN-normal segments & LoH segments of all chromosomes
         meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true);
         Assert.AreEqual(1, meanSegLengths.Count);
-        Assert.AreEqual(_genRef.GetGenomeLen(SexEnum.Female, false) / 23.0, meanSegLengths[0], double.Epsilon);
+        Assert.AreEqual(_genRef.GetGenomeLen(SexType.Female, false) / 23.0, meanSegLengths[0], double.Epsilon);
         // Count the mean segment length weighted by copy-number
         meanSegLengths = SummaryFeatures.GetMeanSegLength(cnps, true, true, true, true);
         Assert.AreEqual(1, meanSegLengths.Count);
         // There are 5 copies of chr1, 2 copies of chr2, and one copy of all other chromosomes (including chrX)
         // i.e. 28 'chromosomes' in total
-        expectedLen = _genRef.GetGenomeLen(SexEnum.Female, false) +
+        expectedLen = _genRef.GetGenomeLen(SexType.Female, false) +
                       4.0 * _genRef.ChrLengths[_genRef.AllChrs[0]] +
                       _genRef.ChrLengths[_genRef.AllChrs[1]];
         Assert.AreEqual(expectedLen / 28.0, meanSegLengths[0], double.Epsilon);
@@ -120,7 +121,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultGetBreakpoints()
     {
-        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexEnum.Female) });
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexType.Female) });
         // Let there be one event to stop division by 0
         var eventCounts = new Dictionary<string, int> { { "sample_1", 1 } };
         // Autosomes only
@@ -136,7 +137,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetBreakpoints()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Delete 1000-2000 on chr1
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         // Gain 0-5000 on chr2
@@ -159,7 +160,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultStratifiedSegLengths()
     {
-        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexEnum.Female) });
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexType.Female) });
         var stratifiedSegLengths = SummaryFeatures.GetStratifiedSegLengths(cnps);
         // Should have three entries corresponding to cn < 2, cn == 2, cn > 2
         Assert.AreEqual(3, stratifiedSegLengths.Count);
@@ -187,7 +188,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestStratifiedSegLengths()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Delete 1000-2000 on chr1
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         // Gain 0-5000 on chr2
@@ -229,7 +230,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultSegLengths()
     {
-        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexEnum.Female) });
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexType.Female) });
         var noCutoff = -1;
         var segLengths = SummaryFeatures.GetSegLengths(cnps, noCutoff);
         Assert.AreEqual(0, segLengths.Count);
@@ -247,7 +248,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestSegLengths()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Delete 1000-2000 on chr1
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         // Gain 0-5000 on chr2
@@ -263,7 +264,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultSegLengthsCutoff()
     {
-        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexEnum.Female) });
+        var cnps = GetCNPs(new List<Karyotype> { new(_genRef, SexType.Female) });
         // Cutoff of set to exclude all chromosomes
         int cutoff = 10;
         var segLengths = SummaryFeatures.GetSegLengths(cnps, cutoff);
@@ -281,7 +282,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestSegLengthsCutoff()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Delete 100_000_000-200_000_000 on chr1
         karXX.ApplyInternalDeletion(0, 100_000_000, 200_000_000);
         int cutoff = 20_000_000;
@@ -297,10 +298,10 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultGetMeanPloidy()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karXX = new Karyotype(_genRef, SexType.Female);
+        var karXY = new Karyotype(_genRef, SexType.Male);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], SexEnum.Female }, { cnps.Keys.ToList()[1], SexEnum.Male } };
+        var sexDict = new Dictionary<string, SexType> { { cnps.Keys.ToList()[0], SexType.Female }, { cnps.Keys.ToList()[1], SexType.Male } };
         var meanPloidy = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2, meanPloidy);
     }
@@ -308,16 +309,16 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetMeanAutosomePloidy()
     {
-        var karA = new Karyotype(_genRef, SexEnum.None);
+        var karA = new Karyotype(_genRef, SexType.None);
         karA.ApplyWGD();
-        var karB = new Karyotype(_genRef, SexEnum.None);
+        var karB = new Karyotype(_genRef, SexType.None);
         // Delete all contigs from chr1-22 (i.e. one copy of each autosome)
         for (int i = 0; i < 22; i++)
         {
             karB.ApplyContigDeletion(i);
         }
         var cnps = GetCNPs(new List<Karyotype> { karA, karB });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karA.Sex }, { cnps.Keys.ToList()[1], karB.Sex } };
+        var sexDict = new Dictionary<string, SexType> { { cnps.Keys.ToList()[0], karA.Sex }, { cnps.Keys.ToList()[1], karB.Sex } };
         var mean = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2.5, mean);
     }
@@ -325,11 +326,11 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetMeanSexPloidy()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyWGD();
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karXY = new Karyotype(_genRef, SexType.Male);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karXX.Sex}, { cnps.Keys.ToList()[1], karXY.Sex}};
+        var sexDict = new Dictionary<string, SexType> { { cnps.Keys.ToList()[0], karXX.Sex}, { cnps.Keys.ToList()[1], karXY.Sex}};
         var mean = SummaryFeatures.GetMeanPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(3.0, mean);
     }
@@ -337,10 +338,10 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultGetPloidy()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karXX = new Karyotype(_genRef, SexType.Female);
+        var karXY = new Karyotype(_genRef, SexType.Male);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], SexEnum.Female }, { cnps.Keys.ToList()[1], SexEnum.Male } };
+        var sexDict = new Dictionary<string, SexType> { { cnps.Keys.ToList()[0], SexType.Female }, { cnps.Keys.ToList()[1], SexType.Male } };
         // Autosomes only
         var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2, ploidies.Count);
@@ -356,15 +357,15 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetAutosomePloidy()
     {
-        var karA = new Karyotype(_genRef, SexEnum.None);
+        var karA = new Karyotype(_genRef, SexType.None);
         karA.ApplyWGD();
-        var karB = new Karyotype(_genRef, SexEnum.None);
+        var karB = new Karyotype(_genRef, SexType.None);
         for (int i = 0; i < 22; i++)
         {
             karB.ApplyContigDeletion(i);
         }
         var cnps = GetCNPs(new List<Karyotype> { karA, karB });
-        var sexDict =  new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karA.Sex }, { cnps.Keys.ToList()[1], karB.Sex } };
+        var sexDict =  new Dictionary<string, SexType> { { cnps.Keys.ToList()[0], karA.Sex }, { cnps.Keys.ToList()[1], karB.Sex } };
         var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2, ploidies.Count);
         Assert.AreEqual(4, ploidies[0]);
@@ -374,33 +375,33 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetSexPloidy()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // WGD and deletion of two copies of X chromosome
         karXX.ApplyWGD();
         karXX.ApplyContigDeletion(22);
         karXX.ApplyContigDeletion(45);
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karXY = new Karyotype(_genRef, SexType.Male);
         // Delete all contigs from chr1-22 (i.e. one copy of each autosome)
         for (int i = 0; i < 22; i++)
         {
             karXY.ApplyContigDeletion(i);
         }
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
-        var sexDict = new Dictionary<string, SexEnum> { { cnps.Keys.ToList()[0], karXX.Sex }, { cnps.Keys.ToList()[1], karXY.Sex } };
+        var sexDict = new Dictionary<string, SexType> { { cnps.Keys.ToList()[0], karXX.Sex }, { cnps.Keys.ToList()[1], karXY.Sex } };
         var ploidies = SummaryFeatures.GetPloidy(_genRef, cnps, sexDict);
         Assert.AreEqual(2, ploidies.Count);
-        var expectedXX = (4.0 * _genRef.GetGenomeLen(SexEnum.Female, false) - 2.0 * _genRef.ChrLengths[_genRef.AllChrs[22]]) /
-                         _genRef.GetGenomeLen(SexEnum.Female, false);
+        var expectedXX = (4.0 * _genRef.GetGenomeLen(SexType.Female, false) - 2.0 * _genRef.ChrLengths[_genRef.AllChrs[22]]) /
+                         _genRef.GetGenomeLen(SexType.Female, false);
         Assert.AreEqual(expectedXX, ploidies[0], 1e-6);
-        var expectedXY = 2.0 * (_genRef.GetGenomeLen(SexEnum.Male) - _genRef.AutosomeLinLen) / _genRef.GetGenomeLen(SexEnum.Male);
+        var expectedXY = 2.0 * (_genRef.GetGenomeLen(SexType.Male) - _genRef.AutosomeLinLen) / _genRef.GetGenomeLen(SexType.Male);
         Assert.AreEqual(expectedXY, ploidies[1], 1e-6);
     }
 
     [Test]
     public void TestChrCNMatrix()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        var karXY = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
+        var karXY = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyWGD();
         for (int i = 0; i < 23; i++)
         {
@@ -424,8 +425,8 @@ public class TestSummaryFeatures
     [Test]
     public void TestMKV()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        var karXY = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
+        var karXY = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyWGD();
         for (int i = 0; i < 23; i++)
         {
@@ -441,8 +442,8 @@ public class TestSummaryFeatures
     [Test]
     public void TestAverageAneuploidy()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        var karXY = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
+        var karXY = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyWGD();
         for (int i = 0; i < 23; i++)
         {
@@ -458,7 +459,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultChangepoints()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
         var (values, max) = SummaryFeatures.GetChangepointInfo(cnps);
         Assert.AreEqual(0, values.Count);
@@ -483,8 +484,8 @@ public class TestSummaryFeatures
     [Test]
     public void TestChangepoints()
     {
-        var karA = new Karyotype(_genRef, SexEnum.Female);
-        var karB = new Karyotype(_genRef, SexEnum.Female);
+        var karA = new Karyotype(_genRef, SexType.Female);
+        var karB = new Karyotype(_genRef, SexType.Female);
         karA.ApplyInternalDeletion(0, 1000, 2000);
         karB.ApplyInternalDuplication(1, 2000, 3000);
         karB.ApplyInternalDuplication(1, 2000, 3000);
@@ -514,7 +515,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultMeanBreakpoints()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
         var eventCounts = new Dictionary<string, int> { { cnps.Keys.ToList()[0], 1 } };
         var mean = SummaryFeatures.GetMeanBreakpoints(cnps, eventCounts, false);
@@ -524,7 +525,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestMeanBreakpoints()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 0, 1000);
         karXX.ApplyInternalDuplication(1, 1000, 2000);
@@ -538,7 +539,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultBreakpointsPerChromosome()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
         var includeSexChromosomes = false;
         var values = SummaryFeatures.GetBreakpointsPerChromosome(_genRef, cnps, includeSexChromosomes);
@@ -556,7 +557,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestBreakpointsPerChromosome()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 0, 1000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
@@ -573,7 +574,7 @@ public class TestSummaryFeatures
         }
 
         // Whole missing internal segment
-        karXX = new Karyotype(_genRef, SexEnum.Female);
+        karXX = new Karyotype(_genRef, SexType.Female);
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         cnps = GetCNPs(new List<Karyotype> { karXX });
@@ -591,14 +592,14 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetBreakpointDistribution()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Create some breakpoints in one sample
         // 2 breakpoints on chr1
         karXX.ApplyInternalDeletion(0, 0, 1000);
         // 4 breakpoints on chr2
         karXX.ApplyInternalDuplication(1, 1000, 2000);
         karXX.ApplyInternalDuplication(1, 5000, 6000);
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karXY = new Karyotype(_genRef, SexType.Male);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var includeSexChromosomes = false;
         var values = SummaryFeatures.GetBreakpointsDistribution(_genRef, cnps, includeSexChromosomes);
@@ -615,8 +616,8 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultBreakpoints()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
-        var karXY = new Karyotype(_genRef, SexEnum.Male);
+        var karXX = new Karyotype(_genRef, SexType.Female);
+        var karXY = new Karyotype(_genRef, SexType.Male);
         var cnps = GetCNPs(new List<Karyotype> { karXX, karXY });
         var size = 10_000_000;
         var includeSexChromosomes = false;
@@ -637,7 +638,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestBreakpoints()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         // Missing segment from the start
         karXX.ApplyInternalDeletion(0, 0, 1000);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
@@ -655,7 +656,7 @@ public class TestSummaryFeatures
         }
 
         // This time with a totally missing segment
-        karXX = new Karyotype(_genRef, SexEnum.Female);
+        karXX = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         cnps = GetCNPs(new List<Karyotype> { karXX });
         values = SummaryFeatures.GetBreakpointsPerBin(_genRef, cnps, includeSexChromosomes, size);
@@ -673,7 +674,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultMajMinCNs()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
         // Major copy number
         var (values, max) = SummaryFeatures.GetMajMinCNs(cnps, true);
@@ -695,7 +696,7 @@ public class TestSummaryFeatures
     {
         // Create a karyotype with 2 copies of chr1-h1, 
         // and no other chromosomes
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyContigDuplication(0);
         for (int i = 1; i < 46; i++)
         {
@@ -726,7 +727,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestDefaultHomozygousDeletionFraction()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         var cnps = GetCNPs(new List<Karyotype> { karXX });
         var values = SummaryFeatures.GetHomozygousDeletionFraction(_genRef, cnps);
         // One sample
@@ -738,7 +739,7 @@ public class TestSummaryFeatures
     [Test]
     public void TestHomozygousDeletionFraction()
     {
-        var karXX = new Karyotype(_genRef, SexEnum.Female);
+        var karXX = new Karyotype(_genRef, SexType.Female);
         karXX.ApplyContigDeletion(0);
         karXX.ApplyContigDeletion(23);
         int chr1Length = _genRef.ChrLengths[_genRef.AllChrs[0]];

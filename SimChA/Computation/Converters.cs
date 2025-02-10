@@ -1,10 +1,8 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.DataTypes;
+﻿using SimChA.Data;
 using SimChA.EventData;
 using SimChA.Simulation;
 
-namespace SimChA.IO;
+namespace SimChA.Computation;
 
 public static class Converters
 {
@@ -52,7 +50,7 @@ public static class Converters
         Random rnd,
         int repeats,
         Dictionary<string, Signature> sigs,
-        SexEnum sex,
+        SexType sex,
         bool autosomesOnly)
     {
         var samples = new List<Sample>();
@@ -65,7 +63,7 @@ public static class Converters
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(sigs, namedProbs);
-            var sampleSex = autosomesOnly ? SexEnum.None : Sampling.GetSex(rnd, sex);
+            var sampleSex = autosomesOnly ? SexType.None : Sampling.GetSex(rnd, sex);
             var sample = new Sample($"sample_{i + 1}", sampleSex, new List<CloneIn> { clone }, events, mixture);
             samples.Add(sample);
         }

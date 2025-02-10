@@ -1,16 +1,13 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-namespace SimChA.DataTypes;
+using SimChA.Data;
+
+namespace SimChA.IO;
 
 public record SimParams(
     int Seed,
-    SexEnum Sex,
-    bool AutosomesOnly,
-    double EventCountMean,
-    Distribution EventDist,
-    double FitnessMean,
-    Distribution FitnessDist,
-    FitnessParams Fitness,
+    SampleParams SampleParams,
+    FitParams FitParams,
     Dictionary<string, Signature>? Signatures = null,
-    MCParams? MCParams = null,
+    MHParams? MHParams = null,
     EvoParams? EvoParams = null);

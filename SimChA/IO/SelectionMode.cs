@@ -1,8 +1,8 @@
-﻿namespace SimChA.DataTypes;
+﻿namespace SimChA.IO;
 
 public enum SelectionMode
 {
     MonteCarlo,
     SimulatedAnnealing,
-    MetroplisHastings
+    MetropolisHastings
 }

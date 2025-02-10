@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
 using CommandLine;
 
+// Configuration
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 var cmdOptions = Parser.Default.ParseArguments<CmdOptions>(args);
 cmdOptions.WithNotParsed(o =>
@@ -46,7 +46,7 @@ foreach (var sample in samples)
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simulator.FitnessParams, sample.Kars);
+        sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.FitParams, sample.Kars);
     }
 }
 

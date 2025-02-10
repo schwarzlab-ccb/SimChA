@@ -1,21 +1,20 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
+using SimChA.IO;
 
-namespace SimChA.Simulation;
+namespace SimChA.Data;
 
 // Note: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
     public double FitnessVal { get; private set; }
-    public SexEnum Sex;
+    public SexType Sex;
     private readonly List<Contig> _contigs;
     private readonly Dictionary<string, List<GenRange>> _missingRanges;
     private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
-    public Karyotype(GenRef genRef, SexEnum sex)
+    public Karyotype(GenRef genRef, SexType sex)
     {
         _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
         _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
@@ -32,13 +31,13 @@ public class Karyotype
     }
     
     public Karyotype(List<Contig> contigs, IEnumerable<GenRange> missingList, 
-        IImmutableDictionary<string, (long start, long end)> centromeres, SexEnum sexEnum)
+        IImmutableDictionary<string, (long start, long end)> centromeres, SexType sexType)
     {
         _missingRanges = missingList
             .GroupBy(range => range.ChrNo)
             .ToDictionary(group => group.Key, group => group.ToList());
         _contigs = contigs;
-        Sex = sexEnum;
+        Sex = sexType;
         Centromeres = centromeres;
     }
 
@@ -88,7 +87,7 @@ public class Karyotype
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
 
-    public double UpdateFitness(GenRef genRef, FitnessParams fParams)
+    public double UpdateFitness(GenRef genRef, FitParams fParams)
         => FitnessVal = Fitness.Calculate(this, genRef, fParams);
     
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
@@ -267,23 +266,18 @@ public class Karyotype
     public List<(string chrNo, long location, Nucleotide newBase)> GetFinalSNVs()
     {
         var snvList = new List<(string, long, Nucleotide)>();
-        foreach (var contig in _contigs)
+        foreach (var region in _contigs.SelectMany(contig => contig.GetRegions()))
         {
-            foreach (var region in contig.GetRegions())
+            if (region.SNVDict == null)
             {
-                if (region.SNVDict == null)
+                continue;
+            }
+            foreach ((long internalLocation, var newBase) in region.SNVDict)
+            {
+                string chrNo = region.ChrNo;
+                if (snvList.All(s => s != (chrNo, internalLocation, newBase)))
                 {
-                    continue;
-                }
-                foreach (var snv in region.SNVDict)
-                {
-                    var chrNo = region.ChrNo;
-                    var internalLocation = snv.Key;
-                    var newBase = snv.Value;
-                    if (!snvList.Any(s => s == (chrNo, internalLocation, newBase)))
-                    {
-                        snvList.Add((chrNo, internalLocation, newBase));
-                    }
+                    snvList.Add((chrNo, internalLocation, newBase));
                 }
             }
         }

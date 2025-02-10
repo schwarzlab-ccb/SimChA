@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using SimChA.Computation;
 using SimChA.DataTypes;
 
-namespace SimChA.Simulation;
+namespace SimChA.Data;
 
 public class Contig
 {

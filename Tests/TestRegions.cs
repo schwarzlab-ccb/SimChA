@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Extreme.DataAnalysis.Models;
 using NUnit.Framework;
 using SimChA.Computation;
+using SimChA.Data;
 using SimChA.DataTypes;
 using SimChA.Simulation;
 

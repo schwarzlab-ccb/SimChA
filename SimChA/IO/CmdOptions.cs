@@ -78,7 +78,7 @@ public class CmdOptions
         {
             if (MHMode)
             {
-                return SelectionMode.MetroplisHastings;
+                return SelectionMode.MetropolisHastings;
             }
             if (EvolutionMode)
             {

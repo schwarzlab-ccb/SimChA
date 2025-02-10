@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using SimChA.Data;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
@@ -12,9 +13,10 @@ namespace Tests;
 public class TestSimulator
 {
     private Random _rnd;
-    private MCParams _mcParams;
+    private SampleParams _sampleParams;
+    private MHParams _mhParams;
     private List<CNEventPars> _eventPs;
-    private FitnessParams _fitness;
+    private FitParams _fitParams;
     private GenRef _genRef;
     private Karyotype _kar;
     private const double EPSILON = 0.0000000001;    
@@ -23,19 +25,19 @@ public class TestSimulator
     public void Setup()
     {
         _rnd = new Random(0);
-        _fitness = new FitnessParams(0.9, 0.05, 2, 1);
+        _sampleParams = new SampleParams();
+        _fitParams = new FitParams(0.9, 0.05, 2);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _mcParams = new MCParams(0, 0, 1.0, true, 1.0, 0.0);
-        _kar = new Karyotype(_genRef, SexEnum.Female);
+        _mhParams = new MHParams(0, 0, 1.0, true, 1.0, 0.0);
+        _kar = new Karyotype(_genRef, SexType.Female);
     }
     
     [Test]
     public void TestPotential()
     {
-        var events = new List<BaseEventData>();
-        // TODO: Fix this thing about files
-        var sim = new MHSimulator(_rnd, _genRef, _fitness,_mcParams);
+        var sampleParams = new SampleParams();
+        var sim = new MHSimulator(_rnd, _genRef, _sampleParams, _fitParams,_mhParams);
         double potential = sim.CalculatePotential(1, 1);
         Assert.AreEqual(0.0, potential,EPSILON);
     }
@@ -43,7 +45,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _genRef, _fitness);
+        var sim = new Simulator(_rnd, _genRef, _sampleParams, _fitParams);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)

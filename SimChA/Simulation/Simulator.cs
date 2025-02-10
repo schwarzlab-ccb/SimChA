@@ -1,5 +1,5 @@
 ﻿using SimChA.Computation;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
 
@@ -8,16 +8,18 @@ namespace SimChA.Simulation;
 public class Simulator
 {
     protected Random Rnd  { get; }
-    public GenRef GenRef  { get; }
-    public FitnessParams FitnessParams  { get; }
+    protected GenRef GenRef  { get; }
+    protected FitParams FitParams  { get; }
+    protected SampleParams SampleParams { get; }
     
     protected int Counter;
 
-    public Simulator(Random rnd, GenRef genRef, FitnessParams fitnessParams)
+    public Simulator(Random rnd, GenRef genRef, SampleParams sampleParams, FitParams fitParams)
     {
         Rnd = rnd;
         GenRef = genRef;
-        FitnessParams = fitnessParams;
+        FitParams = fitParams;
+        SampleParams = sampleParams;
     }
 
     public virtual void SampleEvents(Sample sample)
@@ -29,7 +31,6 @@ public class Simulator
         Counter = 1;
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        // TODO: Check if 1 is the correct number of events!
         ApplyCNEventsRec(sample, root, childLookUp, 1);
     }
     
@@ -65,28 +66,7 @@ public class Simulator
     {
         var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
         return eventPs.Select(
-            e =>
-            {
-                var newEventD = Sampling.GenerateCNEventData(Rnd, kar, e) 
-                                ?? throw new Exception("Failed to initialize event data.");
-                return newEventD;
-            }
+            e => Sampling.GenerateCNEventData(Rnd, kar, e) ?? throw new Exception($"Failed to generate event data for {e}.")
         ).ToList();
-    }
-    
-    public List<(double fitness, int eventCount)> FitnessListFromSamples(SimParams simParams, Dictionary<string, Karyotype> profiles, Dictionary<string, int> eventCounts)
-    {
-        var output = new List<(double fitness, int eventCount)>();
-        var samples = Converters.SamplesFromProfiles(profiles);
-        foreach (var sample in samples)
-        {
-            int total = sample.Clones.Count;
-            foreach (var clone in sample.Clones)
-            {
-                sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, GenRef, simParams.Fitness, sample.Kars);
-                output.Add((sample.CloneStats[clone.CloneId].Fitness, eventCounts[sample.SampleId]));
-            }
-        }
-        return output;
     }
 }

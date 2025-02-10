@@ -1,4 +1,4 @@
-﻿namespace SimChA.DataTypes;
+﻿namespace SimChA.Data;
 
 public record GenRange(long Start, long End, string ChrNo)
 {

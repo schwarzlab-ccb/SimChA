@@ -3,8 +3,8 @@ using System.Globalization;
 using System.Text.Json;
 using SimChA.Computation;
 using SimChA.DataTypes;
-using SimChA.Simulation;
 using System.Text;
+using SimChA.Data;
 
 namespace SimChA.IO;
 
@@ -22,17 +22,16 @@ public class FileIO
     
     // output
     private const string SAMPLES_FILENAME = "samples.tsv";
-    private const string COPYNUMBERS_FILENAME = "copynumbers.tsv";
-    private const string BINNED_COPYNUMBERS_FILENAME = "binned_CNs.tsv";
+    private const string CN_FILENAME = "copynumbers.tsv";
+    private const string BINNED_CN_FILENAME = "binned_CNs.tsv";
     private const string CONSISTENT_CNS_FILENAME = "consistent_CNs.tsv";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
-    //private const string FASTA_FILENAME = "genome.fa";
-    private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
+    // private const string FASTA_FILENAME = "genome.fa";
+    // private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
     private const string TREE_FILENAME = "tree.tsv";
-
     
     private string Timestamp { get; }
     private string OutFolder { get; }
@@ -97,7 +96,7 @@ public class FileIO
     
     public void WriteCopyNumbers(GenRef genRef, IEnumerable<Sample> samples)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), COPYNUMBERS_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\tn_snvs");
@@ -115,7 +114,7 @@ public class FileIO
 
     public void WriteCopyNumbers(Dictionary<string, List<CopyNumber>> cnProfiles)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), BINNED_COPYNUMBERS_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), BINNED_CN_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         outputFile.WriteLine("sample_id\tchrom\tstart\tend\tcn_a\tcn_b\tn_snvs");
@@ -209,7 +208,7 @@ public class FileIO
     public void WriteFasta(GenRef genRef, IEnumerable<Sample> samples)
     {
         // TODO: Do we want WriteFasta to work with multiple samples? Currently only set up for single samples
-        var count = 0;
+        int count = 0;
         if (genRef.GenContentsDict == null)
         {
             throw new Exception("Reference Genome was not set. Please check that you have downloaded the correct assembly (see DownloadRefData.sh)");
@@ -223,21 +222,21 @@ public class FileIO
                 using var outputFile = new StreamWriter(outPath);
                 var kar = sample.Kars[clone.CloneId];
 
-                foreach (var contigId in kar.ContigIds())
+                foreach (int contigId in kar.ContigIds())
                 {
                     outputFile.WriteLine($">ctg{contigId}");
                     Console.WriteLine($"Writing out contig {contigId}");
                     foreach (var region in kar.GetContig(contigId).GetRegions())
                     {
-                        var chrNo = region.ChrNo;
-                        var start = region.Start;
-                        var end   = region.End;
+                        string chrNo = region.ChrNo;
+                        long start = region.Start;
+                        long end   = region.End;
                         var regionSeq = new StringBuilder (genRef.GenContentsDict[chrNo].ToString((int)start, (int)(end-start)));
                         if (region.SNVDict != null)
                         {
                             foreach (var snv in region.SNVDict)
                             {
-                                var loc = snv.Key - start;
+                                long loc = snv.Key - start;
                                 regionSeq[(int)loc] = snv.Value.ToString()[0];
                             }
                         }
@@ -266,7 +265,7 @@ public class FileIO
         file.WriteLine(CloneStat.Header());
         foreach (var sample in samples)
         {
-            foreach ((string cloneId, var cStat) in sample.CloneStats)
+            foreach ((string _, var cStat) in sample.CloneStats)
             {
                 file.WriteLine(cStat.ToString());
             }
@@ -297,7 +296,7 @@ public class FileIO
         }
     }
 
-    public static List<(double fitness, int eventCount)> ReadFitnesses(string filePath, FitnessParams fitnessParams)
+    public static List<(double fitness, int eventCount)> ReadFitnesses(string filePath, FitParams fitParams)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))
@@ -307,7 +306,7 @@ public class FileIO
         try
         {
             var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClones(fitnessFile, fitnessParams);
+            return Parsers.ParseClones(fitnessFile, fitParams);
         }
         catch (Exception e)
         {
@@ -370,7 +369,7 @@ public class FileIO
         }
     }
     
-    public static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexEnum> chrSex)
+    public static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<string, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>
@@ -401,6 +400,7 @@ public class FileIO
         return geneLists;
     }
 
+    // TODO: Needs to implement autosomes only
     public static Dictionary<string, Karyotype> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
@@ -460,7 +460,7 @@ public class FileIO
         }
     }
     
-    private static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ReadChromosomes(string folder)
+    private static (Dictionary<string, int> chrLengths, Dictionary<string, SexType> chrSex) ReadChromosomes(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
         if (!File.Exists(fileFullPath))

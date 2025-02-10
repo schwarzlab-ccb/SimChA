@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.DataTypes;
+﻿using SimChA.Data;
 
 namespace SimChA.Computation;
 

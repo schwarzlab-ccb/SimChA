@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using NUnit.Framework;
+using SimChA.Computation;
+using SimChA.Data;
 using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
@@ -45,9 +47,9 @@ public class TestIO
     [Test]
     public void TestConfigSerialization()
     {
-        var fit = new FitnessParams(0.001f, 0.01f, 0.000_1f, 1);
-        var autosomesOnly = false;
-        var simParams = new SimParams(0, SexEnum.None, autosomesOnly, 1, Distribution.Uniform, 1, Distribution.Exponential, fit);
+        var sampleParams = new SampleParams();
+        var fitParams = new FitParams(0.001f, 0.01f, 0.000_1f, true);
+        var simParams = new SimParams(0, sampleParams, fitParams);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         var deserialized = JsonSerializer.Deserialize<SimParams>(serialized);
@@ -63,8 +65,8 @@ public class TestIO
         var res = Parsers.ParseSimParams(@"{}");
         Assert.AreEqual(0, res.Seed);
         res = Parsers.ParseSimParams(@"{""EventCountMean"": 10, ""EventDist"": ""Normal""}");
-        Assert.AreEqual(10, res.EventCountMean);
-        Assert.AreEqual(Distribution.Normal, res.EventDist);
+        Assert.AreEqual(10, res.SampleParams.EventMean);
+        Assert.AreEqual(DistType.Normal, res.SampleParams.EventDist);
         res = Parsers.ParseSimParams(@"{""Signatures"": {""test"" : { ""Prob"": 1 }}}");
         Assert.AreEqual("test", res.Signatures!.First().Key);
         Assert.AreEqual(1, res.Signatures!.First().Value.Prob, 0.000001);
@@ -100,7 +102,7 @@ public class TestIO
         string? projectPath =
             Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(TestContext.CurrentContext.TestDirectory)));
         var files = new FileIO(projectPath + "/out");
-        var kar = new Karyotype(_genRef, SexEnum.Male);
+        var kar = new Karyotype(_genRef, SexType.Male);
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, 1_000_000, 10));
         var clone = new CloneIn("1", "-1", 0, 1);
@@ -125,10 +127,10 @@ public class TestIO
         var clonesIn = new List<CloneIn>
             { new("0", "-1", 0, 1), new("1", "0", 1, 1) };
 
-        var sample = new Sample("sample", SexEnum.Male, clonesIn, eventPars);
+        var sample = new Sample("sample", SexType.Male, clonesIn, eventPars);
         var contigs = new List<Contig> { new(new Region(0, sequence.Length, "chr1", true)) };
         sample.EventDescs["0"] = new List<CNEventDesc>();
-        sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
+        sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexType.Male);
         sample.EventDescs["1"] = new List<CNEventDesc>();
         sample.Kars["1"] = new Karyotype(sample.Kars["0"]);
 
@@ -180,7 +182,7 @@ public class TestIO
         Assert.AreEqual(4, profiles["1"].FindRegionsOfChr("chr2").Count()); // 4 missing (split by null regions)
         Assert.AreEqual(9, profiles["1"].FindRegionsOfChr("chr3").Count()); // 5 existing + 4 missing
         Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr4").Count()); // 2 missing
-        Assert.AreEqual(SexEnum.Male, profiles["2"].Sex);
+        Assert.AreEqual(SexType.Male, profiles["2"].Sex);
     }
 
     [Test]
@@ -188,7 +190,7 @@ public class TestIO
     {
         Assert.AreEqual("hg19", _genRef.Name);
         Assert.AreEqual(22, _genRef.AutosomesCount);
-        Assert.AreEqual(46, _genRef.ChrCount(SexEnum.Female, true));
+        Assert.AreEqual(46, _genRef.ChrCount(SexType.Female, true));
     }
 
     [Test]
@@ -230,11 +232,11 @@ public class TestIO
         var clonesIn = new List<CloneIn>
             { new("0", "-1", 1, 1) };
 
-        var sample = new Sample("sample_1", SexEnum.Male, clonesIn, eventPars);
+        var sample = new Sample("sample_1", SexType.Male, clonesIn, eventPars);
         var contigs = new List<Contig>
             { new(new Region(0, sequence1.Count(), "chr1", true)), new(new Region(0, sequence2.Length, "chr2", true)) };
         sample.EventDescs["0"] = new List<CNEventDesc>();
-        sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexEnum.Male);
+        sample.Kars["0"] = new Karyotype(contigs, new List<GenRange>(), _genRef.Centromeres, SexType.Male);
         // Apply an internal inversion
         var rnd = new Random(0);
         int contigID = 0;

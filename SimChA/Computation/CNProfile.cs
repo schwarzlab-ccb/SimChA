@@ -1,7 +1,5 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.DataTypes;
-using SimChA.Simulation;
+﻿using SimChA.Data;
+using SimChA.IO;
 
 namespace SimChA.Computation;
 
@@ -13,7 +11,7 @@ public abstract class CNProfile
     public static double CalcCoverage(Karyotype kar, GenRef genRef) 
     =>  (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.Sex,false);
     
-    public static CloneStat GetCloneStats(Sample sample, CloneIn clone, GenRef genRef, FitnessParams fParams, Dictionary<string, Karyotype> karMap)
+    public static CloneStat GetCloneStats(Sample sample, CloneIn clone, GenRef genRef, FitParams fParams, Dictionary<string, Karyotype> karMap)
     {
         var kar = karMap[clone.CloneId];
 
@@ -25,9 +23,9 @@ public abstract class CNProfile
         var essCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar);
         
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.NormalizeGenes);
-        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.NormalizeGenes);
-        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.NormalizeGenes);
+        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.GeneNormalization);
+        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.GeneNormalization);
+        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.GeneNormalization);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
 
         // Get mutation count

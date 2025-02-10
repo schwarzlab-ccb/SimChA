@@ -1,9 +1,9 @@
-namespace SimChA.DataTypes;
+namespace SimChA.IO;
 
 // Parameters used in the MCMC sampling
 // Input: 
 
-public record MCParams(
+public record MHParams(
     int NumSamplesMin, // Burn-in samples
     int NumSamplesTotal, // Number of true samples
     double ThetaFitness, // exponential multiplier for fitness

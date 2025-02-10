@@ -2,6 +2,7 @@
 using SimChA.DataTypes;
 using SimChA.EventData;
 using MathNet.Numerics.Distributions;
+using SimChA.Data;
 
 namespace SimChA.Simulation;
 
@@ -55,35 +56,35 @@ public static class Sampling
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new Dirichlet(concentrations, rnd).Sample().ToList() : new List<double>();
     
-    public static double SampleDist(Random rnd, Distribution dist, double mean = 1)
+    public static double SampleDist(Random rnd, DistType dist, double mean = 1)
     {
         return dist switch
         {
-            Distribution.Exponential => Exponential.Sample(rnd, 1 / mean),
-            Distribution.Normal => Normal.Sample(rnd, mean, .5),
-            Distribution.Geometric => Geometric.Sample(rnd, 1 / mean),
-            Distribution.Poisson => Poisson.Sample(rnd, mean),
+            DistType.Exponential => Exponential.Sample(rnd, 1 / mean),
+            DistType.Normal => Normal.Sample(rnd, mean, .5),
+            DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
+            DistType.Poisson => Poisson.Sample(rnd, mean),
             _ => mean
         };
     }
 
-    public static int SampleDistInt(Random rnd, Distribution dist, double mean)
+    public static int SampleDistInt(Random rnd, DistType dist, double mean)
     {
         return dist switch
         {
-            Distribution.Geometric => Geometric.Sample(rnd, 1 / mean),
-            Distribution.Poisson => Poisson.Sample(rnd, mean),
-            Distribution.Normal => throw new Exception($"{dist} distribution not supported for distance sampling"),
-            Distribution.Exponential => throw new Exception($"{dist} distribution not supported for distance sampling"),
+            DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
+            DistType.Poisson => Poisson.Sample(rnd, mean),
+            DistType.Normal => throw new Exception($"{dist} distribution not supported for distance sampling"),
+            DistType.Exponential => throw new Exception($"{dist} distribution not supported for distance sampling"),
             _ => (int) mean
         };
     }
     
-    public static SexEnum GetSex(Random rnd, SexEnum sexEnum)
-        => sexEnum switch
+    public static SexType GetSex(Random rnd, SexType sexType)
+        => sexType switch
         {
-            SexEnum.None => rnd.CoinFlip() ? SexEnum.Male : SexEnum.Female,
-            _ => sexEnum
+            SexType.None => rnd.CoinFlip() ? SexType.Male : SexType.Female,
+            _ => sexType
         };
 
     public static Nucleotide SampleBase(Random rnd) 

@@ -1,19 +1,19 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-namespace SimChA.DataTypes;
+namespace SimChA.Data;
 
 // A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
 // TODO: The direction should not be part of the region, should be part of the chromosome
 public record Region(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) : GenRange(Start, End, ChrNo)
-{ 
-    protected static string HapToString(bool parent) 
+{
+    private static string HapToString(bool parent) 
         => parent ? "H1" : "H2";
-    
-    protected string HapString => HapToString(Hap1);
+
+    private string HapString => HapToString(Hap1);
 
     public static string DirToStr(bool dir) => dir ? ">" : "<";
 
-    protected string DirString => DirToStr(Forward);
+    private string DirString => DirToStr(Forward);
     
     public override string ToString() => $"{HapString}{DirString}{ChrNo}[{Start}:{End})";
 

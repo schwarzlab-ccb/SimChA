@@ -1,4 +1,4 @@
-﻿using SimChA.Simulation;
+﻿using SimChA.Data;
 namespace SimChA.EventData;
 
 public record WGDEventData(CNEventPars CNEventPars) : BaseEventData(CNEventPars)

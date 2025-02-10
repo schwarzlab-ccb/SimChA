@@ -1,5 +1,5 @@
 ﻿using SimChA.Computation;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
 namespace SimChA.Simulation;
@@ -7,9 +7,9 @@ namespace SimChA.Simulation;
 public class SASimulator : Simulator
 {
     private EvoParams EvoParams { get; }
-    private Random Rnd { get; }
 
-    public SASimulator(Random rnd, GenRef genRef, FitnessParams fitnessParams, EvoParams evoParams) :base(rnd, genRef, fitnessParams)
+    public SASimulator(Random rnd, GenRef genRef, SampleParams sampleParams, FitParams fitParams, EvoParams evoParams) 
+        : base(rnd, genRef, sampleParams, fitParams)
     {
         EvoParams = evoParams;
     }
@@ -23,10 +23,10 @@ public class SASimulator : Simulator
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
         // Start with the tetraploid state
-        if (EvoParams.TetraploidStart)
+        if (SampleParams.TetraploidStart)
         {
             sample.Kars[root.CloneId].ApplyWGD();
-            sample.Kars[root.CloneId].UpdateFitness(GenRef, FitnessParams);
+            sample.Kars[root.CloneId].UpdateFitness(GenRef, FitParams);
         }
         ApplyEvolutionRec(sample, root, childLookUp, 0);
     }
@@ -58,14 +58,10 @@ public class SASimulator : Simulator
             {
                 continue;
             }
-            if (EvoParams.WithFitness == false)
-            {
-                return eventData;
-            }
             var proposedKar = new Karyotype(kar);
             eventData.ApplyEvent(proposedKar);
-            double proposedFitness = proposedKar.UpdateFitness(GenRef, FitnessParams);
-            if (Math.Exp(proposedFitness - currentFitness - FitnessParams.Delta) >= Rnd.NextDouble())
+            double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
+            if (Math.Exp(proposedFitness - currentFitness - EvoParams.Acceptance) >= Rnd.NextDouble())
             {
                 return eventData;
             }
@@ -81,10 +77,10 @@ public class SASimulator : Simulator
     }
 
     bool MetBreakCondition(int time, int nEventsLeft)
-        => !EvoParams.EvolveInTime ? nEventsLeft == 0 : time >= EvoParams.MaxTime; 
+        => !EvoParams.EvolveInTime ? nEventsLeft == 0 : time >= 1; 
 
     double GetMutRate(Karyotype kar)
-        => EvoParams.MutationRate * CNProfile.CalcPloidy(kar, GenRef);
+        => EvoParams.EventRate * CNProfile.CalcPloidy(kar, GenRef);
 
     bool DidMutate(Karyotype kar)
         => !EvoParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
@@ -99,7 +95,7 @@ public class SASimulator : Simulator
         {
             int mutCount = child.Distance;
             var childEvs = new List<CNEventDesc>();
-            double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitnessParams);
+            double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitParams);
             bool hasWGD = false;
             int time = 0;
             while (!MetBreakCondition(time, mutCount - childEvs.Count))
@@ -117,7 +113,7 @@ public class SASimulator : Simulator
 
                 var newKar = new Karyotype(sample.Kars[node.CloneId]);
                 newEvent.ApplyEvent(newKar);
-                double proposedFitness = newKar.UpdateFitness(GenRef, FitnessParams);
+                double proposedFitness = newKar.UpdateFitness(GenRef, FitParams);
                 double dFit = proposedFitness - currentFitness;
                 var eventTime = EvoParams.EvolveInTime ? time : childEvs.Count + 1;
                 var abberation = new CNEventDesc(

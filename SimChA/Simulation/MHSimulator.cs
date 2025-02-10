@@ -1,22 +1,22 @@
 ﻿using SimChA.Computation;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
-using EDists = Extreme.Statistics.Distributions;
 
 namespace SimChA.Simulation;
 
 public class MHSimulator : Simulator
 {
-    private MCParams McParams { get; }
+    private MHParams MhParams { get; }
     
     public MHSimulator(
         Random rnd,
         GenRef genRef,
-        FitnessParams fitnessParams, 
-        MCParams mCParams) : base(rnd, genRef, fitnessParams)
+        SampleParams sampleParams,
+        FitParams fitParams, 
+        MHParams mCParams) : base(rnd, genRef, sampleParams, fitParams)
     {
-        McParams = mCParams;
+        MhParams = mCParams;
     }
     
     public override void SampleEvents(Sample sample)
@@ -34,11 +34,11 @@ public class MHSimulator : Simulator
     public double GetFitnessPotential(double fitness, double targetFitness)
     {
         double dFit = fitness - targetFitness;
-        return -McParams.ThetaFitness * Math.Abs(dFit/targetFitness);
+        return -MhParams.ThetaFitness * Math.Abs(dFit/targetFitness);
     }
     
     public double CalculatePotential(double proposedFitness)
-        => McParams.ThetaFitness * proposedFitness;
+        => MhParams.ThetaFitness * proposedFitness;
     
     public double CalculatePotential(double proposedFitness, double targetFitness)
         => GetFitnessPotential(proposedFitness, targetFitness);
@@ -48,7 +48,7 @@ public class MHSimulator : Simulator
         // Probability of picking each event and their corresponding signature
         foreach (var eventData in events)
             eventData.ApplyEvent(kar);
-        return kar.UpdateFitness(GenRef, FitnessParams);
+        return kar.UpdateFitness(GenRef, FitParams);
     }
 
     private List<BaseEventData> GetNewProposal(Sample sample, Karyotype kar, List<BaseEventData> oldEvents)
@@ -56,7 +56,7 @@ public class MHSimulator : Simulator
         var proposedEvents = oldEvents.ToList();
         // Select a random CNEventPars to modify
         int index = Rnd.Next(proposedEvents.Count);
-        var cnEventP = Rnd.NextDouble() < McParams.SwapEventP 
+        var cnEventP = Rnd.NextDouble() < MhParams.SwapEventP 
             ? Rnd.PickRndElem(sample.EventPars) 
             : proposedEvents[index].CNEventPars;
         var newData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
@@ -80,11 +80,11 @@ public class MHSimulator : Simulator
         var best_diff = 1000.0;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
-        for (int i = 0; i < McParams.NumSamplesTotal; i++)
+        for (int i = 0; i < MhParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
             var fitness = GetFitness(new Karyotype(kar), proposedEvents);
-            var thresholdAccept = Math.Abs(1.0 - fitness/targetFitness) < McParams.ThresholdFit;
+            var thresholdAccept = Math.Abs(1.0 - fitness/targetFitness) < MhParams.ThresholdFit;
             // Calculate the new fitness of the proposed set of events on the clone
             double proposalPotential = CalculatePotential(currentFitness, targetFitness);
             double acceptProb = proposalPotential - currentPotential;
@@ -100,7 +100,7 @@ public class MHSimulator : Simulator
                 }
                 // Break out of the sampling if we have reached the threshold
                 // and have reached the minimum number of samples required
-                if (thresholdAccept && i > McParams.NumSamplesMin) break;
+                if (thresholdAccept && i > MhParams.NumSamplesMin) break;
             }
         }
         return bestEvents;
@@ -117,7 +117,7 @@ public class MHSimulator : Simulator
 
         var fitList = new List<double>{currentFitness};
 
-        for (int i = 0; i < McParams.NumSamplesTotal; i++)
+        for (int i = 0; i < MhParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
             var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
@@ -153,7 +153,7 @@ public class MHSimulator : Simulator
             {
                 double oldFitness = childKar.FitnessVal;
                 
-                var bestEvents = McParams.MatchFitness
+                var bestEvents = MhParams.MatchFitness
                     ? GenEventsForTargetFitness(sample, childKar, child.Distance, child.FitnessTarget)
                     : GenEventsForMaxFitness(sample, childKar, child.Distance);
 
@@ -162,7 +162,7 @@ public class MHSimulator : Simulator
                     Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.");
                     var eventData = bestEvents[mutNo];
                     eventData.ApplyEvent(childKar);
-                    double newFitness = childKar.UpdateFitness(GenRef, FitnessParams);
+                    double newFitness = childKar.UpdateFitness(GenRef, FitParams);
                     double dFit = newFitness - oldFitness;
                     var abberation = new CNEventDesc(eventData.EventType, eventCount + mutNo, eventData.ToString(), dFit,
                         newFitness);

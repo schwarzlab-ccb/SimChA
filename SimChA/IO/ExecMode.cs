@@ -1,6 +1,5 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
+﻿namespace SimChA.IO;
 
-namespace SimChA.DataTypes;
 public enum ExecMode 
 { 
     Tree,

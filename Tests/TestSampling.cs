@@ -22,7 +22,7 @@ public class TestSampling
     }
 
     [Test]
-    public void TestDistSampling([Values] Distribution dist)
+    public void TestDistSampling([Values] DistType dist)
     {
         var reps = Enumerable.Range(0, 100).ToList();
         var res = reps.Select(i => Sampling.SampleDist(_rnd, dist, 100)).Mean();

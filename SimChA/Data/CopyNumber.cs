@@ -1,4 +1,6 @@
-﻿namespace SimChA.DataTypes;
+﻿using SimChA.Data;
+
+namespace SimChA.DataTypes;
 
 public record CopyNumber(GenRange Segment, int CNH1, int CNH2, int NSNVs)
 {

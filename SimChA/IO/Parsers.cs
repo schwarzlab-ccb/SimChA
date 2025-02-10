@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json;
 using SimChA.DataTypes;
-using SimChA.Simulation;
 using System.Text;
 using System.Text.RegularExpressions;
+using SimChA.Data;
 
 namespace SimChA.IO;
 
@@ -67,21 +66,21 @@ public static class Parsers
         return result;
     }
 
-    private static SexEnum GetSexFromProfile(IReadOnlyDictionary<string, bool> present, bool autosomesOnly)
+    private static SexType GetSexFromProfile(IReadOnlyDictionary<string, bool> present, bool autosomesOnly)
     {
         if (autosomesOnly)
         {
-            return SexEnum.None;
+            return SexType.None;
         }
         if (present["chrY"])
         {
-            return SexEnum.Male;
+            return SexType.Male;
         }
         if (present["chrX"])
         {
-            return SexEnum.Female;
+            return SexType.Female;
         }
-        return SexEnum.None;
+        return SexType.None;
     }
 
     // Expected format is that there is a header and the columns contain:
@@ -94,7 +93,7 @@ public static class Parsers
         var missingRanges = new List<GenRange>();
         var regionsA = new List<Region>();
         var regionsB = new List<Region>();
-        var chrList = autosomesOnly ? genRef.ChrIDsForAutosomes() : genRef.AllChrs;
+        var chrList = autosomesOnly ? genRef.ChrIDsForAutosomes().ToList() : genRef.AllChrs;
         var present = chrList.ToDictionary(c => c, _ => false);
         
         string lastSample = "";
@@ -255,7 +254,7 @@ public static class Parsers
         const string distanceKey = "Distance";
         const string fitnessKey = "Fitness";
 
-        string? firstLine = cloneStream.ReadLine() ?? throw new Exception("CloneIn file is empty.");
+        string firstLine = cloneStream.ReadLine() ?? throw new Exception("CloneIn file is empty.");
         var header = firstLine.Split(sep).Select(s => s.Trim()).ToList();
         var columns = new Dictionary<string, int> { { idKey, -1 }, { parentIDKey, -1 }, { distanceKey, -1 } };
         if (parseFitness)
@@ -286,7 +285,7 @@ public static class Parsers
         return clones;
     }
 
-    public static List<(double fitness, int eventCount)> ParseClones(TextReader fitnessStream, FitnessParams fParams)
+    public static List<(double fitness, int eventCount)> ParseClones(TextReader fitnessStream, FitParams fParams)
     {
         var output = new List<(double fitness, int eventCount)>();
         string? firstLine = fitnessStream.ReadLine() ?? throw new Exception("Fitness file is empty.");
@@ -295,8 +294,8 @@ public static class Parsers
         {
             var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
             double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat)*fParams.Stress;
-            var tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
-            var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
+            double tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
+            double og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
             double tsgogTerm = (og + tsg) * fParams.TsgOg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
             double totalFitness = 1.0 + (stressTerm + tsgogTerm + essTerm);
@@ -317,8 +316,8 @@ public static class Parsers
             var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
             string sampleName = lineSplit[0];
             double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat);
-            var tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
-            var og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
+            double tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
+            double og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
             double tsgogTerm = og + tsg;
             double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat);
             // If the file includes data on how many chromosomal events the sample underwent
@@ -343,11 +342,11 @@ public static class Parsers
         return output;
     }
 
-    public static (Dictionary<string, int> chrLengths, Dictionary<string, SexEnum> chrSex) ParseChromosomes(string text)
+    public static (Dictionary<string, int> chrLengths, Dictionary<string, SexType> chrSex) ParseChromosomes(string text)
     {
         IList<string> lines = text.Split("\n");
         Dictionary<string, int> chrLengths = new();
-        Dictionary<string, SexEnum> chrSex = new();
+        Dictionary<string, SexType> chrSex = new();
         for (var index = 0; index < lines.Count; index++)
         {
             string line = lines[index];
@@ -388,18 +387,18 @@ public static class Parsers
         return cents.ToImmutableDictionary();
     }
 
-    private static SexEnum GetSexEnum(ICollection<string> lines, IReadOnlyList<string> lineSplit, int index)
+    private static SexType GetSexEnum(ICollection<string> lines, IReadOnlyList<string> lineSplit, int index)
     {
         if (lineSplit.Count > 2)
         {
             string sexString = lineSplit[2];
-            return Enum.Parse<SexEnum>(sexString);
+            return Enum.Parse<SexType>(sexString);
         }
         return index switch
         {
-            _ when index == lines.Count - 1 => SexEnum.Male,
-            _ when index == lines.Count - 2 => SexEnum.Female,
-            _ => SexEnum.None
+            _ when index == lines.Count - 1 => SexType.Male,
+            _ when index == lines.Count - 2 => SexType.Female,
+            _ => SexType.None
         };
     }
     

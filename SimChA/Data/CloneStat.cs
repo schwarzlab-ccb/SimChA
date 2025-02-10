@@ -1,6 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
-namespace SimChA.DataTypes;
+namespace SimChA.Data;
 
 public record CloneStat(
     string SampleId,

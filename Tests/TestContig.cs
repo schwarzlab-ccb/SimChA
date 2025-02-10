@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using SimChA.Data;
 using SimChA.DataTypes;
 using SimChA.IO;
 using SimChA.Simulation;
@@ -22,8 +23,8 @@ public class TestContig
     public void Setup()
     {
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _contig1 = new Contig(_genRef.GetGenotype(SexEnum.Female).First());
-        _contigX = new Contig(_genRef.GetGenotype(SexEnum.Female).Last());
+        _contig1 = new Contig(_genRef.GetGenotype(SexType.Female).First());
+        _contigX = new Contig(_genRef.GetGenotype(SexType.Female).Last());
     }
     
     [Test]

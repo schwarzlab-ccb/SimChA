@@ -1,23 +1,23 @@
+using SimChA.Data;
 using SimChA.DataTypes;
-using SimChA.Simulation;
 
 namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, SexEnum sex)
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, SexType sex)
     {
         karyotype.MergeRegions();
         return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
     } 
     
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexType sex, bool keepMissing = false) 
     {
         karyotype.MergeRegions();
         return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
 
-    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexType sex, bool keepMissing = false) 
     {
         return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
     }
@@ -84,7 +84,7 @@ public static class CopyNumbers
         return result;
     }
 
-    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexEnum sex)
+    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexType sex)
     {
         long totalLength = genRef.GetGenomeLen(sex) / 2;
         return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
