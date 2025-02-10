@@ -13,7 +13,7 @@ namespace Tests;
 public class TestSimulator
 {
     private Random _rnd;
-    private SampleParams _sampleParams;
+    private SimParams _simParams;
     private MHParams _mhParams;
     private List<CNEventPars> _eventPs;
     private FitParams _fitParams;
@@ -25,7 +25,7 @@ public class TestSimulator
     public void Setup()
     {
         _rnd = new Random(0);
-        _sampleParams = new SampleParams();
+        _simParams = new SimParams();
         _fitParams = new FitParams(0.9, 0.05, 2);
         _eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
@@ -36,8 +36,8 @@ public class TestSimulator
     [Test]
     public void TestPotential()
     {
-        var sampleParams = new SampleParams();
-        var sim = new MHSimulator(_rnd, _genRef, _sampleParams, _fitParams,_mhParams);
+        var sampleParams = new SimParams();
+        var sim = new MHSimulator(_rnd, _genRef, _simParams, _fitParams,_mhParams);
         double potential = sim.CalculatePotential(1, 1);
         Assert.AreEqual(0.0, potential,EPSILON);
     }
@@ -45,7 +45,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _genRef, _sampleParams, _fitParams);
+        var sim = new Simulator(_rnd, _genRef, _simParams, _fitParams);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)

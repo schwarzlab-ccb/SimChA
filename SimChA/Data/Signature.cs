@@ -1,9 +1,8 @@
 ﻿using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.EventData;
 
 namespace SimChA.Data;
 
 [Serializable]
-public record Signature(double Prob, List<CNEventPars> Events) : IHasProb;
+public record Signature(string Name, double Prob, List<CNEventPars> Events) : IHasProb;
 

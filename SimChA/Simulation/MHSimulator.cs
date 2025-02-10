@@ -7,19 +7,19 @@ namespace SimChA.Simulation;
 
 public class MHSimulator : Simulator
 {
-    private MHParams MhParams { get; }
+    private MHParams MHParams { get; }
     
     public MHSimulator(
         Random rnd,
         GenRef genRef,
-        SampleParams sampleParams,
+        SimParams simParams,
         FitParams fitParams, 
-        MHParams mCParams) : base(rnd, genRef, sampleParams, fitParams)
+        MHParams mhParams) : base(rnd, genRef, simParams, fitParams)
     {
-        MhParams = mCParams;
+        MHParams = mhParams;
     }
     
-    public override void SampleEvents(Sample sample)
+    public override void Simulate(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {
@@ -34,11 +34,11 @@ public class MHSimulator : Simulator
     public double GetFitnessPotential(double fitness, double targetFitness)
     {
         double dFit = fitness - targetFitness;
-        return -MhParams.ThetaFitness * Math.Abs(dFit/targetFitness);
+        return -MHParams.ThetaFitness * Math.Abs(dFit/targetFitness);
     }
     
     public double CalculatePotential(double proposedFitness)
-        => MhParams.ThetaFitness * proposedFitness;
+        => MHParams.ThetaFitness * proposedFitness;
     
     public double CalculatePotential(double proposedFitness, double targetFitness)
         => GetFitnessPotential(proposedFitness, targetFitness);
@@ -56,7 +56,7 @@ public class MHSimulator : Simulator
         var proposedEvents = oldEvents.ToList();
         // Select a random CNEventPars to modify
         int index = Rnd.Next(proposedEvents.Count);
-        var cnEventP = Rnd.NextDouble() < MhParams.SwapEventP 
+        var cnEventP = Rnd.NextDouble() < MHParams.SwapEventP 
             ? Rnd.PickRndElem(sample.EventPars) 
             : proposedEvents[index].CNEventPars;
         var newData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
@@ -80,11 +80,11 @@ public class MHSimulator : Simulator
         var best_diff = 1000.0;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
-        for (int i = 0; i < MhParams.NumSamplesTotal; i++)
+        for (int i = 0; i < MHParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
             var fitness = GetFitness(new Karyotype(kar), proposedEvents);
-            var thresholdAccept = Math.Abs(1.0 - fitness/targetFitness) < MhParams.ThresholdFit;
+            var thresholdAccept = Math.Abs(1.0 - fitness/targetFitness) < MHParams.ThresholdFit;
             // Calculate the new fitness of the proposed set of events on the clone
             double proposalPotential = CalculatePotential(currentFitness, targetFitness);
             double acceptProb = proposalPotential - currentPotential;
@@ -100,7 +100,7 @@ public class MHSimulator : Simulator
                 }
                 // Break out of the sampling if we have reached the threshold
                 // and have reached the minimum number of samples required
-                if (thresholdAccept && i > MhParams.NumSamplesMin) break;
+                if (thresholdAccept && i > MHParams.NumSamplesMin) break;
             }
         }
         return bestEvents;
@@ -117,7 +117,7 @@ public class MHSimulator : Simulator
 
         var fitList = new List<double>{currentFitness};
 
-        for (int i = 0; i < MhParams.NumSamplesTotal; i++)
+        for (int i = 0; i < MHParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(sample, kar, currentEvents);
             var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
@@ -153,7 +153,7 @@ public class MHSimulator : Simulator
             {
                 double oldFitness = childKar.FitnessVal;
                 
-                var bestEvents = MhParams.MatchFitness
+                var bestEvents = MHParams.MatchFitness
                     ? GenEventsForTargetFitness(sample, childKar, child.Distance, child.FitnessTarget)
                     : GenEventsForMaxFitness(sample, childKar, child.Distance);
 

@@ -21,24 +21,24 @@ Console.WriteLine("INPUT");
 var options = cmdOptions.Value;
 var execMode = options.ExecMode;
 var selMode = options.SelectionMode;
-var simParams = FileIO.ReadSimParams(options.ConfigFile);
-var rnd = new Random(simParams.Seed);
+var config = FileIO.ReadSimParams(options.ConfigFile);
+var rnd = new Random(config.Seed);
 var files = new FileIO(options.OutputPath);
 var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
-var simulator = Factory.GetSimulator(rnd, genRef, simParams, selMode);
-var samples = Factory.ReadSamples(rnd, genRef, simParams, options);
+var samples = Factory.ReadSamples(rnd, genRef, config, options);
+var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
 if (execMode != ExecMode.Profiles)
 {
     Console.WriteLine("SIMULATION");
     foreach (var sample in samples)
     {
-        simulator.SampleEvents(sample);
+        simulator.Simulate(sample);
     }
 }
 
 Console.WriteLine("ANALYSIS");
-files.WriteSimParams(simParams);
+files.WriteSimParams(config);
 foreach (var sample in samples)
 {
     int counter = 1;
@@ -46,7 +46,7 @@ foreach (var sample in samples)
     foreach (var clone in sample.Clones)
     {
         Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, simParams.FitParams, sample.Kars);
+        sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, config.FitParams, sample.Kars);
     }
 }
 

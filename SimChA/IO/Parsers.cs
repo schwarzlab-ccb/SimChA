@@ -10,13 +10,13 @@ namespace SimChA.IO;
 
 public static class Parsers
 {
-    public static SimParams ParseSimParams(string serializedJSON)
+    public static SimChAConfig ParseSimParams(string serializedJSON)
     {
-        SimParams? res;
+        SimChAConfig? res;
         var options = new JsonSerializerOptions { IncludeFields = true };
         try
         {
-            res = JsonSerializer.Deserialize<SimParams>(serializedJSON, options);
+            res = JsonSerializer.Deserialize<SimChAConfig>(serializedJSON, options);
             if (res is null)
             {
                 throw new Exception($"Could not parse the simulation parameters:\n{serializedJSON}");
@@ -70,7 +70,7 @@ public static class Parsers
     {
         if (autosomesOnly)
         {
-            return SexType.None;
+            return SexType.Any;
         }
         if (present["chrY"])
         {
@@ -80,7 +80,7 @@ public static class Parsers
         {
             return SexType.Female;
         }
-        return SexType.None;
+        return SexType.Any;
     }
 
     // Expected format is that there is a header and the columns contain:
@@ -398,7 +398,7 @@ public static class Parsers
         {
             _ when index == lines.Count - 1 => SexType.Male,
             _ when index == lines.Count - 2 => SexType.Female,
-            _ => SexType.None
+            _ => SexType.Any
         };
     }
     

@@ -7,19 +7,19 @@ namespace SimChA.Simulation;
 
 public static class Factory
 {
-    public static Simulator GetSimulator(Random rnd, GenRef genRef, SimParams simParams, SelectionMode selMode)
+    public static Simulator GetSimulator(Random rnd, GenRef genRef, SimChAConfig simChAConfig, SelectionMode selMode)
     {
-        var sampleParams = simParams.SampleParams;
-        var fitParams = simParams.FitParams;
+        var sampleParams = simChAConfig.SimParams;
+        var fitParams = simChAConfig.FitParams;
         switch (selMode)
         {
             case SelectionMode.MetropolisHastings:
-                var mcParams = simParams.MHParams ?? throw new Exception(
+                var mcParams = simChAConfig.MHParams ?? throw new Exception(
                     "Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
                 return new MHSimulator(rnd, genRef, sampleParams, fitParams, mcParams);
 
             case SelectionMode.SimulatedAnnealing:
-                var evoParams = simParams.EvoParams ?? throw new Exception(
+                var evoParams = simChAConfig.EvoParams ?? throw new Exception(
                     "Error: EvoParams not set. Cannot perform evolution without evolution parameters. Please set EvoParams in the config file.");
                 return new SASimulator(rnd, genRef, sampleParams, fitParams, evoParams);
 
@@ -31,9 +31,19 @@ public static class Factory
         }
     }
 
-    public static List<Sample> ReadSamples(Random rnd, GenRef genRef, SimParams simParams, CmdOptions options)
+    public static List<Sample> ReadSamples(Random rnd, GenRef genRef, SimChAConfig config, CmdOptions options)
     {
-        var sampleParams = simParams.SampleParams;
+        var sampleParams = config.SimParams;
+        if (config.SimParams == null)
+        {
+            throw new Exception("No sample parameters found. Please set \"SimParams\" in the config JSON.");
+        }
+
+        if (config.FitParams == null)
+        {
+            throw new Exception("No fitness parameters found. Please set \"FitParams\" in the config JSON.");
+        }
+        
         if (options.ExecMode == ExecMode.Profiles)
         {
             Console.WriteLine("Reading samples from data:");
@@ -41,8 +51,7 @@ public static class Factory
             return Converters.SamplesFromProfiles(profiles);
         }
         
-        var validSigs = ValidateSignatures(simParams.Signatures);
-
+        var validSigs = ValidateSignatures(config.Signatures);
         if (options.ExecMode == ExecMode.Repeats)
         {
             Console.WriteLine("Creating random samples:");
@@ -54,11 +63,10 @@ public static class Factory
             var inClones = FileIO.ReadCloneTree(options.CloneTreeFile, options.MHMode);
             var (cnEventPs, mixture) = Converters.PropagateSigs(validSigs);
             string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-            var sex = sampleParams.AutosomesOnly ? SexType.None : Sampling.GetSex(rnd, sampleParams.Sex);
+            var sex = sampleParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(rnd, sampleParams.Sex);
             var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture);
             return new List<Sample> { treeSample };
         }
-        
         throw new Exception("Unknown execution mode.");
     }
 
@@ -107,30 +115,30 @@ public static class Factory
         }
     }
 
-    private static Dictionary<string, Signature> ValidateSignatures(Dictionary<string, Signature>? signatures)
+    private static List<Signature> ValidateSignatures(List<Signature>? signatures)
     {
         if (signatures is null)
         {
             throw new Exception("No signatures found.");
         }
-        var validSigs = new Dictionary<string, Signature>();
+        var validSigs = new List<Signature>();
         
-        foreach (var sig in signatures.Where(sig => sig.Value.Prob > 0 && sig.Value.Events.Any(e => e.Prob > 0)))
+        foreach (var sig in signatures.Where(sig => sig.Prob > 0 && sig.Events.Any(e => e.Prob > 0)))
         {
-            if (sig.Value.Events is null || sig.Value.Events.Count == 0)
+            if (sig.Events is null || sig.Events.Count == 0)
             {
-                throw new Exception($"Signature {sig.Key} does not have any events.");
+                throw new Exception($"Signature {sig.Name} does not have any events.");
             }
-            double probSum = sig.Value.Events.Sum(e => e.Prob);
+            double probSum = sig.Events.Sum(e => e.Prob);
             if (probSum <= 0)
             {
-                throw new Exception($"Signature {sig.Key} has a total probability of {probSum}.");
+                throw new Exception($"Signature {sig.Name} has a total probability of {probSum}.");
             }
-            foreach(var cnEventP in sig.Value.Events)
+            foreach(var cnEventP in sig.Events)
             {
                 ValidateEvent(cnEventP);
             }
-            validSigs[sig.Key] = sig.Value;
+            validSigs.Add(sig);
         }
         if (signatures.Count == 0)
         {

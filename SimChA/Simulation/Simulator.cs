@@ -10,19 +10,19 @@ public class Simulator
     protected Random Rnd  { get; }
     protected GenRef GenRef  { get; }
     protected FitParams FitParams  { get; }
-    protected SampleParams SampleParams { get; }
+    protected SimParams SimParams { get; }
     
     protected int Counter;
 
-    public Simulator(Random rnd, GenRef genRef, SampleParams sampleParams, FitParams fitParams)
+    public Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
     {
         Rnd = rnd;
         GenRef = genRef;
         FitParams = fitParams;
-        SampleParams = sampleParams;
+        SimParams = simParams;
     }
 
-    public virtual void SampleEvents(Sample sample)
+    public virtual void Simulate(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {

@@ -1,13 +1,14 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-
+﻿using SimChA.Computation;
 using SimChA.Data;
 
 namespace SimChA.IO;
 
 public record SimParams(
-    int Seed,
-    SampleParams SampleParams,
-    FitParams FitParams,
-    Dictionary<string, Signature>? Signatures = null,
-    MHParams? MHParams = null,
-    EvoParams? EvoParams = null);
+    SexType Sex = SexType.Any,
+    DistType RateDist = DistType.Uniform,
+    double RateMean = 1,
+    DistType FitDist = DistType.Uniform,
+    double FitMean = 1,
+    bool AutosomesOnly = false,
+    bool TetraploidStart = false
+);

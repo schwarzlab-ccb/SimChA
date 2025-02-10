@@ -18,10 +18,10 @@ public class GenRef
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         Centromeres = centromeres;
-        AutosomesCount = chrSex.Count(x => x.Value == SexType.None);
+        AutosomesCount = chrSex.Count(x => x.Value == SexType.Any);
         YChrs = chrSex.Where(pair => pair.Value != SexType.Female).Select(pair => pair.Key).ToList();
         XChrs = chrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList();
-        AutChrs = chrSex.Where(pair => pair.Value == SexType.None).Select(pair => pair.Key).ToList();
+        AutChrs = chrSex.Where(pair => pair.Value == SexType.Any).Select(pair => pair.Key).ToList();
         AllChrs = chrSex.Select(pair => pair.Key).ToList();
         YChrName = chrSex.Where(pair => pair.Value == SexType.Male).Select(pair => pair.Key).FirstOrDefault("");
         XChrName = chrSex.Where(pair => pair.Value == SexType.Female).Select(pair => pair.Key).FirstOrDefault("");
@@ -32,8 +32,8 @@ public class GenRef
         var haplotypeTwoF = CreateHaplotype(SexType.Female,false, useSNV);
         var haplotypeOneM = CreateHaplotype(SexType.Male,true, useSNV);
         var haplotypeTwoM = CreateHaplotype(SexType.Male,false, useSNV);
-        var haplotypeOneA = CreateHaplotype(SexType.None,true, useSNV);
-        var haplotypeTwoA = CreateHaplotype(SexType.None,false, useSNV);
+        var haplotypeOneA = CreateHaplotype(SexType.Any,true, useSNV);
+        var haplotypeTwoA = CreateHaplotype(SexType.Any,false, useSNV);
         XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToList();
         XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToList();
         Autosome = haplotypeOneA.Concat(haplotypeTwoA).ToList();
@@ -59,10 +59,10 @@ public class GenRef
         {
             (true, SexType.Female) => XChrs.Count*2,
             (true, SexType.Male) => YChrs.Count*2,
-            (true, SexType.None) => AutChrs.Count*2,
+            (true, SexType.Any) => AutChrs.Count*2,
             (false, SexType.Female) => XChrs.Count,
             (false, SexType.Male) => AllChrs.Count,
-            (false, SexType.None) => AutChrs.Count,
+            (false, SexType.Any) => AutChrs.Count,
             _ => throw new ArgumentOutOfRangeException($"Missing chromosome counts for {sex}, {diploid}")
         };
 
@@ -91,10 +91,10 @@ public class GenRef
         {
             (true, SexType.Female) => XXGenomeLen,
             (true, SexType.Male) => XYGenomeLen,
-            (true, SexType.None) => AutosomeLen,
+            (true, SexType.Any) => AutosomeLen,
             (false, SexType.Female) => XXLinLen,
             (false, SexType.Male) => XYLinLen,
-            (false, SexType.None) => AutosomeLinLen,
+            (false, SexType.Any) => AutosomeLinLen,
             _ => throw new ArgumentOutOfRangeException($"Missing genome length for {sex}, {diploid}")
         };
     
@@ -111,16 +111,16 @@ public class GenRef
         {
             (true, SexType.Female) => XChrs,
             (true, SexType.Male) => XChrs,
-            (true, SexType.None) => AutChrs,
+            (true, SexType.Any) => AutChrs,
             (false, SexType.Female) => XChrs,
             (false, SexType.Male) => YChrs,
-            (false, SexType.None) => AutChrs,
+            (false, SexType.Any) => AutChrs,
             _ => throw new ArgumentOutOfRangeException($"Missing chr IDs for {sex}, {firstHaplotype}")
         };
 
     
     public IEnumerable<string> ChrIDsForAutosomes()
-        => ChrIDsForSex(SexType.None);
+        => ChrIDsForSex(SexType.Any);
 
     public IEnumerable<List<Region>> GetGenotype(SexType sexType)
         => sexType switch

@@ -8,13 +8,13 @@ public class SASimulator : Simulator
 {
     private EvoParams EvoParams { get; }
 
-    public SASimulator(Random rnd, GenRef genRef, SampleParams sampleParams, FitParams fitParams, EvoParams evoParams) 
-        : base(rnd, genRef, sampleParams, fitParams)
+    public SASimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, EvoParams evoParams) 
+        : base(rnd, genRef, simParams, fitParams)
     {
         EvoParams = evoParams;
     }
 
-    public override void SampleEvents(Sample sample)
+    public override void Simulate(Sample sample)
     {
         if (sample.EventPars == null || sample.EventPars.Count == 0)
         {
@@ -23,7 +23,7 @@ public class SASimulator : Simulator
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
         sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
         // Start with the tetraploid state
-        if (SampleParams.TetraploidStart)
+        if (SimParams.TetraploidStart)
         {
             sample.Kars[root.CloneId].ApplyWGD();
             sample.Kars[root.CloneId].UpdateFitness(GenRef, FitParams);

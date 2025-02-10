@@ -47,12 +47,12 @@ public class TestIO
     [Test]
     public void TestConfigSerialization()
     {
-        var sampleParams = new SampleParams();
+        var sampleParams = new SimParams();
         var fitParams = new FitParams(0.001f, 0.01f, 0.000_1f, true);
-        var simParams = new SimParams(0, sampleParams, fitParams);
+        var simParams = new SimChAConfig(0, sampleParams, fitParams);
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
-        var deserialized = JsonSerializer.Deserialize<SimParams>(serialized);
+        var deserialized = JsonSerializer.Deserialize<SimChAConfig>(serialized);
         Assert.NotNull(deserialized);
         // Assure that the deserialized object is the same as the original, including the nested objects
         Assert.AreEqual(simParams.Seed, deserialized!.Seed);
@@ -65,15 +65,15 @@ public class TestIO
         var res = Parsers.ParseSimParams(@"{}");
         Assert.AreEqual(0, res.Seed);
         res = Parsers.ParseSimParams(@"{""EventCountMean"": 10, ""EventDist"": ""Normal""}");
-        Assert.AreEqual(10, res.SampleParams.EventMean);
-        Assert.AreEqual(DistType.Normal, res.SampleParams.EventDist);
+        Assert.AreEqual(10, res.SimParams.RateMean);
+        Assert.AreEqual(DistType.Normal, res.SimParams.RateDist);
         res = Parsers.ParseSimParams(@"{""Signatures"": {""test"" : { ""Prob"": 1 }}}");
-        Assert.AreEqual("test", res.Signatures!.First().Key);
-        Assert.AreEqual(1, res.Signatures!.First().Value.Prob, 0.000001);
+        Assert.AreEqual("test", res.Signatures!.First().Name);
+        Assert.AreEqual(1, res.Signatures!.First().Prob, 0.000001);
         res = Parsers.ParseSimParams(
             @"{""Signatures"": {""test"" : {""Prob"": 1, ""Events"": [{""Type"": ""WholeGenomeDoubling"", ""Prob"": 0.1}]}}}");
-        Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Value.Events.First().Type);
-        Assert.AreEqual(0.1, res.Signatures!.First().Value.Events.First().Prob, TestFitness.EPSILON);
+        Assert.AreEqual(CNEventType.WholeGenomeDoubling, res.Signatures!.First().Events.First().Type);
+        Assert.AreEqual(0.1, res.Signatures!.First().Events.First().Prob, TestFitness.EPSILON);
     }
 
     [Test]

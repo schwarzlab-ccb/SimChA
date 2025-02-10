@@ -49,7 +49,7 @@ public class TestCopyNumbers
     {
         _kar = new Karyotype(_genRef, sex);
         _kar.ApplyWGD();
-        if (sex == SexType.None)
+        if (sex == SexType.Any)
         {
             Assert.AreEqual(88, _kar.CountContigs());
         }

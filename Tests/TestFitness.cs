@@ -171,14 +171,14 @@ public class TestFitness
     public void TestAutosomeStressTerm([Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        var karA = new Karyotype(genRef, SexType.None);
-        var karB = new Karyotype(genRef, SexType.None);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexType.None), karA.GenomeLen()), EPSILON);
+        var karA = new Karyotype(genRef, SexType.Any);
+        var karB = new Karyotype(genRef, SexType.Any);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Any), karA.GenomeLen()), EPSILON);
         karA.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexType.None), karA.GenomeLen()), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Any), karA.GenomeLen()), EPSILON);
         karA.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexType.None), karA.GenomeLen()), EPSILON);
-        foreach (int i in Enumerable.Range(0, genRef.ChrCount(SexType.None, false))) { karB.ApplyContigDeletion(i); }
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Any), karA.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.ChrCount(SexType.Any, false))) { karB.ApplyContigDeletion(i); }
         Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Male), karB.GenomeLen()), EPSILON);
     }
     

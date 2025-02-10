@@ -83,7 +83,7 @@ public static class Sampling
     public static SexType GetSex(Random rnd, SexType sexType)
         => sexType switch
         {
-            SexType.None => rnd.CoinFlip() ? SexType.Male : SexType.Female,
+            SexType.Any => rnd.CoinFlip() ? SexType.Male : SexType.Female,
             _ => sexType
         };
 

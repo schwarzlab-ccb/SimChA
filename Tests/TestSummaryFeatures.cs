@@ -309,9 +309,9 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetMeanAutosomePloidy()
     {
-        var karA = new Karyotype(_genRef, SexType.None);
+        var karA = new Karyotype(_genRef, SexType.Any);
         karA.ApplyWGD();
-        var karB = new Karyotype(_genRef, SexType.None);
+        var karB = new Karyotype(_genRef, SexType.Any);
         // Delete all contigs from chr1-22 (i.e. one copy of each autosome)
         for (int i = 0; i < 22; i++)
         {
@@ -357,9 +357,9 @@ public class TestSummaryFeatures
     [Test]
     public void TestGetAutosomePloidy()
     {
-        var karA = new Karyotype(_genRef, SexType.None);
+        var karA = new Karyotype(_genRef, SexType.Any);
         karA.ApplyWGD();
-        var karB = new Karyotype(_genRef, SexType.None);
+        var karB = new Karyotype(_genRef, SexType.Any);
         for (int i = 0; i < 22; i++)
         {
             karB.ApplyContigDeletion(i);

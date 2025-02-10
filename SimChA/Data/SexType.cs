@@ -5,4 +5,4 @@ using System.Text.Json.Serialization;
 namespace SimChA.Data;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum SexType { Female, Male, None }
+public enum SexType { Female, Male, Any }
