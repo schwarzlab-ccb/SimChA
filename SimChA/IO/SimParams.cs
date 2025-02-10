@@ -9,6 +9,5 @@ public record SimParams(
     double RateMean = 1,
     DistType FitDist = DistType.Uniform,
     double FitMean = 1,
-    bool AutosomesOnly = false,
     bool TetraploidStart = false
 );

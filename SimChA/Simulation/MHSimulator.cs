@@ -139,8 +139,8 @@ public class MHSimulator : Simulator
         return bestEvents;
     }
 
-    private void ApplyCNEventsRec(Sample sample, CloneData node, 
-        IReadOnlyDictionary<string, List<CloneData>> clones, int eventCount)
+    private void ApplyCNEventsRec(Sample sample, CTreeNode node, 
+        IReadOnlyDictionary<string, List<CTreeNode>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
         {

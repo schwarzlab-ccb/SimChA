@@ -60,19 +60,7 @@ public class FileIO
         }
     }
     
-    public void WriteTree(IEnumerable<Sample> samples)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), TREE_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine(Sample.HeaderAsTree());
-        foreach (var sample in samples)
-        {
-            outputFile.WriteLine(sample.ToTSVAsTree());
-        }
-    }
-    
-    public void WriteConsistentCNs(GenRef genRef, Dictionary<string, List<Clone>> clones)
+    public void WriteConsistentCNs(GenRef genRef, Dictionary<string, List<Sample>> clones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CONSISTENT_CNS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -87,12 +75,12 @@ public class FileIO
             foreach (var clone in subClones)
             {
                 var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, clone.Karyotype, segs, true);
-                outputFile.WriteLine(CopyNumbers.ToTSV(cns, sampleId, clone.CloneId, false));
+                outputFile.WriteLine(CopyNumbers.ToTSV(cns, sampleId, clone.SampleId, false));
             }
         }
     }
     
-    public void WriteCopyNumbers(GenRef genRef, Dictionary<string, List<Clone>> clones)
+    public void WriteCopyNumbers(GenRef genRef, Dictionary<string, List<Sample>> clones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -104,7 +92,7 @@ public class FileIO
             foreach (var clone in subClones)
             {
                 var cns = CopyNumbers.CalcCopyNumbers(genRef, clone.Karyotype);
-                outputFile.WriteLine(CopyNumbers.ToTSV(cns, sampleId, clone.CloneId, false));
+                outputFile.WriteLine(CopyNumbers.ToTSV(cns, sampleId, clone.SampleId, false));
             }
         }
     }
@@ -119,7 +107,7 @@ public class FileIO
         file.WriteLine(jsonString);
     }
 
-    public void WriteKaryotypes(Dictionary<string, List<Clone>> clones)
+    public void WriteKaryotypes(Dictionary<string, List<Sample>> clones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), KARYOTYPES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -130,12 +118,12 @@ public class FileIO
             foreach (var clone in subclones)
             {
                 var kar = clone.Karyotype;
-                outputFile.WriteLine($"{sampleId}\t{clone.CloneId}\t{kar}");
+                outputFile.WriteLine($"{sampleId}\t{clone.SampleId}\t{kar}");
             }
         }
     }
 
-    public void WriteEvents(Dictionary<string, List<Clone>> clones)
+    public void WriteEvents(Dictionary<string, List<Sample>> clones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_EVENTS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -147,14 +135,14 @@ public class FileIO
             {
                 foreach (var cnEvent in clone.Events)
                 {   
-                    outputFile.WriteLine($"{sampleId}\t{clone.CloneId}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
+                    outputFile.WriteLine($"{sampleId}\t{clone.SampleId}\t{cnEvent.EventType}\t{cnEvent.Depth}\t{cnEvent.Description}" +
                                          $"\t{cnEvent.DeltaFitness:f6}\t{cnEvent.TotalFitness:f6}\t{cnEvent.Time:f6}");
                 }
             }
         }
     }
     
-    public void WriteVCF(GenRef genRef, Dictionary<string, List<Clone>> clones)
+    public void WriteVCF(GenRef genRef, Dictionary<string, List<Sample>> clones)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), VCF_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
@@ -181,14 +169,14 @@ public class FileIO
                     // The VCF should *not* be aware of SNVs that didn't end up altering the location in the final karyotype
                     if (char.ToUpper(refBase) != snv.newBase.ToString()[0])
                     {
-                        outputFile.WriteLine($"{clone.CloneId}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
+                        outputFile.WriteLine($"{clone.SampleId}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
                     }
                 }
             }
         }
     }
 
-    public void WriteFasta(GenRef genRef, Dictionary<string, List<Clone>> clones)
+    public void WriteFasta(GenRef genRef, Dictionary<string, List<Sample>> clones)
     {
         // TODO: Do we want WriteFasta to work with multiple samples? Currently only set up for single samples
         int count = 0;
@@ -200,7 +188,7 @@ public class FileIO
         {
             foreach (var clone in subclones)
             {
-                string outPath = Path.Combine(Path.GetFullPath(OutFolder), $"{clone.CloneId}_genome.fa");
+                string outPath = Path.Combine(Path.GetFullPath(OutFolder), $"{clone.SampleId}_genome.fa");
                 Console.WriteLine($"Writing to file {outPath}");
                 using var outputFile = new StreamWriter(outPath);
                 var kar = clone.Karyotype;
@@ -253,7 +241,7 @@ public class FileIO
         }
     }
 
-    public static List<CloneData> ReadCloneTree(string filePath, bool parseFitness)
+    public static List<CTreeNode> ReadCloneTree(string filePath, bool parseFitness)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         string fileFormat = filePath.Substring(filePath.Length - 3);
@@ -332,7 +320,7 @@ public class FileIO
         }
     }
 
-    public static SimChAConfig ReadSimParams(string filePath)
+    public static SimChAConfig ReadSimChAConfig(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);
         if (!File.Exists(fileFullPath))

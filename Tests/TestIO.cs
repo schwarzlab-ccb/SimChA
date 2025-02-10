@@ -9,10 +9,8 @@ using System.Text.Json;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Data;
-using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
-using SimChA.Simulation;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Tests;
@@ -40,7 +38,7 @@ public class TestIO
     [Test]
     public void TestContig()
     {
-        var clone = new CloneData("-1", "0", 1, 1);
+        var clone = new CTreeNode("-1", "0", 1, 1);
         Assert.DoesNotThrow(() => clone.ToString());
     }
 
@@ -105,7 +103,7 @@ public class TestIO
         var kar = new Karyotype(_genRef, SexType.Male);
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, 1_000_000, 10));
-        var clone = new CloneData("1", "-1", 0, 1);
+        var clone = new CTreeNode("1", "-1", 0, 1);
     }
 
     [Test]
@@ -124,7 +122,7 @@ public class TestIO
         var eventPars = new List<CNEventPars>
             { new(CNEventType.SNV, 1.0) };
 
-        var clonesIn = new List<CloneData>
+        var clonesIn = new List<CTreeNode>
             { new("0", "-1", 0, 1), new("1", "0", 1, 1) };
 
         var sample = new Sample("sample", SexType.Male, clonesIn, eventPars);
@@ -159,7 +157,7 @@ public class TestIO
                                  "6,1,1,423957,0,583948,3,0,1.728,0.4133";
         var clones = Parsers.ParseClonesWithEvents(new StringReader(clonesStr), true, ",");
         Assert.AreEqual(4, clones.Count);
-        Assert.AreEqual("0", clones[0].CloneId);
+        Assert.AreEqual("0", clones[0].SampleId);
         Assert.AreEqual("0", clones[1].ParentId);
         Assert.AreEqual(1, clones[2].Distance);
         Assert.AreEqual(1.728, clones[3].Fitness, double.Epsilon * 10);
@@ -229,7 +227,7 @@ public class TestIO
         var eventPars = new List<CNEventPars>
             { new(CNEventType.InternalInversion, 1, 10) };
 
-        var clonesIn = new List<CloneData>
+        var clonesIn = new List<CTreeNode>
             { new("0", "-1", 1, 1) };
 
         var sample = new Sample("sample_1", SexType.Male, clonesIn, eventPars);

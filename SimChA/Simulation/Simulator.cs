@@ -20,25 +20,25 @@ public class Simulator
         SimParams = simParams;
     }
 
-    public virtual List<Clone> Simulate(Sample sample)
+    public virtual List<Sample> Simulate(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {
             throw new Exception("No events to sample from.");
         }
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
-        var res = new List<Clone>();
+        var res = new List<Sample>();
         var rootKar =  new Karyotype(GenRef, sample.Sex);
-        res.Add(new Clone(root.CloneId, rootKar, new List<CNEventDesc>()));
+        res.Add(new Sample(root.CloneId, rootKar, new List<CNEventDesc>()));
         ApplyCNEventsRec(sample, root, childLookUp, res, rootKar, 1);
         return res;
     }
     
     private void ApplyCNEventsRec(
         Sample sample, 
-        CloneData node, 
-        IReadOnlyDictionary<string, List<CloneData>> cloneLookUp, 
-        List<Clone> clones,
+        CTreeNode node, 
+        IReadOnlyDictionary<string, List<CTreeNode>> cloneLookUp, 
+        List<Sample> clones,
         Karyotype parentKar,
         int eventCount)
     {
@@ -59,7 +59,7 @@ public class Simulator
                 childEvs.Add(abberation);
             }
 
-            var newClone = new Clone(child.CloneId, childKar, childEvs);
+            var newClone = new Sample(child.CloneId, childKar, childEvs);
             clones.Add(newClone);
             if (child.CloneId != node.CloneId)
             {

@@ -245,7 +245,7 @@ public static class Parsers
     }
 
 
-    public static List<CloneData> ParseClonesWithEvents(
+    public static List<CTreeNode> ParseClonesWithEvents(
         TextReader cloneStream, bool parseFitness, string sep
     )
     {
@@ -269,7 +269,7 @@ public static class Parsers
             columns[column.Key] = idx;
         }
 
-        var clones = new List<CloneData>();
+        var clones = new List<CTreeNode>();
         while (cloneStream.ReadLine() is { } line)
         {
             var lineSplit = line.Split(sep).Select(s => s.Trim()).ToList();
@@ -279,7 +279,7 @@ public static class Parsers
             double fitness = parseFitness
                 ? double.Parse(lineSplit[columns[fitnessKey]], CultureInfo.InvariantCulture.NumberFormat)
                 : -1.0;
-            var clone = new CloneData(id, parentId, distance, fitness);
+            var clone = new CTreeNode(id, parentId, distance, fitness);
             clones.Add(clone);
         }
         return clones;

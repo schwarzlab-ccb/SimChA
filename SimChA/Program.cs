@@ -20,23 +20,28 @@ watch.Start();
 
 Console.WriteLine("INPUT");
 var options = cmdOptions.Value;
-var execMode = options.ExecMode;
 var selMode = options.SelectionMode;
-var config = FileIO.ReadSimParams(options.ConfigFile);
+var config = FileIO.ReadSimChAConfig(options.ConfigFile);
 var rnd = new Random(config.Seed);
 var files = new FileIO(options.OutputPath);
 var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
-var samples = Factory.ReadSamples(rnd, genRef, config, options);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
-var clones = new Dictionary<string, List<Clone>>();
-    
+
+var clones = new Dictionary<string, List<Sample>>();
 if (options.Simulate)
 {
     Console.WriteLine("SIMULATION");
-    foreach (var sample in samples)
+    var cloneTree = Factory.ReadSamples(rnd, genRef, config, options);
+    foreach (var sample in cloneTree)
     {
         clones[sample.SampleId] = simulator.Simulate(sample);
     }
+}
+else
+{
+    Console.WriteLine("Reading samples from data:");
+    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, config.AutosomesOnly);
+    return Converters.ClonesFromProfiles(profiles);
 }
 
 Console.WriteLine("ANALYSIS");
@@ -65,10 +70,6 @@ try
     if (options.CalcConsistentCNs)
     {
         files.WriteConsistentCNs(genRef, clones);
-    }
-    if (ExecMode.Tree == execMode)
-    {
-        files.WriteTree(samples);
     }
     if (!options.LightweightOutput)
     {

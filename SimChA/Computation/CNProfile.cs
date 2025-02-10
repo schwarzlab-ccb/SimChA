@@ -11,9 +11,9 @@ public abstract class CNProfile
     public static double CalcCoverage(Karyotype kar, GenRef genRef) 
     =>  (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.Sex,false);
     
-    public static CloneStat GetCloneStats(string sampleId, Clone clone, GenRef genRef, FitParams fParams)
+    public static CloneStat GetCloneStats(string sampleId, Sample sample, GenRef genRef, FitParams fParams)
     {
-        var kar= clone.Karyotype;
+        var kar= sample.Karyotype;
 
         double ploidy = CalcPloidy(kar, genRef);
         double coverage = CalcCoverage(kar, genRef);
@@ -31,7 +31,7 @@ public abstract class CNProfile
         double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
         double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
 
-        var res = new CloneStat(sampleId, clone.CloneId, ploidy, coverage, fitness, kar.FitnessVal, stress, tsg, og, ess, clone.Events.Count, hemizygosity, nullizygosity);
+        var res = new CloneStat(sampleId, sample.SampleId, ploidy, coverage, fitness, kar.FitnessVal, stress, tsg, og, ess, sample.Events.Count, hemizygosity, nullizygosity);
         return res;
     }
 }

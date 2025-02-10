@@ -1,45 +1,30 @@
-﻿using System.Text;
-using SimChA.EventData;
+﻿using SimChA.EventData;
 
 namespace SimChA.Data;
 
 public class Sample
 {
     public string SampleId { get; }
-    public SexType Sex { get; }
-    public List<CloneData> Clones { get; }
-    public List<CNEventPars> EventPars { get; }
+    public string ParentId { get; }
+    public Karyotype Karyotype { get; }
+    public List<CNEventDesc> Events { get; }
     public Dictionary<string, double> Mixture { get; }
-    
-    public Sample(string sampleId, SexType sex, List<CloneData> clones, List<CNEventPars>? eventPars = null, Dictionary<string, double>? mixture = null)
+
+    public Sample(string sampleId, string parentId, Karyotype kar, List<CNEventDesc>? events = null, Dictionary<string, double>? mixture = null)
     {
         SampleId = sampleId;
-        Sex = sex;
-        Clones = clones;
-        EventPars = eventPars ?? new List<CNEventPars>();
+        ParentId = parentId;
+        Karyotype = kar;
+        Events = events ?? new List<CNEventDesc>();
         Mixture = mixture ?? new Dictionary<string, double>();
     }
     
     public static string Header() 
-        => "sample_id\tsex\tclone_count\tmixture";
+        => "sample_id\tparent_id\tsex\tdistance\tfitness\tmixture";
     
+    public string ToTSV() 
+        => $"{SampleId}\t{ParentId}\t{Karyotype.Sex}\t{Events.Count}\t{Karyotype.FitnessVal:f4}\t{MixtureString()}";
+     
     private string MixtureString() 
-        => EventPars.Any() ? string.Join(";", Mixture.Select(pair => $"{pair.Key}:{pair.Value:f4}")) : "-";
-    
-    public string ToTSV() => $"{SampleId}\t" +
-                             $"{Sex}\t" +
-                             $"{Clones.Count}\t" +
-                             $"{MixtureString()}";
-    public static string HeaderAsTree() 
-        => "ID\tParentID\tDistance";
-    
-    public string ToTSVAsTree()
-    {
-        var sb = new StringBuilder();
-        foreach (var clone in Clones)
-        {
-            sb.AppendLine($"{clone.CloneId}\t{clone.ParentId}\t{clone.Distance}");
-        }
-        return sb.ToString();
-    }
+        => string.Join(";", Mixture.Select(pair => $"{pair.Key}:{pair.Value:f4}"));
 }

@@ -59,20 +59,16 @@ public static class Converters
         for (int i = 0; i < repeats; i++)
         {
             // Sample to have at least 1 event
-            var clone = new CloneData($"clone_{i + 1}", $"clone_{i + 1}", -1, -1);
             var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
             var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
             var (events, mixture) = PropagateSigs(sigs, namedProbs);
             var sampleSex = autosomesOnly ? SexType.Any : Sampling.GetSex(rnd, sex);
-            var sample = new Sample($"sample_{i + 1}", sampleSex, new List<CloneData> { clone }, events, mixture);
+            var sample = new Sample($"sample_{i + 1}", $"sample_{i + 1}", sampleSex, events, mixture);
             samples.Add(sample);
         }
         return samples;
     }
 
-    public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
-        => (from profile in profiles
-            let clones = new List<CloneData> { new("0", "-1", 0, 0) }
-            select new Sample(profile.Key, profile.Value.Sex, clones)).ToList();
-
+    public static List<Sample> ClonesFromProfiles(Dictionary<string, Karyotype> profiles)
+        => (from profile in profiles select new Sample(profile.Key, profile.Key, profile.Value)).ToList();
 }

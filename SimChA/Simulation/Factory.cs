@@ -44,13 +44,6 @@ public static class Factory
             throw new Exception("No fitness parameters found. Please set \"FitParams\" in the config JSON.");
         }
         
-        if (options.ExecMode == ExecMode.Profiles)
-        {
-            Console.WriteLine("Reading samples from data:");
-            var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, sampleParams.AutosomesOnly);
-            return Converters.SamplesFromProfiles(profiles);
-        }
-        
         var validSigs = ValidateSignatures(config.Signatures);
         if (options.ExecMode == ExecMode.Repeats)
         {
@@ -60,12 +53,11 @@ public static class Factory
         if (options.ExecMode == ExecMode.Tree)
         {
             Console.WriteLine("Reading samples from a clone file:");
-            var inClones = FileIO.ReadCloneTree(options.CloneTreeFile, options.MHMode);
             var (cnEventPs, mixture) = Converters.PropagateSigs(validSigs);
+            var treeSamples = FileIO.ReadCloneTree(options.CloneTreeFile, options.MHMode);
             string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
             var sex = sampleParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(rnd, sampleParams.Sex);
-            var treeSample = new Sample(sampleName, sex, inClones, cnEventPs, mixture);
-            return new List<Sample> { treeSample };
+            return treeSamples;
         }
         throw new Exception("Unknown execution mode.");
     }

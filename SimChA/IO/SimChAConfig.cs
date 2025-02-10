@@ -8,6 +8,7 @@ public record SimChAConfig(
     int Seed,
     SimParams SimParams,
     FitParams FitParams,
+    bool AutosomesOnly = true,
     List<Signature>? Signatures = null,
     MHParams? MHParams = null,
     EvoParams? EvoParams = null);
