@@ -90,4 +90,7 @@ public class CmdOptions
     
     public bool ShouldParseGenome 
         => UseVariants || WriteFasta;
+    
+    public bool Simulate
+        => ExecMode != ExecMode.Profiles;
 }

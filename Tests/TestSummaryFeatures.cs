@@ -37,7 +37,7 @@ public class TestSummaryFeatures
         for (int i = 0; i < kars.Count; i++)
         {
             var kar = kars[i];
-            var cn = CopyNumbers.CalcCopyNumbers(_genRef, kar, kar.Sex).ToList();
+            var cn = CopyNumbers.CalcCopyNumbers(_genRef, kar).ToList();
             cnps.Add($"sample_{i + 1}", cn);
         }
         return cnps;

@@ -4,10 +4,10 @@ namespace SimChA.Computation;
 
 public static class CloneComp
 {
-    public static (CloneIn root, Dictionary<string, List<CloneIn>> lookUp) CreateLookUp(List<CloneIn> clones)
+    public static (CloneData root, Dictionary<string, List<CloneData>> lookUp) CreateLookUp(List<CloneData> clones)
     {
-        CloneIn? root = null;
-        var childLookUp = new Dictionary<string, List<CloneIn>>();
+        CloneData? root = null;
+        var childLookUp = new Dictionary<string, List<CloneData>>();
         foreach (var clone in clones)
         {
             var parentId = clone.ParentId;
@@ -18,11 +18,11 @@ public static class CloneComp
             }
             if (!childLookUp.ContainsKey(parentId))
             {
-                childLookUp.Add(parentId, new List<CloneIn>());
+                childLookUp.Add(parentId, new List<CloneData>());
             }
             if (!childLookUp.ContainsKey(clone.CloneId))
             {
-                childLookUp.Add(clone.CloneId, new List<CloneIn>());
+                childLookUp.Add(clone.CloneId, new List<CloneData>());
             }
             childLookUp[parentId].Add(clone);
         }

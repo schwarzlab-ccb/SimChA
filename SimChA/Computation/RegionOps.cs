@@ -324,7 +324,7 @@ public static class RegionOps
             }
             seekPos += region.Length;
         }
-        throw new Exception("Couldn't find the corresponding region of the chromosome to perform an SNV. This should not occur");
+        throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
     }
 
     public static List<Region> MergeRegions(List<Region> regions)

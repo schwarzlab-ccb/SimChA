@@ -36,7 +36,7 @@ public static class Factory
         var sampleParams = config.SimParams;
         if (config.SimParams == null)
         {
-            throw new Exception("No sample parameters found. Please set \"SimParams\" in the config JSON.");
+            throw new Exception("No simulation parameters found. Please set \"SimParams\" in the config JSON.");
         }
 
         if (config.FitParams == null)

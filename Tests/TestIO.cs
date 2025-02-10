@@ -40,7 +40,7 @@ public class TestIO
     [Test]
     public void TestContig()
     {
-        var clone = new CloneIn("-1", "0", 1, 1);
+        var clone = new CloneData("-1", "0", 1, 1);
         Assert.DoesNotThrow(() => clone.ToString());
     }
 
@@ -105,7 +105,7 @@ public class TestIO
         var kar = new Karyotype(_genRef, SexType.Male);
         var rnd = new Random(48);
         TestKaryotype.ApplyRandomEvent(rnd, kar, new CNEventPars(CNEventType.Rigma, 1.0, 1_000_000, 10));
-        var clone = new CloneIn("1", "-1", 0, 1);
+        var clone = new CloneData("1", "-1", 0, 1);
     }
 
     [Test]
@@ -124,7 +124,7 @@ public class TestIO
         var eventPars = new List<CNEventPars>
             { new(CNEventType.SNV, 1.0) };
 
-        var clonesIn = new List<CloneIn>
+        var clonesIn = new List<CloneData>
             { new("0", "-1", 0, 1), new("1", "0", 1, 1) };
 
         var sample = new Sample("sample", SexType.Male, clonesIn, eventPars);
@@ -162,7 +162,7 @@ public class TestIO
         Assert.AreEqual("0", clones[0].CloneId);
         Assert.AreEqual("0", clones[1].ParentId);
         Assert.AreEqual(1, clones[2].Distance);
-        Assert.AreEqual(1.728, clones[3].FitnessTarget, double.Epsilon * 10);
+        Assert.AreEqual(1.728, clones[3].Fitness, double.Epsilon * 10);
 
     }
 
@@ -229,7 +229,7 @@ public class TestIO
         var eventPars = new List<CNEventPars>
             { new(CNEventType.InternalInversion, 1, 10) };
 
-        var clonesIn = new List<CloneIn>
+        var clonesIn = new List<CloneData>
             { new("0", "-1", 1, 1) };
 
         var sample = new Sample("sample_1", SexType.Male, clonesIn, eventPars);

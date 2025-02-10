@@ -12,8 +12,6 @@ public class Simulator
     protected FitParams FitParams  { get; }
     protected SimParams SimParams { get; }
     
-    protected int Counter;
-
     public Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
     {
         Rnd = rnd;
@@ -22,29 +20,35 @@ public class Simulator
         SimParams = simParams;
     }
 
-    public virtual void Simulate(Sample sample)
+    public virtual List<Clone> Simulate(Sample sample)
     {
         if (sample.EventPars == null || !sample.EventPars.Any())
         {
             throw new Exception("No events to sample from.");
         }
-        Counter = 1;
         var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        ApplyCNEventsRec(sample, root, childLookUp, 1);
+        var res = new List<Clone>();
+        var rootKar =  new Karyotype(GenRef, sample.Sex);
+        res.Add(new Clone(root.CloneId, rootKar, new List<CNEventDesc>()));
+        ApplyCNEventsRec(sample, root, childLookUp, res, rootKar, 1);
+        return res;
     }
     
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, IReadOnlyDictionary<string, List<CloneIn>> clones, int eventCount)
+    private void ApplyCNEventsRec(
+        Sample sample, 
+        CloneData node, 
+        IReadOnlyDictionary<string, List<CloneData>> cloneLookUp, 
+        List<Clone> clones,
+        Karyotype parentKar,
+        int eventCount)
     {
-        foreach (var child in clones[node.CloneId])
+        foreach (var child in cloneLookUp[node.CloneId])
         {
-            var childKar = new Karyotype(sample.Kars[node.CloneId]);
-            sample.Kars[child.CloneId] = childKar;
+            var childKar = new Karyotype(parentKar);
             var childEvs = new List<CNEventDesc>();
-            sample.EventDescs[child.CloneId] = childEvs;
             for (int mutNo = 0; mutNo < child.Distance; mutNo++)
             {
-                Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
+                Console.Write($"\rSample {sample.SampleId}. Clone {clones.Count}/{cloneLookUp.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
                 var eventP = Rnd.PickRndElem(sample.EventPars);
                 var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
                 // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
@@ -54,10 +58,12 @@ public class Simulator
                 var abberation = new CNEventDesc(eventP.Type, eventCount + mutNo, eventData.ToString());
                 childEvs.Add(abberation);
             }
-            Counter++;
+
+            var newClone = new Clone(child.CloneId, childKar, childEvs);
+            clones.Add(newClone);
             if (child.CloneId != node.CloneId)
             {
-                ApplyCNEventsRec(sample, child, clones, eventCount + child.Distance);
+                ApplyCNEventsRec(sample, child, cloneLookUp, clones, childKar, eventCount + childEvs.Count);
             }
         }
     }

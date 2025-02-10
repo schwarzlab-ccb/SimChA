@@ -87,8 +87,8 @@ public class SASimulator : Simulator
     
     private void ApplyEvolutionRec(
         Sample sample,
-        CloneIn node,
-        IReadOnlyDictionary<string, List<CloneIn>> clones,
+        CloneData node,
+        IReadOnlyDictionary<string, List<CloneData>> clones,
         int eventCount)
     {
         foreach (var child in clones[node.CloneId])

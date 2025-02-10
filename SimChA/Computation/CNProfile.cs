@@ -11,9 +11,9 @@ public abstract class CNProfile
     public static double CalcCoverage(Karyotype kar, GenRef genRef) 
     =>  (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.Sex,false);
     
-    public static CloneStat GetCloneStats(Sample sample, CloneIn clone, GenRef genRef, FitParams fParams, Dictionary<string, Karyotype> karMap)
+    public static CloneStat GetCloneStats(string sampleId, Clone clone, GenRef genRef, FitParams fParams)
     {
-        var kar = karMap[clone.CloneId];
+        var kar= clone.Karyotype;
 
         double ploidy = CalcPloidy(kar, genRef);
         double coverage = CalcCoverage(kar, genRef);
@@ -27,15 +27,11 @@ public abstract class CNProfile
         double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.GeneNormalization);
         double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.GeneNormalization);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
-
-        // Get mutation count
-        // sample.EventDescs might be empty
-        var found_events = sample.EventDescs.TryGetValue(clone.CloneId, out var events);
-        int mutCount = found_events && events != null && events.Count > 0 ? events.Last().Depth : 0;
         
         double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
         double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
 
-        return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, clone.FitnessTarget, stress, tsg, og, ess, mutCount, hemizygosity, nullizygosity);
+        var res = new CloneStat(sampleId, clone.CloneId, ploidy, coverage, fitness, kar.FitnessVal, stress, tsg, og, ess, clone.Events.Count, hemizygosity, nullizygosity);
+        return res;
     }
 }

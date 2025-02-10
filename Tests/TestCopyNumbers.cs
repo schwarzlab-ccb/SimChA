@@ -31,7 +31,7 @@ public class TestCopyNumbers
     public void TestCalcPloidyReference([Values] SexType sex)
     {
         _kar = new Karyotype(_genRef, sex);
-        var cnRef = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
+        var cnRef = CopyNumbers.CalcCopyNumbers(_genRef, _kar).ToList();
         double ploidyRef = CopyNumbers.CalcPloidy(_genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
     }
@@ -66,7 +66,7 @@ public class TestCopyNumbers
     {
         var genRef = FileIO.GetGenRef(TestIO.HG_19_PATH, false);
         _kar = new Karyotype(genRef, sex);
-        var cnRef = CopyNumbers.CalcCopyNumbers(genRef, _kar, sex).ToList();
+        var cnRef = CopyNumbers.CalcCopyNumbers(genRef, _kar).ToList();
         Assert.AreEqual(genRef.ChrCount(sex, false), cnRef.Count);
         double ploidyRef = CopyNumbers.CalcPloidy(genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
@@ -77,7 +77,7 @@ public class TestCopyNumbers
     {
         _kar = new Karyotype(_genRef, sex);
         TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
-        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
+        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar).ToList();
         double ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(4, ploidy);
         // TODO Gain / Loss specific number of chromosomes
@@ -93,7 +93,7 @@ public class TestCopyNumbers
             TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Translocation, 1));
             TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1, 1_000_000));
         }
-        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar, sex).ToList();
+        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar).ToList();
         var ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(2, ploidy);
     }

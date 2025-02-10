@@ -139,8 +139,8 @@ public class MHSimulator : Simulator
         return bestEvents;
     }
 
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, 
-        IReadOnlyDictionary<string, List<CloneIn>> clones, int eventCount)
+    private void ApplyCNEventsRec(Sample sample, CloneData node, 
+        IReadOnlyDictionary<string, List<CloneData>> clones, int eventCount)
     {
         foreach (var child in clones[node.CloneId])
         {
@@ -154,7 +154,7 @@ public class MHSimulator : Simulator
                 double oldFitness = childKar.FitnessVal;
                 
                 var bestEvents = MHParams.MatchFitness
-                    ? GenEventsForTargetFitness(sample, childKar, child.Distance, child.FitnessTarget)
+                    ? GenEventsForTargetFitness(sample, childKar, child.Distance, child.Fitness)
                     : GenEventsForMaxFitness(sample, childKar, child.Distance);
 
                 for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)

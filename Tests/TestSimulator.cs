@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using SimChA.Data;
-using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;

@@ -4,6 +4,7 @@ using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
 using CommandLine;
+using SimChA.Data;
 
 // Configuration
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -27,38 +28,43 @@ var files = new FileIO(options.OutputPath);
 var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
 var samples = Factory.ReadSamples(rnd, genRef, config, options);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
-
-if (execMode != ExecMode.Profiles)
+var clones = new Dictionary<string, List<Clone>>();
+    
+if (options.Simulate)
 {
     Console.WriteLine("SIMULATION");
     foreach (var sample in samples)
     {
-        simulator.Simulate(sample);
+        clones[sample.SampleId] = simulator.Simulate(sample);
     }
 }
 
 Console.WriteLine("ANALYSIS");
-files.WriteSimParams(config);
-foreach (var sample in samples)
+var cloneList = new List<CloneStat>();
+        
+foreach ((string sampleId, var subClones) in clones)
 {
     int counter = 1;
-    int total = sample.Clones.Count;
-    foreach (var clone in sample.Clones)
+    int total = clones.Values.Count;
+    foreach (var clone in subClones)
     {
-        Console.Write($"\rSample {sample.SampleId}. Clone {counter++}/{total}.".PadRight(80));
-        sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, genRef, config.FitParams, sample.Kars);
+        Console.Write($"\rSample {sampleId}. Clone {counter++}/{total}.".PadRight(80));
+        var sampleStats = subClones.Select(s 
+            => CNProfile.GetCloneStats(sampleId, clone, genRef, config.FitParams));
+        cloneList.AddRange(sampleStats);
     }
 }
 
 Console.WriteLine("OUTPUT");
+files.WriteSimParams(config);
 try
 {
     files.WriteSamples(samples);
-    files.WriteClones(samples);
+    files.WriteClones(cloneList);
     
     if (options.CalcConsistentCNs)
     {
-        files.WriteConsistentCNs(genRef, samples);
+        files.WriteConsistentCNs(genRef, clones);
     }
     if (ExecMode.Tree == execMode)
     {
@@ -66,20 +72,20 @@ try
     }
     if (!options.LightweightOutput)
     {
-        files.WriteCopyNumbers(genRef, samples);
-        files.WriteKaryotypes(samples);
+        files.WriteCopyNumbers(genRef, clones);
+        files.WriteKaryotypes(clones);
     }
-    if (samples.Any(s => s.EventDescs.Any()))
+    if (options.Simulate)
     {
-        files.WriteEvents(samples);
+        files.WriteEvents(clones);
     }
     if (options.UseVariants)
     {
-        files.WriteVCF(genRef, samples);
+        files.WriteVCF(genRef, clones);
     }
     if (options.WriteFasta)
     {
-        files.WriteFasta(genRef, samples);
+        files.WriteFasta(genRef, clones);
     }
 }
 catch (Exception e)
