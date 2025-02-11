@@ -31,26 +31,4 @@ public class TestSimulator
         _mhParams = new MHParams(0, 0, 1.0, true, 1.0, 0.0);
         _kar = new Karyotype(_genRef, SexType.Female);
     }
-    
-    [Test]
-    public void TestPotential()
-    {
-        var sampleParams = new SimParams();
-        var sim = new MHSimulator(_rnd, _genRef, _simParams, _fitParams,_mhParams);
-        double potential = sim.CalculatePotential(1, 1);
-        Assert.AreEqual(0.0, potential,EPSILON);
-    }
-
-    [Test]
-    public void TestInitEvents()
-    {
-        var sim = new MHSimulator(_rnd, _genRef, _simParams, _fitParams, _mhParams);
-        const int nMutations = 5;
-        var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
-        foreach (var data in eventData)
-        {
-            Assert.True(data.EventType is CNEventType.ChromDeletion or CNEventType.ChromDuplication);
-        }
-        Assert.AreEqual(eventData.Count, nMutations);
-    }
 }

@@ -31,9 +31,19 @@ public class Simulator
             rootKar.ApplyWGD();
             rootKar.UpdateFitness(GenRef, FitParams);
         }
-        ApplyCNEventsRec(root, cloneTree, cnEventPs, mixture, res, rootKar, 1);
+        ApplyCNEventsRec(root, cloneTree, cnEventPs, mixture, res, rootKar, 0);
         return res;
     }
+
+    protected int SampleDist(CTreeNode node)
+        => node.Distance > 0
+            ? node.Distance
+            : Math.Max(1, Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean));
+    
+    protected double SampleFit(CTreeNode node)
+        => node.Fitness > 0 
+            ? node.Fitness 
+            : Sampling.SampleDist(Rnd, SimParams.FitDist, SimParams.FitMean);
     
     protected virtual void ApplyCNEventsRec(
         CTreeNode parent, 
@@ -49,24 +59,30 @@ public class Simulator
         {
             var childKar = new Karyotype(parentKar);
             var childEvs = new List<CNEventDesc>();
-            int distance = child.Distance > 0
-                ? child.Distance
-                : Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean);
-            for (int mutNo = 0; mutNo < distance; mutNo++)
+            int distance = SampleDist(child);
+            
+            for (int mutNo = 1; mutNo <= distance; mutNo++)
             {
-                Console.Write($"\rSample {child.CloneId}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
+                Console.Write($"\rSample {child.CloneId}. Event {mutNo }/{child.Distance}.".PadRight(80));
                 var eventP = Rnd.PickRndElem(cnEventPs);
                 var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
                 // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
                 if (eventData == null)
                     continue;
                 eventData.ApplyEvent(childKar);
-                var abberation = new CNEventDesc(eventP.Type, mutDepth + mutNo, eventData.ToString());
+                var abberation = new CNEventDesc(
+                    eventData.EventType, 
+                    mutDepth + mutNo, 
+                    eventData.ToString(),
+                    0,
+                    0,
+                    mutNo);
                 childEvs.Add(abberation);
             }
 
             var newClone = new Sample(parent.CloneId, child.CloneId, childKar, childEvs, mixture);
             sampleList.Add(newClone);
+            
             if (child.CloneId != parent.CloneId)
             {
                 ApplyCNEventsRec(child, cloneTree, cnEventPs, mixture, sampleList, childKar, mutDepth + childEvs.Count);

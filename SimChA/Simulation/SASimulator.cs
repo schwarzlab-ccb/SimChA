@@ -2,6 +2,7 @@
 using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
+
 namespace SimChA.Simulation;
 
 public class SASimulator : Simulator
@@ -32,7 +33,6 @@ public class SASimulator : Simulator
 
     private BaseEventData GetNewEvent(List<CNEventPars> cnEventPars, Karyotype kar, double currentFitness)
     {
-        List<(double, BaseEventData)> events = new();
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
             var cnEventP = Rnd.PickRndElem(cnEventPars);
@@ -48,15 +48,8 @@ public class SASimulator : Simulator
             {
                 return eventData;
             }
-            events.Add((proposedFitness, eventData));
         }
-        if (events.Count == 0)
-        {
-            throw new Exception($"Could not generate a new event. In {EvoParams.MaxTries} tries.");
-        }
-
-        var best = events.MaxBy(e => e.Item1);
-        return best.Item2;
+        throw new Exception($"Could not generate a new event in {EvoParams.MaxTries} tries.");
     }
 
     bool MetBreakCondition(int time, int nEventsLeft)
@@ -68,7 +61,7 @@ public class SASimulator : Simulator
     bool DidMutate(Karyotype kar)
         => !EvoParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
     
-    protected virtual void ApplyCNEventsRec(
+    protected override void ApplyCNEventsRec(
         CTreeNode parent, 
         List<CTreeNode> cloneTree, 
         List<CNEventPars> cnEventPs,
@@ -77,51 +70,46 @@ public class SASimulator : Simulator
         Karyotype parentKar,
         int mutDepth)
     {
-        foreach (var child in clones[node.CloneId])
+        var children = cloneTree.Where(c => c.ParentId == parent.CloneId).ToList();
+        foreach (var child in children)
         {
-            int mutCount = child.Distance;
+            var childKar = new Karyotype(parentKar);
             var childEvs = new List<CNEventDesc>();
-            double currentFitness = Fitness.Calculate(sample.Kars[node.CloneId], GenRef, FitParams);
+            double currentFit = childKar.FitnessVal;
             bool hasWGD = false;
-            int time = 0;
-            while (!MetBreakCondition(time, mutCount - childEvs.Count))
-            {
-                time++;
-                if (!DidMutate(new Karyotype(sample.Kars[node.CloneId])))
-                {
-                    continue;
-                }
-                Console.Write($"\rSample: {sample.SampleId}. " +
-                              $"Mutation: {childEvs.Count+1}/{mutCount}.");
-                
-                var cnEventPars = GetEventPars(sample.EventPars, hasWGD);
-                var newEvent = GetNewEvent(cnEventPars, sample.Kars[node.CloneId], currentFitness);
+            int distance = child.Distance > 0
+                ? child.Distance
+                : Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean);
 
-                var newKar = new Karyotype(sample.Kars[node.CloneId]);
+            for (int mutNo = 1; mutNo <= distance; mutNo++)
+            {
+                Console.Write($"\rSample {child.CloneId}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
+                var cnEventPars = GetEventPars(cnEventPs, hasWGD);
+                var newEvent = GetNewEvent(cnEventPars, childKar, currentFit);
+                var newKar = new Karyotype(childKar);
                 newEvent.ApplyEvent(newKar);
-                double proposedFitness = newKar.UpdateFitness(GenRef, FitParams);
-                double dFit = proposedFitness - currentFitness;
-                var eventTime = EvoParams.EvolveInTime ? time : childEvs.Count + 1;
+                double proposedFit = newKar.UpdateFitness(GenRef, FitParams);
+                double dFit = proposedFit - currentFit;
                 var abberation = new CNEventDesc(
                     newEvent.EventType,
-                    eventCount + childEvs.Count + 1,
+                    mutDepth + mutNo,
                     newEvent.ToString(),
                     dFit,
-                    proposedFitness,
-                    eventTime);
-                hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
+                    proposedFit,
+                    mutNo);
                 childEvs.Add(abberation);
-                sample.Kars[node.CloneId] = newKar;
-                currentFitness = proposedFitness;
+                
+                hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
+                childKar = newKar;
+                currentFit = proposedFit;
             }
-            if (childEvs.Count < mutCount && sample.Kars[node.CloneId].GenomeLen() > 0)
+            
+            var newClone = new Sample(parent.CloneId, child.CloneId, childKar, childEvs, mixture);
+            sampleList.Add(newClone);
+
+            if (child.CloneId != parent.CloneId)
             {
-                throw new Exception("Failed to generate the required number of events for sample " + sample.SampleId);
-            }
-            sample.EventDescs[node.CloneId] = childEvs;
-            if (child.CloneId != node.CloneId)
-            {
-                ApplyEvolutionRec(sample, child, clones, eventCount + child.Distance);
+                ApplyCNEventsRec(child, cloneTree, cnEventPs, mixture, sampleList, childKar, mutDepth + childEvs.Count);
             }
         }
     }

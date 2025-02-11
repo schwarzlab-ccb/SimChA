@@ -18,7 +18,7 @@ cmdOptions.WithNotParsed(o =>
 var watch = new Stopwatch();
 watch.Start();
 
-Console.WriteLine("INPUT");
+// Input
 var options = cmdOptions.Value;
 var selMode = options.SelectionMode;
 var config = FileIO.ReadSimChAConfig(options.ConfigFile);
@@ -27,10 +27,10 @@ var files = new FileIO(options.OutputPath);
 var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
+// Construct samples
 var samples = new List<Sample>();
 if (options.Simulate)
 {
-    Console.WriteLine("SIMULATION");
     var validSigs = Factory.ValidateSignatures(config.Signatures);
     if (options.ExecMode == ExecMode.Repeats)
     {
@@ -57,16 +57,16 @@ else
     samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.AutosomesOnly);
 }
 
-Console.WriteLine("ANALYSIS");
+// Score samples
 var cloneList = new List<SampleStats>();
 for (int i = 0; i < samples.Count; i++)
 {
-    Console.Write($"\rSample {i + 1}/{samples.Count}.".PadRight(80));
+    Console.Write($"\rAnalyzing sample {i + 1}/{samples.Count}.".PadRight(80));
     var sampleStats = CNProfile.GetCloneStats(samples[i], genRef, config.FitParams);
     cloneList.Add(sampleStats);
 }
 
-Console.WriteLine("OUTPUT");
+// Output
 files.WriteSimParams(config);
 try
 {
@@ -97,11 +97,10 @@ try
 }
 catch (Exception e)
 {
-    Console.WriteLine($"Failed with exception {e.Message}. Stack: {e.StackTrace}");
+    Console.WriteLine($"Failed to write data with exception {e.Message}. Stack: {e.StackTrace}");
     return e.HResult;
 }
 
 watch.Stop();
 Console.WriteLine($"Total time: {TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds)}");
-
 return 0;

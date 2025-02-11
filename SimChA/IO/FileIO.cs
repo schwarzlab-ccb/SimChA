@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Text.Json;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using System.Text;
 using SimChA.Data;
 using SimChA.EventData;
