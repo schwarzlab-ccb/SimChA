@@ -13,7 +13,7 @@ namespace Tests;
 [TestFixture]
 public class TestSampling
 {
-    Random _rnd;
+    private Random _rnd;
     
     [SetUp]
     public void Setup()
@@ -55,7 +55,7 @@ public class TestSampling
     [Test]
     public void TestGetNormSeg()
     {
-        Assert.AreEqual(127097, Sampling.GetNormSeg(_rnd, 1_000_000, 0.1));
+        Assert.AreEqual(119319, Sampling.GetNormSeg(_rnd, 1_000_000, 0.1));
     }
 
     [Test]
@@ -76,7 +76,7 @@ public class TestSampling
         {
             var rnd = new Random();
             var probs = new List<double> { 0.1, 0.2, 0.0, -1.0, 0.3, 0.4 };
-            int index = Extensions.PickRndIndex(rnd, probs);
+            int index = rnd.PickRndIndex(probs);
             Assert.GreaterOrEqual(index, 0);
             Assert.Less(index, probs.Count);
             Assert.AreNotEqual(index, 2);

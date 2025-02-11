@@ -9,13 +9,13 @@ namespace SimChA.Simulation;
 public static class Sampling
 {
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Max(1, Math.Min((long) Math.Round(contigLen * Normal.Sample(rnd, meanFrac, meanFrac / 3)), contigLen));
+        => (long) Math.Clamp(Math.Round(contigLen * Normal.Sample(rnd, meanFrac, meanFrac / 3)), 1, contigLen);
     
     public static long GetExpSeg(Random rnd, long contigLen, long meanLen) 
-        => Math.Max(1, Math.Min((long) Math.Round(Exponential.Sample(rnd, meanLen)), contigLen));
+        => (long) Math.Clamp(Math.Round(meanLen * Exponential.Sample(rnd, 1)), 1, contigLen);
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Max(1, Math.Min((long) Math.Round(contigLen * Exponential.Sample(rnd, meanFrac)), contigLen));
+        => (long) Math.Clamp(Math.Round(contigLen * meanFrac * Exponential.Sample(rnd, 1)), 1, contigLen);
     
     public static double GetExpProb(long segLen, double scale)
         => Math.Exp(-segLen / scale) / scale;
@@ -114,8 +114,10 @@ public static class Sampling
                 return new ContigEventData(cnEventPars, seq[0].id);
             
             case CNEventType.Pass:
-            case CNEventType.WholeGenomeDoubling:
                 return new BaseEventData(cnEventPars);
+            
+            case CNEventType.WholeGenomeDoubling:
+                return new WGDEventData(cnEventPars);
             
             // Tail events
             case CNEventType.TailDeletion:
