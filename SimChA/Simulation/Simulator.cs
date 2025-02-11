@@ -44,8 +44,34 @@ public class Simulator
         => node.Fitness > 0 
             ? node.Fitness 
             : Sampling.SampleDist(Rnd, SimParams.FitDist, SimParams.FitMean);
+
+    protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
+        Karyotype parentKar, 
+        CTreeNode child, 
+        List<CNEventPars> cnEventPs, 
+        int mutDepth)
+    {
+        var childKar = new Karyotype(parentKar);
+        var childEvs = new List<CNEventDesc>();
+        int distance = SampleDist(child);
+
+        for (int mutNo = 1; mutNo <= distance; mutNo++)
+        {
+            Console.Write($"\rSample {child.CloneId}. Event {mutNo}/{child.Distance}.".PadRight(80));
+            var eventP = Rnd.PickRndElem(cnEventPs);
+            var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
+            // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
+            if (eventData == null)
+                continue;
+            eventData.ApplyEvent(childKar);
+            var newEv = new CNEventDesc(eventData.EventType, mutDepth + mutNo, eventData.ToString(), 
+                0, 0, mutNo);
+            childEvs.Add(newEv);
+        }
+        return (childKar, childEvs);
+    }
     
-    protected virtual void ApplyCNEventsRec(
+    protected void ApplyCNEventsRec(
         CTreeNode parent, 
         List<CTreeNode> cloneTree, 
         List<CNEventPars> cnEventPs,
@@ -57,29 +83,7 @@ public class Simulator
         var children = cloneTree.Where(c => c.ParentId == parent.CloneId).ToList();
         foreach (var child in children)
         {
-            var childKar = new Karyotype(parentKar);
-            var childEvs = new List<CNEventDesc>();
-            int distance = SampleDist(child);
-            
-            for (int mutNo = 1; mutNo <= distance; mutNo++)
-            {
-                Console.Write($"\rSample {child.CloneId}. Event {mutNo }/{child.Distance}.".PadRight(80));
-                var eventP = Rnd.PickRndElem(cnEventPs);
-                var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
-                // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
-                if (eventData == null)
-                    continue;
-                eventData.ApplyEvent(childKar);
-                var abberation = new CNEventDesc(
-                    eventData.EventType, 
-                    mutDepth + mutNo, 
-                    eventData.ToString(),
-                    0,
-                    0,
-                    mutNo);
-                childEvs.Add(abberation);
-            }
-
+            var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth);
             var newClone = new Sample(parent.CloneId, child.CloneId, childKar, childEvs, mixture);
             sampleList.Add(newClone);
             

@@ -8,8 +8,8 @@ namespace SimChA.Simulation;
 public class MHSimulator : Simulator
 {
     private MHParams MHParams { get; }
-    
-    public MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, MHParams mhParams) 
+
+    public MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, MHParams mhParams)
         : base(rnd, genRef, simParams, fitParams)
     {
         MHParams = mhParams;
@@ -19,17 +19,17 @@ public class MHSimulator : Simulator
     {
         var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
         return eventPs.Select(
-            e => Sampling.GenerateCNEventData(Rnd, kar, e) 
+            e => Sampling.GenerateCNEventData(Rnd, kar, e)
                  ?? throw new Exception($"Failed to generate event data for {e}.")
         ).ToList();
     }
 
     private double GetFitnessPotential(double fitness, double targetFitness)
-        => -MHParams.ThetaFitness * Math.Abs((fitness - targetFitness)/targetFitness);
+        => -MHParams.ThetaFitness * Math.Abs((fitness - targetFitness) / targetFitness);
 
     private double CalculatePotential(double proposedFitness)
         => MHParams.ThetaFitness * proposedFitness;
-    
+
     private double CalculatePotential(double proposedFitness, double targetFitness)
         => GetFitnessPotential(proposedFitness, targetFitness);
 
@@ -40,23 +40,26 @@ public class MHSimulator : Simulator
         {
             eventData.ApplyEvent(kar);
         }
+
         return kar.UpdateFitness(GenRef, FitParams);
     }
 
-    private List<BaseEventData> GetNewProposal(List<CNEventPars> cnEventPs, Karyotype kar, List<BaseEventData> oldEvents)
+    private List<BaseEventData> GetNewProposal(List<CNEventPars> cnEventPs, Karyotype kar,
+        List<BaseEventData> oldEvents)
     {
         var proposedEvents = oldEvents.ToList();
         // Select a random CNEventPars to modify
         int index = Rnd.Next(proposedEvents.Count);
-        var cnEventP = Rnd.NextDouble() < MHParams.SwapEventP 
-            ? Rnd.PickRndElem(cnEventPs) 
+        var cnEventP = Rnd.NextDouble() < MHParams.SwapEventP
+            ? Rnd.PickRndElem(cnEventPs)
             : proposedEvents[index].CNEventPars;
         var newData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
         proposedEvents[index] = newData ?? throw new Exception("Failed to generate new event data.");
         return proposedEvents;
     }
-    
-    private List<BaseEventData> GenEventsForTargetFitness(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents, double targetFitness)
+
+    private List<BaseEventData> GenEventsForTargetFitness(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents,
+        double targetFitness)
     {
         // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, cnEventPs);
@@ -69,7 +72,7 @@ public class MHSimulator : Simulator
         {
             var proposedEvents = GetNewProposal(cnEventPs, kar, currentEvents);
             double fitness = GetFitness(new Karyotype(kar), proposedEvents);
-            bool thresholdAccept = Math.Abs(1.0 - fitness/targetFitness) < MHParams.ThresholdFit;
+            bool thresholdAccept = Math.Abs(1.0 - fitness / targetFitness) < MHParams.ThresholdFit;
             // Calculate the new fitness of the proposed set of events on the clone
             double proposalPotential = CalculatePotential(currentFitness, targetFitness);
             double acceptProb = proposalPotential - currentPotential;
@@ -77,17 +80,19 @@ public class MHSimulator : Simulator
             {
                 currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
-                double proposed_diff = Math.Abs(fitness - targetFitness);
-                if (proposed_diff < bestDiff)
+                double proposedDiff = Math.Abs(fitness - targetFitness);
+                if (proposedDiff < bestDiff)
                 {
-                    bestDiff = proposed_diff;
+                    bestDiff = proposedDiff;
                     bestEvents = proposedEvents;
                 }
+
                 // Break out of the sampling if we have reached the threshold
                 // and have reached the minimum number of samples required
                 if (thresholdAccept && i > MHParams.NumSamplesMin) break;
             }
         }
+
         return bestEvents;
     }
 
@@ -101,7 +106,7 @@ public class MHSimulator : Simulator
         var bestEvents = new List<BaseEventData>(currentEvents);
 
         // TODO @Cody should this be used?
-        var fitList = new List<double>{currentFitness};
+        var fitList = new List<double> {currentFitness};
 
         for (int i = 0; i < MHParams.NumSamplesTotal; i++)
         {
@@ -122,57 +127,40 @@ public class MHSimulator : Simulator
                 }
             }
         }
+
         return bestEvents;
     }
 
-    protected override void ApplyCNEventsRec(
-        CTreeNode parent, 
-        List<CTreeNode> cloneTree, 
-        List<CNEventPars> cnEventPs,
-        Dictionary<string, double> mixture,
-        List<Sample> sampleList,
+    protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar,
+        CTreeNode child,
+        List<CNEventPars> cnEventPs,
         int mutDepth)
     {
-        var children = cloneTree.Where(c => c.ParentId == parent.CloneId).ToList();
-        foreach (var child in children)
-        {
-            var childKar = new Karyotype(parentKar);
-            var childEvs = new List<CNEventDesc>();
-            int distance = SampleDist(child);
-            double targetFit = SampleFit(child);
-            double oldFitness = childKar.FitnessVal;
-            
-            var bestEvents = MHParams.MatchFitness
-                ? GenEventsForTargetFitness(cnEventPs, childKar, distance, targetFit)
-                : GenEventsForMaxFitness(cnEventPs, childKar, distance);
+        var childKar = new Karyotype(parentKar);
+        var childEvs = new List<CNEventDesc>();
+        int distance = SampleDist(child);
+        double targetFit = SampleFit(child);
+        double oldFitness = childKar.FitnessVal;
 
-            for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
-            {
-                Console.Write($"\rSample {child.CloneId}. Event {mutNo }/{child.Distance}.".PadRight(80));
-            
-                var eventData = bestEvents[mutNo];
-                eventData.ApplyEvent(childKar);
-                double newFitness = childKar.UpdateFitness(GenRef, FitParams);
-                double dFit = newFitness - oldFitness;
-                var abberation = new CNEventDesc(
-                    eventData.EventType, 
-                    mutDepth + mutNo, 
-                    eventData.ToString(),
-                    dFit,
-                    newFitness,
-                    mutNo);
-                childEvs.Add(abberation);
-                oldFitness = newFitness;
-            }
-            
-            var newClone = new Sample(parent.CloneId, child.CloneId, childKar, childEvs, mixture);
-            sampleList.Add(newClone);
-        
-            if (child.CloneId != parent.CloneId)
-            {
-                ApplyCNEventsRec(child, cloneTree, cnEventPs, mixture, sampleList, childKar, mutDepth + childEvs.Count);
-            }
+        var bestEvents = MHParams.MatchFitness
+            ? GenEventsForTargetFitness(cnEventPs, childKar, distance, targetFit)
+            : GenEventsForMaxFitness(cnEventPs, childKar, distance);
+
+        for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
+        {
+            Console.Write($"\rSample {child.CloneId}. Event {mutNo}/{child.Distance}.".PadRight(80));
+
+            var eventData = bestEvents[mutNo];
+            eventData.ApplyEvent(childKar);
+            double newFitness = childKar.UpdateFitness(GenRef, FitParams);
+            double dFit = newFitness - oldFitness;
+            var newEv = new CNEventDesc(eventData.EventType, mutDepth + mutNo, eventData.ToString(),
+                dFit, newFitness, mutNo);
+            childEvs.Add(newEv);
+            oldFitness = newFitness;
         }
+
+        return (childKar, childEvs);
     }
 }
