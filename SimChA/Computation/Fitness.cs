@@ -93,21 +93,20 @@ public static class Fitness
             ? -Math.Log(1.0 - x / 2.0)
             : Math.Log(1.0 + x);
 
+    // 0/0 => 1, i.e. the genes not present in the given sex contributed their default score
+    private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
+        => ExpectedCN(genRef, g.Range.ChrNo, sex) > 0 ? cn / ExpectedCN(genRef, g.Range.ChrNo, sex) : 1;
+    
     public static double TsgOgTerm(GenRef genRef, List<(Gene gene, int CN)> geneCNs, SexType sex, bool normalizeGenes = false)
     {
         if (!geneCNs.Any())
         {
             return 0;
         }
-
-        var genesList = (sex switch
-        {
-            SexType.Female => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.YChrName),
-            SexType.Male => geneCNs,
-            _ => geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
-        }).ToList();
-        int norm = normalizeGenes ? genesList.Count : 1;
-        return genesList.Sum(g => Math.Log2(1+g.CN/ExpectedCN(genRef, g.gene.Range.ChrNo, sex)) * g.gene.DeltaFitness) / norm;
+        int norm = normalizeGenes ? geneCNs.Count : 1;
+        double sum = geneCNs.Sum(pair 
+            => Math.Log2(1+GetExpRatio(genRef, sex, pair.gene, pair.CN)) * pair.gene.DeltaFitness) / norm;
+        return sum;
     }
 
     public static double Zygosity(GenRef genRef, List<(Gene gene, int CN)> geneCNs, int count)
@@ -124,7 +123,7 @@ public static class Fitness
         return zygosityCount / (double)genesList.Count;
     }
 
-    public static double EssTerm(GenRef genRef, List<(Gene gene, int CN)> essCNs, SexType sex, bool normalizeGenes)
+    public static double EssTerm(GenRef genRef, List<(Gene gene, int CN)> essCNs, SexType sex, bool normalizeGenes = false)
     {
         if (!essCNs.Any())
         {
@@ -140,7 +139,6 @@ public static class Fitness
         int norm = normalizeGenes ? genesList.Count : 1;
         return genesList.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness) / norm;
     }
-
 
     public static List<(Gene, int)> CalcCNs(Dictionary<string, List<Gene>> searched, Karyotype karyotype)
     {

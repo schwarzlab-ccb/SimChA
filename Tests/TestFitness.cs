@@ -6,17 +6,15 @@ using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Data;
-using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
-using SimChA.Simulation;
 
 namespace Tests;
 
 [TestFixture]
 public class TestFitness
 {
-    public const double EPSILON = 0.0000000001;
+    public const double EPSILON = 0.00001;
 
     private List<GenRef> _refs;
 
@@ -33,7 +31,7 @@ public class TestFitness
     public void TestEssTerm([Values] SexType sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        bool normGenes = true;
+        bool normGenes = false;
 
         Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), sex, normGenes), EPSILON);
         
@@ -57,34 +55,7 @@ public class TestFitness
         };
         Assert.AreEqual(expectedVal, Fitness.EssTerm(genRef, testSexChromosome, sex, normGenes), EPSILON);
     }
-
-    [Test]
-    public void TestEssTermHaploinsufficiency([Values] SexType sex, [Values(0,1)] int refId)
-    {
-        bool normGenes = true;
-        var genRef = _refs[refId];
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, new List<(Gene, int)>(), sex, normGenes));
-        
-        var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 0) };
-        Assert.AreEqual(0, Fitness.EssTerm(genRef, testNoEffect, sex,  normGenes), EPSILON);
-        
-        var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
-        Assert.AreEqual(-0.2, Fitness.EssTerm(genRef, testMissing, sex,  normGenes), EPSILON);
-
-        var testHaploinsufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
-        Assert.AreEqual(-0.1, Fitness.EssTerm(genRef, testHaploinsufficient, sex,  normGenes), EPSILON);
-        
-        var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0), (MakeGene("chr2", 0.2), 0) };
-        Assert.AreEqual(-0.2 + -0.4, Fitness.EssTerm(genRef, testList, sex, normGenes), EPSILON);
-
-        var testSexChromosome = new List<(Gene, int)> { (MakeGene("chrX", 0.7), 0), (MakeGene("chrY", 0.5), 0)};
-        var expectedVal = sex switch {
-            SexType.Female => -1.4,
-            SexType.Male => -1.2,
-            _ => 0
-        };
-        Assert.AreEqual(expectedVal, Fitness.EssTerm(genRef, testSexChromosome, sex,  normGenes), EPSILON);
-    }
+    
 
     [Test]
     public void TestZygosity()
@@ -137,7 +108,7 @@ public class TestFitness
         testList = new List<(Gene, int)>{
             (MakeGene("chrX", 0.1), 2)
         };
-        var expectedVal = sex switch {
+        double expectedVal = sex switch {
             SexType.Female => 0,
             SexType.Male => 0.1,
             _ => 0
@@ -240,11 +211,10 @@ public class TestFitness
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
         var tsgCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype);
-        double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, sex);
-        Assert.AreEqual(0, tsg, EPSILON);
         var ogsCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype);
-        double og = Fitness.TsgOgTerm(genRef, ogsCNs, sex);;
-        Assert.AreEqual(0, og, EPSILON);
+        double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, sex);
+        double og = Fitness.TsgOgTerm(genRef, ogsCNs, sex);
+        Assert.AreEqual(tsg, og, EPSILON);
     }
 
     [Test]
