@@ -2,9 +2,8 @@
 
 namespace SimChA.Data;
 
-public record CloneStat(
+public record SampleStats(
     string SampleId,
-    string CloneId,
     double Ploidy,
     double Coverage,
     double Fitness,
@@ -19,7 +18,6 @@ public record CloneStat(
 {
     public static string Header() 
         => "sample_id" +
-           "\tclone_id" +
            "\tploidy" +
            "\tcoverage" +
            "\tfitness" +
@@ -34,7 +32,6 @@ public record CloneStat(
     
     public override string ToString() =>
         $"{SampleId}" +
-        $"\t{CloneId}" +
         $"\t{Ploidy}" +
         $"\t{Coverage}" +
         $"\t{Fitness}" +

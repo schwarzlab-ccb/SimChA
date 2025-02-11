@@ -27,37 +27,43 @@ var files = new FileIO(options.OutputPath);
 var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
-var clones = new Dictionary<string, List<Sample>>();
+var samples = new List<Sample>();
 if (options.Simulate)
 {
     Console.WriteLine("SIMULATION");
-    var cloneTree = Factory.ReadSamples(rnd, genRef, config, options);
-    foreach (var sample in cloneTree)
+    var validSigs = Factory.ValidateSignatures(config.Signatures);
+    if (options.ExecMode == ExecMode.Repeats)
     {
-        clones[sample.SampleId] = simulator.Simulate(sample);
+        Console.WriteLine($"Creating {options.Repeats} samples:");
+        var emptyTree = new List<CTreeNode>();
+        for (int i = 0; i < options.Repeats; i++)
+        {
+            string sampleId = $"Sample_{i}";
+            var node = new CTreeNode(sampleId, sampleId, -1, -1);
+            var newSample = simulator.Simulate(node, emptyTree, validSigs);
+            samples.Add(newSample[0]);
+        }
+    }
+    else
+    {
+        var (root, tree) = FileIO.ReadCloneTree(options.CloneTreeFile, options.MHMode);
+        Console.WriteLine($"Creating {tree.Count} samples from a tree:");
+        samples = simulator.Simulate(root, tree, validSigs);
     }
 }
 else
 {
     Console.WriteLine("Reading samples from data:");
-    var profiles = FileIO.ReadProfiles(genRef, options.CNProfiles, config.AutosomesOnly);
-    return Converters.ClonesFromProfiles(profiles);
+    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.AutosomesOnly);
 }
 
 Console.WriteLine("ANALYSIS");
-var cloneList = new List<CloneStat>();
-        
-foreach ((string sampleId, var subClones) in clones)
+var cloneList = new List<SampleStats>();
+for (int i = 0; i < samples.Count; i++)
 {
-    int counter = 1;
-    int total = clones.Values.Count;
-    foreach (var clone in subClones)
-    {
-        Console.Write($"\rSample {sampleId}. Clone {counter++}/{total}.".PadRight(80));
-        var sampleStats = subClones.Select(s 
-            => CNProfile.GetCloneStats(sampleId, clone, genRef, config.FitParams));
-        cloneList.AddRange(sampleStats);
-    }
+    Console.Write($"\rSample {i + 1}/{samples.Count}.".PadRight(80));
+    var sampleStats = CNProfile.GetCloneStats(samples[i], genRef, config.FitParams);
+    cloneList.Add(sampleStats);
 }
 
 Console.WriteLine("OUTPUT");
@@ -69,24 +75,24 @@ try
     
     if (options.CalcConsistentCNs)
     {
-        files.WriteConsistentCNs(genRef, clones);
+        files.WriteConsistentCNs(genRef, samples);
     }
     if (!options.LightweightOutput)
     {
-        files.WriteCopyNumbers(genRef, clones);
-        files.WriteKaryotypes(clones);
+        files.WriteCopyNumbers(genRef, samples);
+        files.WriteKaryotypes(samples);
     }
     if (options.Simulate)
     {
-        files.WriteEvents(clones);
+        files.WriteEvents(samples);
     }
     if (options.UseVariants)
     {
-        files.WriteVCF(genRef, clones);
+        files.WriteVCF(genRef, samples);
     }
     if (options.WriteFasta)
     {
-        files.WriteFasta(genRef, clones);
+        files.WriteFasta(genRef, samples);
     }
 }
 catch (Exception e)

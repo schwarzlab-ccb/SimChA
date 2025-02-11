@@ -20,59 +20,57 @@ public class Simulator
         SimParams = simParams;
     }
 
-    public virtual List<Sample> Simulate(Sample sample)
+    public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
-        if (sample.EventPars == null || !sample.EventPars.Any())
-        {
-            throw new Exception("No events to sample from.");
-        }
-        var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
+        var (cnEventPs, mixture) = Converters.PropagateSigs(sigs);
         var res = new List<Sample>();
-        var rootKar =  new Karyotype(GenRef, sample.Sex);
-        res.Add(new Sample(root.CloneId, rootKar, new List<CNEventDesc>()));
-        ApplyCNEventsRec(sample, root, childLookUp, res, rootKar, 1);
+        var sex = Sampling.GetSex(Rnd, SimParams.Sex);
+        var rootKar = new Karyotype(GenRef, sex);
+        if (SimParams.TetraploidStart)
+        {
+            rootKar.ApplyWGD();
+            rootKar.UpdateFitness(GenRef, FitParams);
+        }
+        ApplyCNEventsRec(root, cloneTree, cnEventPs, mixture, res, rootKar, 1);
         return res;
     }
     
-    private void ApplyCNEventsRec(
-        Sample sample, 
-        CTreeNode node, 
-        IReadOnlyDictionary<string, List<CTreeNode>> cloneLookUp, 
-        List<Sample> clones,
+    protected virtual void ApplyCNEventsRec(
+        CTreeNode parent, 
+        List<CTreeNode> cloneTree, 
+        List<CNEventPars> cnEventPs,
+        Dictionary<string, double> mixture,
+        List<Sample> sampleList,
         Karyotype parentKar,
-        int eventCount)
+        int mutDepth)
     {
-        foreach (var child in cloneLookUp[node.CloneId])
+        var children = cloneTree.Where(c => c.ParentId == parent.CloneId).ToList();
+        foreach (var child in children)
         {
             var childKar = new Karyotype(parentKar);
             var childEvs = new List<CNEventDesc>();
-            for (int mutNo = 0; mutNo < child.Distance; mutNo++)
+            int distance = child.Distance > 0
+                ? child.Distance
+                : Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean);
+            for (int mutNo = 0; mutNo < distance; mutNo++)
             {
-                Console.Write($"\rSample {sample.SampleId}. Clone {clones.Count}/{cloneLookUp.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
-                var eventP = Rnd.PickRndElem(sample.EventPars);
+                Console.Write($"\rSample {child.CloneId}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
+                var eventP = Rnd.PickRndElem(cnEventPs);
                 var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
                 // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
                 if (eventData == null)
                     continue;
                 eventData.ApplyEvent(childKar);
-                var abberation = new CNEventDesc(eventP.Type, eventCount + mutNo, eventData.ToString());
+                var abberation = new CNEventDesc(eventP.Type, mutDepth + mutNo, eventData.ToString());
                 childEvs.Add(abberation);
             }
 
-            var newClone = new Sample(child.CloneId, childKar, childEvs);
-            clones.Add(newClone);
-            if (child.CloneId != node.CloneId)
+            var newClone = new Sample(parent.CloneId, child.CloneId, childKar, childEvs, mixture);
+            sampleList.Add(newClone);
+            if (child.CloneId != parent.CloneId)
             {
-                ApplyCNEventsRec(sample, child, cloneLookUp, clones, childKar, eventCount + childEvs.Count);
+                ApplyCNEventsRec(child, cloneTree, cnEventPs, mixture, sampleList, childKar, mutDepth + childEvs.Count);
             }
         }
-    }
-
-    public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
-    {
-        var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
-        return eventPs.Select(
-            e => Sampling.GenerateCNEventData(Rnd, kar, e) ?? throw new Exception($"Failed to generate event data for {e}.")
-        ).ToList();
     }
 }

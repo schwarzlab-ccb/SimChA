@@ -44,7 +44,7 @@ public class TestSimulator
     [Test]
     public void TestInitEvents()
     {
-        var sim = new Simulator(_rnd, _genRef, _simParams, _fitParams);
+        var sim = new MHSimulator(_rnd, _genRef, _simParams, _fitParams, _mhParams);
         const int nMutations = 5;
         var eventData = sim.InitEvents(_kar, nMutations, _eventPs);
         foreach (var data in eventData)

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.IO;
 
 namespace SimChA.Data;
@@ -9,7 +8,7 @@ namespace SimChA.Data;
 public class Karyotype
 {
     public double FitnessVal { get; private set; }
-    public SexType Sex;
+    public SexType Sex { get; }
     private readonly List<Contig> _contigs;
     private readonly Dictionary<string, List<GenRange>> _missingRanges;
     private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
@@ -263,6 +262,7 @@ public class Karyotype
         contig.SNV(location, newNucleotide);
     }
 
+    // TODO @Cody: SNV as a data type
     public List<(string chrNo, long location, Nucleotide newBase)> GetFinalSNVs()
     {
         var snvList = new List<(string, long, Nucleotide)>();

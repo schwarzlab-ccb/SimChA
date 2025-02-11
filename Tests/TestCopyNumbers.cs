@@ -23,7 +23,7 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(TestIO.HG_19_PATH);
+        _genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH);
         _rnd = new Random(0);
     }
 
@@ -64,7 +64,7 @@ public class TestCopyNumbers
     [Test]
     public void TestCalcAutosomeCNs([Values] SexType sex)
     {
-        var genRef = FileIO.GetGenRef(TestIO.HG_19_PATH, false);
+        var genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH, false);
         _kar = new Karyotype(genRef, sex);
         var cnRef = CopyNumbers.CalcCopyNumbers(genRef, _kar).ToList();
         Assert.AreEqual(genRef.ChrCount(sex, false), cnRef.Count);

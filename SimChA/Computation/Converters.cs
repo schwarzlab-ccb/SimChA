@@ -45,30 +45,4 @@ public static class Converters
         double probSum = events.Sum(ev => ev.Prob);
         return events.Select(ev => ev with { Prob = ev.Prob/probSum }).ToList();
     }
-
-    public static List<Sample> MakeSamples(
-        Random rnd,
-        int repeats,
-        List<Signature> sigs,
-        SexType sex,
-        bool autosomesOnly)
-    {
-        var samples = new List<Sample>();
-        string[] sigNames = sigs.Select(s => s.Name).ToArray();
-        double[] sigProbs = sigs.Select(s => s.Prob).ToArray();
-        for (int i = 0; i < repeats; i++)
-        {
-            // Sample to have at least 1 event
-            var dirichlet = Sampling.CreateRandomMixture(rnd, sigProbs);
-            var namedProbs = sigNames.Zip(dirichlet).ToDictionary(s => s.First, s => s.Second);
-            var (events, mixture) = PropagateSigs(sigs, namedProbs);
-            var sampleSex = autosomesOnly ? SexType.Any : Sampling.GetSex(rnd, sex);
-            var sample = new Sample($"sample_{i + 1}", $"sample_{i + 1}", sampleSex, events, mixture);
-            samples.Add(sample);
-        }
-        return samples;
-    }
-
-    public static List<Sample> ClonesFromProfiles(Dictionary<string, Karyotype> profiles)
-        => (from profile in profiles select new Sample(profile.Key, profile.Key, profile.Value)).ToList();
 }

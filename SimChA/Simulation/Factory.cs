@@ -30,38 +30,7 @@ public static class Factory
                 throw new Exception("Error: No selection mode set.");
         }
     }
-
-    public static List<Sample> ReadSamples(Random rnd, GenRef genRef, SimChAConfig config, CmdOptions options)
-    {
-        var sampleParams = config.SimParams;
-        if (config.SimParams == null)
-        {
-            throw new Exception("No simulation parameters found. Please set \"SimParams\" in the config JSON.");
-        }
-
-        if (config.FitParams == null)
-        {
-            throw new Exception("No fitness parameters found. Please set \"FitParams\" in the config JSON.");
-        }
-        
-        var validSigs = ValidateSignatures(config.Signatures);
-        if (options.ExecMode == ExecMode.Repeats)
-        {
-            Console.WriteLine("Creating random samples:");
-            return Converters.MakeSamples(rnd, options.Repeats, validSigs, sampleParams.Sex, sampleParams.AutosomesOnly);
-        }
-        if (options.ExecMode == ExecMode.Tree)
-        {
-            Console.WriteLine("Reading samples from a clone file:");
-            var (cnEventPs, mixture) = Converters.PropagateSigs(validSigs);
-            var treeSamples = FileIO.ReadCloneTree(options.CloneTreeFile, options.MHMode);
-            string sampleName = Path.GetFileNameWithoutExtension(options.CloneTreeFile);
-            var sex = sampleParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(rnd, sampleParams.Sex);
-            return treeSamples;
-        }
-        throw new Exception("Unknown execution mode.");
-    }
-
+    
     private static void ValidateEvent(CNEventPars cnEventPars)
     {
         switch (cnEventPars.Type)
@@ -107,7 +76,7 @@ public static class Factory
         }
     }
 
-    private static List<Signature> ValidateSignatures(List<Signature>? signatures)
+    public static List<Signature> ValidateSignatures(List<Signature>? signatures)
     {
         if (signatures is null)
         {

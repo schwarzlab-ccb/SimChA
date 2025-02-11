@@ -25,7 +25,7 @@ public class TestSummaryFeatures
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(TestIO.HG_19_PATH);
+        _genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH);
         _rnd = new Random(0);
         _chrs = new List<string> { _genRef.AllChrs[0], _genRef.AllChrs[1] };
         _kar = new Karyotype(_genRef, SexType.Female);

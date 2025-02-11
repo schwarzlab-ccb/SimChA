@@ -90,11 +90,11 @@ public static class CopyNumbers
         return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
     }
 
-    private static string Header(bool withSample, bool isFirst)
-        => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\tn_snvs\n" : "";
+    public static string Header(bool withSample)
+        => (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\tn_snvs\n";
     
-    public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId, string cloneId, bool isFirst)
-        => Header(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cloneId}\t{cn.ToTSV()}"));
+    public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId)
+        => string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 
     public static List<long> GetSegPoints(GenRef genRef, string chrNo, IEnumerable<Karyotype> kars)
     {

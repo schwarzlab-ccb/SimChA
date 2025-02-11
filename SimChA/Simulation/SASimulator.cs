@@ -13,23 +13,6 @@ public class SASimulator : Simulator
     {
         EvoParams = evoParams;
     }
-
-    public override void Simulate(Sample sample)
-    {
-        if (sample.EventPars == null || sample.EventPars.Count == 0)
-        {
-            throw new Exception("No events to sample from.");
-        }
-        var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        // Start with the tetraploid state
-        if (SimParams.TetraploidStart)
-        {
-            sample.Kars[root.CloneId].ApplyWGD();
-            sample.Kars[root.CloneId].UpdateFitness(GenRef, FitParams);
-        }
-        ApplyEvolutionRec(sample, root, childLookUp, 0);
-    }
     
     private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {
@@ -85,11 +68,14 @@ public class SASimulator : Simulator
     bool DidMutate(Karyotype kar)
         => !EvoParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
     
-    private void ApplyEvolutionRec(
-        Sample sample,
-        CTreeNode node,
-        IReadOnlyDictionary<string, List<CTreeNode>> clones,
-        int eventCount)
+    protected virtual void ApplyCNEventsRec(
+        CTreeNode parent, 
+        List<CTreeNode> cloneTree, 
+        List<CNEventPars> cnEventPs,
+        Dictionary<string, double> mixture,
+        List<Sample> sampleList,
+        Karyotype parentKar,
+        int mutDepth)
     {
         foreach (var child in clones[node.CloneId])
         {

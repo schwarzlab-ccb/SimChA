@@ -18,19 +18,15 @@ public class MHSimulator : Simulator
     {
         MHParams = mhParams;
     }
-    
-    public override void Simulate(Sample sample)
-    {
-        if (sample.EventPars == null || !sample.EventPars.Any())
-        {
-            throw new Exception("No events to sample from.");
-        }
-        Counter = 1;
-        var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        ApplyCNEventsRec(sample, root, childLookUp, 1);
-    }
 
+    public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
+    {
+        var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
+        return eventPs.Select(
+            e => Sampling.GenerateCNEventData(Rnd, kar, e) ?? throw new Exception($"Failed to generate event data for {e}.")
+        ).ToList();
+    }
+    
     public double GetFitnessPotential(double fitness, double targetFitness)
     {
         double dFit = fitness - targetFitness;
@@ -139,8 +135,14 @@ public class MHSimulator : Simulator
         return bestEvents;
     }
 
-    private void ApplyCNEventsRec(Sample sample, CTreeNode node, 
-        IReadOnlyDictionary<string, List<CTreeNode>> clones, int eventCount)
+    protected virtual void ApplyCNEventsRec(
+        CTreeNode parent, 
+        List<CTreeNode> cloneTree, 
+        List<CNEventPars> cnEventPs,
+        Dictionary<string, double> mixture,
+        List<Sample> sampleList,
+        Karyotype parentKar,
+        int mutDepth)
     {
         foreach (var child in clones[node.CloneId])
         {
