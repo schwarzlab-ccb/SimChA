@@ -15,17 +15,20 @@ namespace Tests;
 [TestFixture]
 public class TestKaryotype
 {
-    private Karyotype _kar;
-    private Random _rnd;
-    private CNEventPars _del;
-    private CNEventPars _dup;
-    private GenRef _genRef;
+    private Karyotype _kar = null!;
+    private Random _rnd = null!;
+    private CNEventPars _del = null!;
+    private GenRef _genRef = null!;
     private const int TEST_FRAC = 1000;
     const string DATA_PATH = "./../../../../data/hg19";
     
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         var eventData = Sampling.GenerateCNEventData(rnd, kar, cnEventPars);
+        if (eventData == null)
+        {
+            throw new Exception("Could not generate event data.");
+        }
         eventData.ApplyEvent(kar);
     }
     
@@ -36,7 +39,6 @@ public class TestKaryotype
         _kar = new Karyotype(_genRef, SexType.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
-        _dup = new CNEventPars(CNEventType.ChromDuplication, 1);
     }
 
     // Test for each AberrationEnum value
@@ -317,7 +319,7 @@ public class TestKaryotype
 
         var SNVs = regions[0].SNVs;
         Assert.NotNull(SNVs);
-        Assert.AreEqual(1, SNVs.Count);
+        Assert.AreEqual(1, SNVs!.Count);
         Assert.AreEqual(loc, SNVs[0].Location);
         Assert.AreEqual(newNucleotide, SNVs[0].Alt);
 
@@ -332,7 +334,7 @@ public class TestKaryotype
 
         SNVs = regions[0].SNVs;
         Assert.NotNull(SNVs);
-        Assert.AreEqual(1, SNVs.Count);
+        Assert.AreEqual(1, SNVs!.Count);
         Assert.AreEqual(loc, SNVs[0].Location);
         Assert.AreEqual(newNucleotide, SNVs[0].Alt);
     }
@@ -364,14 +366,29 @@ public class TestKaryotype
         var newNucleotide = Nucleotide.C;
         // Apply the SNV
         _kar.ApplyPointMutation(contigID, loc, newNucleotide);
-        // Apply a deletion that covers the SNV
+        // Apply a duplication that covers the SNV
         _kar.ApplyInternalDuplication(contigID, 50, 200);
-        // Check that the SNV is not present
+        // Check that the SNV is present in both copies
         var regions = _kar.GetContig(contigID).GetRegions();
         Assert.AreEqual(3, regions.Count);
         Assert.Null(regions[0].SNVs);
         Assert.NotNull(regions[1].SNVs);
         Assert.NotNull(regions[2].SNVs);
         Assert.AreEqual(regions[1].SNVs, regions[2].SNVs);
+        Assert.AreEqual(1, regions[1].SNVs!.Count);
+        Assert.AreEqual(newNucleotide, regions[1].SNVs![0].Alt);
+
+        // If we alter one region, the other should not be affected
+        var secondNucleotide = Nucleotide.G;
+        _kar.ApplyPointMutation(contigID, loc, secondNucleotide);
+        Assert.AreEqual(3, regions.Count);
+        Assert.Null(regions[0].SNVs);
+        Assert.NotNull(regions[1].SNVs);
+        Assert.NotNull(regions[2].SNVs);
+        Assert.AreNotEqual(regions[1].SNVs, regions[2].SNVs);
+        Assert.AreEqual(1, regions[1].SNVs!.Count);
+        Assert.AreEqual(secondNucleotide, regions[1].SNVs![0].Alt);
+        Assert.AreEqual(1, regions[2].SNVs!.Count);
+        Assert.AreEqual(newNucleotide, regions[2].SNVs![0].Alt);
     }
 }
