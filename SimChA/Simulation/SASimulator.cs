@@ -77,7 +77,7 @@ public class SASimulator : Simulator
 
         for (int mutNo = 1; mutNo <= distance; mutNo++)
         {
-            Console.Write($"\rSample {child.CloneId}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
+            Console.Write($"\rSample {child.CloneId}. Event {mutNo}/{distance}.".PadRight(80));
             var cnEventPars = GetEventPars(cnEventPs, hasWGD);
             var newEvent = GetNewEvent(cnEventPars, childKar, currentFit);
             var newKar = new Karyotype(childKar);
