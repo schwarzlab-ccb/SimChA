@@ -22,7 +22,7 @@ public class Simulator
 
     public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
-        var (cnEventPs, mixture) = Converters.PropagateSigs(sigs);
+        var (cnEventPs, mixture) = Factory.PropagateSigs(sigs);
         var res = new List<Sample>();
         var sex = Sampling.GetSex(Rnd, SimParams.Sex);
         var rootKar = new Karyotype(GenRef, sex);
@@ -70,8 +70,8 @@ public class Simulator
         }
         return (childKar, childEvs);
     }
-    
-    protected void ApplyCNEventsRec(
+
+    private void ApplyCNEventsRec(
         CTreeNode parent, 
         List<CTreeNode> cloneTree, 
         List<CNEventPars> cnEventPs,

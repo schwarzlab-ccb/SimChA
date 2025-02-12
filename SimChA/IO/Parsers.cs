@@ -244,7 +244,6 @@ public static class Parsers
         return geneList;
     }
 
-
     public static List<CTreeNode> ParseClonesWithEvents(
         TextReader cloneStream, bool parseFitness, string sep
     )

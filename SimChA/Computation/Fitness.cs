@@ -95,7 +95,7 @@ public static class Fitness
 
     // 0/0 => 1, i.e. the genes not present in the given sex contributed their default score
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
-        => ExpectedCN(genRef, g.Range.ChrNo, sex) > 0 ? cn / ExpectedCN(genRef, g.Range.ChrNo, sex) : 1;
+        => cn + (2 - ExpectedCN(genRef, g.Range.ChrNo, sex));
     
     public static double TsgOgTerm(GenRef genRef, List<(Gene gene, int CN)> geneCNs, SexType sex, bool normalizeGenes = false)
     {
@@ -105,7 +105,7 @@ public static class Fitness
         }
         int norm = normalizeGenes ? geneCNs.Count : 1;
         double sum = geneCNs.Sum(pair 
-            => Math.Log2(1+GetExpRatio(genRef, sex, pair.gene, pair.CN)) * pair.gene.DeltaFitness) / norm;
+            => Math.Log(1 + GetExpRatio(genRef, sex, pair.gene, pair.CN)) * pair.gene.DeltaFitness) / norm;
         return sum;
     }
 

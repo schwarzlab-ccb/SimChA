@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-
-namespace SimChA.Data;
+﻿namespace SimChA.Data;
 
 // A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
 // TODO: The direction should not be part of the region, should be part of the chromosome
@@ -18,7 +16,7 @@ public record Region(long Start, long End, string ChrNo, bool Hap1, bool Forward
     public override string ToString() => $"{HapString}{DirString}{ChrNo}[{Start}:{End})";
 
     public int NumSNVsBetween(long start, long end)
-        => (SNVDict!=null) ? SNVDict.Keys.Count(loc => loc>= start && loc <= end) : 0 ;
+        => SNVDict != null ? SNVDict.Keys.Count(loc => loc>= start && loc <= end) : 0;
 }
 
 public record PArm(long Start, long End, string ChrNo, bool Hap1, bool Forward = true, Dictionary<long, Nucleotide>? SNVDict = null) 

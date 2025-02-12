@@ -40,7 +40,7 @@ public class TestCopyNumbers
     public void TestCalcPloidyFitness([Values] SexType sex)
     {
         _kar = new Karyotype(_genRef, sex);
-        double ploidyRef = CNProfile.CalcPloidy(_kar, _genRef);
+        double ploidyRef = SampleStat.CalcPloidy(_kar, _genRef);
         Assert.AreEqual(2, ploidyRef);
     }
 
@@ -57,7 +57,7 @@ public class TestCopyNumbers
         {
             Assert.AreEqual(92, _kar.CountContigs());
         }
-        double tetraploidy = CNProfile.CalcPloidy(_kar, _genRef);
+        double tetraploidy = SampleStat.CalcPloidy(_kar, _genRef);
         Assert.AreEqual(4, tetraploidy);
     }
 
