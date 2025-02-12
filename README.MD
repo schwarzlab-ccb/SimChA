@@ -91,7 +91,7 @@ Default parameters are found in the file: `default_params.json`. The exact param
 
 #### Simulation mode only (R, T)
 * `Seed: int` - The seed for the random number generator.
-* `Sex: ["Female", "Male", "None"]` - Whether to simulate exclusively female chromosome, male chromosome, or randomly select from the two.
+* `Sex: ["Female", "Male", "Any"]` - Whether to simulate exclusively female chromosome, male chromosome, or randomly select from the two.
 * `AutosomesOnly: bool` - Choose whether to simulate sex chromosomes or not.
 
 #### Repeats mode only (R)
@@ -109,7 +109,7 @@ Data should be provided as a path to a folder using the `--data` parameter. The 
 
 The chromosome contains the lengths and sex-specific information of individual chromosomes. By default there are two columns, one with the name of a chromosome, one with a number of basises.
 
-Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Both`.
+Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Any`.
 
 Example file:
 
