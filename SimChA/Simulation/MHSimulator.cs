@@ -105,14 +105,10 @@ public class MHSimulator : Simulator
         double bestFitness = currentFitness;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
-        // TODO @Cody should this be used?
-        var fitList = new List<double> {currentFitness};
-
         for (int i = 0; i < MHParams.NumSamplesTotal; i++)
         {
             var proposedEvents = GetNewProposal(cnEventPs, kar, currentEvents);
             var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
-            fitList.Add(proposedFitness);
             // Calculate the new fitness of the proposed set of events on the clone
             double proposalPotential = CalculatePotential(proposedFitness);
             double acceptProb = proposalPotential - currentPotential;
