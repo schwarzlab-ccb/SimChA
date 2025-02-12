@@ -336,11 +336,14 @@ Information about the individual events in the simulation. The columns are:
 
 | sample_id | 	 event_type	   |  depth | EventString	| delta_fitness |	total_fitness |	time |
 |-----------|------------------|----|-------------|----------|-----------|------------|
-|  sample_0 | ChromDuplication | 1 | contig:23 | 11.53782375 | 11.53782375 | 0.7 |
+|  sample_0 | ChromDuplication | 12 | contig:23 | 0.53782375 | 11.53782375 | 12.7 |
+
+This example row tells us that 12th event sample_0 underwent was a chromosomal duplication event, affecting
+contig 23, which increased the sample's fitness by ~0.54 to ~11.54, and the event occurred at time 12.7 (units).
 
 #### 'vcf.tsv'
 
-Generates a simple VCF file of all the observable (i.e. final and nucleotide-changing) SNVs that occurred to the samples during simulation. The columns are:
+Generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. The columns are:
 
 `##fileformat=VCFv4.3`
 
@@ -350,7 +353,7 @@ Generates a simple VCF file of all the observable (i.e. final and nucleotide-cha
 
 | `#SAMPLEID` | 	CHROM	| POS	| ID |	REF |	ALT |
 |----|------------|-------------|----------|-----------|------------|
-|  0 | chr1 | 8114090 | . | a | C |
+|  0 | chr1 | 8114090 | . | A | C |
 
 #### 'genome.fa'
 
