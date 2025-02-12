@@ -147,8 +147,9 @@ For each gene, the:
 SimChA simulates events based on mutational signatures. Each signature is a set of events and their associated parameters, for example consider the following excerpt from a configuration file:
 
 ```
-"Signatures" : {
-  "WChE_example" : {
+"Signatures" : [
+  {
+    "Name" : "WoleChromEvents"
     "Prob": 1,
     "Events": [
       {
@@ -161,23 +162,29 @@ SimChA simulates events based on mutational signatures. Each signature is a set 
       }        
     ]
   },
-  "Internal_example" : {
+  {
+    "Name": "InternalEvents"
     "Prob": 5,
     "Events": [
       {
         "Type": "InternalDeletion",
-        "Prob": 1
+        "Prob": 1,
         "Size": 1000000
-      }      
+      },
+      {
+        "Type": "InternalDuplication",
+        "Prob": 7,
+        "Size": 500000
+      }
     ]
   }
-}
+]
 ```
-These are two signatures, one for Whole Chromosome Events (WChE) and one for Internal events. The likelihood of a signature being selected is 1 : 5, meaning the Internal is 5 times as likely. 
+These are two signatures, one for Whole Chromosome Events and one for Internal events. The likelihood of a signature being selected is 1 : 5, meaning the Internal is 5 times as likely. 
 
-If the WChE is selected, the probability of a deletion compared to duplication is 1 : 2. SimChA works with *contigs*, i.e. contiguous sequences of bases. A deletion or duplication will be a deletion or duplication of a contig. A contig may be comprised of parts of different chromosomes, e.g. after a translocation, however at the start of simulation, the set of contigs is the same as the set of chromosomes.
+If the WholeChromEvent is selected, the probability of a deletion compared to duplication is 1 : 2. SimChA works with *contigs*, i.e. contiguous sequences of bases. A deletion or duplication will be a deletion or duplication of a contig. A contig may be comprised of parts of different chromosomes, e.g. after a translocation, however at the start of simulation, the set of contigs is the same as the set of chromosomes.
 
-If the Internal Deletion is selected, the mean size of a deleted segment will be 1MB, distributed exponentially.
+If the Internal Deletion is selected, the mean size of a deleted segment will be 1MB, distributed exponentially, while Internal Duplication events will have a mean segment size of 500kB.
 
 Each Event has an associated type and a probability, which is relative to all the other events in the signature. The following events are available:
 
