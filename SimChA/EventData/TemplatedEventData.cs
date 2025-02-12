@@ -1,8 +1,6 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using Extreme.Statistics.Distributions;
+﻿using Extreme.Statistics.Distributions;
 using SimChA.Computation;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;

@@ -1,21 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Extreme.Statistics.Distributions;
-using SimChA.Computation;
+﻿using SimChA.Computation;
 using SimChA.DataTypes;
 using SimChA.EventData;
+using MathNet.Numerics.Distributions;
+using SimChA.Data;
 
 namespace SimChA.Simulation;
 
 public static class Sampling
 {
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Max(1, Math.Min((long) Math.Round(contigLen * NormalDistribution.Sample(rnd, meanFrac, meanFrac / 3)), contigLen));
+        => (long) Math.Clamp(Math.Round(contigLen * Normal.Sample(rnd, meanFrac, meanFrac / 3)), 1, contigLen);
     
     public static long GetExpSeg(Random rnd, long contigLen, long meanLen) 
-        => Math.Max(1, Math.Min((long) Math.Round(ExponentialDistribution.Sample(rnd, meanLen)), contigLen));
+        => (long) Math.Clamp(Math.Round(meanLen * Exponential.Sample(rnd, 1)), 1, contigLen);
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
-        => Math.Max(1, Math.Min((long) Math.Round(contigLen * ExponentialDistribution.Sample(rnd, meanFrac)), contigLen));
+        => (long) Math.Clamp(Math.Round(contigLen * meanFrac * Exponential.Sample(rnd, 1)), 1, contigLen);
     
     public static double GetExpProb(long segLen, double scale)
         => Math.Exp(-segLen / scale) / scale;
@@ -24,7 +24,7 @@ public static class Sampling
         => rnd.NextInt64(0, contigLen);
     
     public static int GetFragCount(Random rnd, double mean)
-        => (int) Math.Max(1, Math.Round(NormalDistribution.Sample(rnd, mean)));
+        => (int) Math.Max(1, Math.Round(Normal.Sample(rnd, mean, 1)));
 
     // https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important
     public static int GetChromoplexySiteCount(Random rnd)
@@ -54,46 +54,37 @@ public static class Sampling
     }
     
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
-        => concentrations.Any() ? new DirichletDistribution(concentrations).Sample(rnd).ToList() : new List<double>();
+        => concentrations.Any() ? new Dirichlet(concentrations, rnd).Sample().ToList() : new List<double>();
     
-    public static double SampleDist(Random rnd, DataTypes.Distribution dist, double mean = 1)
+    public static double SampleDist(Random rnd, DistType dist, double mean = 1)
     {
         return dist switch
         {
-            DataTypes.Distribution.Exponential => ExponentialDistribution.Sample(rnd, mean),
-            DataTypes.Distribution.Normal => NormalDistribution.Sample(rnd, mean, .5),
-            _ => 1
+            DistType.Exponential => Exponential.Sample(rnd, 1 / mean),
+            DistType.Normal => Normal.Sample(rnd, mean, .5),
+            DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
+            DistType.Poisson => Poisson.Sample(rnd, mean),
+            _ => mean
         };
     }
 
-    public static int SampleDistance(Random rnd, DataTypes.Distribution dist, double mean)
+    public static int SampleDistInt(Random rnd, DistType dist, double mean)
     {
         return dist switch
         {
-            DataTypes.Distribution.Exponential => (int) Math.Round(mean * ExponentialDistribution.Sample(rnd, 1.0)),
-            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
-            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
-            DataTypes.Distribution.Normal => throw new Exception("Normal distribution not supported for distance sampling"),
+            DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
+            DistType.Poisson => Poisson.Sample(rnd, mean),
+            DistType.Normal => throw new Exception($"{dist} distribution not supported for distance sampling"),
+            DistType.Exponential => throw new Exception($"{dist} distribution not supported for distance sampling"),
             _ => (int) mean
         };
     }
-
-    public static int SampleDistInt(Random rnd, DataTypes.Distribution dist, double mean)
-    {
-        return dist switch
+    
+    public static SexType GetSex(Random rnd, SexType sexType)
+        => sexType switch
         {
-            DataTypes.Distribution.Geometric => GeometricDistribution.Sample(rnd, mean),
-            DataTypes.Distribution.Poisson => PoissonDistribution.Sample(rnd, mean),
-            DataTypes.Distribution.Unit => (int)mean,
-            _ =>1
-        };
-    }
-
-    public static SexEnum GetSex(Random rnd, SexEnum sexEnum)
-        => sexEnum switch
-        {
-            SexEnum.None => rnd.CoinFlip() ? SexEnum.Male : SexEnum.Female,
-            _ => sexEnum
+            SexType.Any => rnd.CoinFlip() ? SexType.Male : SexType.Female,
+            _ => sexType
         };
 
     public static Nucleotide SampleBase(Random rnd) 
@@ -122,8 +113,11 @@ public static class Sampling
             case CNEventType.ChromDuplication:
                 return new ContigEventData(cnEventPars, seq[0].id);
             
-            case CNEventType.WholeGenomeDoubling:
+            case CNEventType.Pass:
                 return new BaseEventData(cnEventPars);
+            
+            case CNEventType.WholeGenomeDoubling:
+                return new WGDEventData(cnEventPars);
             
             // Tail events
             case CNEventType.TailDeletion:

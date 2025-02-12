@@ -1,0 +1,13 @@
+namespace SimChA.IO;
+
+// Parameters used in the MCMC sampling
+// Input: 
+
+public record MHParams(
+    int NumSamplesMin, // Burn-in samples
+    int NumSamplesTotal, // Number of true samples
+    double ThetaFitness, // exponential multiplier for fitness
+    bool MatchFitness, // Match the fitness of the clone to a target fitness
+    double SwapEventP, // Probability of completely swapping an event
+    double ThresholdFit // Percentage difference allowed between accepted and target fitness
+);

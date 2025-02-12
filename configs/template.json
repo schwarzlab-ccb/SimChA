@@ -2,7 +2,7 @@
   "Seed": -1,
   "Sex": "Both",
   "EventCount": 75,
-  "EventDist": "Exponential",
+  "EventDist": "Geometric",
   "Fitness": {
     "Stress": 1,
     "TsgOg": 1,

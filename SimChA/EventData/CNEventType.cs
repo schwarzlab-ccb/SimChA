@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace SimChA.EventData;
 
@@ -29,6 +27,7 @@ public enum CNEventType
     ArmDeletion,
     ArmDuplication,
     CentromereBoundDuplication,
-    CentromereBoundDeletion
+    CentromereBoundDeletion,
+    Pass
     // Tyfonas
 }

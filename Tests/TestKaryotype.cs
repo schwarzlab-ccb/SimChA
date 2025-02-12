@@ -8,6 +8,7 @@ using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;
 using System.Text;
+using SimChA.Data;
 
 namespace Tests;
 
@@ -32,7 +33,7 @@ public class TestKaryotype
     public void Setup()
     {
         _genRef = FileIO.GetGenRef(DATA_PATH);
-        _kar = new Karyotype(_genRef, SexEnum.Male);
+        _kar = new Karyotype(_genRef, SexType.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
         _dup = new CNEventPars(CNEventType.ChromDuplication, 1);
@@ -216,7 +217,7 @@ public class TestKaryotype
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.ChrCount(SexEnum.Female, true); i++)
+        for (int i = 0; i < _genRef.ChrCount(SexType.Female, true); i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }

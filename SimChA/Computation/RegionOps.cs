@@ -1,5 +1,4 @@
-﻿using SimChA.DataTypes;
-using SimChA.Simulation;
+﻿using SimChA.Data;
 
 namespace SimChA.Computation;
 
@@ -45,12 +44,10 @@ public static class RegionOps
             return region;
         }
         var newSNVDict = new Dictionary<long, Nucleotide>(region.SNVDict);
-        foreach (var snv in region.SNVDict)
+        var insideSNV = region.SNVDict.Where(snv => snv.Key <= region.Start || region.End <= snv.Key);
+        foreach (var snv in insideSNV)
         {
-            if (snv.Key <= region.Start || region.End <= snv.Key)
-            {
-                newSNVDict.Remove(snv.Key);
-            }
+            newSNVDict.Remove(snv.Key);
         }
         if (newSNVDict.Keys.Count == 0)
         {
@@ -105,7 +102,10 @@ public static class RegionOps
     {
         if (index < 0 || index >= regions.Count)
         {
-            return new List<Region> { };
+            return new List<Region>
+            {
+                Capacity = 0
+            };
         }
         if (pArm)
         {
@@ -136,7 +136,10 @@ public static class RegionOps
     {
         if (index < 0 || index >= regions.Count)
         {
-            return new List<Region> { };
+            return new List<Region>
+            {
+                Capacity = 0
+            };
         }
         if (pArm)
         {   
@@ -312,10 +315,9 @@ public static class RegionOps
         List<Region> regions, long location)
     {
         long seekPos = 0;
-        var region = regions[0];
-        for (int i = 0; i < regions.Count; i++)
+        foreach (var t in regions)
         {
-            region = regions[i];
+            var region = t;
             if (location >= seekPos && location < seekPos + region.Length)
             {
                 return (region, region.Start + location - seekPos);

@@ -1,25 +1,25 @@
+using SimChA.Data;
 using SimChA.DataTypes;
-using SimChA.Simulation;
 
 namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, SexEnum sex)
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype)
     {
         karyotype.MergeRegions();
-        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
+        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
     } 
     
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool keepMissing = false) 
     {
         karyotype.MergeRegions();
-        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
     }
 
-    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, SexEnum sex, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool keepMissing = false) 
     {
-        return genRef.ChrIDsForSex(sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
+        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
     }
 
     public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
@@ -84,19 +84,19 @@ public static class CopyNumbers
         return result;
     }
 
-    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexEnum sex)
+    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexType sex)
     {
         long totalLength = genRef.GetGenomeLen(sex) / 2;
         return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
     }
 
-    private static string Header(bool withSample, bool isFirst)
-        => isFirst ? (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\tn_snvs\n" : "";
+    public static string Header(bool withSample)
+        => (withSample ? "sample_name\t" : "") + "chr\tstart\tend\tcn_a\tcn_b\tn_snvs\n";
     
-    public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId, bool isFirst)
-        => Header(true, isFirst) + string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
+    public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId)
+        => string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 
-    public static List<long> GetSegPoints(GenRef genRef, string chrNo, IList<Karyotype> kars)
+    public static List<long> GetSegPoints(GenRef genRef, string chrNo, IEnumerable<Karyotype> kars)
     {
         var segList = new HashSet<long> {0, genRef.ChrLengths[chrNo]};
         foreach (var kar in kars)
@@ -107,6 +107,6 @@ public static class CopyNumbers
         return segList.OrderBy(val => val).ToList();
     }
 
-    public static Dictionary<string, List<long>> GetSegPoints(GenRef genRef, IList<Karyotype> kars) 
+    public static Dictionary<string, List<long>> GetSegPoints(GenRef genRef, IEnumerable<Karyotype> kars) 
         => genRef.AllChrs.ToDictionary(chr => chr, chr => GetSegPoints(genRef, chr, kars));
 }

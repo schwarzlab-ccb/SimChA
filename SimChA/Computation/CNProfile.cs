@@ -1,7 +1,5 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.DataTypes;
-using SimChA.Simulation;
+﻿using SimChA.Data;
+using SimChA.IO;
 
 namespace SimChA.Computation;
 
@@ -11,11 +9,11 @@ public abstract class CNProfile
         => 2.0 * kar.GenomeLen() / genRef.GetGenomeLen(kar.Sex);
     
     public static double CalcCoverage(Karyotype kar, GenRef genRef) 
-    =>  (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.Sex,false);
+        => (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double) genRef.GetGenomeLen(kar.Sex,false);
     
-    public static CloneStat GetCloneStats(Sample sample, CloneIn clone, GenRef genRef, FitnessParams fParams, Dictionary<string, Karyotype> karMap)
+    public static SampleStats GetCloneStats(Sample sample, GenRef genRef, FitParams fParams)
     {
-        var kar = karMap[clone.CloneId];
+        var kar= sample.Karyotype;
 
         double ploidy = CalcPloidy(kar, genRef);
         double coverage = CalcCoverage(kar, genRef);
@@ -23,22 +21,17 @@ public abstract class CNProfile
         var tsgCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar);
         var ogCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar);
         var essCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar);
-
         
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.NormalizeGenes);
-        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.NormalizeGenes);
-        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.NormalizeGenes);
+        double tsg = -Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.GeneNormalization);
+        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.GeneNormalization);
+        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.GeneNormalization);
         double fitness = Fitness.CalculateFromComponents(stress, tsg+og, ess, fParams);
-
-        // Get mutation count
-        // sample.EventDescs might be empty
-        var found_events = sample.EventDescs.TryGetValue(clone.CloneId, out var events);
-        int mutCount = found_events && events != null && events.Count > 0 ? events.Last().Depth : 0;
         
         double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
         double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
 
-        return new CloneStat(sample.SampleId, clone.CloneId, ploidy, coverage, fitness, clone.FitnessTarget, stress, tsg, og, ess, mutCount, hemizygosity, nullizygosity);
+        var res = new SampleStats(sample.SampleId, ploidy, coverage, fitness, kar.FitnessVal, stress, tsg, og, ess, sample.Events.Count, hemizygosity, nullizygosity);
+        return res;
     }
 }

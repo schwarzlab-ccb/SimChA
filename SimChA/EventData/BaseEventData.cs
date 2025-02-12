@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.Simulation;
+﻿using SimChA.Data;
 
 namespace SimChA.EventData;
 
@@ -11,7 +9,6 @@ public record BaseEventData(CNEventPars CNEventPars)
     // TODO: This should be immutable, i.e. should return new Karyotype
     public virtual void ApplyEvent(Karyotype kar)
     {
-        kar.ApplyWGD();
     }
 
     public override string ToString()

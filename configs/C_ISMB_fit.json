@@ -2,25 +2,20 @@
     "Seed": -1,
     "Sex": "None",
     "AutosomesOnly": true,
-    "EventCountMean": 89.28,
-    "EventDist": "Exponential",
+    "EventCountMean": 89.82,
+    "EventDist": "Geometric",
     "Fitness": {
-        "Stress": 1.5,
-        "TsgOg": 1,
-        "Essentiality": 1000,
-        "Delta": 1.5,
+        "Stress": 2.5758,
+        "TsgOg": 20,
+        "Essentiality": 1350,
+        "Delta": 1.6,
         "NormalizeGenes": true
     },
     "EvoParams": {
         "WithFitness": true,
         "MaxTries": 5,
-        "EventCost": 2,
-        "TetraploidStart": false,
-        "PWGD": 0.0039
-    },
-    "MCTarget": {
-        "Mean": 0.55,
-        "Dist": "Exponential"
+        "EventCost": 1.6,
+        "TetraploidStart": false
     },
     "Signatures": {
         "CNVs": {
@@ -84,7 +79,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.045
+                    "Prob": 0.052
                 }
             ]
         }

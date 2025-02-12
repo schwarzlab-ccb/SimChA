@@ -1,5 +1,7 @@
 using SimChA.DataTypes;
 using MathNet.Numerics.Statistics;
+using SimChA.Data;
+
 namespace SimChA.Computation;
 
 public static class SummaryFeatures
@@ -304,13 +306,13 @@ public static class SummaryFeatures
         return meanCN;
     }
 
-    public static double GetMeanPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, SexEnum> sexes)
+    public static double GetMeanPloidy(GenRef genRef, Dictionary<string, List<CopyNumber>> cnProfiles, Dictionary<string, SexType> sexes)
         => GetPloidy(genRef, cnProfiles, sexes, -1.0).DefaultIfEmpty(0).Average();
 
     public static List<double> GetPloidy(
         GenRef genRef, 
         Dictionary<string, List<CopyNumber>> cnProfiles,
-        Dictionary<string, SexEnum> sexes, 
+        Dictionary<string, SexType> sexes, 
         double cutoff = 8.0)
         => cnProfiles.Select(kvp => CopyNumbers
                     .CalcPloidy(genRef, kvp.Value, sexes[kvp.Key]))
