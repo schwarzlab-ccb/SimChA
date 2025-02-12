@@ -74,6 +74,7 @@ public class Karyotype
     
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
+    
     // TODO: Why do you need to check if the contigId is less than the count of contigs?
     public List<(long start, long end)> GetCentromeres(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres(Centromeres) : new List<(long, long)>();

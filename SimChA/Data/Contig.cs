@@ -2,7 +2,6 @@
 
 using System.Collections.Immutable;
 using SimChA.Computation;
-using SimChA.DataTypes;
 
 namespace SimChA.Data;
 

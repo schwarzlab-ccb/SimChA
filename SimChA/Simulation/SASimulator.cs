@@ -27,7 +27,7 @@ public class SASimulator : Simulator
         {
             newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * EvoParams.EventCost };
         }
-        var normalized = Converters.NormalizeEvents(newPars);
+        var normalized = Factory.NormalizeEvents(newPars);
         return normalized;
     }
 
@@ -56,7 +56,7 @@ public class SASimulator : Simulator
         => !EvoParams.EvolveInTime ? nEventsLeft == 0 : time >= 1; 
 
     double GetMutRate(Karyotype kar)
-        => EvoParams.EventRate * CNProfile.CalcPloidy(kar, GenRef);
+        => EvoParams.EventRate * SampleStat.CalcPloidy(kar, GenRef);
 
     bool DidMutate(Karyotype kar)
         => !EvoParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));

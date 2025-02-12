@@ -35,12 +35,12 @@ if (options.Simulate)
     if (options.ExecMode == ExecMode.Repeats)
     {
         Console.WriteLine($"Creating {options.Repeats} samples:");
-        var emptyTree = new List<CTreeNode>();
         for (int i = 0; i < options.Repeats; i++)
         {
             string sampleId = $"Sample_{i}";
             var node = new CTreeNode(sampleId, sampleId, -1, -1);
-            var newSample = simulator.Simulate(node, emptyTree, validSigs);
+            var tree = new List<CTreeNode> {node};
+            var newSample = simulator.Simulate(node, tree, validSigs);
             samples.Add(newSample[0]);
         }
     }
@@ -58,20 +58,20 @@ else
 }
 
 // Score samples
-var cloneList = new List<SampleStats>();
+var sampleStats = new List<SampleStat>();
 for (int i = 0; i < samples.Count; i++)
 {
     Console.Write($"\rAnalyzing sample {i + 1}/{samples.Count}.".PadRight(80));
-    var sampleStats = CNProfile.GetCloneStats(samples[i], genRef, config.FitParams);
-    cloneList.Add(sampleStats);
+    var sampleStat = SampleStat.GetSampleStat(samples[i], genRef, config.FitParams);
+    sampleStats.Add(sampleStat);
 }
 
 // Output
+Console.WriteLine();
 files.WriteSimParams(config);
 try
 {
-    files.WriteSamples(samples);
-    files.WriteClones(cloneList);
+    files.WriteSamples(sampleStats);
     
     if (options.CalcConsistentCNs)
     {

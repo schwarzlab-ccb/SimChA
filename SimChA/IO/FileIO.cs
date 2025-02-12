@@ -46,18 +46,6 @@ public class FileIO
             Directory.CreateDirectory(OutFolder);
         }
     }
-
-    public void WriteSamples(IEnumerable<Sample> samples)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine(Sample.Header());
-        foreach (var sample in samples)
-        {
-            outputFile.WriteLine(sample.ToTSV());
-        }
-    }
     
     public void WriteConsistentCNs(GenRef genRef, List<Sample> samples)
     {
@@ -206,12 +194,12 @@ public class FileIO
         }
     }
 
-    public void WriteClones(List<SampleStats> cloneStats)
+    public void WriteSamples(List<SampleStat> cloneStats)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
-        file.WriteLine(SampleStats.Header());
+        file.WriteLine(SampleStat.Header());
 
         foreach (var clone in cloneStats)
         {
