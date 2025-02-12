@@ -146,8 +146,6 @@ public class FileIO
 
     public void WriteFasta(GenRef genRef, List<Sample> samples)
     {
-        // TODO: Do we want WriteFasta to work with multiple samples? Currently only set up for single samples
-        int count = 0;
         if (genRef.GenContentsDict == null)
         {
             throw new Exception("Reference Genome was not set. Please check that you have downloaded the correct assembly (see DownloadRefData.sh)");
@@ -189,8 +187,6 @@ public class FileIO
                 }
                 outputFile.Write("\n");
             }
-            // TODO: What is the purpose of this count?
-            if (count > 0) return;
         }
     }
 
