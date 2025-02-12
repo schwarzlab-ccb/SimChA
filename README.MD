@@ -362,12 +362,9 @@ Generates a simple VCF file of all the observable (i.e. final and nucleotide-alt
 Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include 
 
 
-### Plots (created by `./plots.sh`)
+### Plots
 
-In order to run `./plots.sh` you first have to install the consistent segmentation routine with by running `python setup.py build_ext --inplace` in the `simcha/scripts/segmentation_cython` directory (with [Cython](https://anaconda.org/anaconda/cython) installed).
-
-#### `copy_numbers_heatmap.png` 
-The copy number tracks
+TODO
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, adam.streck@mdc-berlin.de.
