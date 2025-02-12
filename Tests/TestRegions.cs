@@ -12,7 +12,7 @@ namespace Tests;
 [TestFixture]
 public class TestRegions
 {
-    private Region _cRegion;
+    private Region _cRegion = null!;
 
     [SetUp]
     public void Setup()
@@ -357,9 +357,9 @@ public class TestRegions
         Assert.AreEqual(regions[3], mutatedRegions[3]);
 
         Assert.IsNotNull(mutatedRegions[2].SNVs);
-        Assert.AreEqual(1, mutatedRegions[2].SNVs.Count);
-        Assert.AreEqual(location, mutatedRegions[2].SNVs[0].Location);
-        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVs[0].Alt);
+        Assert.AreEqual(1, mutatedRegions[2].SNVs!.Count);
+        Assert.AreEqual(location, mutatedRegions[2].SNVs![0].Location);
+        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVs![0].Alt);
 
     }
 
