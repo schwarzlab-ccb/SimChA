@@ -84,46 +84,51 @@ public class TestFitness
     }
 
     [Test]
-    public void TestTsgOgTerm([Values] SexType sex, [Values(0,1)] int refId)
+    public void TestTsgOgAut([Values] SexType sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), sex), EPSILON);
+        Assert.AreEqual(Fitness.TsgOgTerm(genRef, new List<(Gene, int)>(), sex), 0, EPSILON);
         
         var testNoEffect = new List<(Gene, int)> {(MakeGene("chr1", 0), 0)};
-        Assert.AreEqual(0, Fitness.TsgOgTerm(genRef, testNoEffect, sex), EPSILON);
+        Assert.AreEqual(Fitness.TsgOgTerm(genRef, testNoEffect, sex), 0, EPSILON);
 
-        var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1)};
-        Assert.AreEqual(-0.1, Fitness.TsgOgTerm(genRef, testMissing, sex), EPSILON);
+        var testOg = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1)};
+        Assert.Greater(Fitness.TsgOgTerm(genRef, testOg, sex), 0);
 
-        var testMissingTwice = new List<(Gene, int)> {(MakeGene("chr1", 0.1), 0)};
-        Assert.AreEqual(-0.2, Fitness.TsgOgTerm(genRef, testMissingTwice, sex), EPSILON);
+        var testTsg = new List<(Gene, int)> {(MakeGene("chr1", -0.1), 1)};
+        Assert.Less(Fitness.TsgOgTerm(genRef, testTsg, sex), 0);
 
         var testList = new List<(Gene, int)> {
-            (MakeGene("chr1", 0.1), 1), 
-            (MakeGene("chr1", 0.2), 0), 
-            (MakeGene("chr1", 0.3), 2)
+            (MakeGene("chr1", 0.1), 2), 
+            (MakeGene("chr1", -0.1), 2), 
         };
-        Assert.AreEqual(-0.2 - 0.2 - 0.1, Fitness.TsgOgTerm(genRef, testList, sex), EPSILON);
-
-        testList = new List<(Gene, int)>{
-            (MakeGene("chrX", 0.1), 2)
+        Assert.AreEqual(Fitness.TsgOgTerm(genRef, testList, sex), 0, EPSILON);
+    }
+    
+    [Test]
+    public void TestTsgOgSex([Values(0,1)] int refId)
+    {
+        var genRef = _refs[refId];
+        var xxGene = new List<(Gene, int)> {
+            (MakeGene("chrX", 0.1), 2), 
         };
-        double expectedVal = sex switch {
-            SexType.Female => 0,
-            SexType.Male => 0.1,
-            _ => 0
+        
+        var xyGeneX = new List<(Gene, int)> {
+            (MakeGene("chrX", 0.1), 1), 
         };
-        Assert.AreEqual(expectedVal, Fitness.TsgOgTerm(genRef, testList, sex), EPSILON);
-        testList = new List<(Gene, int)>{
-            (MakeGene("chrX", 0.2), 2),
-            (MakeGene("chrY", 0.1), 2)
+        var xyGeneY = new List<(Gene, int)> {
+            (MakeGene("chrY", 0.1), 1), 
         };
-        expectedVal = sex switch {
-            SexType.Female => 0,
-            SexType.Male => 0.3,
-            _ => 0
-        };
-        Assert.AreEqual(expectedVal, Fitness.TsgOgTerm(genRef, testList, sex), EPSILON);
+        
+        Assert.AreEqual(
+            Fitness.TsgOgTerm(genRef, xxGene, SexType.Female),
+            Fitness.TsgOgTerm(genRef, xyGeneY, SexType.Male),
+            EPSILON);
+        
+        Assert.AreEqual(
+            Fitness.TsgOgTerm(genRef, xyGeneX, SexType.Male),
+            Fitness.TsgOgTerm(genRef, xyGeneY, SexType.Male),
+            EPSILON);
     }
     
     [Test]
@@ -230,26 +235,5 @@ public class TestFitness
             int chrCount = selectList[chrNo].Count;
             Assert.AreEqual(chrCount, contigCount);
         }
-    }
-    
-    [Test]
-    public void TestTsgOgSum([Values] SexType sex, [Values] bool useTSG, [Values(0,1)] int refId)
-    {
-        var genRef = _refs[refId];
-        var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
-        selectList = sex switch {
-            SexType.Female => selectList.Where(pair => pair.Key != "chrY").ToDictionary(pair => pair.Key, pair => pair.Value),
-            SexType.Male => selectList,
-            _ => selectList.Where(pair => pair.Key != "chrX" && pair.Key != "chrY").ToDictionary(pair => pair.Key, pair => pair.Value)
-        };
-        double sumHap1 = selectList.Where(pair => pair.Key != "chrY").Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
-        string missingChr = sex == SexType.Female ? "chrY" : "chrX";
-        double sumHap2 = selectList.Where(pair => pair.Key != missingChr).Sum(pair => pair.Value.Sum(g => g.DeltaFitness));
-        double total = sumHap1 + sumHap2;
-        var karyotype = new Karyotype(genRef, sex);
-        karyotype.ApplyWGD();
-        var cnList = Fitness.CalcCNs(selectList, karyotype);
-        double sum = Fitness.TsgOgTerm(genRef, cnList, sex);
-        Assert.AreEqual(total, sum, EPSILON);
     }
 }

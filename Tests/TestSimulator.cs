@@ -4,7 +4,6 @@ using NUnit.Framework;
 using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
-using SimChA.Simulation;
 
 namespace Tests;
 
@@ -31,4 +30,5 @@ public class TestSimulator
         _mhParams = new MHParams(0, 0, 1.0, true, 1.0, 0.0);
         _kar = new Karyotype(_genRef, SexType.Female);
     }
+    
 }
