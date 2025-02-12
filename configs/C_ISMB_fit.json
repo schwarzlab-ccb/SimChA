@@ -2,7 +2,7 @@
   "Seed": -1,
   "AutosomesOnly": true,
   "SimParams": {
-    "Sex": "Male",
+    "Sex": "Any",
     "RateMean": 89.82,
     "RateDist": "Geometric",
     "FitDist": "Uniform",
@@ -16,7 +16,6 @@
       "GeneNormalization": true
   },
   "EvoParams": {
-      "WithFitness": true,
       "MaxTries": 5,
       "EventCost": 1.6
   },
