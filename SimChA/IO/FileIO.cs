@@ -134,11 +134,11 @@ public class FileIO
                 {
                     throw new Exception("Genomic Content hasn't been set correctly to allow SNV list to be created");
                 }
-                char refBase = genRef.GenContentsDict[snv.chrNo][(int)snv.location];
+                char refBase = genRef.GenContentsDict[snv.ChrNo][(int)snv.Location];
                 // The VCF should *not* be aware of SNVs that didn't end up altering the location in the final karyotype
-                if (char.ToUpper(refBase) != snv.newBase.ToString()[0])
+                if (char.ToUpper(refBase) != snv.Alt.ToString()[0])
                 {
-                    outputFile.WriteLine($"{sample.SampleId}\t{snv.chrNo}\t{snv.location}\t.\t{refBase}\t{snv.newBase}");
+                    outputFile.WriteLine($"{sample.SampleId}\t{snv.ChrNo}\t{snv.Location}\t.\t{refBase}\t{snv.Alt}");
                 }
             }
         }
@@ -167,12 +167,12 @@ public class FileIO
                     long start = region.Start;
                     long end   = region.End;
                     var regionSeq = new StringBuilder (genRef.GenContentsDict[chrNo].ToString((int)start, (int)(end-start)));
-                    if (region.SNVDict != null)
+                    if (region.SNVs != null)
                     {
-                        foreach (var snv in region.SNVDict)
+                        foreach (var snv in region.SNVs)
                         {
-                            long loc = snv.Key - start;
-                            regionSeq[(int)loc] = snv.Value.ToString()[0];
+                            long loc = snv.Location - start;
+                            regionSeq[(int)loc] = snv.Alt.ToString()[0];
                         }
                     }
                     if (!region.Forward)

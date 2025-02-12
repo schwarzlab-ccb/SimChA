@@ -18,7 +18,7 @@ public static class RegionOps
         var newRegion = region.Forward
             ? region with { Start = region.Start + howMuch }
             : region with { End = region.End - howMuch };
-        return UpdateSNVDict(newRegion);
+        return UpdateSNVs(newRegion);
     }
     
     private static Region OffsetEnd(Region region, long howMuch)
@@ -26,7 +26,7 @@ public static class RegionOps
         var newRegion = region.Forward 
             ? region with {End = region.Start + howMuch}
             : region with {Start = region.End - howMuch};
-        return UpdateSNVDict(newRegion);
+        return UpdateSNVs(newRegion);
     }    
     private static Region OffsetBoth(Region region, long start, long end)
     {
@@ -34,26 +34,26 @@ public static class RegionOps
             ? region with {Start = region.Start + start, End = region.Start + end}
             : region with {Start = region.End - end, End = region.End - start };
         
-        return UpdateSNVDict(newRegion);
+        return UpdateSNVs(newRegion);
     }
     
-    private static Region UpdateSNVDict(Region region)
+    private static Region UpdateSNVs(Region region)
     {
-        if (region.SNVDict == null)
+        if (region.SNVs == null)
         {
             return region;
         }
-        var newSNVDict = new Dictionary<long, Nucleotide>(region.SNVDict);
-        var insideSNV = region.SNVDict.Where(snv => snv.Key <= region.Start || region.End <= snv.Key);
-        foreach (var snv in insideSNV)
+        var newSNVs = new List<SNV>(region.SNVs);
+        var lostSNVs = region.SNVs.Where(snv => snv.Location <= region.Start || region.End <= snv.Location);
+        foreach (var snv in lostSNVs)
         {
-            newSNVDict.Remove(snv.Key);
+            newSNVs.Remove(snv);
         }
-        if (newSNVDict.Keys.Count == 0)
+        if (newSNVs.Count == 0)
         {
-            newSNVDict = null;
+            newSNVs = null;
         }
-        return region with {SNVDict = newSNVDict};
+        return region with {SNVs = newSNVs};
     }
     
     public static List<Region> DeleteRange(List<Region> regions, long start, long end)
@@ -226,9 +226,21 @@ public static class RegionOps
         {
             if (location >= seekPos && location < seekPos + region.Length)
             {
-                var newSNVDict = region.SNVDict ?? new Dictionary<long, Nucleotide>();
-                newSNVDict[region.Start + location - seekPos] = newNucleotide;
-                var newRegion = region with { SNVDict = newSNVDict };
+                var newSNVs = region.SNVs ?? new List<SNV>();
+                // See if the SNV is present in the region
+                var snv = newSNVs.FirstOrDefault(s => s.Location == region.Start + location - seekPos);
+                if (snv != null)
+                {
+                    // Update the existing SNV
+                    newSNVs.Remove(snv);
+                    newSNVs.Add(snv with { Alt = newNucleotide });
+                }
+                else
+                {
+                    // Add a new SNV
+                    newSNVs.Add(new SNV(region.Start + location - seekPos, region.ChrNo, newNucleotide));
+                }
+                var newRegion = region with { SNVs = newSNVs };
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else

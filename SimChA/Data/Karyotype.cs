@@ -257,28 +257,28 @@ public class Karyotype
             lastWasDeletion = !lastWasDeletion;
         }
     }
-    public void ApplySNV(int contigID, long location, Nucleotide newNucleotide)
+    public void ApplyPointMutation(int contigID, long location, Nucleotide newNucleotide)
     {
         var contig = _contigs[contigID];
-        contig.SNV(location, newNucleotide);
+        contig.PointMutate(location, newNucleotide);
     }
 
     // TODO @Cody: SNV as a data type
-    public List<(string chrNo, long location, Nucleotide newBase)> GetFinalSNVs()
+    public List<SNV> GetFinalSNVs()
     {
-        var snvList = new List<(string, long, Nucleotide)>();
+        var snvList = new List<SNV>();
         foreach (var region in _contigs.SelectMany(contig => contig.GetRegions()))
         {
-            if (region.SNVDict == null)
+            if (region.SNVs == null)
             {
                 continue;
             }
-            foreach ((long internalLocation, var newBase) in region.SNVDict)
+            foreach (var snv in region.SNVs)
             {
                 string chrNo = region.ChrNo;
-                if (snvList.All(s => s != (chrNo, internalLocation, newBase)))
+                if (snvList.All(s => s != snv))
                 {
-                    snvList.Add((chrNo, internalLocation, newBase));
+                    snvList.Add(snv);
                 }
             }
         }

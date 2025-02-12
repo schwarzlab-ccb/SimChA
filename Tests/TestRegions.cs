@@ -356,8 +356,10 @@ public class TestRegions
         Assert.AreNotEqual(regions[2], mutatedRegions[2]);
         Assert.AreEqual(regions[3], mutatedRegions[3]);
 
-        Assert.NotNull(mutatedRegions[2].SNVDict);
-        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVDict[location]);
+        Assert.IsNotNull(mutatedRegions[2].SNVs);
+        Assert.AreEqual(1, mutatedRegions[2].SNVs.Count);
+        Assert.AreEqual(location, mutatedRegions[2].SNVs[0].Location);
+        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVs[0].Alt);
 
     }
 
@@ -380,7 +382,7 @@ public class TestRegions
     }
 
     [Test]
-    public void TestUpdateSNVDict()
+    public void TestUpdateSNVs()
     {
         var regions = new List<Region>
         {
@@ -391,14 +393,14 @@ public class TestRegions
         var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
         foreach (var region in mutatedRegions)
         {
-            Assert.IsNotNull(region.SNVDict);
+            Assert.IsNotNull(region.SNVs);
         }
         // TODO: Why does DeleteRange remove the original mutatedRegions SNVDict?
         // Does it matter?
         var finalRegions = RegionOps.DeleteRange(mutatedRegions, 30, 70);
         foreach (var region in finalRegions)
         {
-            Assert.IsNull(region.SNVDict);
+            Assert.IsNull(region.SNVs);
         }
     }
 }

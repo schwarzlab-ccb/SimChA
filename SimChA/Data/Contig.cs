@@ -142,7 +142,7 @@ public class Contig
         _regions = RegionOps.GlueNeighbours(_regions);
     }
 
-    public void SNV(long location, Nucleotide newNucleotide)
+    public void PointMutate(long location, Nucleotide newNucleotide)
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
     }

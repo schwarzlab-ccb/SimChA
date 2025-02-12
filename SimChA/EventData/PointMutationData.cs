@@ -17,7 +17,7 @@ public record PointMutationData : ContigEventData
     
     public override void ApplyEvent(Karyotype kar)
     {
-        kar.ApplySNV(ContigId, Location, Base);
+        kar.ApplyPointMutation(ContigId, Location, Base);
     }
 
     public override string ToString()

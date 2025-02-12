@@ -130,7 +130,7 @@ public class GenRef
         };
     
     private Region GetRegion(string chrNo, bool isFirstHaplotype, bool useSNV) 
-        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, true, useSNV ? new Dictionary<long, Nucleotide>() : null);
+        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, true, useSNV ? new List<SNV>() : null);
     
     private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap, bool useSNV = false)
         => ChrIDsForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap, useSNV) });
