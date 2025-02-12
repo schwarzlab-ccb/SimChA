@@ -58,7 +58,6 @@ The default execution is:
 git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
 dotnet run --project SimChA
-./plots.sh
 ```
 
 The results will be written to the folder `./out`
@@ -72,12 +71,14 @@ Use `dotnet run -- [options]` to specify any of the following:
   -C, --config    (Default: ./default_params.json) A json file with configuration of the experiment.
   -T --tree path     A path to a newick with a phylogenetic tree. The file must contain columns "ID", "ParentID", and "Distance". For MCMC, also "Fitness" must be included.
   -R --repeats n   Will run the simulation and generate n independent samples.
-  -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
-  -P --profile path   A path to a file with copy number profiles.
-  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. If you want to use either of the flags "--variants" or "--fasta", you must also have the corresponding reference genome, named genome.fa in the same directory.
-  -s  Calculate consistent copy numbers segmentation in addition to a normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
+  -M --mcmc-mode      Will run the Metropolis-Hastings algorithm to match a simulated clone fitness to a target fitness (either sampled given the input config file, or given in the tree file).
+  -E --evolution-mode Will run the Simulated Annealing algorithm to maximize the fitness of a simulated clone.
+  -P --profile path   Path to an input file with copy number profiles.
+  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: centromeres.tsv, chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. If you want to use either of the flags "--variants" or "--fasta", you must also have the corresponding reference genome, named genome.fa in the same directory.
+  -L --light   Run SimChA in lightweight output mode. Will not create the output copy number profiles, nor the karyotypes.
+  -s  Calculate consistent copy numbers segmentation in addition to the normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
   -V, --variants     Generate a Variant Call Format-like (VCF) file at the end of the run.
-  -F, --fasta       Generate the FASTA file of the produced karyotype (Note: this currently only works for single-sample simulations).
+  -F, --fasta       Generate the FASTA file of the produced karyotypes. Note! This file will be extremely large if you have many samples. We recommend you only run this mode with fewer than 10 samples.
 ```
 
 ### Parameters
@@ -86,7 +87,7 @@ Default parameters are found in the file: `default_params.json`. The exact param
 
 
 #### Common (R, T, P)
-* `Fitness: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
+* `FitParams: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
 
 #### Simulation mode only (R, T)
 * `Seed: int` - The seed for the random number generator.
@@ -180,11 +181,16 @@ If the Internal Deletion is selected, the mean size of a deleted segment will be
 
 Each Event has an associated type and a probability, which is relative to all the other events in the signature. The following events are available:
 
-* `ChromDeletion`
 * `ChromDuplication`
+* `ChromDeletion`
+* `TailDuplication`
 * `TailDeletion`
-* `InternalDeletion`
+* `CentromereBoundDuplication`
+* `CentromereBoundDeletion`
+* `ArmDuplication`
+* `ArmDeletion`
 * `InternalDuplication`
+* `InternalDeletion`
 * `InternalInversion`
 * `InvertedDuplication`
 * `Translocation`
@@ -202,7 +208,7 @@ Each Event has an associated type and a probability, which is relative to all th
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Size: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal events.
+* `Size: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 ### Chromosome Deletion (Prob)
@@ -328,9 +334,9 @@ The start position is inclusive, the end exclusive.
 
 Information about the individual events in the simulation. The columns are:
 
-| Id | 	EventType	| EventString	| dFitness |	tFitness |	Mutations |
-|----|------------|-------------|----------|-----------|------------|
-|  0 | ChromDuplication | contig:23 | 11.53782375 | 11.53782375 | 1 |
+| sample_id | 	 event_type	   |  depth | EventString	| delta_fitness |	total_fitness |	time |
+|-----------|------------------|----|-------------|----------|-----------|------------|
+|  sample_0 | ChromDuplication | 1 | contig:23 | 11.53782375 | 11.53782375 | 0.7 |
 
 #### 'vcf.tsv'
 
