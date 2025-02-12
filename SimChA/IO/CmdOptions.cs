@@ -39,7 +39,7 @@ public class CmdOptions
     [Option('E', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
     public bool EvolutionMode { get; set; }
 
-    [Option("light", Required = false, Default = false, HelpText = "Flag to avoid printing out the output CNPs and karyotypes.")]
+    [Option('L', "light", Required = false, Default = false, HelpText = "Flag to avoid printing out the output CNPs and karyotypes.")]
     public bool LightweightOutput { get; set; }
 
     public ExecMode ExecMode
