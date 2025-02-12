@@ -263,7 +263,6 @@ public class Karyotype
         contig.PointMutate(location, newNucleotide);
     }
 
-    // TODO @Cody: SNV as a data type
     public List<SNV> GetFinalSNVs()
     {
         var snvList = new List<SNV>();
