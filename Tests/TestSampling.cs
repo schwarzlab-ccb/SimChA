@@ -25,7 +25,7 @@ public class TestSampling
     public void TestDistSampling([Values] DistType dist)
     {
         var reps = Enumerable.Range(0, 100).ToList();
-        var res = reps.Select(i => Sampling.SampleDist(_rnd, dist, 100)).Mean();
+        double res = reps.Select(i => Sampling.SampleDist(_rnd, dist, 100)).Mean();
         Assert.GreaterOrEqual(res, 50);
         Assert.LessOrEqual(res, 150);
     }

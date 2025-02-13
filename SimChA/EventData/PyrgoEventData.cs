@@ -11,15 +11,14 @@ public record PyrgoEventData : ContigEventData
     public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
     {
         ContigId = contigId;
-        long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Size);
+        long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frac);
         long pyrgoStart = Sampling.GetPos(rnd, contigLen - pyrgoFrag);
-        
         int fracCount = GeometricDistribution.Sample(rnd, 1.0 / cnEventPars.Frag) + 1;
         
         FragmentsList = new List<(long, long)>();
         for (int i = 0; i < fracCount; i++)
         {
-            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, cnEventPars.Size / cnEventPars.Frag);
+            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, cnEventPars.Frac / cnEventPars.Frag);
             long fracStart = Sampling.GetPos(rnd, pyrgoFrag - fracLen);
             FragmentsList.Add((pyrgoStart + fracStart, fracLen));
         }

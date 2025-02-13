@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.IO;
+﻿using SimChA.IO;
 
 namespace SimChA.Data;
 
@@ -58,7 +56,7 @@ public record SampleStat(
     public static double CalcPloidy(Karyotype kar, GenRef genRef)
         => 2.0 * kar.GenomeLen() / genRef.GetGenomeLen(kar.Sex);
 
-    public static double CalcCoverage(Karyotype kar, GenRef genRef)
+    private static double CalcCoverage(Karyotype kar, GenRef genRef)
         => (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double)genRef.GetGenomeLen(kar.Sex, false);
 
     public static SampleStat GetSampleStat(Sample sample, GenRef genRef, FitParams fParams)

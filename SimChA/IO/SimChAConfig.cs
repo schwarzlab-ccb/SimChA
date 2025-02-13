@@ -11,4 +11,4 @@ public record SimChAConfig(
     bool AutosomesOnly = true,
     List<Signature>? Signatures = null,
     MHParams? MHParams = null,
-    EvoParams? EvoParams = null);
+    SAParams? EvoParams = null);

@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
-using SimChA.Computation;
 using SimChA.IO;
 using SimChA.Simulation;
-using CommandLine;
 using SimChA.Data;
+using CommandLine;
 
 // Configuration
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;

@@ -1,5 +1,4 @@
-﻿using SimChA.Computation;
-using SimChA.Data;
+﻿using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
 
@@ -56,7 +55,7 @@ public static class Factory
             case CNEventType.CentromereBoundDuplication:
             case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
-                if (cnEventPars.Size <= 0) 
+                if (cnEventPars.Frac <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
                 break;
             
@@ -65,7 +64,7 @@ public static class Factory
             case CNEventType.TICycle:
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
-                if (cnEventPars.Size <= 0) 
+                if (cnEventPars.Frac <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
                 if (cnEventPars.Frag <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Frag\": 5");

@@ -1,6 +1,6 @@
 namespace SimChA.IO;
 
-public record EvoParams(
+public record SAParams(
     double EventCost, // Flag to turn on and off event parameters being weighted by ploidy
     double Acceptance, 
     double EventRate,

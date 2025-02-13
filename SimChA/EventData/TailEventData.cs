@@ -13,7 +13,7 @@ public record TailEventData : ContigEventData
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {
         //Length = Sampling.GetPos(rnd, contigLen, CN);
-        Length = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
+        Length = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         Direction = rnd.CoinFlip();
     }
     

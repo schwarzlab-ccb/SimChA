@@ -65,7 +65,7 @@ public class TestEventData
     public void TestCentromereBoundEventData()
     {
         const long len = 10_000_000;
-        var cents = new List<(long start, long end)>() { (1_000_000L, 2_000_000L) };
+        var cents = new List<(long start, long end)> { (1_000_000L, 2_000_000L) };
         var eventP = new CNEventPars(CNEventType.CentromereBoundDeletion, 1, 1_000_000);
         var eventData = new InternalEventData(_rnd, eventP, 0, len, cents);
         Assert.LessOrEqual(eventData.Start, cents[0].end);
@@ -78,7 +78,7 @@ public class TestEventData
     public void TestArmEvent()
     {
         var eventP = new CNEventPars(CNEventType.ArmDeletion, 1);
-        var cents = new List<(long start, long end)>() { (1_000_000L, 2_000_000L) };
+        var cents = new List<(long start, long end)> { (1_000_000L, 2_000_000L) };
         var eventData = new TailEventData(_rnd, eventP, 0, cents);
         Assert.AreEqual(1_000_000L, eventData.Length);
     }

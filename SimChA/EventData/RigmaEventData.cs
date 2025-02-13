@@ -12,9 +12,10 @@ public record RigmaEventData : ContigEventData
     public RigmaEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
     {
         ContigId = contigId;
-        int fracCount = GeometricDistribution.Sample(rnd, 1 / cnEventPars.Frag) + 1;
-        Start = Sampling.GetPos(rnd, contigLen - cnEventPars.Size);
-        StopsList = Enumerable.Range(0, fracCount).Select(_ => Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frag / cnEventPars.Size)).ToList();
+        long fragSize = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frac);
+        Start = Sampling.GetPos(rnd, contigLen - fragSize);
+        int fracCount = GeometricDistribution.Sample(rnd, 1.0 / cnEventPars.Frag) + 1;
+        StopsList = Enumerable.Range(0, fracCount).Select(_ => Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frag / cnEventPars.Frac)).ToList();
     }
     
     public override void ApplyEvent(Karyotype kar)

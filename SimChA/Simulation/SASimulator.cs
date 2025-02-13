@@ -7,17 +7,17 @@ namespace SimChA.Simulation;
 
 public class SASimulator : Simulator
 {
-    private EvoParams EvoParams { get; }
+    private SAParams SAParams { get; }
 
-    public SASimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, EvoParams evoParams) 
+    public SASimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, SAParams saParams) 
         : base(rnd, genRef, simParams, fitParams)
     {
-        EvoParams = evoParams;
+        SAParams = saParams;
     }
     
     private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {
-        if (EvoParams.EventCost <= 0 || !hasWGD)
+        if (SAParams.EventCost <= 0 || !hasWGD)
         {
             return pars;
         }
@@ -25,7 +25,7 @@ public class SASimulator : Simulator
         var newPars = new List<CNEventPars>(pars);
         foreach (var e in pars.Where(e => e.Type.ToString().EndsWith("Deletion")))
         {
-            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * EvoParams.EventCost };
+            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * SAParams.EventCost };
         }
         var normalized = Factory.NormalizeEvents(newPars);
         return normalized;
@@ -33,7 +33,7 @@ public class SASimulator : Simulator
 
     private BaseEventData GetNewEvent(List<CNEventPars> cnEventPars, Karyotype kar, double currentFitness)
     {
-        for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
+        for (int tryNo = 0; tryNo <= SAParams.MaxTries; tryNo++)
         {
             var cnEventP = Rnd.PickRndElem(cnEventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
@@ -44,22 +44,22 @@ public class SASimulator : Simulator
             var proposedKar = new Karyotype(kar);
             eventData.ApplyEvent(proposedKar);
             double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
-            if (Math.Exp(proposedFitness - currentFitness - EvoParams.Acceptance) >= Rnd.NextDouble())
+            if (Math.Exp(proposedFitness - currentFitness - SAParams.Acceptance) >= Rnd.NextDouble())
             {
                 return eventData;
             }
         }
-        throw new Exception($"Could not generate a new event in {EvoParams.MaxTries} tries.");
+        throw new Exception($"Could not generate a new event in {SAParams.MaxTries} tries.");
     }
 
     bool MetBreakCondition(int time, int nEventsLeft)
-        => !EvoParams.EvolveInTime ? nEventsLeft == 0 : time >= 1; 
+        => !SAParams.EvolveInTime ? nEventsLeft == 0 : time >= 1; 
 
     double GetMutRate(Karyotype kar)
-        => EvoParams.EventRate * SampleStat.CalcPloidy(kar, GenRef);
+        => SAParams.EventRate * SampleStat.CalcPloidy(kar, GenRef);
 
     bool DidMutate(Karyotype kar)
-        => !EvoParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
+        => !SAParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
