@@ -26,6 +26,7 @@ public class Simulator
         var res = new List<Sample>();
         var sex = Sampling.GetSex(Rnd, SimParams.Sex);
         var rootKar = new Karyotype(GenRef, sex);
+        rootKar.UpdateFitness(GenRef, FitParams);
         if (SimParams.TetraploidStart)
         {
             rootKar.ApplyWGD();
@@ -69,7 +70,7 @@ public class Simulator
             var newEv = new CNEventDesc(eventData.EventType, mutDepth + evNo, eventData.ToString(), 
                 0, 0, time);
             childEvs.Add(newEv);
-        } while (time <= 1 - double.Epsilon);
+        } while (time < 1 - double.Epsilon);
         return (childKar, childEvs);
     }
 

@@ -71,9 +71,6 @@ public class SASimulator : Simulator
         var childEvs = new List<CNEventDesc>();
         double currentFit = childKar.FitnessVal;
         bool hasWGD = false;
-        int distance = child.Distance > 0
-            ? child.Distance
-            : Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean);
 
         double rate = SampleRate(child);
         double time = 0.0;
@@ -96,7 +93,7 @@ public class SASimulator : Simulator
             hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
             childKar = newKar;
             currentFit = proposedFit;
-        } while (time <= 1 - double.Epsilon);
+        } while (time < 1 - double.Epsilon);
         return (childKar, childEvs);
     }
 }

@@ -4,10 +4,10 @@ namespace SimChA.IO;
 // Input: 
 
 public record MHParams(
-    int NumSamplesMin, // Burn-in samples
-    int NumSamplesTotal, // Number of true samples
-    double ThetaFitness, // exponential multiplier for fitness
-    bool MatchFitness, // Match the fitness of the clone to a target fitness
-    double SwapEventP, // Probability of completely swapping an event
-    double ThresholdFit // Percentage difference allowed between accepted and target fitness
+    int NumSamplesMin = 0, // Burn-in samples
+    int NumSamplesTotal = 1, // Number of true samples
+    double ThetaFitness = 1, // exponential multiplier for fitness
+    bool MatchFitness = true, // Match the fitness of the clone to a target fitness
+    double SwapEventP = 1, // Probability of completely swapping an event
+    double ThresholdFit = 0 // Percentage difference allowed between accepted and target fitness
 );

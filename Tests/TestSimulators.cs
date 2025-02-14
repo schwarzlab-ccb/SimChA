@@ -32,26 +32,33 @@ public class TestSimulators
     [Test]
     public void TestSimulator()
     {
-        var sim = new Simulator(_rnd, _genRef, new SimParams(), new FitParams(0.9, 0.05, 2));
-        var eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
+        var sim = new Simulator(_rnd, _genRef, new SimParams(), new FitParams());
+        var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
         var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
+        Assert.AreEqual(1, res.Count);
+        Assert.AreEqual(1, res[0].Events.Count);
+        Assert.AreEqual(46, res[0].Karyotype.CountContigs());
     }
 
     [Test]
     public void TestMHSimulator()
     {
-        var mhParams = new MHParams(0, 0, 1.0, true, 1.0, 0.0);
-        var sim = new MHSimulator(_rnd, _genRef, new SimParams(), new FitParams(0.9, 0.05, 2), mhParams);
-        var eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
+        var sim = new MHSimulator(_rnd, _genRef, new SimParams(), new FitParams(),  new MHParams());
+        var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
         var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
+        Assert.AreEqual(res.Count, 1);
+        Assert.AreEqual(res[0].Events.Count, 1);
+        Assert.AreEqual(res[0].Karyotype.CountContigs(), 46);
     }
     
     [Test]
     public void TestSASimulator()
     {
-        var saParams = new SAParams(1, 1, 1, 10, false);
-        var sim = new SASimulator(_rnd, _genRef, new SimParams(), new FitParams(0.9, 0.05, 2), saParams);
-        var eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
+        var sim = new SASimulator(_rnd, _genRef, new SimParams(), new FitParams(), new SAParams());
+        var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
         var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
+        Assert.AreEqual(res.Count, 1);
+        Assert.AreEqual(res[0].Events.Count, 1);
+        Assert.AreEqual(res[0].Karyotype.CountContigs(), 46);
     }
 }
