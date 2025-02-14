@@ -75,23 +75,28 @@ public class SASimulator : Simulator
             ? child.Distance
             : Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean);
 
-        for (int mutNo = 1; mutNo <= distance; mutNo++)
+        double rate = SampleRate(child);
+        double time = 0.0;
+        do
         {
-            Console.Write($"\rSample {child.CloneId}. Event {mutNo}/{distance}.".PadRight(80));
+            time += rate;
+            int evNo = childEvs.Count + 1;
+            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{child.Distance}.".PadRight(80));
             var cnEventPars = GetEventPars(cnEventPs, hasWGD);
             var newEvent = GetNewEvent(cnEventPars, childKar, currentFit);
             var newKar = new Karyotype(childKar);
             newEvent.ApplyEvent(newKar);
             double proposedFit = newKar.UpdateFitness(GenRef, FitParams);
             double dFit = proposedFit - currentFit;
-            var abberation = new CNEventDesc(newEvent.EventType, mutDepth + mutNo, newEvent.ToString(),
-                dFit, proposedFit, mutNo);
+            var abberation = new CNEventDesc(newEvent.EventType, mutDepth + evNo, newEvent.ToString(),
+                dFit, proposedFit, time);
+            
             childEvs.Add(abberation);
                 
             hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
             childKar = newKar;
             currentFit = proposedFit;
-        }
+        } while (time <= 1 - double.Epsilon);
         return (childKar, childEvs);
     }
 }

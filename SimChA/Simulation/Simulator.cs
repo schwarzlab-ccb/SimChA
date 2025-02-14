@@ -35,10 +35,10 @@ public class Simulator
         return res;
     }
 
-    protected int SampleDist(CTreeNode node)
+    protected double SampleRate(CTreeNode node)
         => node.Distance > 0
-            ? node.Distance
-            : Math.Max(1, Sampling.SampleDistInt(Rnd, SimParams.RateDist, SimParams.RateMean));
+            ? 1.0 / node.Distance
+            : Math.Max(0, Sampling.SampleDist(Rnd, SimParams.RateDist, SimParams.RateMean));
     
     protected double SampleFit(CTreeNode node)
         => node.Fitness > 0 
@@ -53,21 +53,23 @@ public class Simulator
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        int distance = SampleDist(child);
-
-        for (int mutNo = 1; mutNo <= distance; mutNo++)
+        double rate = SampleRate(child);
+        double time = 0.0;
+        do
         {
-            Console.Write($"\rSample {child.CloneId}. Event {mutNo}/{child.Distance}.".PadRight(80));
+            time += rate;
+            int evNo = childEvs.Count + 1;
+            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{child.Distance}.".PadRight(80));
             var eventP = Rnd.PickRndElem(cnEventPs);
             var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
             // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
             if (eventData == null)
                 continue;
             eventData.ApplyEvent(childKar);
-            var newEv = new CNEventDesc(eventData.EventType, mutDepth + mutNo, eventData.ToString(), 
-                0, 0, mutNo);
+            var newEv = new CNEventDesc(eventData.EventType, mutDepth + evNo, eventData.ToString(), 
+                0, 0, time);
             childEvs.Add(newEv);
-        }
+        } while (time <= 1 - double.Epsilon);
         return (childKar, childEvs);
     }
 

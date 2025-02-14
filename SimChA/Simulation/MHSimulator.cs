@@ -135,7 +135,7 @@ public class MHSimulator : Simulator
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        int distance = SampleDist(child);
+        int distance = (int) Math.Round(1 / SampleRate(child));
         double targetFit = SampleFit(child);
         double oldFitness = childKar.FitnessVal;
 

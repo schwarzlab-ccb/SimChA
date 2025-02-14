@@ -26,7 +26,6 @@ public class TestSimulators
     {
         _rnd = new Random(0);
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        
         _baseNode = new CTreeNode("root", "root", 1, 1);
     }
 
@@ -45,7 +44,6 @@ public class TestSimulators
         var sim = new MHSimulator(_rnd, _genRef, new SimParams(), new FitParams(0.9, 0.05, 2), mhParams);
         var eventPs = new List<CNEventPars> {new(CNEventType.ChromDuplication, .4), new(CNEventType.ChromDeletion, .6)};
         var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
-        
     }
     
     [Test]
