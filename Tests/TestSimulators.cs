@@ -14,8 +14,6 @@ public class TestSimulators
     private Random _rnd;
     private GenRef _genRef;
     
-    private CTreeNode _baseNode;
-
     private static List<Signature> MakeSigs(List<CNEventPars> eventPs) 
         => new() { new ("TestSig", 1, eventPs) };
     
@@ -26,39 +24,39 @@ public class TestSimulators
     {
         _rnd = new Random(0);
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _baseNode = new CTreeNode("root", "root", 1, 1);
     }
 
-    [Test]
-    public void TestSimulator()
+    
+    private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, SAParams? saParams = null)
     {
-        var sim = new Simulator(_rnd, _genRef, new SimParams(), new FitParams());
+        simParams ??= new SimParams();
+        fitParams ??= new FitParams();
+        mhParams ??= new MHParams();
+        saParams ??= new SAParams();
+        return type switch
+        {
+            not null when type == typeof(Simulator) => new Simulator(_rnd, _genRef, simParams, fitParams),
+            not null when type == typeof(MHSimulator) => new MHSimulator(_rnd, _genRef, simParams, fitParams, mhParams),
+            not null when type == typeof(SASimulator) => new SASimulator(_rnd, _genRef, simParams, fitParams, saParams),
+            _ => throw new ArgumentException("Unknown simulator type")
+        };
+    }
+    
+    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(SASimulator))]
+    public void TestSimulatorsAll(Type simulatorType)
+    {
+        var sim = GetSimulator(simulatorType);
         var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
-        var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
+        var node = new CTreeNode("root", "root", 1, 1);
+        var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs)); 
         Assert.AreEqual(1, res.Count);
         Assert.AreEqual(1, res[0].Events.Count);
         Assert.AreEqual(46, res[0].Karyotype.CountContigs());
     }
-
-    [Test]
-    public void TestMHSimulator()
-    {
-        var sim = new MHSimulator(_rnd, _genRef, new SimParams(), new FitParams(),  new MHParams());
-        var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
-        var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
-        Assert.AreEqual(res.Count, 1);
-        Assert.AreEqual(res[0].Events.Count, 1);
-        Assert.AreEqual(res[0].Karyotype.CountContigs(), 46);
-    }
     
     [Test]
-    public void TestSASimulator()
+    public void TestEmptySimulator()
     {
-        var sim = new SASimulator(_rnd, _genRef, new SimParams(), new FitParams(), new SAParams());
-        var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
-        var res = sim.Simulate(_baseNode, EmptyTree(_baseNode), MakeSigs(eventPs)); 
-        Assert.AreEqual(res.Count, 1);
-        Assert.AreEqual(res[0].Events.Count, 1);
-        Assert.AreEqual(res[0].Karyotype.CountContigs(), 46);
+        
     }
 }

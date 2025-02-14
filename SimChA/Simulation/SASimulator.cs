@@ -51,15 +51,6 @@ public class SASimulator : Simulator
         }
         throw new Exception($"Could not generate a new event in {SAParams.MaxTries} tries.");
     }
-
-    bool MetBreakCondition(int time, int nEventsLeft)
-        => !SAParams.EvolveInTime ? nEventsLeft == 0 : time >= 1; 
-
-    double GetMutRate(Karyotype kar)
-        => SAParams.EventRate * SampleStat.CalcPloidy(kar, GenRef);
-
-    bool DidMutate(Karyotype kar)
-        => !SAParams.EvolveInTime || Rnd.NextDouble() < 1 - Math.Exp(-GetMutRate(kar));
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
