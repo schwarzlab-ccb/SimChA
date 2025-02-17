@@ -33,9 +33,9 @@ public class FileIO
     // private const string TREE_FILENAME = "tree.tsv";
     
     private string Timestamp { get; }
-    private string OutFolder { get; }
+    private string? OutFolder { get; }
 
-    public FileIO(string outFolder)
+    public FileIO(string? outFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;

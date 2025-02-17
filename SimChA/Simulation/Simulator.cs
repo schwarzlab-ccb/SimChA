@@ -20,12 +20,12 @@ public class Simulator
         SimParams = simParams;
     }
 
-    public static BaseEventData CreatePassEvent() 
+    protected static BaseEventData CreatePassEvent() 
         => new(new CNEventPars(CNEventType.Pass, 1));
 
     public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
-        var (cnEventPs, mixture) = Factory.PropagateSigs(sigs);
+        var (cnEventPs, mixture) = Factory.MixSignatures(sigs);
         var res = new List<Sample>();
         var sex = Sampling.GetSex(Rnd, SimParams.Sex);
         var rootKar = new Karyotype(GenRef, sex);

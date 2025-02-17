@@ -5,10 +5,9 @@ using SimChA.Data;
 namespace SimChA.IO;
 
 public record SimChAConfig(
-    int Seed,
     SimParams SimParams,
+    ChAParams ChAParams,
     FitParams FitParams,
-    bool AutosomesOnly = true,
     List<Signature>? Signatures = null,
     MHParams? MHParams = null,
     SAParams? EvoParams = null);

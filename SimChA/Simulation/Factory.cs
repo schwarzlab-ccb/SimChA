@@ -107,29 +107,28 @@ public static class Factory
         return validSigs;
     }
 
-    public static (List<CNEventPars>, Dictionary<string, double> mixture) PropagateSigs(List<Signature> signatures, Dictionary<string, double>? probs = null)
+    public static (List<CNEventPars>, Dictionary<string, double> mixture) MixSignatures(List<Signature> signatures, Dictionary<string, double>? probs = null)
     {
+        if (probs != null)
+        {
+            if (probs.Count != signatures.Count)
+            {
+                throw new ArgumentException("probs must have the same length as signatures");
+            }
+            if (Math.Abs(probs.Values.Sum() - 1) > 1e-9)
+            {
+                throw new ArgumentException("probs must sum to 1");
+            }
+        }
         var events = new List<CNEventPars>();
         var mixture = new Dictionary<string, double>();
         double sigProbSum = signatures.Sum(sig => sig.Prob);
-        foreach(var sig in signatures)
+        foreach((string sigId, double prob, var cnEventParsList) in signatures)
         {
-            string sigId = sig.Name;
-            if (probs != null)
-            {
-                if (probs.Count != signatures.Count)
-                {
-                    throw new ArgumentException("probs must have the same length as signatures");
-                }
-                if (Math.Abs(probs.Values.Sum() - 1) > 1e-9)
-                {
-                    throw new ArgumentException("probs must sum to 1");
-                }
-            }
-            double sigProb = probs == null ? sig.Prob / sigProbSum : probs[sigId];
+            double sigProb = probs == null ? prob / sigProbSum : probs[sigId];
             mixture.Add(sigId, sigProb);
             
-            var selectedEvs = sig.Events.Where(ev => ev.Prob > 0).ToList();
+            var selectedEvs = cnEventParsList.Where(ev => ev.Prob > 0).ToList();
             double evsProbSum = selectedEvs.Sum(ev => ev.Prob);
             events.AddRange(selectedEvs.Select(cnEventP => cnEventP with
             {

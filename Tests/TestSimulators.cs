@@ -25,7 +25,6 @@ public class TestSimulators
         _rnd = new Random(0);
         _genRef = FileIO.GetGenRef("./../../../../data/hg19");
     }
-
     
     private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, SAParams? saParams = null)
     {
@@ -54,9 +53,14 @@ public class TestSimulators
         Assert.AreEqual(46, res[0].Karyotype.CountContigs());
     }
     
-    [Test]
-    public void TestEmptySimulator()
+    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(SASimulator))]
+    public void TestEmptySimulator(Type simulatorType)
     {
-        
+        var sim = GetSimulator(simulatorType);
+        var eventPs = new List<CNEventPars> { new(CNEventType.ChromDeletion, 1) };
+        int dist = 50;
+        var node = new CTreeNode("root", "root", dist, 1);
+        var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs)); 
+        Assert.AreEqual(dist, res[0].Events.Count);
     }
 }

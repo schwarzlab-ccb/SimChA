@@ -10,11 +10,9 @@ public class SASimulator : Simulator
     private SAParams SAParams { get; }
 
     public SASimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, SAParams saParams) 
-        : base(rnd, genRef, simParams, fitParams)
-    {
-        SAParams = saParams;
-    }
-    
+        : base(rnd, genRef, simParams, fitParams) 
+        => SAParams = saParams;
+
     private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {
         if (SAParams.EventCost <= 0 || !hasWGD)
@@ -49,7 +47,7 @@ public class SASimulator : Simulator
                 return eventData;
             }
         }
-        throw new Exception($"Could not generate a new event in {SAParams.MaxTries} tries.");
+        return CreatePassEvent();
     }
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(

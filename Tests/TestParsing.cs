@@ -30,16 +30,16 @@ public class TestParsing
     [Test]
     public void TestConfigSerialization()
     {
-        var sampleParams = new SimParams();
-        var fitParams = new FitParams(0.001f, 0.01f, 0.000_1f, true);
-        var simParams = new SimChAConfig(0, sampleParams, fitParams);
+        var chAParams = new ChAParams();
+        var simParams = new SimChAConfig(new SimParams(), chAParams, new FitParams());
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(simParams, options);
         var deserialized = JsonSerializer.Deserialize<SimChAConfig>(serialized);
         Assert.NotNull(deserialized);
         // Assure that the deserialized object is the same as the original, including the nested objects
-        Assert.AreEqual(simParams.Seed, deserialized!.Seed);
-        Assert.AreEqual(simParams.Signatures, deserialized.Signatures);
+        Assert.AreEqual(chAParams.Seed, chAParams.Seed);
+        Assert.NotNull(deserialized);
+        Assert.AreEqual(simParams.Signatures, deserialized?.Signatures);
     }
     
     [Test]
