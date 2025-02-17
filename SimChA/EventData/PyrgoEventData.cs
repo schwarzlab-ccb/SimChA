@@ -27,6 +27,6 @@ public record PyrgoEventData : ContigEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyPyrgo(ContigId, FragmentsList);
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};frags:{string.Join(",", FragmentsList)}";
 }

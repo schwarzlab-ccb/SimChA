@@ -133,24 +133,23 @@ public class MHSimulator : Simulator
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        int distance = (int) Math.Round(1 / SampleRate(child));
         double targetFit = SampleFit(child);
         double oldFitness = childKar.FitnessVal;
 
+        int eventCount = SampleEventCount(child);
         var bestEvents = MHParams.MatchFitness
-            ? GenEventsForTargetFitness(cnEventPs, childKar, distance, targetFit)
-            : GenEventsForMaxFitness(cnEventPs, childKar, distance);
+            ? GenEventsForTargetFitness(cnEventPs, childKar, eventCount, targetFit)
+            : GenEventsForMaxFitness(cnEventPs, childKar, eventCount);
 
-        for (int mutNo = 0; mutNo < bestEvents.Count; mutNo++)
+        for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            Console.Write($"\rSample {child.CloneId}. Event {mutNo}/{child.Distance}.".PadRight(80));
+            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{eventCount}".PadRight(80));
 
-            var eventData = bestEvents[mutNo];
+            var eventData = bestEvents[evNo - 1];
             eventData.ApplyEvent(childKar);
             double newFitness = childKar.UpdateFitness(GenRef, FitParams);
             double dFit = newFitness - oldFitness;
-            var newEv = new CNEventDesc(eventData.EventType, mutDepth + mutNo, eventData.ToString(),
-                dFit, newFitness, mutNo);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFitness);
             childEvs.Add(newEv);
             oldFitness = newFitness;
         }

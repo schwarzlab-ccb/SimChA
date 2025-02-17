@@ -38,12 +38,10 @@ public class Simulator
         return res;
     }
 
-    protected double SampleRate(CTreeNode node)
+    protected int SampleEventCount(CTreeNode node)
     {
         double events = node.Distance > 0 ? node.Distance : SimParams.RateMean;
-        double rate = 1 / events;
-        double sample = Sampling.SampleDist(Rnd, SimParams.RateDist, rate);
-        return Math.Max(0, sample);
+        return Sampling.SampleDistInt(Rnd, SimParams.RateDist, events);
     }
     
     protected double SampleFit(CTreeNode node)
@@ -59,20 +57,16 @@ public class Simulator
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        double rate = SampleRate(child);
-        double time = 0.0;
-        do
+        int eventCount = SampleEventCount(child);
+        for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            time += rate;
-            int evNo = childEvs.Count + 1;
-            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{child.Distance}.".PadRight(80));
+            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{eventCount}".PadRight(80));
             var eventP = Rnd.PickRndElem(cnEventPs);
             var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreatePassEvent();
             eventData.ApplyEvent(childKar);
-            var newEv = new CNEventDesc(eventData.EventType, mutDepth + evNo, eventData.ToString(), 
-                0, 0, time);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo);
             childEvs.Add(newEv);
-        } while (time < 1 - double.Epsilon);
+        } 
         return (childKar, childEvs);
     }
 

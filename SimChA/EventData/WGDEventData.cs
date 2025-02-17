@@ -8,6 +8,6 @@ public record WGDEventData(CNEventPars CNEventPars) : BaseEventData(CNEventPars)
         kar.ApplyWGD();
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => "WGD";
 }

@@ -20,6 +20,6 @@ public record PointMutationData : ContigEventData
         kar.ApplyPointMutation(ContigId, Location, Base);
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};location:{Location};base:{Base}";
 }

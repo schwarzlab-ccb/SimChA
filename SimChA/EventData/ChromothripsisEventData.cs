@@ -22,7 +22,7 @@ public record ChromothripsisEventData : ContigEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyChromothripsis(ContigId, StopsList, SelectionList);
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};" +
            $"stops:{string.Join(",", StopsList)};" +
            $"selection:{string.Join(",", SelectionList)}";

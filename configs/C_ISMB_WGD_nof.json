@@ -1,0 +1,27 @@
+{
+    "SimParams": {
+        "RateMean": 89.82,
+        "RateDist": "Geometric"
+    },
+    "ChAParams": {
+        "Seed": 42,
+        "AutosomesOnly": true
+    },
+    "FitParams": {},
+    "Signatures": [
+        {
+            "Name": "CNA",
+            "Prob": 1,
+            "Events": [
+                {
+                    "Type": "pass",
+                    "Prob": 1
+                },
+                {
+                    "Type": "WholeGenomeDoubling",
+                    "Prob": 0.007074905465888097
+                }
+            ]
+        }
+    ]
+}

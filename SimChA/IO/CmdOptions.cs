@@ -23,6 +23,10 @@ public class CmdOptions
     [Option('D', "data", Required = false, Default = "./data/hg19", HelpText = "The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores." +
                                                                                " The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.")]
     public string DataFolder { get; set; }
+    
+    
+    [Option('E', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
+    public bool EvolutionMode { get; set; }
 
     [Option('M', "mcmc-mode", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
     public bool MHMode { get; set; }
@@ -36,8 +40,6 @@ public class CmdOptions
     [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
     public bool WriteFasta { get; set; }
     
-    [Option('E', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
-    public bool EvolutionMode { get; set; }
 
     [Option('L', "light", Required = false, Default = false, HelpText = "Flag to avoid printing out the output CNPs and karyotypes.")]
     public bool LightweightOutput { get; set; }
@@ -74,6 +76,10 @@ public class CmdOptions
     {
         get
         {
+            if (EvolutionMode && MHMode)
+            {
+                throw new Exception("Cannot run both evolution and MCMC mode at the same time.");
+            }
             if (MHMode)
             {
                 return SelectionMode.MetropolisHastings;

@@ -60,29 +60,23 @@ public class SASimulator : Simulator
         var childEvs = new List<CNEventDesc>();
         double currentFit = childKar.FitnessVal;
         bool hasWGD = false;
-
-        double rate = SampleRate(child);
-        double time = 0.0;
-        do
+        int eventCount = SampleEventCount(child);
+        for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            time += rate;
-            int evNo = childEvs.Count + 1;
-            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{child.Distance}.".PadRight(80));
+            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{eventCount}".PadRight(80));
             var cnEventPars = GetEventPars(cnEventPs, hasWGD);
-            var newEvent = GetNewEvent(cnEventPars, childKar, currentFit);
+            var eventData = GetNewEvent(cnEventPars, childKar, currentFit);
             var newKar = new Karyotype(childKar);
-            newEvent.ApplyEvent(newKar);
+            eventData.ApplyEvent(newKar);
             double proposedFit = newKar.UpdateFitness(GenRef, FitParams);
             double dFit = proposedFit - currentFit;
-            var abberation = new CNEventDesc(newEvent.EventType, mutDepth + evNo, newEvent.ToString(),
-                dFit, proposedFit, time);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, proposedFit);
             
-            childEvs.Add(abberation);
-                
-            hasWGD |= newEvent.EventType == CNEventType.WholeGenomeDoubling;
+            childEvs.Add(newEv);
+            hasWGD |= eventData.EventType == CNEventType.WholeGenomeDoubling;
             childKar = newKar;
             currentFit = proposedFit;
-        } while (time < 1 - double.Epsilon);
+        }
         return (childKar, childEvs);
     }
 }

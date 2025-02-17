@@ -19,6 +19,6 @@ public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEvent
         }
     }
     
-    public override string ToString() 
+    public override string EventDesc() 
         => $"contig:{ContigId}";
 }

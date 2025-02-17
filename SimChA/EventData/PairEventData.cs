@@ -25,6 +25,6 @@ public record PairEventData : BaseEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyTranslocation(ContigIdA, ContigIdB, PosA, PosB, Inverted);
     
-    public override string ToString()
+    public override string EventDesc()
         => $"contigA:{ContigIdA};contigB:{ContigIdB};posA:{PosA};posB:{PosB};dir:{Inverted}";
 }

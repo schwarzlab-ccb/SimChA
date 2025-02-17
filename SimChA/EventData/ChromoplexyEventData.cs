@@ -36,7 +36,7 @@ public record ChromoplexyEventData : BaseEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyChromoplexy(ContigIds, Stops, Sequence, Breakpoints);
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contigs:[{string.Join(",", ContigIds)}];" +
            $"stops:[{string.Join(",", Stops.Select(s => $"[{string.Join(",", s)}]"))}];" +
            $"sequence:[{string.Join(",", Sequence)}];" +

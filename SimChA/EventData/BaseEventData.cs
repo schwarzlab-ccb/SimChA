@@ -11,6 +11,6 @@ public record BaseEventData(CNEventPars CNEventPars)
     {
     }
 
-    public override string ToString()
+    public virtual string EventDesc()
         => "";
 }

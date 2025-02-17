@@ -60,6 +60,6 @@ public record InternalEventData : ContigEventData
         }
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};start:{Start};end:{End}";
 }

@@ -44,6 +44,6 @@ public record TemplatedEventData : BaseEventData
         }
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => string.Join(",", Frags.Select(x => $"({x.id},{x.start},{x.len},{Region.DirToStr(x.dir)})"));
 }

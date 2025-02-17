@@ -21,6 +21,6 @@ public record RigmaEventData : ContigEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyRigma(ContigId, Start, StopsList);
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};start{Start};stops:{string.Join(",", StopsList)}";
 }

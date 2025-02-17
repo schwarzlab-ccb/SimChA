@@ -1,26 +1,22 @@
 namespace SimChA.EventData;
 
 public record CNEventDesc(
-    CNEventType EventType,
+    BaseEventData EventData,
     int Depth,
-    string Description = "",
     double DeltaFitness = 0,
-    double TotalFitness = 0,
-    double Time = 0)
+    double TotalFitness = 0)
 {
-    public static string Header() 
+    public static string Header()
         => "event_type" +
            "\tdepth" +
            "\tdescription" +
            "\tdelta_fitness" +
-           "\ttotal_fitness" +
-           "\ttime";
-    
+           "\ttotal_fitness";
+
     public string ToTSV() =>
-        $"{EventType}" +
+        $"{EventData.EventType}" +
         $"\t{Depth}" +
-        $"\t{Description}" +
+        $"\t{EventData.EventDesc()}" +
         $"\t{DeltaFitness:f4}" +
-        $"\t{TotalFitness:f4}" +
-        $"\t{Time:f4}";
+        $"\t{TotalFitness:f4}";
 }

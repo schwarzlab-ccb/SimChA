@@ -24,7 +24,7 @@ public class TestEventData
     {
         var eventP = new CNEventPars(CNEventType.ChromDeletion, 1, 1_000_000);
         var eventData = new ContigEventData(eventP, 1);
-        Assert.AreEqual("contig:1", eventData.ToString());
+        Assert.AreEqual("contig:1", eventData.EventDesc());
     }
     
     [Test]
@@ -32,7 +32,7 @@ public class TestEventData
     {
         var eventP = new CNEventPars(CNEventType.WholeGenomeDoubling, 1, 1_000_000);
         var eventData = new BaseEventData(eventP);
-        Assert.AreEqual("", eventData.ToString());
+        Assert.AreEqual("", eventData.EventDesc());
     }
 
     [Test]
@@ -175,7 +175,7 @@ public class TestEventData
         const long len = 100_000_000;
         var eventP = new CNEventPars(CNEventType.SNV, 1);
         var eventData = new PointMutationData(new Random((int) seed), eventP, 0, len);
-        var dataArray = eventData.ToString().Split(';');
+        var dataArray = eventData.EventDesc().Split(';');
         Assert.AreEqual("contig:0", dataArray[0]);
         Assert.Less(eventData.Location, len);
         Assert.AreNotEqual("N", eventData.Base.ToString());

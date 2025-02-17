@@ -45,6 +45,6 @@ public record TailEventData : ContigEventData
         }
     }
     
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};length:{Length};dir:{Direction}";
 }
