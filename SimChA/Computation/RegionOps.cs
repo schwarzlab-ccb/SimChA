@@ -2,7 +2,6 @@
 
 namespace SimChA.Computation;
 
-// TODO: Inverted regions currently not 
 public static class RegionOps
 {
     private static void AddIfNotEmpty(ICollection<Region> regions, Region region)
@@ -15,25 +14,18 @@ public static class RegionOps
 
     private static Region OffsetStart(Region region, long howMuch)
     {
-        var newRegion = region.Forward
-            ? region with { Start = region.Start + howMuch }
-            : region with { End = region.End - howMuch };
+        var newRegion = region with { Start = region.Start + howMuch };
         return UpdateSNVs(newRegion);
     }
     
     private static Region OffsetEnd(Region region, long howMuch)
     {
-        var newRegion = region.Forward 
-            ? region with {End = region.Start + howMuch}
-            : region with {Start = region.End - howMuch};
+        var newRegion = region with { End = region.Start + howMuch };
         return UpdateSNVs(newRegion);
     }    
     private static Region OffsetBoth(Region region, long start, long end)
     {
-        var newRegion = region.Forward 
-            ? region with {Start = region.Start + start, End = region.Start + end}
-            : region with {Start = region.End - end, End = region.End - start };
-        
+        var newRegion = region with { Start = region.Start + start, End = region.Start + end };
         return UpdateSNVs(newRegion);
     }
     
@@ -145,10 +137,7 @@ public static class RegionOps
         {   
             return includeCentromere ? regions.GetRange(0, index + 1) : regions.GetRange(0, index);
         }
-        else
-        {
-            return includeCentromere ? regions.GetRange(index, regions.Count - index) : regions.GetRange(index + 1, regions.Count - index - 1);
-        }
+        return includeCentromere ? regions.GetRange(index, regions.Count - index) : regions.GetRange(index + 1, regions.Count - index - 1);
     }
 
     public static List<Region> CopyRange(List<Region> regions, long start, long end)
@@ -218,6 +207,7 @@ public static class RegionOps
 
         return (beforeRegions, afterRegions);
     }
+    
     public static List<Region> PointMutateRegion(List<Region> regions, long location, Nucleotide newNucleotide)
     {
         long seekPos = 0;
@@ -252,42 +242,8 @@ public static class RegionOps
         return newRegions;
     }
 
-    public static List<Region> GlueNeighbours(List<Region> regions)
-    {
-        // Step 1: Sort the regions
-        var sortedRegions = regions.OrderBy(r => r.ChrNo).ThenBy(r => r.Start).ThenBy(r => r.End).ToList();
-
-        var mergedRegions = new List<Region>();
-        foreach (var currentRegion in sortedRegions)
-        {
-            bool isMerged = false;
-            for (int i = 0; i < mergedRegions.Count; i++)
-            {
-                var existingRegion = mergedRegions[i];
-                // Check if the current region can be merged with the existing one
-                if (existingRegion.ChrNo == currentRegion.ChrNo &&
-                    existingRegion.Forward == currentRegion.Forward &&
-                    (existingRegion.End == currentRegion.Start))
-                {
-                    // Merge regions by updating the existing region to encompass both
-                    mergedRegions[i] = existingRegion with { End = currentRegion.End };
-                    isMerged = true;
-                    break;
-                }
-            }
-            // If the current region wasn't merged, add it as a new entry
-            if (!isMerged)
-            {
-                mergedRegions.Add(currentRegion);
-            }
-        }
-
-        // Return the merged and glued regions
-        return mergedRegions;
-    }
-
     public static List<Region> InvertRegions(IEnumerable<Region> regions)
-        => regions.Select(r => r with { Forward = !r.Forward }).Reverse().ToList();
+        => regions.Select(r => r with {Start = r.End * -1, End = r.Start * -1}).Reverse().ToList();
 
     public static List<Region> ConcatRegions(IEnumerable<IEnumerable<Region>> listOfRegions)
         => listOfRegions.SelectMany(x => x).ToList();
@@ -322,23 +278,7 @@ public static class RegionOps
     
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
-
-    public static (Region region, long internalLocation) FindRegion(
-        List<Region> regions, long location)
-    {
-        long seekPos = 0;
-        foreach (var t in regions)
-        {
-            var region = t;
-            if (location >= seekPos && location < seekPos + region.Length)
-            {
-                return (region, region.Start + location - seekPos);
-            }
-            seekPos += region.Length;
-        }
-        throw new Exception("Couldn't find the corresponding region of the chromsome to perform an SNV. This should not occur");
-    }
-
+    
     public static List<Region> MergeRegions(List<Region> regions)
     {
         var newRegions = new List<Region>();
@@ -351,7 +291,7 @@ public static class RegionOps
             else
             {
                 var last = newRegions[^1];
-                if (last.ChrNo == regions[i].ChrNo && last.End == regions[i].Start && last.Forward == regions[i].Forward)
+                if (last.ChrNo == regions[i].ChrNo && last.End == regions[i].Start)
                 {
                     newRegions[^1] = last with {End = regions[i].End};
                 }

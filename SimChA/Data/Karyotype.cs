@@ -45,14 +45,6 @@ public class Karyotype
     
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
-
-    public void GlueNeighbours()
-    {
-        foreach (var contig in _contigs)
-        {
-            contig.GlueNeighbours();
-        }
-    }
     
     public IEnumerable<Region> FindRegionsOfChr(string chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));

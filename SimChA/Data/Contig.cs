@@ -12,9 +12,6 @@ public class Contig
     public Contig()
         => _regions = new List<Region>();
 
-    public Contig(Region initialRegion)
-        => _regions = new List<Region> { initialRegion };
-
     public Contig(IEnumerable<Region> regions)
         => _regions = regions.Where(r => r.Length > 0).ToList();
 
@@ -136,34 +133,26 @@ public class Contig
     {
         _regions = RegionOps.ConcatRegions(_regions, other._regions);
     }
-
-    public void GlueNeighbours()
-    {
-        _regions = RegionOps.GlueNeighbours(_regions);
-    }
-
+    
     public void PointMutate(long location, Nucleotide newNucleotide)
     {
         _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
     }
     
-    public (Region region, long internalLocation) FindRegion(long location) 
-        => RegionOps.FindRegion(_regions, location);
-
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
     {
         List<Gene> presentGenes = new();
-        foreach ((long start, long end, string chrNo, bool _, bool forward, _) in _regions)
+        foreach (var reg in _regions)
         {
-            var geneList = geneLists[chrNo];
-            if (forward && geneList.Count > 0)
+            var geneList = geneLists[reg.ChrNo];
+            if (reg.Forward && geneList.Count > 0)
             {
                 int geneIndex = 0;
-                while (geneIndex < geneList.Count && start > geneList[geneIndex].Range.Start)
+                while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Range.Start)
                 {
                     geneIndex++;
                 }
-                while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= end)
+                while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= reg.End)
                 {
                     presentGenes.Add(geneList[geneIndex]);
                     geneIndex++;

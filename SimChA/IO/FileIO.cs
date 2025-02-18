@@ -349,7 +349,6 @@ public class FileIO
         return geneLists;
     }
 
-    // TODO: Needs to implement autosomes only
     public static  List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
@@ -364,7 +363,6 @@ public class FileIO
             var samples = new List<Sample>();
             foreach ((string sampleId, var karyotype) in profiles)
             {
-                karyotype.GlueNeighbours();
                 samples.Add(new Sample(sampleId, sampleId, karyotype));
             }
             return samples;
