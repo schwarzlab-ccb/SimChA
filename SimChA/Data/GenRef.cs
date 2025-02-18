@@ -5,11 +5,34 @@ namespace SimChA.Data;
 
 public class GenRef
 {
+    public string Name { get; }
+    public Dictionary<string, int> ChrLengths { get; }
+    public Dictionary<string, SexType> ChrSex { get; }
+    public Dictionary<string, GenRange> Centromeres { get; }
+    public int AutosomesCount { get; }
+    private List<List<Region>> XYGenome { get; }
+    private List<List<Region>> XXGenome { get; }
+    private List<List<Region>> Autosome { get; }
+    private long XYLinLen { get; }
+    private long XXLinLen { get; }
+    public long AutosomeLinLen { get; }
+    private long XYGenomeLen { get; }
+    private long XXGenomeLen { get; }
+    public long AutosomeLen { get; }
+    private List<string> YChrs { get; }
+    private List<string> XChrs { get; }
+    public List<string> AllChrs { get; }
+    private List<string> AutChrs { get; }
+    public string YChrName { get; }
+    public string XChrName { get; }
+    public Dictionary<string, StringBuilder>? GenContentsDict { get; }
+    public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
+    
     public GenRef(
         string name,
         Dictionary<string, int> chrLengths,
         Dictionary<string, SexType> chrSex,
-        ImmutableDictionary<string, (long start, long end)> centromeres,
+        Dictionary<string, GenRange>  centromeres,
         Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList,
         Dictionary<string, StringBuilder>? genContentsDict = null)
     {
@@ -17,13 +40,13 @@ public class GenRef
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         Centromeres = centromeres;
-        AutosomesCount = chrSex.Count(x => x.Value == SexType.Any);
-        YChrs = chrSex.Where(pair => pair.Value != SexType.Female).Select(pair => pair.Key).ToList();
-        XChrs = chrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList();
-        AutChrs = chrSex.Where(pair => pair.Value == SexType.Any).Select(pair => pair.Key).ToList();
-        AllChrs = chrSex.Select(pair => pair.Key).ToList();
-        YChrName = chrSex.Where(pair => pair.Value == SexType.Male).Select(pair => pair.Key).FirstOrDefault("");
-        XChrName = chrSex.Where(pair => pair.Value == SexType.Female).Select(pair => pair.Key).FirstOrDefault("");
+        AutosomesCount = ChrSex.Count(x => x.Value == SexType.Any);
+        YChrs = ChrSex.Where(pair => pair.Value != SexType.Female).Select(pair => pair.Key).ToList();
+        XChrs = ChrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList();
+        AutChrs = ChrSex.Where(pair => pair.Value == SexType.Any).Select(pair => pair.Key).ToList();
+        AllChrs = ChrSex.Select(pair => pair.Key).ToList();
+        YChrName = ChrSex.Where(pair => pair.Value == SexType.Male).Select(pair => pair.Key).FirstOrDefault("");
+        XChrName = ChrSex.Where(pair => pair.Value == SexType.Female).Select(pair => pair.Key).FirstOrDefault("");
         bool useSNV = genContentsDict != null;
 
         // Create the haplotypes
@@ -47,11 +70,6 @@ public class GenRef
         GeneLists = geneList;
         GenContentsDict = genContentsDict;
     }
-    public string Name { get; }
-    public Dictionary<string, int> ChrLengths { get; }
-    public Dictionary<string, SexType> ChrSex { get; }
-    public ImmutableDictionary<string, (long start, long end)> Centromeres { get; }
-    public int AutosomesCount { get; }
     
     public int ChrCount(SexType sex, bool diploid = true)
         => (diploid, sex) switch
@@ -64,27 +82,7 @@ public class GenRef
             (false, SexType.Any) => AutChrs.Count,
             _ => throw new ArgumentOutOfRangeException($"Missing chromosome counts for {sex}, {diploid}")
         };
-
-    private List<List<Region>> XYGenome { get; }
-    private List<List<Region>> XXGenome { get; }
-    private List<List<Region>> Autosome { get; }
-    private long XYLinLen { get; }
-    private long XXLinLen { get; }
-    public long AutosomeLinLen { get; }
-    private long XYGenomeLen { get; }
-    private long XXGenomeLen { get; }
-    public long AutosomeLen { get; }
-    private List<string> YChrs { get; }
-    private List<string> XChrs { get; }
-    public List<string> AllChrs { get; }
-    private List<string> AutChrs { get; }
-    public string YChrName { get; }
-    public string XChrName { get; }
-
-    public Dictionary<string, StringBuilder>? GenContentsDict { get; set; }
-
-    public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
-
+    
     public long GetGenomeLen(SexType sex, bool diploid = true)
         => (diploid, sex) switch
         {
@@ -121,7 +119,7 @@ public class GenRef
     public IEnumerable<string> ChrIDsForAutosomes()
         => ChrIDsForSex(SexType.Any);
 
-    public IEnumerable<List<Region>> GetGenotype(SexType sexType)
+    public List<List<Region>> GetGenotype(SexType sexType)
         => sexType switch
         {
             SexType.Female => XXGenome,

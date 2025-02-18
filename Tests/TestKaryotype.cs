@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;
-using System.Text;
 using SimChA.Data;
 
 namespace Tests;
@@ -106,7 +104,11 @@ public class TestKaryotype
     [Test]
     public void TestInvertedDuplication()
     {
-        throw new NotImplementedException();
+        long len = _kar.ContigLen(0);
+        _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
+        _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len + 2 * TEST_FRAC, _kar.ContigLen(0));
     }
     
     [Test]
@@ -154,16 +156,16 @@ public class TestKaryotype
     [Test]
     public void TestTranslocation()
     {
-        long contig0Len = _kar.ContigLen(0);
+        long contigLen = _kar.ContigLen(0);
         long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList());
         
-        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, false);
-        Assert.AreEqual(contig0Len, _kar.ContigLen(1));
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, 2 * TEST_FRAC, true);
+        Assert.AreEqual(contigLen + TEST_FRAC, _kar.ContigLen(1));
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
 
-        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, true);
+        _kar.ApplyTranslocation(0, 1, 4 * TEST_FRAC,  3 * TEST_FRAC, true);
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
-        Assert.AreEqual(contig0Len, _kar.ContigLen(0));
+        Assert.AreEqual(contigLen + TEST_FRAC * 2, _kar.ContigLen(0));
         Console.WriteLine(_kar);
     }
     

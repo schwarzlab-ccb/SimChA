@@ -23,6 +23,7 @@ public static class RegionOps
         var newRegion = region with { End = region.Start + howMuch };
         return UpdateSNVs(newRegion);
     }    
+    
     private static Region OffsetBoth(Region region, long start, long end)
     {
         var newRegion = region with { Start = region.Start + start, End = region.Start + end };
@@ -263,6 +264,7 @@ public static class RegionOps
         
         // First region
         var newRegions = new List<List<Region>> { CopyRange(regions, 0, locs[0]) };
+        
         // Internal regions
         for (int i = 0; i < locs.Count - 1; i++)
         {
@@ -279,25 +281,43 @@ public static class RegionOps
     public static List<Region> Gather(List<List<Region>> newRegions, IEnumerable<int> indices) 
         => ConcatRegions(indices.Select(i => newRegions[i]));
     
+    private static List<SNV>? MergeSNVs(List<SNV>? snvs1, List<SNV>? snvs2)
+    {
+        if (snvs1 == null && snvs2 == null)
+        {
+            return null;
+        }
+        if (snvs1 == null)
+        {
+            return snvs2;
+        }
+        if (snvs2 == null)
+        {
+            return snvs1;
+        }
+        return snvs1.Concat(snvs2).ToList();
+    }
+    
     public static List<Region> MergeRegions(List<Region> regions)
     {
         var newRegions = new List<Region>();
         for (int i = 0; i < regions.Count; i++)
         {
+            var cur = regions[i];
             if (i == 0)
             {
-                newRegions.Add(regions[i]);
+                newRegions.Add(cur);
             }
             else
             {
                 var last = newRegions[^1];
-                if (last.ChrNo == regions[i].ChrNo && last.End == regions[i].Start)
+                if (last.ChrNo == cur.ChrNo && last.End == cur.Start)
                 {
-                    newRegions[^1] = last with {End = regions[i].End};
+                    newRegions[^1] = last with { End = cur.End, SNVs = MergeSNVs(last.SNVs, cur.SNVs) };;
                 }
                 else
                 {
-                    newRegions.Add(regions[i]);
+                    newRegions.Add(cur);
                 }
             }
         }

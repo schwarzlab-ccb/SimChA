@@ -94,7 +94,7 @@ public static class Parsers
             
             var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
             var sexType = chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
-            var kar = new Karyotype(newRegs, genRef.Centromeres, sexType);
+            var kar = new Karyotype(genRef, newRegs,  sexType);
             result[sample] = kar;
         }
 
@@ -255,30 +255,30 @@ public static class Parsers
     }
 
     // Set the centromeres to the boundaries of the centromere regions (given that p and q parts are separated)
-    public static ImmutableDictionary<string, (long start, long end)> ParseCentromeres(TextReader centromereFile)
+    public static Dictionary<string, GenRange> ParseCentromeres(TextReader centromereFile)
     {   
         centromereFile.ReadLine(); // Skip header
-        Dictionary<string, (long start, long end)> cents = new();
+        Dictionary<string, GenRange> cents = new();
 
         while (centromereFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
-            string chr = lineSplit[0];
+            string chrom = lineSplit[0];
             long start = long.Parse(lineSplit[1]);
             long end = long.Parse(lineSplit[2]);
 
-            if (cents.ContainsKey(chr))
+            if (cents.ContainsKey(chrom))
             {
-                var existing = cents[chr];
-                cents[chr] = (Math.Min(existing.start, start), Math.Max(existing.end, end));
+                var existing = cents[chrom];
+                cents[chrom] = new GenRange(Math.Min(existing.Start, start), Math.Max(existing.End, end), chrom);
             }
             else
             {
-                cents[chr] = (start, end);
+                cents[chrom] = new GenRange(start, end, chrom);
             }
         }
-        
-        return cents.ToImmutableDictionary();
+
+        return cents;
     }
 
     private static SexType GetSexEnum(ICollection<string> lines, IReadOnlyList<string> lineSplit, int index)

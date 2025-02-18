@@ -1,79 +1,32 @@
 using SimChA.Data;
-using SimChA.DataTypes;
 
 namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype)
+    public static List<CopyNumber> CalcCNs(GenRef genRef, Karyotype karyotype)
     {
         karyotype.MergeRegions();
-        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c),c));
-    } 
-    
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs) 
-    {
-        karyotype.MergeRegions();
-        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), segs[c], c));
+        return CalcCNs(genRef, karyotype, GetSegPoints(genRef, karyotype));
     }
 
-    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs) 
+    public static List<CopyNumber> CalcCNs(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> breaks)
     {
-        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(),  segs[c], c, false));
-    }
-
-    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins)
-    {
-        var chrIDs = bins.Keys;
-        karyotype.MergeRegions();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(),bins[c], c, false));
+        return genRef.ChrIDsForSex(karyotype.Sex)
+            .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), breaks[c], c)).ToList();
     }
     
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, string chrNo)
-    {
-        var regionList = curRegs.ToList();
-        var starts = regionList.Select(r => r.Start).Append(0);
-        var ends = regionList.Select(r => r.End).Append(genRef.ChrLengths[chrNo]);
-        var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
-        return CalcChrCopyNumbers(regionList, segmentBoundaries, chrNo);
-    }
-    
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<long> segs, string chrNo, bool joinSegments = true)
+    private static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, List<long> breaks, string chrNo)
     {
         var result = new List<CopyNumber>();
-        for (int i = 0; i < segs.Count - 1; i++)
+        for (int i = 0; i < breaks.Count - 1; i++)
         {
-            var seg = new GenRange(segs[i], segs[i + 1], chrNo);
-            int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInside(r));
-            int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInside(r));
+            var seg = new GenRange(breaks[i], breaks[i + 1], chrNo);
+            int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInsideOf(r));
+            int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInsideOf(r));
 		    int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
             var cn = new CopyNumber(seg, cnh1, cnh2, nSNVs);
             result.Add(cn);
-
-        }
-        if (joinSegments)
-        {
-            // Merge the result list such that adjacent segments with the same copy number are combined
-            result = result.Aggregate(new List<CopyNumber>(), (acc, cn) =>
-            {
-                if (acc.Count == 0)
-                {
-                    acc.Add(cn);
-                }
-                else
-                {
-                    var last = acc[^1];
-                    if (last.CNH1 == cn.CNH1 && last.CNH2 == cn.CNH2)
-                    {
-                        acc[^1] = new CopyNumber(new GenRange(last.Segment.Start, cn.Segment.End, last.Segment.ChrNo), last.CNH1, last.CNH2, last.NSNVs + cn.NSNVs);
-                    }
-                    else
-                    {
-                        acc.Add(cn);
-                    }
-                }
-                return acc;
-            });
         }
         return result;
     }
@@ -81,7 +34,7 @@ public static class CopyNumbers
     public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexType sex)
     {
         long totalLength = genRef.GetGenomeLen(sex) / 2;
-        return copyNumbers.Select(c => (float) c.Segment.Length * (c.CNH1 + c.CNH2) / totalLength).Sum();
+        return copyNumbers.Select(c => c.Segment.Length * (c.CNH1 + c.CNH2)).Sum() / (float) totalLength;
     }
 
     public static string Header(bool withSample)
@@ -90,17 +43,14 @@ public static class CopyNumbers
     public static string ToTSV(IEnumerable<CopyNumber> copyNumbers, string sampleId)
         => string.Join("\n", copyNumbers.Select(cn => $"{sampleId}\t{cn.ToTSV()}"));
 
-    public static List<long> GetSegPoints(GenRef genRef, string chrNo, IEnumerable<Karyotype> kars)
+    private static List<long> GetSegPoints(GenRef genRef, string chrNo, Karyotype kar)
     {
         var segList = new HashSet<long> {0, genRef.ChrLengths[chrNo]};
-        foreach (var kar in kars)
-        {
-            var segPoints = kar.FindRegionsOfChr(chrNo).SelectMany(r => new[] {r.Start, r.End});
-            segList.UnionWith(segPoints);
-        }
+        var segPoints = kar.FindRegionsOfChr(chrNo).SelectMany(r => new[] {r.AbsStart, r.AbsEnd});
+        segList.UnionWith(segPoints);
         return segList.OrderBy(val => val).ToList();
     }
 
-    public static Dictionary<string, List<long>> GetSegPoints(GenRef genRef, IEnumerable<Karyotype> kars) 
-        => genRef.AllChrs.ToDictionary(chr => chr, chr => GetSegPoints(genRef, chr, kars));
+    public static Dictionary<string, List<long>> GetSegPoints(GenRef genRef, Karyotype kar) 
+        => genRef.AllChrs.ToDictionary(chr => chr, chr => GetSegPoints(genRef, chr, kar));
 }

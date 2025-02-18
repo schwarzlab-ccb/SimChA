@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using SimChA.DataTypes;
 
 namespace SimChA.IO;
 

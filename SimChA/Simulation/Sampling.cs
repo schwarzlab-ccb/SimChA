@@ -1,5 +1,4 @@
 ﻿using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.EventData;
 using MathNet.Numerics.Distributions;
 using SimChA.Data;
@@ -16,9 +15,6 @@ public static class Sampling
     
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
         => (long) Math.Clamp(Math.Round(contigLen * meanFrac * Exponential.Sample(rnd, 1)), 1, contigLen);
-    
-    public static double GetExpProb(long segLen, double scale)
-        => Math.Exp(-segLen / scale) / scale;
     
     public static long GetPos(Random rnd, long contigLen)
         => rnd.NextInt64(0, contigLen);
@@ -128,16 +124,12 @@ public static class Sampling
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
                 var cents = kar.GetCentromeres(seq[0].id);
-                return cents.Count == 0 
-                    ? null
-                    : new TailEventData(rnd, cnEventPars, seq[0].id, cents);
+                return cents.Count > 0 ? new TailEventData(rnd, cnEventPars, seq[0].id, cents) : null;
 
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:
                 cents = kar.GetCentromeres(seq[0].id);
-                return cents.Count == 0
-                    ? null
-                    : new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len, cents);
+                return cents.Count > 0 ? new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len, cents) : null;
 
             // Internal events
             case CNEventType.InternalDuplication:
@@ -147,9 +139,9 @@ public static class Sampling
                 return new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
             
             case CNEventType.Translocation:
-                return seq.Count < 2 
-                    ? null 
-                    : new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len);
+                return seq.Count > 1
+                    ? new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len)
+                    : null;
 
             case CNEventType.Chromothripsis:
                 return new ChromothripsisEventData(rnd, cnEventPars, seq[0].id, seq[0].len);

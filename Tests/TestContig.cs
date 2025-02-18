@@ -2,13 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using SimChA.Data;
-using SimChA.DataTypes;
 using SimChA.IO;
-using SimChA.Simulation;
 
 namespace Tests;
 
@@ -47,16 +44,23 @@ public class TestContig
     [Test]
     public void TestInversion()
     {
-        long length = _contig1.Length(); 
-        _contig1.InvertRange(length / 4, length * 3 / 4);
+        long length = _contig1.Length();
+        for (int i = 0; i < 10; i++)
+        {
+            _contig1.InvertRange(i * 1000000, i * 2000000);
+        }
+
         Assert.AreEqual(length, _contig1.Length());
     }
 
     [Test]
     public void TestReplication()
     {
-        long length = _contig1.Length() + 900;
-        _contig1.DuplicateRange(100, 1000);
+        long length = _contig1.Length() + 10 * 900;
+        for (int i = 0; i < 10; i++)
+        {
+            _contig1.DuplicateRange(i*1000 + 100, i*1000 + 1000);
+        }
         Assert.AreEqual(length, _contig1.Length());
     }
     

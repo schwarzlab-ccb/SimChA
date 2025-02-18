@@ -1,4 +1,3 @@
-using SimChA.DataTypes;
 using MathNet.Numerics.Statistics;
 using SimChA.Data;
 

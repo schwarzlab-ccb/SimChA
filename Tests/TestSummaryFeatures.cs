@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using SimChA.DataTypes;
 using SimChA.Simulation;
 using SimChA.Computation;
 using SimChA.Data;
@@ -37,7 +36,7 @@ public class TestSummaryFeatures
         for (int i = 0; i < kars.Count; i++)
         {
             var kar = kars[i];
-            var cn = CopyNumbers.CalcCopyNumbers(_genRef, kar).ToList();
+            var cn = CopyNumbers.CalcCNs(_genRef, kar).ToList();
             cnps.Add($"sample_{i + 1}", cn);
         }
         return cnps;

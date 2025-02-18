@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
-
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using SimChA.Computation;
 
 namespace SimChA.Data;
@@ -145,33 +143,34 @@ public class Contig
         foreach (var reg in _regions)
         {
             var geneList = geneLists[reg.ChrNo];
-            if (reg.Forward && geneList.Count > 0)
+            if (!reg.Forward || geneList.Count <= 0)
             {
-                int geneIndex = 0;
-                while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Range.Start)
-                {
-                    geneIndex++;
-                }
-                while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= reg.End)
-                {
-                    presentGenes.Add(geneList[geneIndex]);
-                    geneIndex++;
-                }
+                continue;
+            }
+            int geneIndex = 0;
+            while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Range.Start)
+            {
+                geneIndex++;
+            }
+            while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= reg.End)
+            {
+                presentGenes.Add(geneList[geneIndex]);
+                geneIndex++;
             }
         }
         return presentGenes;
     }
 
-    public List<(long start, long end)> GetCentromeres(IImmutableDictionary<string, (long start, long end)> centromeres)
+    public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
     {
         List<(long start, long end)> centromereList = new();
         long currentPos = 0;
         foreach (var reg in _regions)
         {
-            (long centStart, long centEnd) = centromeres[reg.ChrNo];
-            if (reg.Start <= centStart && reg.End >= centEnd)
+            var cent = centMap[reg.ChrNo];
+            if (cent.IsInsideOf(reg))
             {
-                centromereList.Add((currentPos + centStart, currentPos + centEnd));
+                centromereList.Add((currentPos + cent.Start, currentPos + cent.End));
             }
             currentPos += reg.Length;
         }

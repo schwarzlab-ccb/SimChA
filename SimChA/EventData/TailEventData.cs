@@ -10,17 +10,18 @@ public record TailEventData : ContigEventData
     public bool Direction { get; }
     
     // Constructor used for Tail CNEventPars
-    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
+        : base(CNEventPars, contigId)
     {
         //Length = Sampling.GetPos(rnd, contigLen, CN);
         Length = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         Direction = rnd.CoinFlip();
     }
     
-    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, 
-        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> cents)
+        : base(CNEventPars, contigId)
     {
-        var cent =  centromeres.Shuffle(rnd).First();
+        var cent =  cents.Shuffle(rnd).First();
         Length = rnd.CoinFlip() ? cent.start : cent.end;
         Direction = rnd.CoinFlip();
     }

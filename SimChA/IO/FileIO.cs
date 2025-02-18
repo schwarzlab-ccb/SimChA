@@ -33,9 +33,9 @@ public class FileIO
     // private const string TREE_FILENAME = "tree.tsv";
     
     private string Timestamp { get; }
-    private string? OutFolder { get; }
+    private string OutFolder { get; }
 
-    public FileIO(string? outFolder)
+    public FileIO(string outFolder)
     {
         Timestamp = DateTime.Now.ToString("yy_MM_dd_HH_mm_ss");
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -55,10 +55,13 @@ public class FileIO
         
         outputFile.WriteLine(CopyNumbers.Header(true));
         var karyotypes = samples.Select(s => s.Karyotype);
-        var segs = CopyNumbers.GetSegPoints(genRef, karyotypes);
+        var breaks = karyotypes.Select(k => CopyNumbers.GetSegPoints(genRef, k)).ToList();
+        var segmentation = genRef.AllChrs.ToDictionary(
+            chrom => chrom, 
+            chrom => breaks.SelectMany(br => br[chrom]).ToHashSet().OrderBy(val => val).ToList());
         foreach (var sample in samples)
         {
-            var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, sample.Karyotype, segs);
+            var cns = CopyNumbers.CalcCNs(genRef, sample.Karyotype, segmentation);
             outputFile.WriteLine(CopyNumbers.ToTSV(cns, sample.SampleId));
         }
     }
@@ -72,7 +75,7 @@ public class FileIO
 
         foreach (var sample in samples)
         {
-            var cns = CopyNumbers.CalcCopyNumbers(genRef, sample.Karyotype);
+            var cns = CopyNumbers.CalcCNs(genRef, sample.Karyotype);
             outputFile.WriteLine(CopyNumbers.ToTSV(cns, sample.SampleId));
         }
     }
@@ -409,7 +412,7 @@ public class FileIO
         }
     }
 
-    private static ImmutableDictionary<string, (long start, long end)> ReadCentromeres(string folder)
+    private static Dictionary<string, GenRange> ReadCentromeres(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CENTROMERES_TSV));
         if (!File.Exists(fileFullPath))

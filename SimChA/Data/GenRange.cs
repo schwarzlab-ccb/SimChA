@@ -5,10 +5,14 @@ public record GenRange(long Start, long End, string ChrNo)
     public long Length => End - Start;
     
     public bool Forward => Start >= 0;
+
+    public long AbsStart => Math.Max(Start, -End);
+    
+    public long AbsEnd => Math.Max(End, -Start);
     
     // True if this range is inside the other range
-    public bool IsInside(GenRange other) 
-        => Math.Max(Start, -End) >= other.Start && Math.Max(End, -Start) <= other.End && ChrNo == other.ChrNo;
+    public bool IsInsideOf(GenRange other) 
+        => AbsStart >= other.AbsStart && AbsEnd <= other.AbsEnd && ChrNo == other.ChrNo;
 
     // True if this range shares at least one position with the other range
     public bool Overlaps(GenRange other)

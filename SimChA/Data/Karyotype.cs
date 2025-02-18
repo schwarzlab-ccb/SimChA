@@ -1,37 +1,36 @@
-﻿using System.Collections.Immutable;
-using SimChA.Computation;
+﻿using SimChA.Computation;
 using SimChA.IO;
 
 namespace SimChA.Data;
 
-// Note: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
+// NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
-    public double FitnessVal { get; private set; }
+    private GenRef GenRef { get; }
     public SexType Sex { get; }
+    public double FitnessVal { get; private set; }
     private readonly List<Contig> _contigs;
-    private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
     public Karyotype(GenRef genRef, SexType sex)
     {
+        GenRef = genRef;
         _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
         Sex = sex;
-        Centromeres = genRef.Centromeres;
     }
     
     public Karyotype(Karyotype other)
     {
+        GenRef = other.GenRef;
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
         Sex = other.Sex;
-        Centromeres = other.Centromeres;
         FitnessVal = other.FitnessVal;
     }
     
-    public Karyotype(List<Contig> contigs, IImmutableDictionary<string, (long start, long end)> centromeres, SexType sexType)
+    public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
     {
+        GenRef = genRef;
         _contigs = contigs;
-        Sex = sexType;
-        Centromeres = centromeres;
+        Sex = sex;
     }
 
     public int CountContigs() 
@@ -55,9 +54,8 @@ public class Karyotype
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
     
-    // TODO: Why do you need to check if the contigId is less than the count of contigs?
     public List<(long start, long end)> GetCentromeres(int contigId)
-        => contigId < _contigs.Count ? _contigs[contigId].GetCentromeres(Centromeres) : new List<(long, long)>();
+        => _contigs[contigId].GetCentromeres(GenRef.Centromeres);
     
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
