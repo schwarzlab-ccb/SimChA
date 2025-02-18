@@ -9,6 +9,10 @@ public record GenRange(long Start, long End, string ChrNo)
     public long AbsStart => Math.Max(Start, -End);
     
     public long AbsEnd => Math.Max(End, -Start);
+
+    public static string DirToStr(bool dir) => dir ? ">" : "<";
+
+    private string DirString => DirToStr(Forward);
     
     // True if this range is inside the other range
     public bool IsInsideOf(GenRange other) 
@@ -19,5 +23,5 @@ public record GenRange(long Start, long End, string ChrNo)
         => Start < other.End && End > other.Start && ChrNo == other.ChrNo;
     
     public override string ToString() 
-        => $"{ChrNo}[{Start}:{End})";
+        => $"{DirString}{ChrNo}[{Start}:{End})";
 }

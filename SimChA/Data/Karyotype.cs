@@ -9,6 +9,7 @@ public class Karyotype
     private GenRef GenRef { get; }
     public SexType Sex { get; }
     public double FitnessVal { get; private set; }
+    
     private readonly List<Contig> _contigs;
     
     public Karyotype(GenRef genRef, SexType sex)
@@ -37,7 +38,7 @@ public class Karyotype
         => _contigs.Count(c => c.Any());
     
     public long GenomeLen()
-        => _contigs.Sum(c => c.Length());// - MissingLen();
+        => _contigs.Sum(c => c.Length());
     
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
@@ -48,7 +49,7 @@ public class Karyotype
     public IEnumerable<Region> FindRegionsOfChr(string chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
 
-    public static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
+    private static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;
     
     public long ContigLen(int contigId)
@@ -60,7 +61,8 @@ public class Karyotype
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
     
-    public Contig GetContig(int contigID) => _contigs[contigID];
+    public Contig GetContig(int contigID) 
+        => _contigs[contigID];
 
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
@@ -250,13 +252,10 @@ public class Karyotype
             {
                 continue;
             }
-            foreach (var snv in region.SNVs)
+
+            foreach (var snv in region.SNVs.Where(snv => snvList.All(s => s != snv)))
             {
-                string chrNo = region.ChrNo;
-                if (snvList.All(s => s != snv))
-                {
-                    snvList.Add(snv);
-                }
+                snvList.Add(snv);
             }
         }
         return snvList;
