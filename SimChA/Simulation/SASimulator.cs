@@ -29,54 +29,48 @@ public class SASimulator : Simulator
         return normalized;
     }
 
-    private BaseEventData GetNewEvent(List<CNEventPars> cnEventPars, Karyotype kar, double currentFitness)
+    private (Karyotype newKar, BaseEventData eventData) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
     {
         for (int tryNo = 0; tryNo <= SAParams.MaxTries; tryNo++)
         {
             var cnEventP = Rnd.PickRndElem(cnEventPars);
-            var eventData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
-            if (eventData == null)
+            var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, cnEventP);
+            if (eventData != null)
             {
-                continue;
-            }
-            var proposedKar = new Karyotype(kar);
-            eventData.ApplyEvent(proposedKar);
-            double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
-            if (Math.Exp(proposedFitness - currentFitness - SAParams.Acceptance) >= Rnd.NextDouble())
-            {
-                return eventData;
+                var proposedKar = new Karyotype(currentKar);
+                eventData.ApplyEvent(proposedKar);
+                double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
+                if (Math.Exp(proposedFitness - currentKar.FitnessVal - SAParams.Acceptance) > Rnd.NextDouble())
+                {
+                    return (proposedKar, eventData);
+                }
             }
         }
-        return CreatePassEvent();
+        return (currentKar, CreatePassEvent());
     }
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
-        Karyotype parentKar, 
-        CTreeNode child, 
+        Karyotype currentKar, 
+        CTreeNode cnChild, 
         List<CNEventPars> cnEventPs, 
         int mutDepth)
     {
-        var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        double currentFit = childKar.FitnessVal;
         bool hasWGD = false;
-        int eventCount = SampleEventCount(child);
+        int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{eventCount}".PadRight(80));
+            Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
             var cnEventPars = GetEventPars(cnEventPs, hasWGD);
-            var eventData = GetNewEvent(cnEventPars, childKar, currentFit);
-            var newKar = new Karyotype(childKar);
-            eventData.ApplyEvent(newKar);
-            double proposedFit = newKar.UpdateFitness(GenRef, FitParams);
-            double dFit = proposedFit - currentFit;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, proposedFit);
+            var (newKar, eventData) = GetNewEvent(cnEventPars, currentKar);
+            double newFit = newKar.UpdateFitness(GenRef, FitParams);
+            double dFit = newFit - currentKar.FitnessVal;
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit);
             
             childEvs.Add(newEv);
             hasWGD |= eventData.EventType == CNEventType.WholeGenomeDoubling;
-            childKar = newKar;
-            currentFit = proposedFit;
+            currentKar = newKar;
         }
-        return (childKar, childEvs);
+        return (currentKar, childEvs);
     }
 }

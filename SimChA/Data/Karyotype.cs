@@ -10,13 +10,11 @@ public class Karyotype
     public double FitnessVal { get; private set; }
     public SexType Sex { get; }
     private readonly List<Contig> _contigs;
-    private readonly Dictionary<string, List<GenRange>> _missingRanges;
     private IImmutableDictionary<string, (long start, long end)> Centromeres { get; }
     
     public Karyotype(GenRef genRef, SexType sex)
     {
         _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
-        _missingRanges = genRef.AllChrs.ToDictionary(chrNo => chrNo, _ => new List<GenRange>());
         Sex = sex;
         Centromeres = genRef.Centromeres;
     }
@@ -24,17 +22,13 @@ public class Karyotype
     public Karyotype(Karyotype other)
     {
         _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
-        _missingRanges = other._missingRanges;
         Sex = other.Sex;
         Centromeres = other.Centromeres;
+        FitnessVal = other.FitnessVal;
     }
     
-    public Karyotype(List<Contig> contigs, IEnumerable<GenRange> missingList, 
-        IImmutableDictionary<string, (long start, long end)> centromeres, SexType sexType)
+    public Karyotype(List<Contig> contigs, IImmutableDictionary<string, (long start, long end)> centromeres, SexType sexType)
     {
-        _missingRanges = missingList
-            .GroupBy(range => range.ChrNo)
-            .ToDictionary(group => group.Key, group => group.ToList());
         _contigs = contigs;
         Sex = sexType;
         Centromeres = centromeres;
@@ -60,14 +54,8 @@ public class Karyotype
         }
     }
     
-    public long MissingLen()
-        => _missingRanges.Sum(r => r.Value.Sum(range => range.Length));
-
     public IEnumerable<Region> FindRegionsOfChr(string chrNo) 
         => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
-
-    public IList<GenRange> GetMissingOfChr(string chrNo)
-        => _missingRanges.ContainsKey(chrNo) ? _missingRanges[chrNo] : new List<GenRange>();
 
     public static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;

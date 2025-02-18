@@ -18,7 +18,7 @@ public static class Factory
                 return new MHSimulator(rnd, genRef, sampleParams, fitParams, mcParams);
 
             case SelectionMode.SimulatedAnnealing:
-                var evoParams = simChAConfig.EvoParams ?? throw new Exception(
+                var evoParams = simChAConfig.SAParams ?? throw new Exception(
                     "Error: EvoParams not set. Cannot perform evolution without evolution parameters. Please set EvoParams in the config file.");
                 return new SASimulator(rnd, genRef, sampleParams, fitParams, evoParams);
 

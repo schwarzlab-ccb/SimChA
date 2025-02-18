@@ -1,7 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -89,10 +86,10 @@ public class TestParsing
         var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false);
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
-        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr1").Count()); // 2 existing
-        Assert.AreEqual(4, profiles["1"].FindRegionsOfChr("chr2").Count()); // 4 missing (split by null regions)
-        Assert.AreEqual(9, profiles["1"].FindRegionsOfChr("chr3").Count()); // 5 existing + 4 missing
-        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr4").Count()); // 2 missing
+        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr1").Count()); 
+        Assert.AreEqual(0, profiles["1"].FindRegionsOfChr("chr2").Count());
+        Assert.AreEqual(5, profiles["1"].FindRegionsOfChr("chr3").Count()); 
+        Assert.AreEqual(1, profiles["2"].FindRegionsOfChr("chrX").Count()); 
         Assert.AreEqual(SexType.Male, profiles["2"].Sex);
     }
 

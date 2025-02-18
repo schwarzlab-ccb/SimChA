@@ -8,54 +8,48 @@ public static class CopyNumbers
     public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype)
     {
         karyotype.MergeRegions();
-        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c), karyotype.GetMissingOfChr(c),c));
+        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(genRef, karyotype.FindRegionsOfChr(c),c));
     } 
     
-    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs) 
     {
         karyotype.MergeRegions();
-        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing));
+        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), segs[c], c));
     }
 
-    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs, bool keepMissing = false) 
+    public static IEnumerable<CopyNumber> CalcConsistentCopyNumbers(GenRef genRef, Karyotype karyotype, IDictionary<string, List<long>> segs) 
     {
-        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), segs[c], c, keepMissing, false));
+        return genRef.ChrIDsForSex(karyotype.Sex).SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(),  segs[c], c, false));
     }
 
-    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins, bool keepMissing = false)
+    public static IEnumerable<CopyNumber> CalcBinnedCopyNumbers(Karyotype karyotype, IDictionary<string, List<long>> bins)
     {
         var chrIDs = bins.Keys;
         karyotype.MergeRegions();
-        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), karyotype.GetMissingOfChr(c), bins[c], c, keepMissing, false));
-    }
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, IList<GenRange> missing, string chrNo, bool keepMissing = false)
-    {
-        var regionList = curRegs.ToList();
-        var starts = regionList.Select(r => r.Start).Append(0).Concat(missing.Select(r => r.Start));
-        var ends = regionList.Select(r => r.End).Append(genRef.ChrLengths[chrNo]).Concat(missing.Select(r => r.End));
-        var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
-        return CalcChrCopyNumbers(regionList, missing, segmentBoundaries, chrNo, keepMissing);
+        return chrIDs.SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(),bins[c], c, false));
     }
     
-    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<GenRange> missing, IList<long> segs, string chrNo, bool keepMissing, bool joinSegments = true)
+    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(GenRef genRef, IEnumerable<Region> curRegs, string chrNo)
+    {
+        var regionList = curRegs.ToList();
+        var starts = regionList.Select(r => r.Start).Append(0);
+        var ends = regionList.Select(r => r.End).Append(genRef.ChrLengths[chrNo]);
+        var segmentBoundaries = starts.Concat(ends).Distinct().OrderBy(val => val).ToList();
+        return CalcChrCopyNumbers(regionList, segmentBoundaries, chrNo);
+    }
+    
+    public static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, IList<long> segs, string chrNo, bool joinSegments = true)
     {
         var result = new List<CopyNumber>();
         for (int i = 0; i < segs.Count - 1; i++)
         {
             var seg = new GenRange(segs[i], segs[i + 1], chrNo);
-            // Skip segments that are completely missing
-            if (missing.All(m => !seg.IsInside(m)))
-            {
-                int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInside(r));
-                int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInside(r));
-		        int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
-            	var cn = new CopyNumber(seg, cnh1, cnh2, nSNVs);
-                result.Add(cn);
-            }
-            else if (keepMissing)
-            {
-                result.Add(new CopyNumber(seg, -1, -1, -1));
-            }
+            int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInside(r));
+            int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInside(r));
+		    int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
+            var cn = new CopyNumber(seg, cnh1, cnh2, nSNVs);
+            result.Add(cn);
+
         }
         if (joinSegments)
         {

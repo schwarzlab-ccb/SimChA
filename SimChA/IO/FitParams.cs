@@ -4,8 +4,8 @@ namespace SimChA.IO;
 
 public record FitParams
 (
-    double Stress = 1,
-    double TsgOg = 1,
-    double Essentiality = 1,
+    double Stress = 0,
+    double TsgOg = 0,
+    double Essentiality = 0,
     bool GeneNormalization = false
 );

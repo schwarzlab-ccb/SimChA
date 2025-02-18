@@ -7,7 +7,6 @@ public record SampleStat(
     string ParentId,
     SexType Sex,
     double Ploidy,
-    double Coverage,
     double Fitness,
     double FitnessTarget,
     double Stress,
@@ -24,7 +23,6 @@ public record SampleStat(
            "\tparent_id" +
            "\tsex" +
            "\tploidy" +
-           "\tcoverage" +
            "\tfitness" +
            "\tfitness_target" +
            "\tstress" +
@@ -41,7 +39,6 @@ public record SampleStat(
         $"\t{ParentId}" +
         $"\t{Sex}" +
         $"\t{Ploidy}" +
-        $"\t{Coverage}" +
         $"\t{Fitness}" +
         $"\t{FitnessTarget}" +
         $"\t{Stress}" +
@@ -55,16 +52,12 @@ public record SampleStat(
 
     public static double CalcPloidy(Karyotype kar, GenRef genRef)
         => 2.0 * kar.GenomeLen() / genRef.GetGenomeLen(kar.Sex);
-
-    private static double CalcCoverage(Karyotype kar, GenRef genRef)
-        => (genRef.GetGenomeLen(kar.Sex, false) - kar.MissingLen()) / (double)genRef.GetGenomeLen(kar.Sex, false);
-
+    
     public static SampleStat GetSampleStat(Sample sample, GenRef genRef, FitParams fParams)
     {
         var kar = sample.Karyotype;
 
         double ploidy = CalcPloidy(kar, genRef);
-        double coverage = CalcCoverage(kar, genRef);
 
         var tsgCNs = Computation.Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar);
         var ogCNs = Computation.Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar);
@@ -79,7 +72,7 @@ public record SampleStat(
         double hemizygosity = Computation.Fitness.Zygosity(genRef, essCNs, 1);
         double nullizygosity = Computation.Fitness.Zygosity(genRef, essCNs, 0);
 
-        var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, coverage, fitness, 
+        var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitness, 
             kar.FitnessVal, stress, tsg, og, ess, 
             sample.Events.Count, hemizygosity, nullizygosity, sample.MixtureString());
         return res;

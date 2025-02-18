@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using SimChA.DataTypes;
-using SimChA.Simulation;
 using SimChA.Computation;
 using SimChA.Data;
 using SimChA.EventData;
@@ -17,7 +15,6 @@ namespace Tests;
 public class TestCopyNumbers
 {
     private GenRef _genRef;
-    private Karyotype _kar;
     private Random _rnd;
     
     [SetUp]
@@ -30,8 +27,8 @@ public class TestCopyNumbers
     [Test]
     public void TestCalcPloidyReference([Values] SexType sex)
     {
-        _kar = new Karyotype(_genRef, sex);
-        var cnRef = CopyNumbers.CalcCopyNumbers(_genRef, _kar).ToList();
+        var kar = new Karyotype(_genRef, sex);
+        var cnRef = CopyNumbers.CalcCopyNumbers(_genRef, kar).ToList();
         double ploidyRef = CopyNumbers.CalcPloidy(_genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
     }
@@ -39,25 +36,25 @@ public class TestCopyNumbers
     [Test]
     public void TestCalcPloidyFitness([Values] SexType sex)
     {
-        _kar = new Karyotype(_genRef, sex);
-        double ploidyRef = SampleStat.CalcPloidy(_kar, _genRef);
+        var kar = new Karyotype(_genRef, sex);
+        double ploidyRef = SampleStat.CalcPloidy(kar, _genRef);
         Assert.AreEqual(2, ploidyRef);
     }
 
     [Test]
     public void TestCalcPloidyTetraploid([Values] SexType sex)
     {
-        _kar = new Karyotype(_genRef, sex);
-        _kar.ApplyWGD();
+        var kar = new Karyotype(_genRef, sex);
+        kar.ApplyWGD();
         if (sex == SexType.Any)
         {
-            Assert.AreEqual(88, _kar.CountContigs());
+            Assert.AreEqual(88, kar.CountContigs());
         }
         else
         {
-            Assert.AreEqual(92, _kar.CountContigs());
+            Assert.AreEqual(92, kar.CountContigs());
         }
-        double tetraploidy = SampleStat.CalcPloidy(_kar, _genRef);
+        double tetraploidy = SampleStat.CalcPloidy(kar, _genRef);
         Assert.AreEqual(4, tetraploidy);
     }
 
@@ -65,8 +62,8 @@ public class TestCopyNumbers
     public void TestCalcAutosomeCNs([Values] SexType sex)
     {
         var genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH, false);
-        _kar = new Karyotype(genRef, sex);
-        var cnRef = CopyNumbers.CalcCopyNumbers(genRef, _kar).ToList();
+        var kar = new Karyotype(genRef, sex);
+        var cnRef = CopyNumbers.CalcCopyNumbers(genRef, kar).ToList();
         Assert.AreEqual(genRef.ChrCount(sex, false), cnRef.Count);
         double ploidyRef = CopyNumbers.CalcPloidy(genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
@@ -75,9 +72,9 @@ public class TestCopyNumbers
     [Test]
     public void TestWGSPloidy([Values] SexType sex)
     {
-        _kar = new Karyotype(_genRef, sex);
-        TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
-        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar).ToList();
+        var kar = new Karyotype(_genRef, sex);
+        TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
+        var cns = CopyNumbers.CalcCopyNumbers(_genRef, kar).ToList();
         double ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(4, ploidy);
         // TODO Gain / Loss specific number of chromosomes
@@ -86,15 +83,15 @@ public class TestCopyNumbers
     [Test]
     public void TestNormalPloidy([Values] SexType sex)
     {
-        _kar = new Karyotype(_genRef, sex);
+        var kar = new Karyotype(_genRef, sex);
         // add a bunch of translocations and inversions and check that ploidy is still 2
         for (int i = 0; i < 100; i++)
         {
-            TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.Translocation, 1));
-            TestKaryotype.ApplyRandomEvent(_rnd, _kar, new CNEventPars(CNEventType.InternalInversion, 1, 1_000_000));
+            TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.Translocation, 1));
+            TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.InternalInversion, 1, 1_000_000));
         }
-        var cns = CopyNumbers.CalcCopyNumbers(_genRef, _kar).ToList();
-        var ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
+        var cns = CopyNumbers.CalcCopyNumbers(_genRef, kar).ToList();
+        double ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(2, ploidy);
     }
 
@@ -130,12 +127,8 @@ public class TestCopyNumbers
         karXX.ApplyInternalDeletion(0, 1000, 2000);
         string chrNo = "chr1";
         var segs = CopyNumbers.GetSegPoints(_genRef, chrNo, new List<Karyotype> {karXX});
-        var cns = CopyNumbers.CalcChrCopyNumbers(
-            karXX.FindRegionsOfChr(chrNo).ToList(), 
-            karXX.GetMissingOfChr(chrNo), 
-            segs, 
-            chrNo, 
-            false);
+        var curRegs = karXX.FindRegionsOfChr(chrNo).ToList();
+        var cns = CopyNumbers.CalcChrCopyNumbers(curRegs, segs, chrNo, false);
         Console.WriteLine(string.Join(", ", cns));
     }
 }

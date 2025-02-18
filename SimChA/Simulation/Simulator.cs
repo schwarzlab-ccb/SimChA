@@ -51,16 +51,16 @@ public class Simulator
 
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
-        CTreeNode child, 
+        CTreeNode cnChild, 
         List<CNEventPars> cnEventPs, 
         int mutDepth)
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        int eventCount = SampleEventCount(child);
+        int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{eventCount}".PadRight(80));
+            Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
             var eventP = Rnd.PickRndElem(cnEventPs);
             var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreatePassEvent();
             eventData.ApplyEvent(childKar);

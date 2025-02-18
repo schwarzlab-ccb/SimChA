@@ -7,7 +7,10 @@
         "Seed": 0,
         "AutosomesOnly": true
     },
-    "FitParams": {},
+    "FitParams": {
+        "Stress":  1.98
+    },
+    "SAParams": { },
     "Signatures": [
         {
             "Name": "CNA",
@@ -19,7 +22,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.007074905465888097
+                    "Prob": 0.0466
                 }
             ]
         }

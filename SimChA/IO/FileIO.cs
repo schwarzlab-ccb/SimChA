@@ -58,7 +58,7 @@ public class FileIO
         var segs = CopyNumbers.GetSegPoints(genRef, karyotypes);
         foreach (var sample in samples)
         {
-            var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, sample.Karyotype, segs, true);
+            var cns = CopyNumbers.CalcConsistentCopyNumbers(genRef, sample.Karyotype, segs);
             outputFile.WriteLine(CopyNumbers.ToTSV(cns, sample.SampleId));
         }
     }

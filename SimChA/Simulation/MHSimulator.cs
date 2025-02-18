@@ -127,23 +127,23 @@ public class MHSimulator : Simulator
 
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar,
-        CTreeNode child,
+        CTreeNode cnChild,
         List<CNEventPars> cnEventPs,
         int mutDepth)
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        double targetFit = SampleFit(child);
+        double targetFit = SampleFit(cnChild);
         double oldFitness = childKar.FitnessVal;
 
-        int eventCount = SampleEventCount(child);
+        int eventCount = SampleEventCount(cnChild);
         var bestEvents = MHParams.MatchFitness
             ? GenEventsForTargetFitness(cnEventPs, childKar, eventCount, targetFit)
             : GenEventsForMaxFitness(cnEventPs, childKar, eventCount);
 
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            Console.Write($"\rSample {child.CloneId}. Event {evNo}/{eventCount}".PadRight(80));
+            Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
 
             var eventData = bestEvents[evNo - 1];
             eventData.ApplyEvent(childKar);

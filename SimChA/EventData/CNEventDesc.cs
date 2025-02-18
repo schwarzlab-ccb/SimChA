@@ -1,10 +1,6 @@
 namespace SimChA.EventData;
 
-public record CNEventDesc(
-    BaseEventData EventData,
-    int Depth,
-    double DeltaFitness = 0,
-    double TotalFitness = 0)
+public record CNEventDesc(BaseEventData EventData, int Depth, double DeltaFitness = 0, double TotalFitness = 0)
 {
     public static string Header()
         => "event_type" +
