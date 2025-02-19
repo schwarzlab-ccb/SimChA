@@ -264,8 +264,8 @@ public static class Parsers
         {
             string[] lineSplit = line.Split('\t');
             string chrom = lineSplit[0];
-            long start = long.Parse(lineSplit[1]);
-            long end = long.Parse(lineSplit[2]);
+            int start = int.Parse(lineSplit[1]);
+            int end = int.Parse(lineSplit[2]);
 
             if (cents.ContainsKey(chrom))
             {

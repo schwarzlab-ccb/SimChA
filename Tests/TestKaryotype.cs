@@ -91,13 +91,13 @@ public class TestKaryotype
     public void TestInternalInversion()
     {
         long len = _kar.ContigLen(0);
-        int nRegions = _kar.GetContig(0).Count();
+        int nRegions = _kar.GetContig(0).CountRegions();
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
-        var regions = _kar.FindRegionsOfChr("chr1").ToList();
+        var regions = _kar.FindChrRegions("chr1").ToList();
         Assert.AreEqual(nRegions + 2, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));
-        Assert.AreEqual(-2 * TEST_FRAC, regions.First(r => !r.Forward).Start);
+        Assert.AreEqual(-2 * TEST_FRAC, regions.First(r => !r.Forward).AbsStart);
         Assert.AreEqual(-TEST_FRAC, regions.First(r => !r.Forward).End);
     }
     
@@ -157,14 +157,14 @@ public class TestKaryotype
     public void TestTranslocation()
     {
         long contigLen = _kar.ContigLen(0);
-        long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList());
+        long chrLen = RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList());
         
         _kar.ApplyTranslocation(0, 1, TEST_FRAC, 2 * TEST_FRAC, true);
         Assert.AreEqual(contigLen + TEST_FRAC, _kar.ContigLen(1));
-        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList()));
 
         _kar.ApplyTranslocation(0, 1, 4 * TEST_FRAC,  3 * TEST_FRAC, true);
-        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList()));
         Assert.AreEqual(contigLen + TEST_FRAC * 2, _kar.ContigLen(0));
         Console.WriteLine(_kar);
     }
@@ -311,7 +311,7 @@ public class TestKaryotype
         Assert.AreEqual(46, _kar.CountContigs());
         
         var contig = _kar.GetContig(contigID);
-        Assert.AreEqual(1, contig.Count());
+        Assert.AreEqual(1, contig.CountRegions());
         var SNVs = contig.GetSNVs();
         Assert.NotNull(SNVs);
         Assert.AreEqual(1, SNVs.Count);
@@ -325,7 +325,7 @@ public class TestKaryotype
         Assert.AreEqual(46, _kar.CountContigs());
         
         contig = _kar.GetContig(contigID);
-        Assert.AreEqual(1, contig.Count());
+        Assert.AreEqual(1, contig.CountRegions());
         SNVs = contig.GetSNVs();
         Assert.NotNull(SNVs);
         Assert.AreEqual(1, SNVs.Count);
@@ -345,7 +345,7 @@ public class TestKaryotype
         _kar.ApplyInternalDeletion(contigID, 50, 200);
         // Check that the SNV is not present
         var contig = _kar.GetContig(contigID);
-        Assert.AreEqual(2, contig.Count());
+        Assert.AreEqual(2, contig.CountRegions());
         var snvs = contig.GetSNVs();
         Assert.IsEmpty(snvs);
     }
@@ -362,7 +362,7 @@ public class TestKaryotype
         _kar.ApplyInternalDuplication(contigID, 50, 200);
         // Check that the SNV is present in both copies
         var contig = _kar.GetContig(contigID);
-        Assert.AreEqual(3, contig.Count());
+        Assert.AreEqual(3, contig.CountRegions());
         var SNVs = contig.GetSNVs();
         Assert.IsNotEmpty(SNVs);
         Assert.AreEqual(SNVs[0], SNVs[1]);

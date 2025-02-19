@@ -1,14 +1,15 @@
-﻿using SimChA.Computation;
+﻿using Extreme.Mathematics;
+using SimChA.Computation;
 using SimChA.IO;
 
 namespace SimChA.Data;
 
-// NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
 public class Karyotype
 {
     private GenRef GenRef { get; }
     public SexType Sex { get; }
     public double FitnessVal { get; private set; }
+    // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
     
     public Karyotype(GenRef genRef, SexType sex)
@@ -41,15 +42,46 @@ public class Karyotype
     
     public IEnumerable<SNV> GetSNVs()
         => _contigs.SelectMany(c => c.GetSNVs()).ToList();
+
+    public Dictionary<string, List<int>> CalcBreaks()
+    {
+        var breakSets = GenRef.ChrIDsForSex(Sex).ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c] });
+        foreach (var contig in _contigs)
+        {
+            foreach ((string chrom, var breaks) in contig.CalcBreaks())
+            {
+                breakSets[chrom].UnionWith(breaks);
+            }
+        }
+        return breakSets.ToDictionary(k => k.Key, v => v.Value.OrderBy(i => i).ToList());
+    }
     
+    public IEnumerable<CopyNumber> CalcChrCopyNumbers(List<int> breaks, string chrom)
+    {
+        var result = new List<CopyNumber>();
+        for (int i = 0; i < breaks.Count - 1; i++)
+        {
+            int start = breaks[i];
+            int end = breaks[i + 1];
+            var seg = new GenRange(start, end, chrom);
+            var cns = _contigs.Select(c => c.GetCNs(seg));
+            (int cnA, int cnB, int nSNVs) = cns.Aggregate((CNA: 0, CNB: 0, SNV: 0), (acc, vals) 
+                => (acc.CNA + vals.CNA, acc.CNB + vals.CNB, acc.SNV + vals.SNV));
+            var cn = new CopyNumber(seg, cnA, cnB, nSNVs);
+            result.Add(cn);
+        }
+        return result;
+    }
+
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
     
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
     
-    public IEnumerable<Region> FindRegionsOfChr(string chrNo) 
-        => _contigs.SelectMany(c => c.FindRegionsOfChr(chrNo));
+    // @CODY this should be made private, needs to update tests
+    public IEnumerable<Region> FindChrRegions(string chrNo) 
+        => _contigs.SelectMany(c => c.FindChrRegions(chrNo));
 
     private static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
         => fiveToThree ? segLength : contig.Length() - segLength;
@@ -63,6 +95,7 @@ public class Karyotype
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length());
     
+    // @CODY this should be made private, needs to update test
     public Contig GetContig(int contigID) 
         => _contigs[contigID];
 

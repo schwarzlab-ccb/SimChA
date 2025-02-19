@@ -13,7 +13,7 @@ public record Region(long Start, long End, string Chrom, bool Hap1, List<SNV>? S
         => $"{HapString}{base.ToString()}";
 
     public int NumSNVsBetween(long start, long end)
-        => SNVs is { Count: > 0 } ? SNVs.Count(s => s.Pos >= start && s.Pos <= end) : 0;
+        => SNVs?.Count(s => s.Pos >= start && s.Pos <= end) ?? 0;
 
     public string GetSeq(GenRef genRef)
     {

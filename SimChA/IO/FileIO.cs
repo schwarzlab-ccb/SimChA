@@ -55,7 +55,7 @@ public class FileIO
         
         outputFile.WriteLine(CopyNumbers.Header(true));
         var karyotypes = samples.Select(s => s.Karyotype);
-        var breaks = karyotypes.Select(k => CopyNumbers.GetSegPoints(genRef, k)).ToList();
+        var breaks = karyotypes.Select(k => k.CalcBreaks()).ToList();
         var segmentation = genRef.AllChrs.ToDictionary(
             chrom => chrom, 
             chrom => breaks.SelectMany(br => br[chrom]).ToHashSet().OrderBy(val => val).ToList());
@@ -75,6 +75,7 @@ public class FileIO
 
         foreach (var sample in samples)
         {
+            sample.Karyotype.MergeRegions();
             var cns = CopyNumbers.CalcCNs(genRef, sample.Karyotype);
             outputFile.WriteLine(CopyNumbers.ToTSV(cns, sample.SampleId));
         }
@@ -154,8 +155,7 @@ public class FileIO
             string outPath = Path.Combine(Path.GetFullPath(OutFolder), $"{sample.SampleId}_genome.fa");
             Console.WriteLine($"Writing to file {outPath}");
             using var outputFile = new StreamWriter(outPath);
-            var kar = sample.Karyotype;
-            foreach (string region in kar.GetSeq())
+            foreach (string region in sample.Karyotype.GetSeq())
             {
                 outputFile.Write(region);
             }

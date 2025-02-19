@@ -86,10 +86,10 @@ public class TestParsing
         var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false);
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
-        Assert.AreEqual(2, profiles["1"].FindRegionsOfChr("chr1").Count()); 
-        Assert.AreEqual(0, profiles["1"].FindRegionsOfChr("chr2").Count());
-        Assert.AreEqual(5, profiles["1"].FindRegionsOfChr("chr3").Count()); 
-        Assert.AreEqual(1, profiles["2"].FindRegionsOfChr("chrX").Count()); 
+        Assert.AreEqual(2, profiles["1"].FindChrRegions("chr1").Count()); 
+        Assert.AreEqual(0, profiles["1"].FindChrRegions("chr2").Count());
+        Assert.AreEqual(5, profiles["1"].FindChrRegions("chr3").Count()); 
+        Assert.AreEqual(1, profiles["2"].FindChrRegions("chrX").Count()); 
         Assert.AreEqual(SexType.Male, profiles["2"].Sex);
     }
 

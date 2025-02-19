@@ -25,7 +25,7 @@ public class GenRef
     public string YChrName { get; }
     public string XChrName { get; }
     
-    // TODO @CODY: The string should be obtained via a function rather than a direct access (make private)
+    // @CODY: The string should be obtained via a function rather than a direct access (make private)
     // In case of no genome, if called, a string of 'N" shoudl be returned
     public Dictionary<string, StringBuilder>? GenContentsDict { get; }
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }

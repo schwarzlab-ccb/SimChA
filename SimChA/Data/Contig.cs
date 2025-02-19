@@ -27,8 +27,43 @@ public class Contig
     public long Length()
         => Length(_regions);
     
-    public int Count()
+    public int CountRegions()
         => _regions.Count;
+
+    public (int CNA, int CNB, int SNV) GetCNs(GenRange segRegion)
+    {
+        int cna = 0;
+        int cnb = 0;
+        int snvs = 0;
+        foreach (var reg in _regions.Where(segRegion.IsInsideOf))
+        {
+            if (reg.Hap1)
+            {
+                cna += 1;
+            }
+            else
+            {
+                cnb += 1;
+            }
+            snvs += reg.NumSNVsBetween(reg.Start, reg.End);
+        }
+        return (cna, cnb, snvs);
+    }
+
+    public Dictionary<string, List<int>> CalcBreaks()
+    {
+        Dictionary<string, List<int>> breaks = new();
+        foreach (var region in _regions)
+        {
+            if (!breaks.ContainsKey(region.Chrom))
+            {
+                breaks[region.Chrom] = new List<int>();
+            }
+            breaks[region.Chrom].Add((int)region.AbsStart);
+            breaks[region.Chrom].Add((int)region.AbsEnd);
+        }
+        return breaks;
+    }
 
     public bool Any()
         => Length() > 0;
@@ -48,7 +83,7 @@ public class Contig
     public override string ToString()
         => ToString(_regions);
 
-    public IEnumerable<Region> FindRegionsOfChr(string chrNo)
+    public IEnumerable<Region> FindChrRegions(string chrNo)
         => _regions.Where(r => r.Chrom == chrNo);
 
     public void Clear()
