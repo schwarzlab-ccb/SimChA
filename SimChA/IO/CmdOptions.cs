@@ -7,7 +7,7 @@ public class CmdOptions
     [Option('O', "output", Required = false, Default = "./out", HelpText = "The path to the output files.")]
     public string OutputPath { get; set; }
 
-    [Option('C', "config", Required = false, Default = "./default_params.json", HelpText = "A json file with configuration of the experiment.")]
+    [Option('C', "config", Required = false, Default = "./simcha_config.json", HelpText = "A json file with configuration of the experiment.")]
     public string ConfigFile { get; set; }
 
     [Option('T', "tree", Required = false, Default = "", HelpText = "A clone file that describes the tree to be built.")]
@@ -23,26 +23,27 @@ public class CmdOptions
                                                                                " The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.")]
     public string DataFolder { get; set; }
     
-    
-    [Option('E', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode.")]
+    [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.")]
     public bool EvolutionMode { get; set; }
 
-    [Option('M', "mcmc-mode", Required = false, Default = false, HelpText = "Run the Markov Chain Monte Carlo simulation of mutational events. The argument is a path to a file that lists the fitness of individual clones.")]
+    [Option('m', "mcmc-mode", Required = false, Default = false, HelpText = "The model will be run in MCMC mode. In this mode the fitness of the samples will be matched using the Metropolis-Hastings algorithm.")]
     public bool MHMode { get; set; }
     
-    [Option('s', Required = false, Default = false, HelpText = "Also calculate consistent copy numbers segmentation. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region.")]
-    public bool CalcConsistentCNs { get; set; }
+    [Option('s', "segments", Required = false, Default = false, HelpText = "Write out copy numbers segments.")]
+    public bool WriteCNs { get; set; }
+    
+    [Option('S', "consistent-segments", Required = false, Default = false, HelpText = "Write out copy number segments under a minimum consistent segmentation.")]
+    public bool WriteConsistentCNs { get; set; }
+    
+    [Option('k', "karyotypes", Required = false, Default = false, HelpText = "Write out karyotypes. Unlike CN segments, Karyotypes retain information about the connections between segments.")]
+    public bool WriteKaryotypes { get; set; }
 
-    [Option('V', "variants", Required = false, Default = false, HelpText = "Use the included FASTA reference files for SNVs.")]
-    public bool UseVariants { get; set; }
+    [Option('v', "variants", Required = false, Default = false, HelpText = "Write out VCF file with the variants of the final simulated karyotype.")]
+    public bool WriteVariants { get; set; }
 
-    [Option('F', "fasta", Required = false, Default = false, HelpText = "Produce an output FASTA file of the final simulated karyotype, based on the input reference genome.")]
+    [Option('f', "fasta", Required = false, Default = false, HelpText = "Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.")]
     public bool WriteFasta { get; set; }
     
-
-    [Option('L', "light", Required = false, Default = false, HelpText = "Flag to avoid printing out the output CNPs and karyotypes.")]
-    public bool LightweightOutput { get; set; }
-
     public ExecMode ExecMode
     {
         get
@@ -92,8 +93,11 @@ public class CmdOptions
     }
     
     public bool ShouldParseGenome 
-        => UseVariants || WriteFasta;
+        => WriteVariants || WriteFasta;
     
     public bool Simulate
         => ExecMode != ExecMode.Profiles;
+    
+    public bool CalcSegments
+        => WriteCNs || WriteConsistentCNs;
 }

@@ -60,13 +60,12 @@ else
 // Score and segment samples
 var sampleStats = new List<SampleStat>();
 var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
-var jointSegmentation = options is {CalcConsistentCNs: true, LightweightOutput: false}
-    ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
+var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
 foreach (var sample in samples)
 {
     Console.Write($"\rAnalyzing sample {sample.SampleId}.".PadRight(80));
     sampleStats.Add(SampleStat.GetSampleStat(sample, genRef, config.FitParams));
-    if (!options.LightweightOutput)
+    if (options.CalcSegments)
     {
         sampleCNs[sample.SampleId] = CopyNumbers.CalcCNs(sample.Karyotype, jointSegmentation);
     }
@@ -78,21 +77,22 @@ files.WriteSimParams(config);
 try
 {
     files.WriteSamples(sampleStats);
-    
-    if (!options.LightweightOutput)
+    if (options.CalcSegments)
     {
         files.WriteCopyNumbers(sampleCNs);
+    }
+    if (options.WriteKaryotypes)
+    {
         files.WriteKaryotypes(samples);
     }
     if (options.Simulate)
     {
         files.WriteEvents(samples);
     }
-    if (options.UseVariants)
+    if (options.WriteVariants)
     {
         files.WriteVCF(genRef, samples);
     }
-    // @CODY is the Fasta conditional on using the variants?
     if (options.WriteFasta)
     {
         files.WriteFasta(samples);

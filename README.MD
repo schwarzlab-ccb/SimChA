@@ -67,39 +67,44 @@ The results will be written to the folder `./out`
 Use `dotnet run -- [options]` to specify any of the following:
 
 ```
-  -O, --output    (Default: ./out) The path to the output files.
-  -C, --config    (Default: ./default_params.json) A json file with configuration of the experiment.
-  -T --tree path     A path to a newick with a phylogenetic tree. The file must contain columns "ID", "ParentID", and "Distance". For MCMC, also "Fitness" must be included.
-  -R --repeats n   Will run the simulation and generate n independent samples.
-  -M --mcmc-mode      Will run the Metropolis-Hastings algorithm to match a simulated clone fitness to a target fitness (either sampled given the input config file, or given in the tree file).
-  -E --evolution-mode Will run the Simulated Annealing algorithm to maximize the fitness of a simulated clone.
-  -P --profile path   Path to an input file with copy number profiles.
-  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: centromeres.tsv, chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. If you want to use either of the flags "--variants" or "--fasta", you must also have the corresponding reference genome, named genome.fa in the same directory.
-  -L --light   Run SimChA in lightweight output mode. Will not create the output copy number profiles, nor the karyotypes.
-  -s  Calculate consistent copy numbers segmentation in addition to the normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
-  -V, --variants     Generate a Variant Call Format-like (VCF) file at the end of the run.
-  -F, --fasta       Generate the FASTA file of the produced karyotypes. Note! This file will be extremely large if you have many samples. We recommend you only run this mode with fewer than 10 samples.
+ 
+  -O, --output                 (Default: ./out) The path to the output files.
+
+  -C, --config                 (Default: ./default_params.json) A json file with configuration of the experiment.
+
+  -T, --tree                   (Default: ) A clone file that describes the tree to be built.
+
+  -R, --repeats                (Default: 1) Number of repeats to generate if the distance parameter is used.
+
+  -P, --cnprofiles             (Default: ) File with CNAs, will cause the program to write a scoring file.
+
+  -D, --data                   (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name 
+                               as the assembly used.
+
+  -e, --evolution-mode         (Default: false) Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.
+
+  -m, --mcmc-mode              (Default: false) The model will be run in MCMC mode. In this mode the fitness of the samples will be matched using the Metropolis-Hastings algorithm.
+
+  -s, --segments               (Default: false) Write out copy numbers segments.
+
+  -S, --consistent-segments    (Default: false) Write out copy number segments under a minimum consistent segmentation.
+
+  -k, --karyotypes             (Default: false) Write out karyotypes. Unlike CN segments, Karyotypes retain information about the connections between segments.
+
+  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype.
+
+  -f, --fasta                  (Default: false) Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.
+
+  --help                       Display this help screen.
+
+  --version                    Display version information.
 ```
 
-### Parameters
+### Configuration
 
-Default parameters are found in the file: `default_params.json`. The exact parameters are dependent on the execution mode. The parameters are:
+Default parameters are found in the file: `simcha_config.json`. The exact parameters are dependent on the execution mode. The parameters are:
 
-
-#### Common (R, T, P)
-* `FitParams: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
-
-#### Simulation mode only (R, T)
-* `Seed: int` - The seed for the random number generator.
-* `Sex: ["Female", "Male", "Any"]` - Whether to simulate exclusively female chromosome, male chromosome, or randomly select from the two.
-* `AutosomesOnly: bool` - Choose whether to simulate sex chromosomes or not.
-
-#### Repeats mode only (R)
-* `EventCount: double` - The mean number of events per sample.
-* `EventDist: ["Uniform", "Geometric", "Poisson"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
-
-#### MCMC mode (M)
-TODO
+TODO!
 
 ## Input Data
 
@@ -107,7 +112,7 @@ Data should be provided as a path to a folder using the `--data` parameter. The 
 
 ### Chromosomes
 
-The chromosome contains the lengths and sex-specific information of individual chromosomes. By default there are two columns, one with the name of a chromosome, one with a number of basises.
+The chromosome contains the lengths and sex-specific information of individual chromosomes. By default, there are two columns, one with the name of a chromosome, one with a number of basises.
 
 Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Any`.
 

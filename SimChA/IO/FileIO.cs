@@ -59,7 +59,7 @@ public class FileIO
 
     public void WriteSimParams(SimChAConfig simChAConfig)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
