@@ -16,12 +16,14 @@ public static class CopyNumbers
             .SelectMany(c => CalcChrCopyNumbers(karyotype.FindRegionsOfChr(c).ToList(), breaks[c], c)).ToList();
     }
     
-    private static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, List<long> breaks, string chrNo)
+    private static IEnumerable<CopyNumber> CalcChrCopyNumbers(IReadOnlyCollection<Region> curRegs, List<long> breaks, string chrom)
     {
         var result = new List<CopyNumber>();
         for (int i = 0; i < breaks.Count - 1; i++)
         {
-            var seg = new GenRange(breaks[i], breaks[i + 1], chrNo);
+            long start = breaks[i];
+            long end = breaks[i + 1];
+            var seg = new GenRange(start, end, chrom);
             int cnh1 = curRegs.Count(r => r.Hap1 && seg.IsInsideOf(r));
             int cnh2 = curRegs.Count(r => !r.Hap1 && seg.IsInsideOf(r));
 		    int nSNVs = curRegs.Sum(r => r.NumSNVsBetween(seg.Start, seg.End));
@@ -34,7 +36,7 @@ public static class CopyNumbers
     public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexType sex)
     {
         long totalLength = genRef.GetGenomeLen(sex) / 2;
-        return copyNumbers.Select(c => c.Segment.Length * (c.CNH1 + c.CNH2)).Sum() / (float) totalLength;
+        return copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() / (float) totalLength;
     }
 
     public static string Header(bool withSample)

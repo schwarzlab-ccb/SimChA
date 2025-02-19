@@ -49,7 +49,7 @@ public class Contig
         => ToString(_regions);
 
     public IEnumerable<Region> FindRegionsOfChr(string chrNo)
-        => _regions.Where(r => r.ChrNo == chrNo);
+        => _regions.Where(r => r.Chrom == chrNo);
 
     public void Clear()
     {
@@ -159,7 +159,7 @@ public class Contig
         List<Gene> presentGenes = new();
         foreach (var reg in _regions)
         {
-            var geneList = geneLists[reg.ChrNo];
+            var geneList = geneLists[reg.Chrom];
             if (!reg.Forward || geneList.Count <= 0)
             {
                 continue;
@@ -184,7 +184,7 @@ public class Contig
         long currentPos = 0;
         foreach (var reg in _regions)
         {
-            var cent = centMap[reg.ChrNo];
+            var cent = centMap[reg.Chrom];
             if (cent.IsInsideOf(reg))
             {
                 centromereList.Add((currentPos + cent.Start, currentPos + cent.End));

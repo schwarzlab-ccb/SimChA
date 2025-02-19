@@ -229,7 +229,7 @@ public static class RegionOps
                 else
                 {
                     // Add a new SNV
-                    newSNVs.Add(new SNV(region.Start + location - seekPos, region.ChrNo, newNucleotide));
+                    newSNVs.Add(new SNV(region.Start + location - seekPos, region.Chrom, newNucleotide));
                 }
                 var newRegion = region with { SNVs = newSNVs };
                 AddIfNotEmpty(newRegions, newRegion);
@@ -311,7 +311,7 @@ public static class RegionOps
             else
             {
                 var last = newRegions[^1];
-                if (last.ChrNo == cur.ChrNo && last.End == cur.Start)
+                if (last.Chrom == cur.Chrom && last.End == cur.Start)
                 {
                     newRegions[^1] = last with { End = cur.End, SNVs = MergeSNVs(last.SNVs, cur.SNVs) };;
                 }

@@ -7,10 +7,10 @@ public static class SummaryFeatures
 {
     public static double GetSampleMajMinCN(List<CopyNumber> cnList, bool getMajor)
     {
-        var weightedSum = cnList.Select(cn => cn.Segment.Length *
+        var weightedSum = cnList.Select(cn => cn.Length *
                                         (getMajor ? Math.Max(cn.CNH1, cn.CNH2)
                                                   : Math.Min(cn.CNH1, cn.CNH2)) ).ToList().Sum();
-        var totalWeight = cnList.Select(cn => cn.Segment.Length).Sum();
+        var totalWeight = cnList.Select(cn => cn.Length).Sum();
         return weightedSum / (double)totalWeight;
     }
     public static (List<double> values, double max) GetMajMinCNs(Dictionary<string, List<CopyNumber>> cnProfiles, bool getMajor)
@@ -42,7 +42,7 @@ public static class SummaryFeatures
             var cnList = cnProfile.Value;
             if (!includeSexChromosomes)
             {
-                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+                cnList = cnList.Where(cn => !(cn.Chrom == "chrX" || cn.Chrom == "chrY")).ToList();
             }
             if (!includeCNNormal)
             {
@@ -52,9 +52,9 @@ public static class SummaryFeatures
             {
                 cnList = cnList.Where(cn => !(cn.CNH1 + cn.CNH2 == 2 && (cn.CNH1 == 0 || cn.CNH2 == 0))).ToList();
             }
-            cnLess.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 < 2).Select(cn => (double)cn.Segment.Length));
-            cnEqual.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 == 2).Select(cn => (double)cn.Segment.Length));
-            cnMore.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 > 2).Select(cn => (double)cn.Segment.Length));
+            cnLess.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 < 2).Select(cn => (double)cn.Length));
+            cnEqual.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 == 2).Select(cn => (double)cn.Length));
+            cnMore.AddRange(cnList.Where(cn => cn.CNH1 + cn.CNH2 > 2).Select(cn => (double)cn.Length));
         }
         var weights = new List<double>() {1.0/3, 1.0/3, 1.0/3};
         if (weightedByCount)
@@ -80,7 +80,7 @@ public static class SummaryFeatures
             var cnList = cnProfile.Value;
             if (!includeSexChromosomes)
             {
-                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+                cnList = cnList.Where(cn => !(cn.Chrom == "chrX" || cn.Chrom == "chrY")).ToList();
             }
             if (!includeCNNormal)
             {
@@ -92,14 +92,14 @@ public static class SummaryFeatures
             }
             if (weighted)
             {
-                var lengths = cnList.Where(cn => cutoff <= 0 || cn.Segment.Length <= cutoff)
-                                    .SelectMany(cn => Enumerable.Repeat((double)cn.Segment.Length, cn.CNH1 + cn.CNH2));
+                var lengths = cnList.Where(cn => cutoff <= 0 || cn.Length <= cutoff)
+                                    .SelectMany(cn => Enumerable.Repeat((double)cn.Length, cn.CNH1 + cn.CNH2));
                 segLengths.AddRange(lengths);
             }
             else
             {
-                segLengths.AddRange(cnList.Where(cn => cutoff <= 0 || cn.Segment.Length <= cutoff)
-                                          .Select(cn => (double) cn.Segment.Length));
+                segLengths.AddRange(cnList.Where(cn => cutoff <= 0 || cn.Length <= cutoff)
+                                          .Select(cn => (double) cn.Length));
             }
         }
         return segLengths;
@@ -113,7 +113,7 @@ public static class SummaryFeatures
             var cnList = cnProfile.Value;
             if (!includeSexChromosomes)
             {
-                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+                cnList = cnList.Where(cn => !(cn.Chrom == "chrX" || cn.Chrom == "chrY")).ToList();
             }
             if (!includeCNNormal)
             {
@@ -126,12 +126,12 @@ public static class SummaryFeatures
             // Weighted means to account for copy-number of the segment
             if (weighted)
             {
-                var lengths = cnList.SelectMany(cn => Enumerable.Repeat((double)cn.Segment.Length, cn.CNH1 + cn.CNH2));
+                var lengths = cnList.SelectMany(cn => Enumerable.Repeat((double)cn.Length, cn.CNH1 + cn.CNH2));
                 meanSegLengths.Add(lengths.DefaultIfEmpty(0).Average());
             }
             else
             {
-                meanSegLengths.Add(cnList.Select(cn => (double) cn.Segment.Length).DefaultIfEmpty(0).Average());
+                meanSegLengths.Add(cnList.Select(cn => (double) cn.Length).DefaultIfEmpty(0).Average());
             }
             
         }
@@ -151,7 +151,7 @@ public static class SummaryFeatures
             var lastChr = null as string;
             foreach (var cn in cnList)
             {
-                var thisChr = cn.Segment.ChrNo;
+                var thisChr = cn.Chrom;
                 if (thisChr != lastChr)
                 {
                     leftSegmentCN = 2;
@@ -198,10 +198,10 @@ public static class SummaryFeatures
             foreach (var chr in chrs)
             {
                 var chrLen = genRef.ChrLengths[chr];
-                var chrSegs = cnList.Where(cn => cn.Segment.ChrNo == chr).ToList();
+                var chrSegs = cnList.Where(cn => cn.Chrom == chr).ToList();
                 var intervals = Enumerable.Range(0, (int)((chrLen + SIZE) / (double)SIZE) );
-                var grouped = chrSegs.Where(cn => cn.Segment.End != chrLen) // Exclude endpoints of the chromosome
-                                     .GroupBy(cn => (int)(cn.Segment.End / SIZE))
+                var grouped = chrSegs.Where(cn => cn.End != chrLen) // Exclude endpoints of the chromosome
+                                     .GroupBy(cn => (int)(cn.End / SIZE))
                                      .ToDictionary(g => g.Key, g => g.Count());
 
                 var binned = Enumerable.Range(0, intervals.Count())
@@ -238,9 +238,9 @@ public static class SummaryFeatures
             var cnList = cnProfile.Value;
             if (!includeSexChromosomes)
             {
-                cnList = cnList.Where(cn => !(cn.Segment.ChrNo == "chrX" || cn.Segment.ChrNo == "chrY")).ToList();
+                cnList = cnList.Where(cn => !(cn.Chrom == "chrX" || cn.Chrom == "chrY")).ToList();
             }
-            double count = cnList.Count(cn => cn.Segment.End != cn.Segment.Length);
+            double count = cnList.Count(cn => cn.End != cn.Length);
             if (eventCount[cnProfile.Key] > 0)
             {
                 count /= eventCount[cnProfile.Key];
@@ -265,9 +265,9 @@ public static class SummaryFeatures
             foreach (var chr in chrs)
             {
                 var chrLen = genRef.ChrLengths[chr];
-                var chrSegs = cnList.Where(cn => cn.Segment.ChrNo == chr).ToList();
+                var chrSegs = cnList.Where(cn => cn.Chrom == chr).ToList();
                 // Exclude endpoint of the chromosome
-                var bps = chrSegs.Count(cn => cn.Segment.End != chrLen);
+                var bps = chrSegs.Count(cn => cn.End != chrLen);
                 allBPs.Add(bps);
             }
             breakpoints.Add(cnProfile.Key, allBPs);
@@ -281,9 +281,9 @@ public static class SummaryFeatures
         foreach (var cnProfile in cnProfiles)
         {
             var homozygDelList = cnProfile.Value.Where(cn => cn.CNH1 + cn.CNH2 == 0 
-                                                            && cn.Segment.ChrNo != "chrX" 
-                                                            && cn.Segment.ChrNo != "chrY").ToList();
-            var lenLost = homozygDelList.Select(cn => cn.Segment.Length).Sum();
+                                                            && cn.Chrom != "chrX" 
+                                                            && cn.Chrom != "chrY").ToList();
+            var lenLost = homozygDelList.Select(cn => cn.Length).Sum();
             fraction.Add(lenLost/(double)genRef.AutosomeLen);
         }
         return fraction;
@@ -329,12 +329,12 @@ public static class SummaryFeatures
             var chrSpecificCN = new Dictionary<string, double>();
             foreach (var cnProfile in cnProfiles)
             {
-                var chrCNPs = cnProfile.Value.Where(cn => cn.Segment.ChrNo == chr && cn.CNH1 + cn.CNH2 > 0).ToList();
+                var chrCNPs = cnProfile.Value.Where(cn => cn.Chrom == chr && cn.CNH1 + cn.CNH2 > 0).ToList();
                 double val = 0.0;
                 if (chrCNPs.Any())
                 {
-                    double weightedLen = chrCNPs.Select(cn => (cn.CNH1 + cn.CNH2)*cn.Segment.Length).Sum();
-                    val = weightedLen / chrCNPs.Select(cn => cn.Segment.Length).Sum();
+                    double weightedLen = chrCNPs.Select(cn => (cn.CNH1 + cn.CNH2)*cn.Length).Sum();
+                    val = weightedLen / chrCNPs.Select(cn => cn.Length).Sum();
                 }
                 chrSpecificCN.Add(cnProfile.Key, val);
             }

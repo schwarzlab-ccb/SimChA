@@ -95,7 +95,7 @@ public static class Fitness
 
     // 0/0 => 1, i.e. the genes not present in the given sex contributed their default score
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
-        => cn + (2 - ExpectedCN(genRef, g.Range.ChrNo, sex));
+        => cn + (2 - ExpectedCN(genRef, g.Range.Chrom, sex));
     
     public static double TsgOgTerm(GenRef genRef, List<(Gene gene, int CN)> geneCNs, SexType sex, bool normalizeGenes = false)
     {
@@ -118,7 +118,7 @@ public static class Fitness
         }
 
         var genesList =
-            geneCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName).ToList();
+            geneCNs.Where(g => g.gene.Range.Chrom != genRef.XChrName && g.gene.Range.Chrom != genRef.YChrName).ToList();
         int zygosityCount = genesList.Count(g => g.CN == count);
         return zygosityCount / (double)genesList.Count;
     }
@@ -132,9 +132,9 @@ public static class Fitness
 
         var genesList = (sex switch
         {
-            SexType.Female => essCNs.Where(g => g.gene.Range.ChrNo != genRef.YChrName),
+            SexType.Female => essCNs.Where(g => g.gene.Range.Chrom != genRef.YChrName),
             SexType.Male => essCNs,
-            _ => essCNs.Where(g => g.gene.Range.ChrNo != genRef.XChrName && g.gene.Range.ChrNo != genRef.YChrName)
+            _ => essCNs.Where(g => g.gene.Range.Chrom != genRef.XChrName && g.gene.Range.Chrom != genRef.YChrName)
         }).ToList();
         int norm = normalizeGenes ? genesList.Count : 1;
         return genesList.Sum(g => Math.Min(g.CN - 1, 0) * g.gene.DeltaFitness) / norm;

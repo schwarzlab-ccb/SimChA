@@ -1,7 +1,14 @@
 ﻿namespace SimChA.Data;
 
-public record CopyNumber(GenRange Segment, int CNH1, int CNH2, int NSNVs)
+public record CopyNumber(long Start, long End, string Chrom, int CNH1, int CNH2, int NSNVs) 
+    : GenRange(Start, End, Chrom)
 {
+    public CopyNumber(GenRange range, int cnH1, int cnH2, int nSNVs) 
+        : this(range.Start, range.End, range.Chrom, cnH1, cnH2, nSNVs) { }
+    
+    private static string NAIfNegStr(int val)
+        => val < 0 ? "NA" : $"{val}";
+    
     public string ToTSV()
-        => string.Join('\t', Segment.ChrNo, Segment.Start + 1, Segment.End, CNH1 >= 0 ? CNH1 : "NA", CNH2 >= 0 ? CNH2 : "NA", NSNVs >= 0 ? NSNVs : "NA");
+        => string.Join('\t', Chrom, Start + 1, End, NAIfNegStr(CNH1), NAIfNegStr(CNH2), NAIfNegStr(NSNVs));
 }

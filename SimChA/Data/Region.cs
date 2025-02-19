@@ -1,9 +1,7 @@
-﻿using System.Text;
-
-namespace SimChA.Data;
+﻿namespace SimChA.Data;
 
 // A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
-public record Region(long Start, long End, string ChrNo, bool Hap1, List<SNV>? SNVs = null) : GenRange(Start, End, ChrNo)
+public record Region(long Start, long End, string Chrom, bool Hap1, List<SNV>? SNVs = null) : GenRange(Start, End, Chrom)
 {
     private static string HapToString(bool parent) 
         => parent ? "H1" : "H2";
@@ -19,7 +17,7 @@ public record Region(long Start, long End, string ChrNo, bool Hap1, List<SNV>? S
 
     public string GetSeq(GenRef genRef)
     {
-        char[] regionSeq = genRef.GenContentsDict[ChrNo].ToString((int) Start, (int) (End - Start)).ToCharArray();
+        char[] regionSeq = genRef.GenContentsDict[Chrom].ToString((int) Start, (int) (End - Start)).ToCharArray();
         if (SNVs != null)
         {
             foreach (var snv in SNVs)
