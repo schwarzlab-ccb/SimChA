@@ -1,5 +1,4 @@
-﻿using Extreme.Mathematics;
-using SimChA.Computation;
+﻿using SimChA.Computation;
 using SimChA.IO;
 
 namespace SimChA.Data;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using SimChA.Computation;
@@ -18,7 +17,7 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH);
+        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH);
         _rnd = new Random(0);
     }
 
@@ -26,7 +25,7 @@ public class TestCopyNumbers
     public void TestCalcPloidyReference([Values] SexType sex)
     {
         var kar = new Karyotype(_genRef, sex);
-        var cnRef = CopyNumbers.CalcCNs(_genRef, kar).ToList();
+        var cnRef = CopyNumbers.CalcCNs(kar).ToList();
         double ploidyRef = CopyNumbers.CalcPloidy(_genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
     }
@@ -52,9 +51,9 @@ public class TestCopyNumbers
     [Test]
     public void TestCalcAutosomeCNs([Values] SexType sex)
     {
-        var genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH, false);
+        var genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, false);
         var kar = new Karyotype(genRef, sex);
-        var cnRef = CopyNumbers.CalcCNs(genRef, kar).ToList();
+        var cnRef = CopyNumbers.CalcCNs(kar).ToList();
         Assert.AreEqual(genRef.ChrCount(sex, false), cnRef.Count);
         double ploidyRef = CopyNumbers.CalcPloidy(genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
@@ -65,7 +64,7 @@ public class TestCopyNumbers
     {
         var kar = new Karyotype(_genRef, sex);
         TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.WholeGenomeDoubling, 1));
-        var cns = CopyNumbers.CalcCNs(_genRef, kar).ToList();
+        var cns = CopyNumbers.CalcCNs(kar).ToList();
         double ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(4, ploidy);
         // TODO Gain / Loss specific number of chromosomes
@@ -82,7 +81,7 @@ public class TestCopyNumbers
             // TestKaryotype.ApplyRandomEvent(_rnd, kar, new CNEventPars(CNEventType.InternalInversion, 1, 1_000_000));
             kar.ApplyInternalInversion(0, i*10000000, i*20000000);
         }
-        var cns = CopyNumbers.CalcCNs(_genRef, kar).ToList();
+        var cns = CopyNumbers.CalcCNs(kar).ToList();
         double ploidy = CopyNumbers.CalcPloidy(_genRef, cns, sex);
         Assert.AreEqual(2, ploidy);
     }

@@ -21,7 +21,7 @@ public class TestParsing
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(HG_19_PATH);
+        _genRef = FileIO.ReadGenRef(HG_19_PATH);
     }
     
     [Test]

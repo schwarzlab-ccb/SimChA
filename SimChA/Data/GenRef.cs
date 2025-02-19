@@ -21,7 +21,7 @@ public class GenRef
     private List<string> YChrs { get; }
     private List<string> XChrs { get; }
     public List<string> AllChrs { get; }
-    private List<string> AutChrs { get; }
+    public List<string> AutChrs { get; }
     public string YChrName { get; }
     public string XChrName { get; }
     

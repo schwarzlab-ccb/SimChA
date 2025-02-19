@@ -4,10 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using SimChA.Simulation;
 using SimChA.Computation;
 using SimChA.Data;
-using SimChA.EventData;
 using SimChA.IO;
 
 namespace Tests;
@@ -24,7 +22,7 @@ public class TestSummaryFeatures
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(TestParsing.HG_19_PATH);
+        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH);
         _rnd = new Random(0);
         _chrs = new List<string> { _genRef.AllChrs[0], _genRef.AllChrs[1] };
         _kar = new Karyotype(_genRef, SexType.Female);
@@ -36,7 +34,7 @@ public class TestSummaryFeatures
         for (int i = 0; i < kars.Count; i++)
         {
             var kar = kars[i];
-            var cn = CopyNumbers.CalcCNs(_genRef, kar).ToList();
+            var cn = CopyNumbers.CalcCNs(kar).ToList();
             cnps.Add($"sample_{i + 1}", cn);
         }
         return cnps;

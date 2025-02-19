@@ -1,7 +1,5 @@
-﻿using System.Collections.Immutable;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
-using SimChA.Computation;
 using System.Text;
 using SimChA.Data;
 using SimChA.EventData;
@@ -23,12 +21,9 @@ public class FileIO
     // output
     private const string SAMPLES_FILENAME = "samples.tsv";
     private const string CN_FILENAME = "copynumbers.tsv";
-    private const string CONSISTENT_CNS_FILENAME = "consistent_CNs.tsv";
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
-    private const string CLONES_FILENAME = "clones.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
-    // private const string FASTA_FILENAME = "genome.fa";
     // private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
     // private const string TREE_FILENAME = "tree.tsv";
     
@@ -47,37 +42,18 @@ public class FileIO
         }
     }
     
-    public void WriteConsistentCNs(GenRef genRef, List<Sample> samples)
-    {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CONSISTENT_CNS_FILENAME);
-        Console.WriteLine($"Writing to file {outPath}");
-        using var outputFile = new StreamWriter(outPath);
-        
-        outputFile.WriteLine(CopyNumbers.Header(true));
-        var karyotypes = samples.Select(s => s.Karyotype);
-        var breaks = karyotypes.Select(k => k.CalcBreaks()).ToList();
-        var segmentation = genRef.AllChrs.ToDictionary(
-            chrom => chrom, 
-            chrom => breaks.SelectMany(br => br[chrom]).ToHashSet().OrderBy(val => val).ToList());
-        foreach (var sample in samples)
-        {
-            var cns = CopyNumbers.CalcCNs(genRef, sample.Karyotype, segmentation);
-            outputFile.WriteLine(CopyNumbers.ToTSV(cns, sample.SampleId));
-        }
-    }
-    
-    public void WriteCopyNumbers(GenRef genRef, List<Sample> samples)
+    public void WriteCopyNumbers(Dictionary<string, IEnumerable<CopyNumber>> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), CN_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine(CopyNumbers.Header(true));
-
-        foreach (var sample in samples)
+        outputFile.WriteLine("sample_id\t" + CopyNumber.Header());
+        foreach ((string sampleID, var cns) in samples)
         {
-            sample.Karyotype.MergeRegions();
-            var cns = CopyNumbers.CalcCNs(genRef, sample.Karyotype);
-            outputFile.WriteLine(CopyNumbers.ToTSV(cns, sample.SampleId));
+            foreach (var cn in cns)
+            {
+                outputFile.WriteLine($"{sampleID}{cn.ToTSV()}");
+            }
         }
     }
 
@@ -164,7 +140,7 @@ public class FileIO
 
     public void WriteSamples(List<SampleStat> cloneStats)
     {
-        string outPath = Path.Combine(Path.GetFullPath(OutFolder), CLONES_FILENAME);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
         file.WriteLine(SampleStat.Header());
@@ -206,7 +182,7 @@ public class FileIO
         }
     }
 
-    // TODO: Is needed?
+    // @CODY: Is needed?
     public static List<(double fitness, int eventCount)> ReadFitnesses(string filePath, FitParams fitParams)
     {
         string fileFullPath = Path.GetFullPath(filePath);
@@ -225,7 +201,7 @@ public class FileIO
         }
     }
 
-    // TODO: Is needed?
+    // @CODY: Is needed?
     public static Dictionary<string, (double, double, double, int)> ReadCloneComponents(string filePath)
     {
         string fileFullPath = Path.GetFullPath(filePath);
@@ -321,7 +297,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static  List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
+    public static List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -338,24 +314,6 @@ public class FileIO
                 samples.Add(new Sample(sampleId, sampleId, karyotype));
             }
             return samples;
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
-    public static Dictionary<string, int> ReadEventCounts(string filePath)
-    {
-        string fileFullPath = Path.GetFullPath(filePath);
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        try
-        {
-            var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseEventCounts(fitnessFile);
         }
         catch (Exception e)
         {
@@ -399,7 +357,7 @@ public class FileIO
         }
     }
 
-    public static GenRef GetGenRef(string dataFolder, bool useVariants = false)
+    public static GenRef ReadGenRef(string dataFolder, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex) = ReadChromosomes(dataFolder);

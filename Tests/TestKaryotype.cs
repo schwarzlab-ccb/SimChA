@@ -13,12 +13,11 @@ namespace Tests;
 [TestFixture]
 public class TestKaryotype
 {
-    private Karyotype _kar = null!;
-    private Random _rnd = null!;
-    private CNEventPars _del = null!;
-    private GenRef _genRef = null!;
+    private Karyotype _kar;
+    private Random _rnd;
+    private CNEventPars _del;
+    private GenRef _genRef;
     private const int TEST_FRAC = 1000;
-    const string DATA_PATH = "./../../../../data/hg19";
     
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
@@ -33,7 +32,7 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(DATA_PATH);
+        _genRef = FileIO.ReadGenRef(TestParsing.DATA_PATH);
         _kar = new Karyotype(_genRef, SexType.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
@@ -97,8 +96,10 @@ public class TestKaryotype
         var regions = _kar.FindChrRegions("chr1").ToList();
         Assert.AreEqual(nRegions + 2, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));
-        Assert.AreEqual(-2 * TEST_FRAC, regions.First(r => !r.Forward).AbsStart);
+        Assert.AreEqual(-2 * TEST_FRAC, regions.First(r => !r.Forward).Start);
+        Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).AbsStart);
         Assert.AreEqual(-TEST_FRAC, regions.First(r => !r.Forward).End);
+        Assert.AreEqual(2 * TEST_FRAC, regions.First(r => !r.Forward).AbsEnd);
     }
     
     [Test]

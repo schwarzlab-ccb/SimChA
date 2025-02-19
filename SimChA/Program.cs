@@ -4,6 +4,7 @@ using SimChA.IO;
 using SimChA.Simulation;
 using SimChA.Data;
 using CommandLine;
+using SimChA.Computation;
 
 // Configuration
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -23,7 +24,7 @@ var selMode = options.SelectionMode;
 var config = FileIO.ReadSimChAConfig(options.ConfigFile);
 var rnd = new Random(config.ChAParams.Seed);
 var files = new FileIO(options.OutputPath);
-var genRef = FileIO.GetGenRef(options.DataFolder, options.ShouldParseGenome);
+var genRef = FileIO.ReadGenRef(options.DataFolder, options.ShouldParseGenome);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
 // Construct samples
@@ -56,13 +57,19 @@ else
     samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.ChAParams.AutosomesOnly);
 }
 
-// Score samples
+// Score and segment samples
 var sampleStats = new List<SampleStat>();
-for (int i = 0; i < samples.Count; i++)
+var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
+var jointSegmentation = options is {CalcConsistentCNs: true, LightweightOutput: false}
+    ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
+foreach (var sample in samples)
 {
-    Console.Write($"\rAnalyzing sample {i + 1}/{samples.Count}.".PadRight(80));
-    var sampleStat = SampleStat.GetSampleStat(samples[i], genRef, config.FitParams);
-    sampleStats.Add(sampleStat);
+    Console.Write($"\rAnalyzing sample {sample.SampleId}.".PadRight(80));
+    sampleStats.Add(SampleStat.GetSampleStat(sample, genRef, config.FitParams));
+    if (!options.LightweightOutput)
+    {
+        sampleCNs[sample.SampleId] = CopyNumbers.CalcCNs(sample.Karyotype, jointSegmentation);
+    }
 }
 
 // Output
@@ -72,13 +79,9 @@ try
 {
     files.WriteSamples(sampleStats);
     
-    if (options.CalcConsistentCNs)
-    {
-        files.WriteConsistentCNs(genRef, samples);
-    }
     if (!options.LightweightOutput)
     {
-        files.WriteCopyNumbers(genRef, samples);
+        files.WriteCopyNumbers(sampleCNs);
         files.WriteKaryotypes(samples);
     }
     if (options.Simulate)
@@ -89,6 +92,7 @@ try
     {
         files.WriteVCF(genRef, samples);
     }
+    // @CODY is the Fasta conditional on using the variants?
     if (options.WriteFasta)
     {
         files.WriteFasta(samples);

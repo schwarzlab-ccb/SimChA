@@ -12,8 +12,8 @@ public record Region(long Start, long End, string Chrom, bool Hap1, List<SNV>? S
     public override string ToString() 
         => $"{HapString}{base.ToString()}";
 
-    public int NumSNVsBetween(long start, long end)
-        => SNVs?.Count(s => s.Pos >= start && s.Pos <= end) ?? 0;
+    public int CountSNVs(long start, long end)
+        => SNVs?.Count(s => s.Pos >= start && s.Pos < end) ?? 0;
 
     public string GetSeq(GenRef genRef)
     {

@@ -21,7 +21,7 @@ public class TestFitness
     [SetUp]
     public void Setup()
     {
-        _refs = new List<GenRef> { FileIO.GetGenRef(TestParsing.HG_19_PATH), FileIO.GetGenRef(TestParsing.HG_38_PATH) };
+        _refs = new List<GenRef> { FileIO.ReadGenRef(TestParsing.HG_19_PATH), FileIO.ReadGenRef(TestParsing.HG_38_PATH) };
     }
     
     private static Gene MakeGene(string chrNo, double deltaFitness)

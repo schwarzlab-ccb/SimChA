@@ -45,7 +45,7 @@ public class Contig
             {
                 cnb += 1;
             }
-            snvs += reg.NumSNVsBetween(reg.Start, reg.End);
+            snvs += reg.CountSNVs(reg.Start, reg.End);
         }
         return (cna, cnb, snvs);
     }

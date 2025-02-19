@@ -8,6 +8,9 @@ public record CopyNumber(long Start, long End, string Chrom, int CNH1, int CNH2,
     
     private static string NaIfNegStr(int val)
         => val < 0 ? "NA" : $"{val}";
+
+    public static string Header()
+        => "chrom\tstart\tend\tcn_a\tcn_b\tn_snvs";
     
     public string ToTSV()
         => string.Join('\t', Chrom, Start + 1, End, NaIfNegStr(CNH1), NaIfNegStr(CNH2), NaIfNegStr(NSNVs));

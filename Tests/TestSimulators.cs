@@ -23,7 +23,7 @@ public class TestSimulators
     public void Setup()
     {
         _rnd = new Random(0);
-        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
+        _genRef = FileIO.ReadGenRef("./../../../../data/hg19");
     }
     
     private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, SAParams? saParams = null)
