@@ -25,9 +25,9 @@ public static class Parsers
         {
             throw new Exception($"Could not parse the simulation parameters:\n{serializedJSON}");
         }
-        if (res.ChAParams.Seed < 0)
+        if (res.SimParams.Seed < 0)
         {
-            return res with { ChAParams = res.ChAParams with { Seed = new Random().Next() } };
+            return res with { SimParams = res.SimParams with { Seed = new Random().Next() } };
         }
         return res;
     }

@@ -4,12 +4,19 @@ SimChA is a research project at SchwarzLab.
 
 ## Requirements
 
+> Git 2.4+ with Git-LFS
+
 ### TL;DR; 
 
-The program can be run on a platform of your choice in the provided *Conda* environment. Inside of the repo run 
+The program can be run on a platform of your choice in the provided *Conda* environment. 
+The following commands should make SimChA display the available commands.
+
 ```
+git clone git@bitbucket.org:schwarzlab/simcha.git
+cd simcha
 conda env create --file simcha.yml
 conda activate simcha
+dotnet run --project SimChA -- --help
 ```
 
 ### Tested platforms
@@ -24,7 +31,7 @@ The program has been tested on:
 
 The simulation code is written in **C# 8**. **.NET 8.0** is requred. We recommend installation using *Conda*:
 ```
-conda install -c conda-forge dotnet git-lfs
+conda install -c conda-forge dotnet
 ``` 
 
 ### Data analysis
@@ -32,13 +39,6 @@ conda install -c conda-forge dotnet git-lfs
 The analysis code is written in **Python 3.11**. The following packages are required (either from *Conda* or *Pip*):
 ```
 conda install -c conda-forge -c bioconda biopython matplotlib numpy pandas seaborn pillow lifelines
-```
-
-### Gene Data
-
-The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so in order for SimChA to work, in the root directory of the project, run:
-```
-git lfs pull
 ```
 
 ### Somatic Nucleotide Variants (SNVs)
@@ -104,17 +104,65 @@ Use `dotnet run -- [options]` to specify any of the following:
 
 Default parameters are found in the file: `simcha_config.json`. The exact parameters are dependent on the execution mode. The parameters are:
 
-TODO!
+#### `SimParams`
+
+The parameters controlling the simulation of events.
+
+* `Seed: int (0)`: The seed for the random number generator. If < 0, the seed will be generated randomly on runtime.
+* `Sex: ["Any", "Male", "Female"] ("Any")`: One of `Any`, `Male`, `Female`. If `Any`, then samples' sex will be generated with a random.
+* `RateDist: ["Uniform", "Geometric", "Poisson"] ("Uniform")` - The distribution of the mutation rate.
+* `RateMean: float (1.0)`: the mean of the mutation rate (mutations between two nodes).
+* `FitDist: ["Uniform", "Exponential", "Normal"] ("Uniform")`: The distribution of the fitness delta between two samples.
+* `FitMean: float (1.0)`: the mean of the fitness delta between two samples.
+
+See section TODO on how the mutation rate and fitness delta are used.
+
+#### `ChAParams`
+
+The parameters relating to the structure of chromosomal aberrations. The parameters are:
+
+*  `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
+
+#### `FitParams`
+
+The parameters controlling the fitness of the samples. 
+
+* `Stress: float (0.0)`: Stress penalizes abnormally high ploidy.
+* `TsgOg: float (0.0)`: Affected by the number of Tumor Suppressors (TSG) and Oncogenes (OG) in the sample. TSG loss and OG gain increase fitness.
+* `Essentiality: float (0.0)`: Penalizes full loss of essential genes.
+* `GeneNormalization: bool (false)`: If true, `TsgOg` and `Essentiality` are normalized by the number of TSG, OG, and Essential genes in the sample.
+
+#### `Signatures`
+
+TODO
+
+#### `MHParams`
+
+@CODY
+
+#### `SAParams`
+
+TODO
+
+* `Acceptance: float (0.0)`: 
+* `MaxTries: int (1)`: 
 
 ## Input Data
 
-Data should be provided as a path to a folder using the `--data` parameter. The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectivelly. 
+Data should be provided as a path to a folder using the `--data` parameter (or left empty for default). 
+The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. 
+We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectively.
+
+@ CODY: In the below sections filenames should be provided.
 
 ### Chromosomes
 
-The chromosome contains the lengths and sex-specific information of individual chromosomes. By default, there are two columns, one with the name of a chromosome, one with a number of basises.
+The chromosome contains the lengths and sex-specific information of individual chromosomes. 
+By default, there are two columns, one with the name of a chromosome, one with a number of bases.
 
-Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Any`.
+Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. 
+All the other are considers to be autosomes. 
+If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Any`.
 
 Example file:
 
@@ -292,11 +340,9 @@ Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/
 TODO: check
 
 ### Pyrgo 
-![Pyrgo](./doc/img/pyrgo_128.png)
 TODO
 
 ### Rigma
-![Rigma](./doc/img/rigma_128.png)
 TODO
 
 ### Template Insertion Chain
@@ -307,7 +353,6 @@ TODO
 
 ### Template Insertion Bridge
 TODO
-
 
 ## Output
 
@@ -371,15 +416,14 @@ Generates a simple VCF file of all the observable (i.e. final and nucleotide-alt
 
 *Note that this only currently works with single-sample simulations* 
 
-Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include 
-
+Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include
 
 ### Plots
 
 TODO
 
 ## Contact
-Email questions, feature requests and bug reports to Adam Streck, adam.streck@mdc-berlin.de.
+Email questions, feature requests and bug reports to Adam Streck, `a.streck@iccb-cologne.org`.
 
 ## License
 SimChA is available under the MIT License.

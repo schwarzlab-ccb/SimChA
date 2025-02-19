@@ -22,7 +22,7 @@ watch.Start();
 var options = cmdOptions.Value;
 var selMode = options.SelectionMode;
 var config = FileIO.ReadSimChAConfig(options.ConfigFile);
-var rnd = new Random(config.ChAParams.Seed);
+var rnd = new Random(config.SimParams.Seed);
 var files = new FileIO(options.OutputPath);
 var genRef = FileIO.ReadGenRef(options.DataFolder, options.ShouldParseGenome);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
