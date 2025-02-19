@@ -10,8 +10,10 @@ public class SASimulator : Simulator
     private SAParams SAParams { get; }
 
     public SASimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, SAParams saParams) 
-        : base(rnd, genRef, simParams, fitParams) 
-        => SAParams = saParams;
+        : base(rnd, genRef, simParams, fitParams)
+    {
+        SAParams = saParams;
+    }
 
     private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {

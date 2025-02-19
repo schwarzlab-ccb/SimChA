@@ -131,64 +131,33 @@ public class FileIO
         outputFile.WriteLine("#SAMPLEID\tCHROM\tPOS\tID\tREF\tALT");
         foreach (var sample in samples)
         {
-            foreach (var snv in sample.Karyotype.GetFinalSNVs())
+            foreach (var snv in sample.Karyotype.GetSNVs())
             {
                 if (genRef.GenContentsDict == null)
                 {
                     throw new Exception("Genomic Content hasn't been set correctly to allow SNV list to be created");
                 }
-                char refBase = genRef.GenContentsDict[snv.ChrNo][(int)snv.Location];
+                char refBase = genRef.GenContentsDict[snv.Chrom][(int)snv.Pos];
                 // The VCF should *not* be aware of SNVs that didn't end up altering the location in the final karyotype
                 if (char.ToUpper(refBase) != snv.Alt.ToString()[0])
                 {
-                    outputFile.WriteLine($"{sample.SampleId}\t{snv.ChrNo}\t{snv.Location}\t.\t{refBase}\t{snv.Alt}");
+                    outputFile.WriteLine($"{sample.SampleId}\t{snv.Chrom}\t{snv.Pos}\t.\t{refBase}\t{snv.Alt}");
                 }
             }
         }
     }
 
-    public void WriteFasta(GenRef genRef, List<Sample> samples)
+    public void WriteFasta(List<Sample> samples)
     {
-        if (genRef.GenContentsDict == null)
-        {
-            throw new Exception("Reference Genome was not set. Please check that you have downloaded the correct assembly (see DownloadRefData.sh)");
-        }
         foreach (var sample in samples)
         {
             string outPath = Path.Combine(Path.GetFullPath(OutFolder), $"{sample.SampleId}_genome.fa");
             Console.WriteLine($"Writing to file {outPath}");
             using var outputFile = new StreamWriter(outPath);
             var kar = sample.Karyotype;
-
-            foreach (int contigId in kar.ContigIds())
+            foreach (string region in kar.GetSeq())
             {
-                outputFile.WriteLine($">ctg{contigId}");
-                Console.WriteLine($"Writing out contig {contigId}");
-                foreach (var region in kar.GetContig(contigId).GetRegions())
-                {
-                    string chrNo = region.ChrNo;
-                    long start = region.Start;
-                    long end   = region.End;
-                    var regionSeq = new StringBuilder (genRef.GenContentsDict[chrNo].ToString((int)start, (int)(end-start)));
-                    if (region.SNVs != null)
-                    {
-                        foreach (var snv in region.SNVs)
-                        {
-                            long loc = snv.Location - start;
-                            regionSeq[(int)loc] = snv.Alt.ToString()[0];
-                        }
-                    }
-                    if (!region.Forward)
-                    {
-                        char[] baseArray = regionSeq.ToString().ToCharArray();
-                        Array.Reverse(baseArray);
-                        regionSeq = new StringBuilder(new string(baseArray));
-                    }
-                    outputFile.Write(regionSeq);
-                    // Note that the output FASTA will not be in blocks of 80 characters wide
-                    // Implementing it means the write-out function takes way longer.
-                }
-                outputFile.Write("\n");
+                outputFile.Write(region);
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using SimChA.Computation;
+﻿using SimChA.Computation;
 
 namespace SimChA.Data;
 
@@ -8,25 +7,37 @@ public class Contig
     private List<Region> _regions;
 
     public Contig()
-        => _regions = new List<Region>();
+    {
+        _regions = new List<Region>();
+    }
 
     public Contig(IEnumerable<Region> regions)
-        => _regions = regions.Where(r => r.Length > 0).ToList();
+    {
+        _regions = regions.Where(r => r.Length > 0).ToList();
+    }
 
     public Contig(Contig other)
-        => _regions = new List<Region>(other._regions);
+    {
+        _regions = new List<Region>(other._regions);
+    }
 
     public static Contig Concat(IEnumerable<Contig> contigs)
         => new(contigs.SelectMany(c => c._regions));
 
     public long Length()
         => Length(_regions);
+    
+    public int Count()
+        => _regions.Count;
 
     public bool Any()
         => Length() > 0;
-
-    public List<Region> GetRegions()
-        => _regions;
+    
+    public IEnumerable<string> GetSeq(GenRef genRef)
+        => _regions.Select(r => r.GetSeq(genRef));
+    
+    public List<SNV> GetSNVs()
+        => _regions.SelectMany(r => r.SNVs ?? new List<SNV>()).ToList();
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -41,10 +52,14 @@ public class Contig
         => _regions.Where(r => r.ChrNo == chrNo);
 
     public void Clear()
-        => _regions.Clear();
+    {
+        _regions.Clear();
+    }
 
     public void DeleteRange(long start, long end)
-        => _regions = RegionOps.DeleteRange(_regions, start, end);
+    { 
+        _regions = RegionOps.DeleteRange(_regions, start, end);
+    }
 
     public Contig Split(long pos, bool keepFirst)
     {
@@ -54,7 +69,9 @@ public class Contig
     }
 
     public void Join(Contig other)
-        => _regions = RegionOps.ConcatRegions(_regions, other._regions);
+    {
+        _regions = RegionOps.ConcatRegions(_regions, other._regions);
+    }
 
     public void InvertRange(long invStart, long invEnd)
     {
@@ -178,5 +195,7 @@ public class Contig
     }
 
     public void MergeRegions()
-        => _regions = RegionOps.MergeRegions(_regions);
+    {
+        _regions = RegionOps.MergeRegions(_regions);
+    }
 }

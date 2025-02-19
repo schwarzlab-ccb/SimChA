@@ -10,8 +10,10 @@ public class MHSimulator : Simulator
     private MHParams MHParams { get; }
 
     public MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, MHParams mhParams)
-        : base(rnd, genRef, simParams, fitParams) 
-        => MHParams = mhParams;
+        : base(rnd, genRef, simParams, fitParams)
+    {
+        MHParams = mhParams;
+    }
 
     private List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
     {

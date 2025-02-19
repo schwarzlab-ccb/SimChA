@@ -1,6 +1,11 @@
 namespace SimChA.Data;
 
-public record SNV(long Location, string ChrNo, Nucleotide Alt)
+// TODO @CODY IMO SNV should hold both REF and ALT
+public record SNV(long Pos, string Chrom, Nucleotide Alt)
 {
-    public override string ToString() => $"chr:{ChrNo};location:{Location};alt:{Alt}";
+    public string Header() 
+        => "chrom\tpos\talt";
+    
+    public override string ToString() 
+        => $"{Chrom}\t{Pos}\t{Alt}";
 }

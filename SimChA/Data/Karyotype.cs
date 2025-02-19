@@ -9,7 +9,6 @@ public class Karyotype
     private GenRef GenRef { get; }
     public SexType Sex { get; }
     public double FitnessVal { get; private set; }
-    
     private readonly List<Contig> _contigs;
     
     public Karyotype(GenRef genRef, SexType sex)
@@ -40,6 +39,9 @@ public class Karyotype
     public long GenomeLen()
         => _contigs.Sum(c => c.Length());
     
+    public IEnumerable<SNV> GetSNVs()
+        => _contigs.SelectMany(c => c.GetSNVs()).ToList();
+    
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
     
@@ -64,6 +66,9 @@ public class Karyotype
     public Contig GetContig(int contigID) 
         => _contigs[contigID];
 
+    public IEnumerable<string> GetSeq()
+        => _contigs.SelectMany(c => c.GetSeq(GenRef).Concat(new List<string> {"\n"}));
+    
     public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
         => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
 
@@ -241,24 +246,6 @@ public class Karyotype
     {
         var contig = _contigs[contigID];
         contig.PointMutate(location, newNucleotide);
-    }
-
-    public List<SNV> GetFinalSNVs()
-    {
-        var snvList = new List<SNV>();
-        foreach (var region in _contigs.SelectMany(contig => contig.GetRegions()))
-        {
-            if (region.SNVs == null)
-            {
-                continue;
-            }
-
-            foreach (var snv in region.SNVs.Where(snv => snvList.All(s => s != snv)))
-            {
-                snvList.Add(snv);
-            }
-        }
-        return snvList;
     }
     
     public void MergeRegions()

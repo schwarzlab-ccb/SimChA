@@ -350,7 +350,7 @@ public class TestRegions
 
         Assert.IsNotNull(mutatedRegions[2].SNVs);
         Assert.AreEqual(1, mutatedRegions[2].SNVs!.Count);
-        Assert.AreEqual(location, mutatedRegions[2].SNVs![0].Location);
+        Assert.AreEqual(location, mutatedRegions[2].SNVs![0].Pos);
         Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVs![0].Alt);
 
     }

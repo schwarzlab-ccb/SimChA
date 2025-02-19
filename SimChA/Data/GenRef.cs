@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Text;
+﻿using System.Text;
 
 namespace SimChA.Data;
 
@@ -25,6 +24,9 @@ public class GenRef
     private List<string> AutChrs { get; }
     public string YChrName { get; }
     public string XChrName { get; }
+    
+    // TODO @CODY: The string should be obtained via a function rather than a direct access (make private)
+    // In case of no genome, if called, a string of 'N" shoudl be returned
     public Dictionary<string, StringBuilder>? GenContentsDict { get; }
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
     

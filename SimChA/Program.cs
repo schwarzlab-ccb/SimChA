@@ -91,7 +91,7 @@ try
     }
     if (options.WriteFasta)
     {
-        files.WriteFasta(genRef, samples);
+        files.WriteFasta(samples);
     }
 }
 catch (Exception e)

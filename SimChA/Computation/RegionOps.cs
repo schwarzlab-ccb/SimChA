@@ -37,7 +37,7 @@ public static class RegionOps
             return region;
         }
         var newSNVs = new List<SNV>(region.SNVs);
-        var lostSNVs = region.SNVs.Where(snv => snv.Location <= region.Start || region.End <= snv.Location);
+        var lostSNVs = region.SNVs.Where(snv => snv.Pos <= region.Start || region.End <= snv.Pos);
         foreach (var snv in lostSNVs)
         {
             newSNVs.Remove(snv);
@@ -219,7 +219,7 @@ public static class RegionOps
             {
                 var newSNVs = region.SNVs ?? new List<SNV>();
                 // See if the SNV is present in the region
-                var snv = newSNVs.FirstOrDefault(s => s.Location == region.Start + location - seekPos);
+                var snv = newSNVs.FirstOrDefault(s => s.Pos == region.Start + location - seekPos);
                 if (snv != null)
                 {
                     // Update the existing SNV

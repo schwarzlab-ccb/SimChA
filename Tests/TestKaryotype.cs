@@ -91,7 +91,7 @@ public class TestKaryotype
     public void TestInternalInversion()
     {
         long len = _kar.ContigLen(0);
-        int nRegions = _kar.GetContig(0).GetRegions().Count;
+        int nRegions = _kar.GetContig(0).Count();
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
         var regions = _kar.FindRegionsOfChr("chr1").ToList();
@@ -310,13 +310,12 @@ public class TestKaryotype
         _kar.ApplyPointMutation(contigID, loc, newNucleotide);
         Assert.AreEqual(46, _kar.CountContigs());
         
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(1, regions.Count);
-
-        var SNVs = regions[0].SNVs;
+        var contig = _kar.GetContig(contigID);
+        Assert.AreEqual(1, contig.Count());
+        var SNVs = contig.GetSNVs();
         Assert.NotNull(SNVs);
-        Assert.AreEqual(1, SNVs!.Count);
-        Assert.AreEqual(loc, SNVs[0].Location);
+        Assert.AreEqual(1, SNVs.Count);
+        Assert.AreEqual(loc, SNVs[0].Pos);
         Assert.AreEqual(newNucleotide, SNVs[0].Alt);
 
         // Try a repeated SNV
@@ -325,13 +324,12 @@ public class TestKaryotype
 
         Assert.AreEqual(46, _kar.CountContigs());
         
-        regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(1, regions.Count);
-
-        SNVs = regions[0].SNVs;
+        contig = _kar.GetContig(contigID);
+        Assert.AreEqual(1, contig.Count());
+        SNVs = contig.GetSNVs();
         Assert.NotNull(SNVs);
-        Assert.AreEqual(1, SNVs!.Count);
-        Assert.AreEqual(loc, SNVs[0].Location);
+        Assert.AreEqual(1, SNVs.Count);
+        Assert.AreEqual(loc, SNVs[0].Pos);
         Assert.AreEqual(newNucleotide, SNVs[0].Alt);
     }
 
@@ -346,12 +344,10 @@ public class TestKaryotype
         // Apply a deletion that covers the SNV
         _kar.ApplyInternalDeletion(contigID, 50, 200);
         // Check that the SNV is not present
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(2, regions.Count);
-        foreach (var region in regions)
-        {
-            Assert.Null(region.SNVs);
-        }
+        var contig = _kar.GetContig(contigID);
+        Assert.AreEqual(2, contig.Count());
+        var snvs = contig.GetSNVs();
+        Assert.IsEmpty(snvs);
     }
 
     [Test]
@@ -365,26 +361,20 @@ public class TestKaryotype
         // Apply a duplication that covers the SNV
         _kar.ApplyInternalDuplication(contigID, 50, 200);
         // Check that the SNV is present in both copies
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(3, regions.Count);
-        Assert.Null(regions[0].SNVs);
-        Assert.NotNull(regions[1].SNVs);
-        Assert.NotNull(regions[2].SNVs);
-        Assert.AreEqual(regions[1].SNVs, regions[2].SNVs);
-        Assert.AreEqual(1, regions[1].SNVs!.Count);
-        Assert.AreEqual(newNucleotide, regions[1].SNVs![0].Alt);
+        var contig = _kar.GetContig(contigID);
+        Assert.AreEqual(3, contig.Count());
+        var SNVs = contig.GetSNVs();
+        Assert.IsNotEmpty(SNVs);
+        Assert.AreEqual(SNVs[0], SNVs[1]);
+        Assert.AreEqual(newNucleotide, SNVs[0].Alt);
 
         // If we alter one region, the other should not be affected
         var secondNucleotide = Nucleotide.G;
         _kar.ApplyPointMutation(contigID, loc, secondNucleotide);
-        Assert.AreEqual(3, regions.Count);
-        Assert.Null(regions[0].SNVs);
-        Assert.NotNull(regions[1].SNVs);
-        Assert.NotNull(regions[2].SNVs);
-        Assert.AreNotEqual(regions[1].SNVs, regions[2].SNVs);
-        Assert.AreEqual(1, regions[1].SNVs!.Count);
-        Assert.AreEqual(secondNucleotide, regions[1].SNVs![0].Alt);
-        Assert.AreEqual(1, regions[2].SNVs!.Count);
-        Assert.AreEqual(newNucleotide, regions[2].SNVs![0].Alt);
+        SNVs = _kar.GetContig(contigID).GetSNVs();
+        Assert.IsNotEmpty(SNVs);
+        Assert.AreNotEqual(SNVs[0], SNVs[1]);
+        Assert.AreEqual(secondNucleotide, SNVs[0].Alt);
+        Assert.AreEqual(newNucleotide, SNVs[1].Alt);
     }
 }

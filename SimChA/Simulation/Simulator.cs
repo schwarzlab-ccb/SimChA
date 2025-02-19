@@ -45,9 +45,7 @@ public class Simulator
     }
     
     protected double SampleFit(CTreeNode node)
-        => node.Fitness > 0 
-            ? node.Fitness 
-            : Sampling.SampleDist(Rnd, SimParams.FitDist, SimParams.FitMean);
+        => node.Fitness > 0 ? node.Fitness : Sampling.SampleDist(Rnd, SimParams.FitDist, SimParams.FitMean);
 
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
