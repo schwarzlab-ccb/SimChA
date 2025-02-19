@@ -52,16 +52,16 @@ public class FileIO
         {
             foreach (var cn in cns)
             {
-                outputFile.WriteLine($"{sampleID}{cn.ToTSV()}");
+                outputFile.WriteLine($"{sampleID}\t{cn.ToTSV()}");
             }
         }
     }
 
-    public void WriteSimParams(SimChAConfig simChAConfig, string? name = null)
+    public void WriteSimParams(SimChAConfig simChAConfig)
     {
-        string filePath = (name != null) ? Path.Combine(Path.GetFullPath(OutFolder), name)
-                                         : Path.Combine(Path.GetFullPath(OutFolder), SIM_PARAMS_FILENAME);
-        using var file = new StreamWriter(filePath);
+        string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
+        Console.WriteLine($"Writing to file {outPath}");
+        using var file = new StreamWriter(outPath);
         var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
         string jsonString = JsonSerializer.Serialize(simChAConfig, options);
         file.WriteLine(jsonString);
