@@ -1,21 +1,11 @@
 {
-    "Seed": -1,
-    "Sex": "None",
-    "AutosomesOnly": true,
-    "EventCountMean": 89.28,
-    "EventDist": "Geometric",
-    "Fitness": {
-        "Stress": 2.5758,
-        "TsgOg": 20,
-        "Essentiality": 1350,
-        "Delta": 1.6,
-        "NormalizeGenes": true
+    "SimParams": {
+        "RateMean": 89.82,
+        "RateDist": "Geometric"
     },
-    "EvoParams": {
-        "WithFitness": false,
-        "MaxTries": 5,
-        "EventCost": 1.6,
-        "TetraploidStart": false
+    "ChAParams": {
+        "Seed": 0,
+        "AutosomesOnly": true
     },
     "Signatures": {
         "CNVs": {
@@ -32,22 +22,22 @@
                 {
                     "Type": "TailDeletion",
                     "Prob": 0.0809,
-                    "Size": 41067200
+                    "Frac": 41067200
                 },
                 {
                     "Type": "InternalDeletion",
                     "Prob": 0.0589,
-                    "Size": 19888700
+                    "Frac": 19888700
                 },
                 {
                     "Type": "InternalDeletion",
                     "Prob": 0.1445,
-                    "Size": 624000
+                    "Frac": 624000
                 },
                 {
                     "Type": "CentromereBoundDeletion",
                     "Prob": 0.0084,
-                    "Size": 18691000
+                    "Frac": 18691000
                 },
                 {
                     "Type": "ChromDuplication",
@@ -60,26 +50,30 @@
                 {
                     "Type": "TailDuplication",
                     "Prob": 0.1029,
-                    "Size": 41401000
+                    "Frac": 41401000
                 },
                 {
                     "Type": "InternalDuplication",
                     "Prob": 0.3563,
-                    "Size": 707500
+                    "Frac": 707500
                 },
                 {
                     "Type": "InternalDuplication",
                     "Prob": 0.1295,
-                    "Size": 13767400
+                    "Frac": 13767400
                 },
                 {
                     "Type": "CentromereBoundDuplication",
                     "Prob": 0.0189,
-                    "Size": 16087400
+                    "Frac": 16087400
                 },
                 {
                     "Type": "WholeGenomeDoubling",
                     "Prob": 0.0038
+                },
+                {
+                    "Type": "WholeGenomeDoubling",
+                    "Prob": 0.007074905465888097
                 }
             ]
         }

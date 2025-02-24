@@ -41,11 +41,11 @@ public class Simulator
     protected int SampleEventCount(CTreeNode node)
     {
         double events = node.Distance > 0 ? node.Distance : SimParams.RateMean;
-        return Sampling.SampleDistInt(Rnd, SimParams.RateDist, events);
+        return Sampling.SampleDiscDist(Rnd, SimParams.RateDist, events);
     }
     
     protected double SampleFit(CTreeNode node)
-        => node.Fitness > 0 ? node.Fitness : Sampling.SampleDist(Rnd, SimParams.FitDist, SimParams.FitMean);
+        => node.Fitness > 0 ? node.Fitness : Sampling.SampleContDist(Rnd, SimParams.FitDist, SimParams.FitMean);
 
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 

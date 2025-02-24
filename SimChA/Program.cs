@@ -37,7 +37,7 @@ if (options.Simulate)
         Console.WriteLine($"Creating {options.Repeats} samples:");
         for (int i = 0; i < options.Repeats; i++)
         {
-            string sampleId = $"Sample_{i}";
+            string sampleId = $"Sample_{i+1}";
             var node = new CTreeNode(sampleId, sampleId, -1, -1);
             var tree = new List<CTreeNode> {node};
             var newSample = simulator.Simulate(node, tree, validSigs);

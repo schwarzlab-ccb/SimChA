@@ -72,11 +72,11 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -C, --config                 (Default: ./default_params.json) A json file with configuration of the experiment.
 
-  -T, --tree                   (Default: ) A clone file that describes the tree to be built.
+  -T, --tree                   A clone file that describes the tree to be built.
 
   -R, --repeats                (Default: 1) Number of repeats to generate if the distance parameter is used.
 
-  -P, --cnprofiles             (Default: ) File with CNAs, will cause the program to write a scoring file.
+  -P, --cnprofiles             File with CNAs, will cause the program to write a scoring file.
 
   -D, --data                   (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name 
                                as the assembly used.

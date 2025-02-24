@@ -52,28 +52,41 @@ public static class Sampling
     public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
         => concentrations.Any() ? new Dirichlet(concentrations, rnd).Sample().ToList() : new List<double>();
     
-    public static double SampleDist(Random rnd, DistType dist, double mean = 1)
+    public static double SampleContDist(Random rnd, DistType dist, double mean = 1)
     {
         return dist switch
         {
             DistType.Exponential => Exponential.Sample(rnd, 1 / mean),
-            DistType.Normal => Normal.Sample(rnd, mean, .5),
-            DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
-            DistType.Poisson => Poisson.Sample(rnd, mean),
+            DistType.Normal => Normal.Sample(rnd, mean, 0.5),
             _ => mean
         };
     }
 
-    public static int SampleDistInt(Random rnd, DistType dist, double mean)
+    public static int SampleDiscDist(Random rnd, DistType dist, double mean)
     {
         return dist switch
         {
             DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
             DistType.Poisson => Poisson.Sample(rnd, mean),
-            DistType.Normal => throw new Exception($"{dist} distribution not supported for distance sampling"),
-            DistType.Exponential => throw new Exception($"{dist} distribution not supported for distance sampling"),
-            _ => (int) mean
+              _ => (int) mean
         };
+    }
+
+    public static double GetParetoScale(double mean) 
+        => 1.0/2.0*(-1.0 + Math.Sqrt(1.0 + 4.0*mean*mean));
+
+    public static double SampleParetoLim(Random rnd, double mean)
+    {
+        double shape = 0.5;
+        double scale = GetParetoScale(mean);
+        for (int i = 0; i < 1000; i++) {
+            double sample = Pareto.Sample(rnd, scale, shape);
+            if (sample <= 1)
+            {
+                return sample;
+            }
+        } 
+        return 1;
     }
     
     public static SexType GetSex(Random rnd, SexType sexType)

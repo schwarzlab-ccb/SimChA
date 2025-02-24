@@ -5,7 +5,6 @@ using MathNet.Numerics.Statistics;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Simulation;
-using SimChA.IO;
 
 namespace Tests;
 
@@ -20,13 +19,29 @@ public class TestSampling
         _rnd = new Random(0);
     }
 
-    [Test]
-    public void TestDistSampling([Values] DistType dist)
+    [TestCase(0.001), TestCase(0.01), TestCase(0.1), TestCase(0.5)]
+    public void TestParetoSampling(double mean)
     {
-        var reps = Enumerable.Range(0, 100).ToList();
-        double res = reps.Select(i => Sampling.SampleDist(_rnd, dist, 100)).Mean();
-        Assert.GreaterOrEqual(res, 50);
-        Assert.LessOrEqual(res, 150);
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleParetoLim(_rnd, mean)).Mean();
+        Assert.Greater(res, mean * 0.5);
+        Assert.Less(res, mean * 1.5);
+        Console.Write(res);
+    }
+
+    [Test]
+    public void TestContSampling([Values(DistType.Exponential, DistType.Normal)] DistType dist, [Values(0.01, 0.1, 1, 10, 100)] double mean)
+    {
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Mean();
+        Assert.Greater(res, mean * 0.5);
+        Assert.Less(res, mean * 1.5);
+    }
+    
+    [Test]
+    public void TestDiscSampling([Values(DistType.Geometric, DistType.Poisson)] DistType dist, [Values(1, 10, 100)] double mean)
+    {
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Mean();
+        Assert.Greater(res, mean * 0.5);
+        Assert.Less(res, mean * 1.5);
     }
 
     [Test]

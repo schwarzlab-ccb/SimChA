@@ -4,7 +4,6 @@ namespace SimChA.Computation;
 
 public static class CopyNumbers
 {
-
     public static Dictionary<string, List<int>> GetJointSegmentation(List<string> chromNames, List<Sample> samples)
     {
         var breaks = samples.Select(s => s.Karyotype.CalcBreaks()).ToList();
@@ -23,7 +22,4 @@ public static class CopyNumbers
     public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexType sex)
         => 2 * copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() 
            / (float) genRef.GetGenomeLen(sex);
-    
-    
-    
 }
