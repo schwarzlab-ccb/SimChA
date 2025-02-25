@@ -5,19 +5,19 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class SASimulator : Simulator
+public class EvoSimulator : Simulator
 {
-    private SAParams SAParams { get; }
+    private EvoParams EvoParams { get; }
 
-    public SASimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, SAParams saParams) 
+    public EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, EvoParams evoParams) 
         : base(rnd, genRef, simParams, fitParams)
     {
-        SAParams = saParams;
+        EvoParams = evoParams;
     }
 
     private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
     {
-        if (SAParams.EventCost <= 0 || !hasWGD)
+        if (true)
         {
             return pars;
         }
@@ -25,7 +25,7 @@ public class SASimulator : Simulator
         var newPars = new List<CNEventPars>(pars);
         foreach (var e in pars.Where(e => e.Type.ToString().EndsWith("Deletion")))
         {
-            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * SAParams.EventCost };
+            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * EvoParams.EventCost };
         }
         var normalized = Factory.NormalizeEvents(newPars);
         return normalized;
@@ -33,7 +33,7 @@ public class SASimulator : Simulator
 
     private (Karyotype newKar, BaseEventData eventData) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
     {
-        for (int tryNo = 0; tryNo <= SAParams.MaxTries; tryNo++)
+        for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
             var cnEventP = Rnd.PickRndElem(cnEventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, cnEventP);
@@ -42,7 +42,7 @@ public class SASimulator : Simulator
                 var proposedKar = new Karyotype(currentKar);
                 eventData.ApplyEvent(proposedKar);
                 double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
-                if (Math.Exp(proposedFitness - currentKar.FitnessVal - SAParams.Acceptance) > Rnd.NextDouble())
+                if (Math.Exp(proposedFitness - currentKar.FitnessVal - EvoParams.Acceptance) > Rnd.NextDouble())
                 {
                     return (proposedKar, eventData);
                 }

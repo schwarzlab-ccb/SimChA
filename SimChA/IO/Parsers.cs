@@ -65,8 +65,8 @@ public static class Parsers
             }
             int start = int.Parse(lineSplit[2]) - 1;
             int end = int.Parse(lineSplit[3]);
-            int cnA = int.Parse(lineSplit[4]);
-            int cnB = int.Parse(lineSplit[5]);
+            int cnA = (int) Math.Round(float.Parse(lineSplit[4]));
+            int cnB = (int) Math.Round(float.Parse(lineSplit[5]));
             sampleSegs[sample].Add((chrom, start, end, cnA, cnB));
         }
         

@@ -10,7 +10,7 @@
     "FitParams": {
         "Stress":  1.98
     },
-    "SAParams": { },
+    "EvoParams": { },
     "Signatures": [
         {
             "Name": "CNA",

@@ -3,6 +3,6 @@
 public enum SelectionMode
 {
     MonteCarlo,
-    SimulatedAnnealing,
+    Evolution,
     MetropolisHastings
 }

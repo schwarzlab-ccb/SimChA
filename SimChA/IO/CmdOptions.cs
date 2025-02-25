@@ -86,7 +86,7 @@ public class CmdOptions
             }
             if (EvolutionMode)
             {
-                return SelectionMode.SimulatedAnnealing;
+                return SelectionMode.Evolution;
             }
             return SelectionMode.MonteCarlo;
         }

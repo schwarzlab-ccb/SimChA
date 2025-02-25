@@ -13,6 +13,7 @@ public static class CopyNumbers
         return segmentation;
     }
 
+    // TODO: Optimization needed
     public static IEnumerable<CopyNumber> CalcCNs(Karyotype karyotype, IDictionary<string, List<int>>? breaks = null)
     {
         breaks ??= karyotype.CalcBreaks();

@@ -7,75 +7,65 @@
         "Seed": 0,
         "AutosomesOnly": true
     },
-    "Signatures": {
-        "CNVs": {
-            "Prob": 1,
-            "Events": [
-                {
-                    "Type": "ChromDeletion",
-                    "Prob": 0.0465
-                },
-                {
-                    "Type": "ArmDeletion",
-                    "Prob": 0.0107
-                },
-                {
-                    "Type": "TailDeletion",
-                    "Prob": 0.0809,
-                    "Frac": 41067200
-                },
-                {
-                    "Type": "InternalDeletion",
-                    "Prob": 0.0589,
-                    "Frac": 19888700
-                },
-                {
-                    "Type": "InternalDeletion",
-                    "Prob": 0.1445,
-                    "Frac": 624000
-                },
-                {
-                    "Type": "CentromereBoundDeletion",
-                    "Prob": 0.0084,
-                    "Frac": 18691000
-                },
-                {
-                    "Type": "ChromDuplication",
-                    "Prob": 0.0304
-                },
-                {
-                    "Type": "ArmDuplication",
-                    "Prob": 0.0121
-                },
-                {
-                    "Type": "TailDuplication",
-                    "Prob": 0.1029,
-                    "Frac": 41401000
-                },
-                {
-                    "Type": "InternalDuplication",
-                    "Prob": 0.3563,
-                    "Frac": 707500
-                },
-                {
-                    "Type": "InternalDuplication",
-                    "Prob": 0.1295,
-                    "Frac": 13767400
-                },
-                {
-                    "Type": "CentromereBoundDuplication",
-                    "Prob": 0.0189,
-                    "Frac": 16087400
-                },
-                {
-                    "Type": "WholeGenomeDoubling",
-                    "Prob": 0.0038
-                },
-                {
-                    "Type": "WholeGenomeDoubling",
-                    "Prob": 0.007074905465888097
-                }
-            ]
-        }
+    "FitParams": {
+        "Stress":  1.98
+    },
+    "EvoParams": { },
+    "Signatures": [{
+        "Name": "CNVs",
+        "Prob": 1,
+        "Events": [
+            {
+                "Type": "ArmDuplication",
+                "Prob": 0.012466549071422344
+            },
+            {
+                "Type": "ArmDeletion",
+                "Prob": 0.012133716523920349
+            },
+            {
+                "Type": "CentromereBoundDuplication",
+                "Prob": 0.020839341645483872,
+                "Frac": 0.09837232529455073
+            },
+            {
+                "Type": "CentromereBoundDeletion",
+                "Prob": 0.012157190859764317,
+                "Frac": 0.1315579141331199
+            },
+            {
+                "Type": "InternalDuplication",
+                "Prob": 0.4710745880254059,
+                "Frac": 0.03199072548077375
+            },
+            {
+                "Type": "InternalDeletion",
+                "Prob": 0.20539205494335977,
+                "Frac": 0.051515309628065206
+            },
+            {
+                "Type": "TailDuplication",
+                "Prob": 0.10211587602867893,
+                "Frac": 0.28791997712033157
+            },
+            {
+                "Type": "TailDeletion",
+                "Prob": 0.0975107143575745,
+                "Frac": 0.3217236046221925
+            },
+            {
+                "Type": "ChromDuplication",
+                "Prob": 0.0257555382665209
+            },
+            {
+                "Type": "ChromDeletion",
+                "Prob": 0.035958490667274766
+            },
+            {
+                "Type": "WholeGenomeDoubling",
+                "Prob": 0.007074905465888097
+            }
+        ]
     }
+    ]
 }

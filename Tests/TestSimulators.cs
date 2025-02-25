@@ -26,22 +26,22 @@ public class TestSimulators
         _genRef = FileIO.ReadGenRef("./../../../../data/hg19");
     }
     
-    private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, SAParams? saParams = null)
+    private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, EvoParams? saParams = null)
     {
         simParams ??= new SimParams();
         fitParams ??= new FitParams();
         mhParams ??= new MHParams();
-        saParams ??= new SAParams();
+        saParams ??= new EvoParams();
         return type switch
         {
             not null when type == typeof(Simulator) => new Simulator(_rnd, _genRef, simParams, fitParams),
             not null when type == typeof(MHSimulator) => new MHSimulator(_rnd, _genRef, simParams, fitParams, mhParams),
-            not null when type == typeof(SASimulator) => new SASimulator(_rnd, _genRef, simParams, fitParams, saParams),
+            not null when type == typeof(EvoSimulator) => new EvoSimulator(_rnd, _genRef, simParams, fitParams, saParams),
             _ => throw new ArgumentException("Unknown simulator type")
         };
     }
     
-    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(SASimulator))]
+    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestSimulatorsAll(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);
@@ -53,7 +53,7 @@ public class TestSimulators
         Assert.AreEqual(46, res[0].Karyotype.CountContigs());
     }
     
-    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(SASimulator))]
+    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestEmptySimulator(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);

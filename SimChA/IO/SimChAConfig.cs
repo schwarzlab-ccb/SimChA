@@ -9,5 +9,5 @@ public record SimChAConfig(
     ChAParams ChAParams,
     FitParams FitParams,
     List<Signature>? Signatures = null,
-    MHParams? MHParams = null,
-    SAParams? SAParams = null);
+    EvoParams? EvoParams = null,
+    MHParams? MHParams = null);
