@@ -37,6 +37,7 @@ public class TestParsing
         Assert.AreEqual(config.Signatures, deserialized?.Signatures);
     }
     
+    
     [Test]
     public void TestParseGeneLists()
     {
@@ -44,13 +45,13 @@ public class TestParsing
 
         string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
 
-        var gene1 = new Gene("TSG1", new GenRange(0, 50, "chr1"), 0.001);
+        var gene1 = new Gene(0, 50, "chr1", "TSG1",0.001);
         tsgList["chr1"].Add(gene1);
         var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs);
-        Assert.AreEqual(tsgList["chr1"], listFromString);
+        Assert.AreEqual(tsgList, listFromString);
 
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
-        var gene2 = new Gene("TSG2", new GenRange(99, 5000, "chr2"), 0.01);
+        var gene2 = new Gene(99, 5000, "chr2", "TSG2", 0.01);
         tsgList["chr2"].Add(gene2);
         listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs);
         Assert.AreEqual(tsgList, listFromString);

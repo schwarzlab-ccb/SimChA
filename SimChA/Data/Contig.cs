@@ -197,11 +197,11 @@ public class Contig
         foreach (var reg in _regions.Where(r => r.Chrom == chrom && r.Forward))
         {
             int geneIndex = 0;
-            while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Range.Start)
+            while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Start)
             {
                 geneIndex++;
             }
-            while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= reg.End)
+            while (geneIndex < geneList.Count && geneList[geneIndex].End <= reg.End)
             {
                 presentGenes.Add(geneList[geneIndex].Name);
                 geneIndex++;

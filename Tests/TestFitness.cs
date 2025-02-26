@@ -25,7 +25,7 @@ public class TestFitness
     }
     
     private static Gene MakeGene(string chrNo, double deltaFitness)
-        => new($"G{chrNo}", new Region(0, 50, chrNo, false, new List<SNV>()), deltaFitness);
+        => new(0, 50, chrNo, $"G{chrNo}", deltaFitness);
 
     [Test]
     public void TestEssTerm([Values] SexType sex, [Values(0,1)] int refId)

@@ -30,9 +30,9 @@ public class TestRegions
         Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, "chr1")));
         Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, "chr1")));
 
-        var gene = new Gene("OR4F5", new GenRange(69090, 70008, "chr1"), 0.142321064);
+        var gene = new Gene(69090, 70008, "chr1" , "OR4F5", 0.142321064);
         var range = new GenRange(0, 249250621, "chr1");
-        Assert.IsTrue(range.Overlaps(gene.Range));
+        Assert.IsTrue(range.Overlaps(gene));
     }
 
     [Test]
@@ -304,5 +304,17 @@ public class TestRegions
         {
             Assert.IsEmpty(region.SNVs);
         }
+    }
+
+    [Test]
+    public void TestEquality()
+    {
+        var region1 = new Region(0, 100, "chr1", true, new List<SNV>());
+        var region2 = new Region(0, 100, "chr1", true, new List<SNV>());
+        Assert.AreEqual(region1, region2);
+        
+        var range1 = new GenRange(0, 100, "chr1");
+        var range2 = new GenRange(0, 100, "chr1");
+        Assert.AreEqual(range1, range2);
     }
 }

@@ -117,14 +117,13 @@ public static class Parsers
                 // Convert to zero-based [start, end) index 
                 int start = int.Parse(genString[1]) - 1;
                 int end = int.Parse(genString[2]);
-                var region = new GenRange(start, end, chrom);
-                var gene = new Gene(name, region, fitness);
+                var gene = new Gene(start, end, chrom, name, fitness);
                 geneList[chrom].Add(gene);
             }
         }
         foreach (var pair in geneList)
         {
-            pair.Value.Sort((g1, g2) => g1.Range.Start.CompareTo(g2.Range.Start));
+            pair.Value.Sort((g1, g2) => g1.Start.CompareTo(g2.Start));
         }
         return geneList;
     }

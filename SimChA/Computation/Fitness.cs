@@ -47,7 +47,7 @@ public static class Fitness
 
     // 0/0 => 1, i.e. the genes not present in the given sex contributed their default score
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
-        => cn + (2 - ExpectedCN(genRef, g.Range.Chrom, sex));
+        => cn + (2 - ExpectedCN(genRef, g.Chrom, sex));
     
     public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexType sex, bool normalizeGenes = false)
     {
@@ -60,7 +60,7 @@ public static class Fitness
     }
 
     private static bool IsAutosome(GenRef genRef, Gene gene) 
-        => gene.Range.Chrom != genRef.XChrName && gene.Range.Chrom != genRef.YChrName;
+        => gene.Chrom != genRef.XChrName && gene.Chrom != genRef.YChrName;
     
     // @CODY TODO: This only works for autosomes currently.
     public static double Zygosity(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, int count, bool normalizeGenes = false) 
@@ -71,7 +71,7 @@ public static class Fitness
     private static IEnumerable<(Gene gene, int CN)> GenesForSex(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex) 
         => sex switch
         {
-            SexType.Female => essCNs.Where(g => g.gene.Range.Chrom != genRef.YChrName),
+            SexType.Female => essCNs.Where(g => g.gene.Chrom != genRef.YChrName),
             SexType.Male => essCNs,
             _ => essCNs.Where(pair => IsAutosome(genRef, pair.gene))
         };

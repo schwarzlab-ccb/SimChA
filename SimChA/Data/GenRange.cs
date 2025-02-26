@@ -20,6 +20,18 @@ public class GenRange
         Chrom = other.Chrom;
     }
 
+    public override bool Equals(object? obj)
+    {
+        if (obj is GenRange other)
+        {
+            return Start == other.Start && End == other.End && Chrom == other.Chrom;
+        }
+        return false;
+    }
+
+    public override int GetHashCode() 
+        => HashCode.Combine(Start, End, Chrom);
+
     public void Revert()
     {
         long oldStart = Start;
