@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.Data;
+﻿using SimChA.Data;
 using SimChA.IO;
 
 namespace SimChA.Computation;
@@ -9,34 +7,19 @@ public static class Fitness
 {
     private const double EPSILON = 1e-8;
 
-    public static double Calculate(
-        Karyotype kar,
-        GenRef genRef,
-        FitParams fParams)
+    private static double CalcTerm(double parameter, Func<double> termCalculation)
+        => parameter > EPSILON ? termCalculation() * parameter : 0.0;
+
+    public static double Calculate(Karyotype kar, GenRef genRef, FitParams fParams)
     {
         bool normGenes = fParams.GeneNormalization;
-        double stressTerm = fParams.Stress > EPSILON
-            ? StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen())
-            : 0.0;
-        double ogTerm = fParams.TsgOg > EPSILON 
-            ? TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar), kar.Sex, normGenes)
-            : 0.0;
-        double tsgTerm = fParams.TsgOg > EPSILON
-            ? TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar), kar.Sex, normGenes)
-            : 0.0;
-        double essTerm = fParams.Essentiality > EPSILON
-            ? EssTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar), kar.Sex, normGenes) 
-            : 0.0;
-        return 1 + stressTerm * fParams.Stress + (ogTerm - tsgTerm) * fParams.TsgOg + essTerm * fParams.Essentiality;
+        double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen()));
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar), kar.Sex, normGenes));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar), kar.Sex, normGenes));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar), kar.Sex, normGenes));
+        return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
-
-    public static double CalculateFromComponents(
-        double stressTerm,
-        double tsgogTerm,
-        double essTerm,
-        FitParams fParams) 
-        => 1 + stressTerm * fParams.Stress + tsgogTerm * fParams.TsgOg + essTerm * fParams.Essentiality;
-
+    
     public static void LogCNs(IEnumerable<(Gene, int)> geneCNs)
     {
         Console.WriteLine("CNs:");

@@ -187,20 +187,6 @@ public class TestFitness
     }
 
     [Test]
-    public void TestCalculateFromComponents([Values] SexType sex, [Values(0,1)] int refId)
-    {
-        var genRef = _refs[refId];
-        var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitParams(0.001, 0.01, 0.000_1, true);
-        double stress = Fitness.StressTerm(genRef.GetGenomeLen(sex), karyotype.GenomeLen());
-        double tsg = -Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], karyotype), sex);
-        double og = Fitness.TsgOgTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], karyotype), sex);
-        double ess = Fitness.EssTerm(genRef, Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], karyotype), sex, fit.GeneNormalization);
-        double total = 1 + (stress*fit.Stress + (tsg + og)*fit.TsgOg + ess*fit.Essentiality);
-        Assert.AreEqual(total, Fitness.CalculateFromComponents(stress, tsg+og, ess, fit), EPSILON);
-    }
-
-    [Test]
     public void TestAutosomeCalculate([Values] SexType sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
