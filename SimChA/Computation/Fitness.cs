@@ -29,18 +29,6 @@ public static class Fitness
         }
     }
 
-    public static double Sigmoid(double x)
-        => 1 / (1 + Math.Exp(-((x * 1.5 - 1) * 10)));
-
-    public static double Exponential(double x)
-        => Math.Pow(x, 9) * 5;
-
-    public static double Linear(double x)
-        => x;
-
-    public static double Tanh(double x)
-        => Math.Tanh(x);
-
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double)refBaseCount);
 
@@ -55,9 +43,7 @@ public static class Fitness
         };
     }
     public static double CountFn(double x)
-        => x < 0
-            ? -Math.Log(1.0 - x / 2.0)
-            : Math.Log(1.0 + x);
+        => x < 0 ? -Math.Log(1.0 - x / 2.0) : Math.Log(1.0 + x);
 
     // 0/0 => 1, i.e. the genes not present in the given sex contributed their default score
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
@@ -82,28 +68,32 @@ public static class Fitness
             geneCNs.Average(pair => IsAutosome(genRef, pair.gene) && pair.CN == count ? 1 : 0) :
             geneCNs.Count(pair => IsAutosome(genRef, pair.gene) && pair.CN == count);
 
-    public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex, bool normalizeGenes = false)
-    {
-        var genesList = sex switch
+    private static IEnumerable<(Gene gene, int CN)> GenesForSex(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex) 
+        => sex switch
         {
             SexType.Female => essCNs.Where(g => g.gene.Range.Chrom != genRef.YChrName),
             SexType.Male => essCNs,
             _ => essCNs.Where(pair => IsAutosome(genRef, pair.gene))
         };
-
-        Func<(Gene gene, int CN), double> calsGene =
-            pair => Math.Min(pair.CN - 1, 0) * pair.gene.DeltaFitness;
-        
-        return normalizeGenes
-            ? genesList.Average(calsGene)
-            : genesList.Sum(calsGene);
+    
+    public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex, bool normalizeGenes = false)
+    {
+        var genesList = GenesForSex(genRef, essCNs, sex);
+        Func<(Gene gene, int CN), double> calsGene = pair => Math.Min(pair.CN - 1, 0) * pair.gene.DeltaFitness;
+        return normalizeGenes ? genesList.Average(calsGene) : genesList.Sum(calsGene);
     }
 
+    // TODO: The genes should exist on the karyotype actually
     public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<string, List<Gene>> searched, Karyotype karyotype)
     {
-        var present = karyotype.GetPresentGenes(searched);
-        var counts = present.GroupBy(g => g).ToDictionary(g => g.Key, g => g.Count());
-        var allSearched = searched.SelectMany(p => p.Value);
-        return allSearched.Select(g => (g, counts.GetValueOrDefault(g, 0)));
+        List<IEnumerable<(Gene, int)>> res = new();
+        foreach ((string chrom, var geneList) in searched)
+        {
+            var present = karyotype.GetPresentGenes(chrom, geneList);
+            var counts = present.GroupBy(g => g).ToDictionary(g => g.Key, g => g.Count());
+            var allCounts = searched[chrom].Select(g => (g, counts.GetValueOrDefault(g, 0)));
+            res.Add(allCounts);
+        }
+        return res.SelectMany(v => v);
     }
 }

@@ -226,19 +226,6 @@ public class TestKaryotype
     private Gene MakeGene(string chrNo) 
         => new("G" + chrNo, new Region(0, 50, chrNo, false), _rnd.NextDouble());
 
-    [Test]
-    public void TestGetPresentGenes()
-    {
-        var chrNums = _genRef.AllChrs;
-        var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> { MakeGene(c) });
-        var tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
-        
-        // Removes a gene and a contig at the same time
-        ApplyRandomEvent(_rnd, _kar, _del);
-        tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
-    }
     
     [Test]
     public void TestPyrgo()

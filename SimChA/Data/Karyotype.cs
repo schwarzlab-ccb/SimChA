@@ -104,8 +104,8 @@ public class Karyotype
     public IEnumerable<string> GetSeq()
         => _contigs.SelectMany(c => c.GetSeq(GenRef).Concat(new List<string> {"\n"}));
     
-    public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
-        => _contigs.SelectMany(c => c.GetPresentGenes(geneLists)).ToList();
+    public IEnumerable<Gene> GetPresentGenes(string chrom, List<Gene> geneList)
+        => _contigs.SelectMany(c => c.GetPresentGenes(chrom, geneList));
 
     public double UpdateFitness(GenRef genRef, FitParams fParams)
         => FitnessVal = Fitness.Calculate(this, genRef, fParams);

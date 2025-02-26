@@ -12,19 +12,19 @@ public static class RegionOps
         }
     }
 
-    private static Region OffsetStart(Region region, long howMuch)
+    private static Region ResizeFront(Region region, long howMuch)
     {
         var newRegion = region with { Start = region.Start + howMuch };
         return UpdateSNVs(newRegion);
     }
     
-    private static Region OffsetEnd(Region region, long howMuch)
+    private static Region ResizeBack(Region region, long howMuch)
     {
         var newRegion = region with { End = region.Start + howMuch };
         return UpdateSNVs(newRegion);
     }    
     
-    private static Region OffsetBoth(Region region, long start, long end)
+    private static Region ResizeBoth(Region region, long start, long end)
     {
         var newRegion = region with { Start = region.Start + start, End = region.Start + end };
         return UpdateSNVs(newRegion);
@@ -68,20 +68,20 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // star inside, end outside of region
             {
-                var newRegion = OffsetEnd(region, start - seekPos);
+                var newRegion = ResizeBack(region, start - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region, end inside the region
             {
-                var newRegion = OffsetStart(region, end - seekPos);
+                var newRegion = ResizeFront(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // None coordinates inside of the region
             {
-                var firstRegion = OffsetEnd(region, start - seekPos);
+                var firstRegion = ResizeBack(region, start - seekPos);
                 AddIfNotEmpty(newRegions, firstRegion);
 
-                var secondRegion = OffsetStart(region, end - seekPos);
+                var secondRegion = ResizeFront(region, end - seekPos);
                 AddIfNotEmpty(newRegions, secondRegion);
             }
 
@@ -160,17 +160,17 @@ public static class RegionOps
             }
             else if (end > seekPos + region.Length) // end outside of region
             {
-                var newRegion = OffsetStart(region, start - seekPos);
+                var newRegion = ResizeFront(region, start - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else if (start < seekPos) // start before the region
             {
-                var newRegion = OffsetEnd(region, end - seekPos);
+                var newRegion = ResizeBack(region, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
             else // None coordinates inside of the region
             {
-                var newRegion = OffsetBoth(region, start - seekPos, end - seekPos);
+                var newRegion = ResizeBoth(region, start - seekPos, end - seekPos);
                 AddIfNotEmpty(newRegions, newRegion);
             }
 
@@ -197,9 +197,9 @@ public static class RegionOps
             }
             else // split inside the region
             {
-                var firstPart = OffsetEnd(region, pos - seekPos);
+                var firstPart = ResizeBack(region, pos - seekPos);
                 AddIfNotEmpty(beforeRegions, firstPart);
-                var secondPart = OffsetStart(region, pos - seekPos);
+                var secondPart = ResizeFront(region, pos - seekPos);
                 AddIfNotEmpty(afterRegions, secondPart);
             }
 

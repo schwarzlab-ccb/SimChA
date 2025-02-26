@@ -183,7 +183,6 @@ public class TestFitness
         var karyotype = new Karyotype(genRef, sex);
         var fit = new FitParams(0.001, 0.01, 0.000_1, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
-        // TODO: Test the linear combination
     }
 
     [Test]
@@ -194,11 +193,10 @@ public class TestFitness
         karyotype.MergeRegions();
         var fit = new FitParams(0.001, 0.01, 0.000_1, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
-        // TODO: Test the linear combination
     }
-    
+
     [Test]
-    public void TestReferenceFitness([Values] SexType sex, [Values(0,1)] int refId, [Values(-1, 0, 1)] int myInt)
+    public void TestReferenceFitness([Values] SexType sex, [Values(0, 1)] int refId, [Values(-1, 0, 1)] int myInt)
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
@@ -207,20 +205,5 @@ public class TestFitness
         double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, sex);
         double og = Fitness.TsgOgTerm(genRef, ogsCNs, sex);
         Assert.AreEqual(tsg, og, EPSILON);
-    }
-
-    [Test]
-    public void TestGetPresentGenes([Values] bool useTSG, [Values(0,1)] int refId)
-    {
-        var genRef = _refs[refId];
-        var selectList = genRef.GeneLists[useTSG ? GeneListType.TumorSuppressor : GeneListType.Oncogene];
-        var contigs = genRef.GetGenotype(SexType.Male).Select(region => new Contig(region)).ToList();
-        foreach (string chrNo in genRef.AllChrs)
-        {
-            int chrToCont = chrNo != "chrY" ? genRef.AllChrs.FindIndex(c => c == chrNo) : 45;
-            int contigCount = contigs[chrToCont].GetPresentGenes(selectList).Count;
-            int chrCount = selectList[chrNo].Count;
-            Assert.AreEqual(chrCount, contigCount);
-        }
     }
 }

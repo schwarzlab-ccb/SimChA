@@ -189,16 +189,11 @@ public class Contig
         _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
     }
     
-    public List<Gene> GetPresentGenes(Dictionary<string, List<Gene>> geneLists)
+    public List<Gene> GetPresentGenes(string chrom, List<Gene> geneList)
     {
         List<Gene> presentGenes = new();
-        foreach (var reg in _regions)
+        foreach (var reg in _regions.Where(r => r.Chrom == chrom && r.Forward))
         {
-            var geneList = geneLists[reg.Chrom];
-            if (!reg.Forward || geneList.Count <= 0)
-            {
-                continue;
-            }
             int geneIndex = 0;
             while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Range.Start)
             {
