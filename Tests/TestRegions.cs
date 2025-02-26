@@ -1,22 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Extreme.DataAnalysis.Models;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Data;
-using SimChA.Simulation;
 
 namespace Tests;
 
 [TestFixture]
 public class TestRegions
 {
-    private Region _cRegion = null!;
+    private Region _cRegion;
 
     [SetUp]
     public void Setup()
     {
-        _cRegion = new Region(0, 249250621, "chr1", true);
+        _cRegion = new Region(0, 249250621, "chr1", true, new List<SNV>());
     }
 
     [Test]
@@ -70,7 +68,8 @@ public class TestRegions
     [Test]
     public void TestDeleteInverted()
     {
-        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var regions = new List<Region> { _cRegion };
+        RegionOps.Revert(regions);
         var newRegions = RegionOps.DeleteRange(regions, 1000, 2000);
         Assert.AreEqual(1000, newRegions[0].Length);
         Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].Length);
@@ -85,152 +84,78 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(2, 3, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         var res = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         Assert.AreEqual(res, RegionOps.DeleteRange(regions, 1, 3));
     }
     
     [Test]
-    public void TestDeleteArm()
-    {
-        var regions = new List<Region>
-        {
-            new(0, 1, "chr1", true),
-            new(1, 2, "chr1", true),
-            new(2, 3, "chr1", true)
-        };
-        var pArm = new List<Region>
-        {
-            new(1, 2, "chr1", true),
-            new(2, 3, "chr1", true)
-        };
-        Assert.AreEqual(pArm, RegionOps.DeleteArm(regions, 1, true, false));
-        regions = new List<Region>
-        {
-            new(0, 1, "chr1", true),
-            new(1, 2, "chr1", true),
-            new(2, 3, "chr1", true)
-        };
-        var qArm = new List<Region>
-        {
-            new(0, 1, "chr1", true),
-            new(1, 2, "chr1",true)
-        };
-        Assert.AreEqual(qArm, RegionOps.DeleteArm(regions, 1, false, false));
-        regions = new List<Region>
-        {
-            new(0, 1, "chr1", true),
-            new(1, 2, "chr1", true),
-            new(2, 3, "chr1", true)
-        };
-        var pArmWithRegion = new List<Region>
-        {
-            new(2, 3, "chr1", true)
-        };
-        Assert.AreEqual(pArmWithRegion, RegionOps.DeleteArm(regions, 1, true, true));
-        regions = new List<Region>
-        {
-            new(0, 1, "chr1",true),
-            new(1, 2, "chr1",true),
-            new(2, 3, "chr1",true)
-        };
-        var qArmWithRegion = new List<Region>
-        {
-            new(0, 1, "chr1",true)
-        };
-        Assert.AreEqual(qArmWithRegion, RegionOps.DeleteArm(regions, 1, false, true));
-    }
-
-    [Test]
-    public void TestGetArm()
-    {
-        var regions = new List<Region>
-        {
-            new(0, 1, "chr1",true),
-            new(1, 2, "chr1",true),
-            new(2, 3, "chr1", true)
-        };
-        var qArm = new List<Region>
-        {
-            new(2, 3, "chr1",true)
-        };
-        Assert.AreEqual(qArm, RegionOps.GetArm(regions, 1, false, false));
-        var pArm = new List<Region>
-        {
-            new(0, 1, "chr1",true)
-        };
-        Assert.AreEqual(pArm, RegionOps.GetArm(regions, 1, true, false));
-        var qArmWithRegion = new List<Region>
-        {
-            new(1, 2, "chr1", true),
-            new(2, 3, "chr1", true)
-        };
-        Assert.AreEqual(qArmWithRegion, RegionOps.GetArm(regions, 1, false, true));
-        var pArmWithRegion = new List<Region>
-        {
-            new(0, 1, "chr1", true),
-            new(1, 2, "chr1", true)
-        };
-        Assert.AreEqual(pArmWithRegion, RegionOps.GetArm(regions, 1, true, true));        
-    }
-
-    [Test]
     public void TestMergeRegions()
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(2, 3, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         var mergeAll = new List<Region>
         {
-            _cRegion with { Start = 0, End = 4 },
+            new(0, 4, "chr1", true, new List<SNV>()),
         };
         Assert.AreEqual(mergeAll, RegionOps.MergeRegions(regions));
         
         var mergeAllInverted = new List<Region>
         {
-            _cRegion with { Start = -4, End = -2},
-            _cRegion with { Start = -2, End = 0},
+            new(-4, -2, "chr1", true, new List<SNV>()),
+            new(-2, 0, "chr1", true, new List<SNV>())
         };
-        Assert.AreEqual(mergeAll, RegionOps.InvertRegions(RegionOps.MergeRegions(mergeAllInverted)));
-        Assert.AreEqual(mergeAll, RegionOps.MergeRegions(RegionOps.InvertRegions(mergeAllInverted)));
+        var merged = RegionOps.MergeRegions(mergeAllInverted);
+        RegionOps.Revert(merged);
+        Assert.AreEqual(mergeAll, merged);
+        mergeAllInverted = new List<Region>
+        {
+            new(-4, -2, "chr1", true, new List<SNV>()),
+            new(-2, 0, "chr1", true, new List<SNV>())
+        };
+        RegionOps.Revert(mergeAllInverted);
+        merged =  RegionOps.MergeRegions(mergeAllInverted);
+        Assert.AreEqual(mergeAll, merged);
 
         regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = -3, End = -2 },
-            _cRegion with { Start = 3, End = 4}
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(-3, -2, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         var mergeOneInverted = new List<Region>
         {
-            _cRegion with { Start = 0, End = 2},
-            _cRegion with { Start = -3, End = -2 },
-            _cRegion with { Start = 3, End = 4}
+            new(0, 2, "chr1", true, new List<SNV>()),
+            new(-3, -2, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         Assert.AreEqual(mergeOneInverted, RegionOps.MergeRegions(regions));
 
         regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 3, End = 4}
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         var mergeGapped = new List<Region>
         {
-            _cRegion with { Start = 0, End = 2},
-            _cRegion with { Start = 3, End = 4}
+            new(0, 2, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         Assert.AreEqual(mergeGapped, RegionOps.MergeRegions(regions));
     }
@@ -256,23 +181,25 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(2, 3, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
         var res = new List<Region>
         {
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 }
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(2, 3, "chr1", true, new List<SNV>()),
         };
-        Assert.AreEqual(res, RegionOps.CopyRange(regions, 1, 3));
+        var copy = RegionOps.CopyRange(regions, 1, 3);
+        Assert.AreEqual(res, copy);
     }
 
     [Test]
     public void TestCopyInverted()
     {
-        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var regions = new List<Region> { _cRegion };
+        RegionOps.Revert(regions);
         // Start and end within a region
         var regCopy = RegionOps.CopyRange(regions, 1000, 2000);
         Assert.AreEqual(1, regions.Count);
@@ -285,13 +212,12 @@ public class TestRegions
     public void TestSplit()
     {
         var regions = new List<Region> { _cRegion };
-        
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
         Assert.AreEqual(2000, before[0].Length);
-        Assert.AreEqual(regions[0]  with { End = 2000}, before[0]);
-        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
+        Assert.AreEqual(2000, before[0].End);
+        Assert.AreEqual(2000, after[0].Start);
 
-        regions = RegionOps.InvertRegions(regions);
+        RegionOps.Revert(regions);
         (before, after) = RegionOps.SplitRegions(regions, 2000);
         Assert.AreEqual(2000, before[0].Length);
         Assert.AreEqual(_cRegion.Length - 2000,  after[0].Length);
@@ -302,7 +228,7 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 2 }
+            new(0, 2, "chr1", true, new List<SNV>())
         };
         var (before, after) = RegionOps.SplitRegions(regions, 1);
         Assert.AreEqual(1, Contig.Length(after));
@@ -313,7 +239,7 @@ public class TestRegions
     {
         var regions = new List<Region> { _cRegion };
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
-        regions = RegionOps.InvertRegions(regions);
+        RegionOps.Revert(regions);
         Console.WriteLine(Contig.ToString(regions));
         Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
     }
@@ -335,14 +261,15 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, new List<SNV>()),
+            new(2, 3, "chr1", true, new List<SNV>()),
+            new(3, 4, "chr1", true, new List<SNV>())
         };
-        var location = 2;
-        var newNucleotide = Nucleotide.A;
-        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        const int location = 2;
+        const Nucleotide newNucleotide = Nucleotide.A;
+        var mutatedRegions = RegionOps.Copy(regions);
+        RegionOps.PointMutateRegion(mutatedRegions, location, newNucleotide);
         Assert.AreEqual(regions[0], mutatedRegions[0]);
         Assert.AreEqual(regions[1], mutatedRegions[1]);
         Assert.AreNotEqual(regions[2], mutatedRegions[2]);
@@ -360,11 +287,12 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with {Start = 0, End = 100}
+            new(0, 100, "chr1", true, new List<SNV>()),
         };
-        var location = 45;
-        var newNucleotide = Nucleotide.A;
-        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        const int location = 45;
+        const Nucleotide newNucleotide = Nucleotide.A;
+        var mutatedRegions = RegionOps.Copy(regions);
+        RegionOps.PointMutateRegion(mutatedRegions, location, newNucleotide);
         foreach (var region in mutatedRegions)
         {
             Assert.IsNotNull(region.SNVs);
@@ -374,7 +302,7 @@ public class TestRegions
         var finalRegions = RegionOps.DeleteRange(mutatedRegions, 30, 70);
         foreach (var region in finalRegions)
         {
-            Assert.IsNull(region.SNVs);
+            Assert.IsEmpty(region.SNVs);
         }
     }
 }

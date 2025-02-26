@@ -222,10 +222,6 @@ public class TestKaryotype
         }
         Assert.AreEqual("[]", _kar.ToString());
     }
-
-    private Gene MakeGene(string chrNo) 
-        => new("G" + chrNo, new Region(0, 50, chrNo, false), _rnd.NextDouble());
-
     
     [Test]
     public void TestPyrgo()

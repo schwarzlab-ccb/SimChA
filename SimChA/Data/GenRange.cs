@@ -1,7 +1,32 @@
 ﻿namespace SimChA.Data;
 
-public record GenRange(long Start, long End, string Chrom)
+public class GenRange
 {
+    public long Start { get; protected set; }
+    public long End { get; protected set; }
+    public string Chrom { get; protected set;}
+    
+    public GenRange(long start, long end, string chrom)
+    {
+        Start = start;
+        End = end;
+        Chrom = chrom;
+    }
+    
+    public GenRange(GenRange other)
+    {
+        Start = other.Start;
+        End = other.End;
+        Chrom = other.Chrom;
+    }
+
+    public void Revert()
+    {
+        long oldStart = Start;
+        Start = -End;
+        End = -oldStart;
+    }
+    
     public long Length => End - Start;
     
     public bool Forward => Start >= 0;

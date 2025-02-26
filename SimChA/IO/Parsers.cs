@@ -84,11 +84,11 @@ public static class Parsers
                 chrXfound |= chrNo == "chrX";
                 for (int i = 0; i < cnA; i++)
                 {
-                    regionsA.Add(new Region(start, end, chrNo, true));
+                    regionsA.Add(new Region(start, end, chrNo, true, new List<SNV>()));
                 }
                 for (int i = 0; i < cnB; i++)
                 {
-                    regionsB.Add(new Region(start, end, chrNo, false));
+                    regionsB.Add(new Region(start, end, chrNo, false, new List<SNV>()));
                 }
             }
             

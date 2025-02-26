@@ -68,7 +68,7 @@ public class Karyotype
                 var cns = _contigs.Select(c => c.GetCNs(seg));
                 (int cnA, int cnB, int nSNVs) = cns.Aggregate((CNA: 0, CNB: 0, SNV: 0), (acc, vals)
                     => (acc.CNA + vals.CNA, acc.CNB + vals.CNB, acc.SNV + vals.SNV));
-                var cn = new CopyNumber(seg, cnA, cnB, nSNVs);
+                var cn = new CopyNumber(start, end, chrom, cnA, cnB, nSNVs);
                 result.Add(cn);
             }
         }
@@ -104,7 +104,7 @@ public class Karyotype
     public IEnumerable<string> GetSeq()
         => _contigs.SelectMany(c => c.GetSeq(GenRef).Concat(new List<string> {"\n"}));
     
-    public IEnumerable<Gene> GetPresentGenes(string chrom, List<Gene> geneList)
+    public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)
         => _contigs.SelectMany(c => c.GetPresentGenes(chrom, geneList));
 
     public double UpdateFitness(GenRef genRef, FitParams fParams)
@@ -178,7 +178,7 @@ public class Karyotype
         var altContig = _contigs[contigB];
         if (inverted)
         {
-            altContig.Invert();
+            altContig.Revert();
         }
         var splitRef = refContig.Split(posA, true);
         var splitAlt = altContig.Split(posB, true);

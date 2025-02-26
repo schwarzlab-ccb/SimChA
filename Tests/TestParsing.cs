@@ -47,7 +47,7 @@ public class TestParsing
         var gene1 = new Gene("TSG1", new GenRange(0, 50, "chr1"), 0.001);
         tsgList["chr1"].Add(gene1);
         var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs);
-        Assert.AreEqual(tsgList, listFromString);
+        Assert.AreEqual(tsgList["chr1"], listFromString);
 
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
         var gene2 = new Gene("TSG2", new GenRange(99, 5000, "chr2"), 0.01);

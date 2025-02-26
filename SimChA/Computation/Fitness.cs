@@ -91,7 +91,7 @@ public static class Fitness
         {
             var present = karyotype.GetPresentGenes(chrom, geneList);
             var counts = present.GroupBy(g => g).ToDictionary(g => g.Key, g => g.Count());
-            var allCounts = searched[chrom].Select(g => (g, counts.GetValueOrDefault(g, 0)));
+            var allCounts = searched[chrom].Select(g => (g, counts.GetValueOrDefault(g.Name, 0)));
             res.Add(allCounts);
         }
         return res.SelectMany(v => v);

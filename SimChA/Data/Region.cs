@@ -1,8 +1,87 @@
 ﻿namespace SimChA.Data;
 
 // A region is zero indexed start-inclusive, end-exclusive, e.g. [0, 1) is a region of length 1 containing the first base.
-public record Region(long Start, long End, string Chrom, bool Hap1, List<SNV>? SNVs = null) : GenRange(Start, End, Chrom)
+public class Region : GenRange
 {
+    public bool Hap1 { get; }
+    public List<SNV> SNVs { get; }
+    
+    public Region(long start, long end, string chrom, bool hap1, List<SNV> snvs) : base(start, end, chrom)
+    {
+        Hap1 = hap1;
+        SNVs = snvs;
+    }
+
+    public Region(Region other) : base(other)
+    {
+        Hap1 = other.Hap1;
+        SNVs = new List<SNV>(other.SNVs);
+    }
+
+    private bool Equals(Region? other)
+    {
+        if (other == null) return false;
+        return Start == other.Start && End == other.End && Chrom == other.Chrom && Hap1 == other.Hap1 && SNVs.SequenceEqual(other.SNVs);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is Region otherRegion)
+        {
+            return Equals(otherRegion);
+        }
+        return false;
+    }
+
+    public override int GetHashCode() 
+        => HashCode.Combine(Hap1, SNVs);
+
+    public void ResizeFront(long howMuch)
+    {
+        Start += howMuch;
+        UpdateSNVs();
+    }
+    
+    public void ResizeBack(long howMuch)
+    {
+        End = Start + howMuch;
+        UpdateSNVs();
+    }    
+    
+    public void ResizeBoth(long start, long end)
+    {
+        End = Start + end;
+        Start += start;
+        UpdateSNVs();
+    }
+    
+    private void UpdateSNVs()
+    {
+        foreach (var snv in SNVs.Where(snv => snv.Pos <= AbsStart || AbsEnd <= snv.Pos).ToList())
+        {
+            SNVs.Remove(snv);
+        }
+    }
+
+    private void AddSNVs(List<SNV> snvs)
+    {
+        SNVs.AddRange(snvs);
+    }
+
+    public void AddSNV(long offset, Nucleotide newNucleotide)
+    {
+        int index = SNVs.FindIndex(s => s.Pos == AbsStart + offset);
+        if (index >= 0)
+        {
+            // Update the existing SNV
+            SNVs[index] = SNVs[index] with { Alt = newNucleotide };
+        }
+        else
+        {
+            SNVs.Add(new SNV(AbsStart + offset, Chrom, newNucleotide));
+        }
+    }
+    
     private static string HapToString(bool parent) 
         => parent ? "H1" : "H2";
 
@@ -28,5 +107,11 @@ public record Region(long Start, long End, string Chrom, bool Hap1, List<SNV>? S
         }
         regionSeq = Forward ? regionSeq : regionSeq.Reverse().ToArray();
         return new string(regionSeq);
+    }
+
+    public void MergeWith(Region cur)
+    {
+        End = cur.End;
+        AddSNVs(cur.SNVs);
     }
 }

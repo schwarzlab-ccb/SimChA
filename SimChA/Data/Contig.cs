@@ -18,7 +18,7 @@ public class Contig
 
     public Contig(Contig other)
     {
-        _regions = new List<Region>(other._regions);
+        _regions = RegionOps.Copy(other._regions);
     }
 
     public static Contig Concat(IEnumerable<Contig> contigs)
@@ -72,7 +72,7 @@ public class Contig
         => _regions.Select(r => r.GetSeq(genRef));
     
     public List<SNV> GetSNVs()
-        => _regions.SelectMany(r => r.SNVs ?? new List<SNV>()).ToList();
+        => _regions.SelectMany(r => r.SNVs).ToList();
 
     public static long Length(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
@@ -110,16 +110,16 @@ public class Contig
 
     public void InvertRange(long invStart, long invEnd)
     {
-        var copy = RegionOps.CopyRange(_regions, invStart, invEnd);
-        var inverse = RegionOps.InvertRegions(copy);
+        var inverse = RegionOps.CopyRange(_regions, invStart, invEnd);
+        RegionOps.Revert(inverse);
         var deleted = RegionOps.DeleteRange(_regions, invStart, invEnd);
         var (first, second) = RegionOps.SplitRegions(deleted, invStart);
         _regions = RegionOps.ConcatRegions(new[] { first, inverse, second });
     }
 
-    public void Invert()
+    public void Revert()
     {
-        _regions = RegionOps.InvertRegions(_regions);
+        RegionOps.Revert(_regions);
     }
 
     public void DuplicateRange(long start, long end)
@@ -134,12 +134,14 @@ public class Contig
         var (first, second) = RegionOps.SplitRegions(_regions, pos);
         if (cutFront)
         {
-            var inverse = RegionOps.InvertRegions(second);
+            var inverse = RegionOps.Copy(second);
+            RegionOps.Revert(inverse);
             _regions = RegionOps.ConcatRegions(inverse, second);
         }
         else
         {
-            var inverse = RegionOps.InvertRegions(first);
+            var inverse = RegionOps.Copy(first);
+            RegionOps.Revert(inverse);
             _regions = RegionOps.ConcatRegions(first, inverse);
         }
     }
@@ -161,7 +163,7 @@ public class Contig
         var ranges = RegionOps.CopyRange(_regions, start, end);
         if (inverse)
         {
-            ranges = RegionOps.InvertRegions(ranges);
+            RegionOps.Revert(ranges);
         }
         return new Contig(ranges);
     }
@@ -186,12 +188,12 @@ public class Contig
     
     public void PointMutate(long location, Nucleotide newNucleotide)
     {
-        _regions = RegionOps.PointMutateRegion(_regions, location, newNucleotide);
+        RegionOps.PointMutateRegion(_regions, location, newNucleotide);
     }
     
-    public List<Gene> GetPresentGenes(string chrom, List<Gene> geneList)
+    public List<string> GetPresentGenes(string chrom, List<Gene> geneList)
     {
-        List<Gene> presentGenes = new();
+        List<string> presentGenes = new();
         foreach (var reg in _regions.Where(r => r.Chrom == chrom && r.Forward))
         {
             int geneIndex = 0;
@@ -201,7 +203,7 @@ public class Contig
             }
             while (geneIndex < geneList.Count && geneList[geneIndex].Range.End <= reg.End)
             {
-                presentGenes.Add(geneList[geneIndex]);
+                presentGenes.Add(geneList[geneIndex].Name);
                 geneIndex++;
             }
         }

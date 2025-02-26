@@ -1,10 +1,18 @@
 ﻿namespace SimChA.Data;
 
-public record CopyNumber(long Start, long End, string Chrom, int CNH1, int CNH2, int NSNVs) 
-    : GenRange(Start, End, Chrom)
+public class CopyNumber : GenRange
 {
-    public CopyNumber(GenRange range, int cnH1, int cnH2, int nSNVs) 
-        : this(range.AbsStart, range.AbsEnd, range.Chrom, cnH1, cnH2, nSNVs) { }
+    public int CNH1 { get; }
+    public int CNH2 { get; }
+    public int NSNVs { get; }
+    
+    public CopyNumber(long start, long end, string chrom, int cnh1, int cnh2, int nsnvs)
+        : base(start, end, chrom)
+    {
+        CNH1 = cnh1;
+        CNH2 = cnh2;
+        NSNVs = nsnvs;
+    }
     
     private static string NaIfNegStr(int val)
         => val < 0 ? "NA" : $"{val}";
