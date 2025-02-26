@@ -61,7 +61,7 @@ public record SampleStat(
 
         var tsgCNs = Computation.Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar);
         var ogCNs = Computation.Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar);
-        var essCNs = Computation.Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar);
+        var essCNs = Computation.Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar).ToList();
 
         double stress = Computation.Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
         double tsg = -Computation.Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.GeneNormalization);

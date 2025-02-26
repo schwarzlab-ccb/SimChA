@@ -54,20 +54,23 @@ public class Karyotype
         }
         return breakSets.ToDictionary(k => k.Key, v => v.Value.OrderBy(i => i).ToList());
     }
-    
-    public IEnumerable<CopyNumber> CalcChrCopyNumbers(List<int> breaks, string chrom)
+
+    public List<CopyNumber> CalcCNs(IDictionary<string, List<int>> allBreaks)
     {
         var result = new List<CopyNumber>();
-        for (int i = 0; i < breaks.Count - 1; i++)
+        foreach ((string chrom, var breaks) in allBreaks)
         {
-            int start = breaks[i];
-            int end = breaks[i + 1];
-            var seg = new GenRange(start, end, chrom);
-            var cns = _contigs.Select(c => c.GetCNs(seg));
-            (int cnA, int cnB, int nSNVs) = cns.Aggregate((CNA: 0, CNB: 0, SNV: 0), (acc, vals) 
-                => (acc.CNA + vals.CNA, acc.CNB + vals.CNB, acc.SNV + vals.SNV));
-            var cn = new CopyNumber(seg, cnA, cnB, nSNVs);
-            result.Add(cn);
+            for (int i = 0; i < breaks.Count - 1; i++)
+            {
+                int start = breaks[i];
+                int end = breaks[i + 1];
+                var seg = new GenRange(start, end, chrom);
+                var cns = _contigs.Select(c => c.GetCNs(seg));
+                (int cnA, int cnB, int nSNVs) = cns.Aggregate((CNA: 0, CNB: 0, SNV: 0), (acc, vals)
+                    => (acc.CNA + vals.CNA, acc.CNB + vals.CNB, acc.SNV + vals.SNV));
+                var cn = new CopyNumber(seg, cnA, cnB, nSNVs);
+                result.Add(cn);
+            }
         }
         return result;
     }

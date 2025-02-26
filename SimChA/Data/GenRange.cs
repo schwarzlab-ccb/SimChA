@@ -6,9 +6,9 @@ public record GenRange(long Start, long End, string Chrom)
     
     public bool Forward => Start >= 0;
 
-    public long AbsStart => Math.Max(Start, -End);
+    public long AbsStart => Forward ? Start : -End;
     
-    public long AbsEnd => Math.Max(End, -Start);
+    public long AbsEnd => Forward ? End : -Start;
 
     public static string DirToStr(bool dir) => dir ? ">" : "<";
 
@@ -16,7 +16,7 @@ public record GenRange(long Start, long End, string Chrom)
     
     // True if this range is inside the other range
     public bool IsInsideOf(GenRange other) 
-        => AbsStart >= other.AbsStart && AbsEnd <= other.AbsEnd && Chrom == other.Chrom;
+        => Chrom == other.Chrom && AbsStart >= other.AbsStart && AbsEnd <= other.AbsEnd;
 
     // True if this range shares at least one position with the other range
     public bool Overlaps(GenRange other)

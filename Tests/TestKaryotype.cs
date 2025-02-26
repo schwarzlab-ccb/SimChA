@@ -378,4 +378,20 @@ public class TestKaryotype
         Assert.AreEqual(secondNucleotide, SNVs[0].Alt);
         Assert.AreEqual(newNucleotide, SNVs[1].Alt);
     }
+
+    [Test]
+    public void TestCalcChrCopyNumbers()
+    {
+        var dupEv = new CNEventPars(CNEventType.InternalDuplication, 1, .1);
+        int dupCount = 100;
+        for (int i = 0; i < dupCount; i++)
+        {
+            ApplyRandomEvent(_rnd, _kar, dupEv);
+        }
+
+        var breaks = _kar.CalcBreaks();
+        var chrCopyNumbers = _kar.CalcCNs(breaks);
+        // each event should create two new regions
+        Assert.AreEqual(24, chrCopyNumbers.Count - dupCount * 2);
+    }
 }

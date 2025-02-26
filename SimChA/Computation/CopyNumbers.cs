@@ -13,14 +13,10 @@ public static class CopyNumbers
         return segmentation;
     }
 
-    // TODO: Optimization needed
-    public static IEnumerable<CopyNumber> CalcCNs(Karyotype karyotype, IDictionary<string, List<int>>? breaks = null)
-    {
-        breaks ??= karyotype.CalcBreaks();
-        return breaks.Keys.SelectMany(c => karyotype.CalcChrCopyNumbers(breaks[c], c));
-    }
-    
-    public static double CalcPloidy(GenRef genRef, IEnumerable<CopyNumber> copyNumbers, SexType sex)
+    public static List<CopyNumber> CalcCNs(Karyotype karyotype, IDictionary<string, List<int>>? breaks = null) 
+        => karyotype.CalcCNs(breaks ?? karyotype.CalcBreaks());
+
+    public static double CalcPloidy(GenRef genRef, List<CopyNumber> copyNumbers, SexType sex)
         => 2 * copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() 
            / (float) genRef.GetGenomeLen(sex);
 }
