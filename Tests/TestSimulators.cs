@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using SimChA.Data;
 using SimChA.EventData;
@@ -18,6 +19,8 @@ public class TestSimulators
         => new() { new ("TestSig", 1, eventPs) };
     
     private static List<CTreeNode> EmptyTree(CTreeNode node) => new() { node };
+
+    private List<Signature> _baseEvs;
 
     [SetUp]
     public void Setup()
@@ -42,7 +45,7 @@ public class TestSimulators
     }
     
     [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
-    public void TestSimulatorsAll(Type simulatorType)
+    public void TestSimulatorsPass(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);
         var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
@@ -61,6 +64,35 @@ public class TestSimulators
         int dist = 50;
         var node = new CTreeNode("root", "root", dist, 1);
         var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs)); 
+        Assert.AreEqual(1, res.Count);
+        Assert.AreEqual(dist, res[0].Events.Count);
+    }
+    
+    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
+    public void TestSimulatorsBase(Type simulatorType)
+    {
+        var sim = GetSimulator(simulatorType);
+        List<CNEventPars> eventPs = new()
+        {
+            new CNEventPars(CNEventType.ChromDuplication, 1),
+            new CNEventPars(CNEventType.ChromDeletion, 1),
+            new CNEventPars(CNEventType.ArmDeletion, 1),
+            new CNEventPars(CNEventType.ArmDuplication, 1),
+            new CNEventPars(CNEventType.InternalDeletion, 1, .1),
+            new CNEventPars(CNEventType.InternalDuplication, 1, .1),
+            new CNEventPars(CNEventType.InternalInversion, 1, .1),
+            new CNEventPars(CNEventType.InvertedDuplication, 1, .1),
+            new CNEventPars(CNEventType.TailDeletion, 1, .3),
+            new CNEventPars(CNEventType.TailDuplication, 1, .3),
+            new CNEventPars(CNEventType.CentromereBoundDeletion, 1, .2),
+            new CNEventPars(CNEventType.CentromereBoundDuplication, 1, .2),
+        };
+        int dist = 100;
+        var root = new CTreeNode("root", "root", 0, 1);
+        var tree = Enumerable.Range(1, 10)
+            .Select(i => new CTreeNode("clone" + i, "root", dist, 1));
+        var res = sim.Simulate(root, tree.ToList(), MakeSigs(eventPs)); 
+        Assert.AreEqual(10, res.Count);
         Assert.AreEqual(dist, res[0].Events.Count);
     }
 }

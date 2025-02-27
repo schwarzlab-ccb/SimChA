@@ -23,9 +23,6 @@ public class GenRange
     public override bool Equals(object? obj) 
         => obj is GenRange other && Start == other.Start && End == other.End && Chrom == other.Chrom;
 
-    public override int GetHashCode() 
-        => HashCode.Combine(Start, End, Chrom);
-
     public void Revert()
     {
         long oldStart = Start;

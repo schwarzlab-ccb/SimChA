@@ -37,7 +37,7 @@ public class Karyotype
         => _contigs.Count(c => c.Any());
     
     public long GenomeLen()
-        => _contigs.Sum(c => c.Length());
+        => _contigs.Sum(c => c.Length);
     
     public IEnumerable<SNV> GetSNVs()
         => _contigs.SelectMany(c => c.GetSNVs()).ToList();
@@ -56,24 +56,7 @@ public class Karyotype
     }
 
     public List<CopyNumber> CalcCNs(IDictionary<string, List<int>> allBreaks)
-    {
-        var result = new List<CopyNumber>();
-        foreach ((string chrom, var breaks) in allBreaks)
-        {
-            for (int i = 0; i < breaks.Count - 1; i++)
-            {
-                int start = breaks[i];
-                int end = breaks[i + 1];
-                var seg = new GenRange(start, end, chrom);
-                var cns = _contigs.Select(c => c.GetCNs(seg));
-                (int cnA, int cnB, int nSNVs) = cns.Aggregate((CNA: 0, CNB: 0, SNV: 0), (acc, vals)
-                    => (acc.CNA + vals.CNA, acc.CNB + vals.CNB, acc.SNV + vals.SNV));
-                var cn = new CopyNumber(start, end, chrom, cnA, cnB, nSNVs);
-                result.Add(cn);
-            }
-        }
-        return result;
-    }
+        => CopyNumbers.CalcCNs(allBreaks, _contigs);
 
     public IEnumerable<int> ContigIds() 
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
@@ -86,16 +69,16 @@ public class Karyotype
         => _contigs.SelectMany(c => c.FindChrRegions(chrNo));
 
     private static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree) 
-        => fiveToThree ? segLength : contig.Length() - segLength;
+        => fiveToThree ? segLength : contig.Length- segLength;
     
     public long ContigLen(int contigId)
-        => contigId < _contigs.Count ? _contigs[contigId].Length() : 0;
+        => contigId < _contigs.Count ? _contigs[contigId].Length : 0;
     
     public List<(long start, long end)> GetCentromeres(int contigId)
         => _contigs[contigId].GetCentromeres(GenRef.Centromeres);
     
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
-        => fiveToThree ? (0, position) : (position, contig.Length());
+        => fiveToThree ? (0, position) : (position, contig.Length);
     
     // @CODY this should be made private, needs to update test
     public Contig GetContig(int contigID) 

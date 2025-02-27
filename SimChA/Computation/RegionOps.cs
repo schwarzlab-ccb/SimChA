@@ -189,7 +189,7 @@ public static class RegionOps
             newRegions.Add(copy);
         }
         // Last region
-        newRegions.Add(CopyRange(regions, locs.Last(), Contig.Length(regions)));
+        newRegions.Add(CopyRange(regions, locs.Last(), CountLength(regions)));
         return newRegions;
     }
     
@@ -221,4 +221,7 @@ public static class RegionOps
         }
         return newRegions;
     }
+
+    public static long CountLength(IEnumerable<Region> regions)
+        => regions.Sum(r => r.Length);
 }

@@ -27,74 +27,74 @@ public class TestContig
     [Test]
     public void TestSplit()
     {
-        long remainderLen = _contig1.Length() - 1000;
+        long remainderLen = _contig1.Length - 1000;
         var rest = _contig1.Split(1000, true);
-        Assert.AreEqual(1000, _contig1.Length());
-        Assert.AreEqual(remainderLen, rest.Length());
+        Assert.AreEqual(1000, _contig1.Length);
+        Assert.AreEqual(remainderLen, rest.Length);
     }
 
     [Test]
     public void TestJoin()
     {
-        long combinedLen = _contig1.Length() + _contigX.Length(); 
+        long combinedLen = _contig1.Length + _contigX.Length; 
         _contig1.Join(_contigX);
-        Assert.AreEqual(combinedLen, _contig1.Length());
+        Assert.AreEqual(combinedLen, _contig1.Length);
     }
 
     [Test]
     public void TestInversion()
     {
-        long length = _contig1.Length();
+        long length = _contig1.Length;
         for (int i = 0; i < 10; i++)
         {
             _contig1.InvertRange(i * 1000000, i * 2000000);
         }
 
-        Assert.AreEqual(length, _contig1.Length());
+        Assert.AreEqual(length, _contig1.Length);
     }
 
     [Test]
     public void TestReplication()
     {
-        long length = _contig1.Length() + 10 * 900;
+        long length = _contig1.Length + 10 * 900;
         for (int i = 0; i < 10; i++)
         {
             _contig1.DuplicateRange(i*1000 + 100, i*1000 + 1000);
         }
-        Assert.AreEqual(length, _contig1.Length());
+        Assert.AreEqual(length, _contig1.Length);
     }
     
     [Test]
     public void TestBridgeFront()
     {
-        long length = (_contig1.Length() - 1000) * 2;
+        long length = (_contig1.Length - 1000) * 2;
         _contig1.Bridge(1000, true);
-        Assert.AreEqual(length, _contig1.Length());
+        Assert.AreEqual(length, _contig1.Length);
         _contig1.Bridge(1000, false);
-        Assert.AreEqual(1000*2, _contig1.Length());
+        Assert.AreEqual(1000*2, _contig1.Length);
     }
 
     [Test]
     public void TestScatterAndGather()
     {
-        long length = _contig1.Length();
+        long length = _contig1.Length;
         _contig1.ScatterAndGather(new List<long>{1000, 2000, 3000}, new List<int>{3, 1, 2, 0});
-        Assert.AreEqual(length, _contig1.Length());
+        Assert.AreEqual(length, _contig1.Length);
     }
 
     [Test]
     public void TestGetRandomRegion()
     {
-        var res = _contig1.GetSubContig(1, _contig1.Length() - 1);
-        Assert.LessOrEqual(_contig1.Length() - 2, res.Length());
+        var res = _contig1.GetSubContig(1, _contig1.Length - 1);
+        Assert.LessOrEqual(_contig1.Length - 2, res.Length);
     }
 
     [Test]
     public void TestInsertContig()
     {
         var copyOfContig1 = new Contig(_contig1);
-        copyOfContig1.InsertContig(_contigX, _contig1.Length() / 2);
-        Assert.AreEqual(_contig1.Length() + _contigX.Length(), copyOfContig1.Length());
+        copyOfContig1.InsertContig(_contigX, _contig1.Length / 2);
+        Assert.AreEqual(_contig1.Length + _contigX.Length, copyOfContig1.Length);
     }
 
     [Test]

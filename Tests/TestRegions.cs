@@ -42,27 +42,27 @@ public class TestRegions
         // Start and end within a region
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 1000, RegionOps.CountLength(regions));
         // Start and end within a region (out of two)
         regions = RegionOps.DeleteRange(regions, 2000, 4000);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 3000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 3000, RegionOps.CountLength(regions));
         // Two neighbouring regions
         regions = RegionOps.DeleteRange(regions, 1500, 2500);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 4000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 4000, RegionOps.CountLength(regions));
         // Cut region out
         regions = RegionOps.DeleteRange(regions, 500, 2500);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 6000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 6000, RegionOps.CountLength(regions));
         // Remove region from front
         regions = RegionOps.DeleteRange(regions, 0, 500);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 6500, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 6500, RegionOps.CountLength(regions));
         // oversized range selection
         regions = RegionOps.DeleteRange(regions, -1000, _cRegion.Length);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(0, Contig.Length(regions));
+        Assert.AreEqual(0, RegionOps.CountLength(regions));
     }
     
     [Test]
@@ -167,13 +167,13 @@ public class TestRegions
         // Start and end within a region
         var regCopy = RegionOps.CopyRange(regions, 500, 3500);
         Console.WriteLine(Contig.ToString(regCopy));
-        Assert.AreEqual(3000, Contig.Length(regCopy));
+        Assert.AreEqual(3000, RegionOps.CountLength(regCopy));
         // Copy across regions
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         regions = RegionOps.DeleteRange(regions, 4000, 5000);
         regCopy = RegionOps.CopyRange(regions, 500, 3500);
         Console.WriteLine(Contig.ToString(regCopy));
-        Assert.AreEqual(3000, Contig.Length(regCopy));
+        Assert.AreEqual(3000, RegionOps.CountLength(regCopy));
     }
 
     [Test]
@@ -231,7 +231,7 @@ public class TestRegions
             new(0, 2, "chr1", true, new List<SNV>())
         };
         var (before, after) = RegionOps.SplitRegions(regions, 1);
-        Assert.AreEqual(1, Contig.Length(after));
+        Assert.AreEqual(1, RegionOps.CountLength(after));
     }
     
     [Test]
@@ -241,7 +241,7 @@ public class TestRegions
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         RegionOps.Revert(regions);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 1000, RegionOps.CountLength(regions));
     }
     
     [Test]
@@ -250,10 +250,10 @@ public class TestRegions
         var regions = new List<Region> { _cRegion };
         regions = RegionOps.ConcatRegions(regions, regions);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length * 2, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length * 2, RegionOps.CountLength(regions));
         regions = RegionOps.ConcatRegions(new[] {regions, regions });
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length * 4, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length * 4, RegionOps.CountLength(regions));
     }
 
     [Test]

@@ -65,7 +65,7 @@ public class EvoSimulator : Simulator
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
             var cnEventPars = GetEventPars(cnEventPs, hasWGD);
             var (newKar, eventData) = GetNewEvent(cnEventPars, currentKar);
-            double newFit = newKar.UpdateFitness(GenRef, FitParams);
+            double newFit = newKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit);
             

@@ -108,10 +108,19 @@ public static class Sampling
         int idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
         return (idSelected, kar.ContigLen(idSelected));
     }
-    
+
+    // Selects the contigs to be affected by the event
+    private static IEnumerable<(int id, long len)> GetSeq(IEnumerable<(int id, long len)> contigs, CNEventType type) 
+        => type switch {
+            CNEventType.TIChain or CNEventType.TICycle or CNEventType.TIBridge or CNEventType.Chromoplexy => contigs,
+            CNEventType.Translocation => contigs.Take(2),
+            _ => contigs.Take(1)
+        };
+
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
-        List<(int id, long len)> seq = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
+        IEnumerable<(int id, long len)> contigs = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i)));
+        var seq = GetSeq(contigs, cnEventPars.Type).ToList();
         if (seq.Count == 0)
             return null;
         
@@ -153,7 +162,7 @@ public static class Sampling
             
             case CNEventType.Translocation:
                 return seq.Count > 1
-                    ? new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[0].len)
+                    ? new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[1].len)
                     : null;
 
             case CNEventType.Chromothripsis:
