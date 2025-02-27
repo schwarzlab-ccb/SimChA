@@ -18,23 +18,11 @@ public class Region : GenRange
         SNVs = new List<SNV>(other.SNVs);
     }
 
-    private bool Equals(Region? other)
-    {
-        if (other == null) return false;
-        return Start == other.Start && End == other.End && Chrom == other.Chrom && Hap1 == other.Hap1 && SNVs.SequenceEqual(other.SNVs);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is Region otherRegion)
-        {
-            return Equals(otherRegion);
-        }
-        return false;
-    }
-
+    public override bool Equals(object? obj) 
+        => obj is Region other && base.Equals(other) && Hap1 == other.Hap1 && SNVs.SequenceEqual(other.SNVs);
+    
     public override int GetHashCode() 
-        => HashCode.Combine(Hap1, SNVs);
+        => HashCode.Combine(base.GetHashCode(), Hap1, SNVs);
 
     public void ResizeFront(long howMuch)
     {

@@ -4,7 +4,7 @@ public class GenRange
 {
     public long Start { get; protected set; }
     public long End { get; protected set; }
-    public string Chrom { get; protected set;}
+    public string Chrom { get; }
     
     public GenRange(long start, long end, string chrom)
     {
@@ -20,14 +20,8 @@ public class GenRange
         Chrom = other.Chrom;
     }
 
-    public override bool Equals(object? obj)
-    {
-        if (obj is GenRange other)
-        {
-            return Start == other.Start && End == other.End && Chrom == other.Chrom;
-        }
-        return false;
-    }
+    public override bool Equals(object? obj) 
+        => obj is GenRange other && Start == other.Start && End == other.End && Chrom == other.Chrom;
 
     public override int GetHashCode() 
         => HashCode.Combine(Start, End, Chrom);
