@@ -9,7 +9,7 @@
   },
   "FitParams": {
     "Stress":  4,
-    "TsgOg": 0.1,
+    "TsgOg": 0.02,
     "Essentiality": 1,
     "GeneNormalization": false
   },

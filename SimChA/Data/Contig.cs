@@ -24,7 +24,7 @@ public class Contig
 
     public Contig(IEnumerable<Region> regions)
     {
-        _regions = regions.Where(r => r.Length > 0).ToList();
+        _regions = regions.ToList();
         _length = RegionOps.CountLength(_regions);
     }
 
@@ -135,9 +135,10 @@ public class Contig
 
     public void DuplicateRange(long start, long end)
     {
-        var copy = RegionOps.CopyRange(Regions, start, end);
-        var (first, second) = RegionOps.SplitRegions(Regions, start);
-        Regions = RegionOps.ConcatRegions(new[] { first, copy, second });
+        // TODO: Should be replace with TakeUntil and TakeFrom
+        var (_, second) = RegionOps.SplitRegions(Regions, start);
+        var (first, _) = RegionOps.SplitRegions(Regions, end);
+        Regions = RegionOps.ConcatRegions(new[] { first, second });
     }
 
     public void Bridge(long pos, bool cutFront)
@@ -202,24 +203,15 @@ public class Contig
         RegionOps.PointMutateRegion(Regions, location, newNucleotide);
     }
     
-    public List<string> GetPresentGenes(string chrom, List<Gene> geneList)
-    {
-        List<string> presentGenes = new();
-        foreach (var reg in Regions.Where(r => r.Chrom == chrom && r.Forward))
-        {
-            int geneIndex = 0;
-            while (geneIndex < geneList.Count && reg.Start > geneList[geneIndex].Start)
-            {
-                geneIndex++;
-            }
-            while (geneIndex < geneList.Count && geneList[geneIndex].End <= reg.End)
-            {
-                presentGenes.Add(geneList[geneIndex].Name);
-                geneIndex++;
-            }
-        }
-        return presentGenes;
-    }
+    public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)
+        => Regions
+            .Where(r => r.Chrom == chrom && r.Forward)
+            .SelectMany(reg 
+                => geneList
+                    .SkipWhile(g => g.Start < reg.Start)
+                    .TakeWhile(g => g.End <= reg.End)
+                    .Select(g => g.Name));
+
 
     public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
     {

@@ -90,7 +90,7 @@ public static class Fitness
         foreach ((string chrom, var geneList) in searched)
         {
             var present = karyotype.GetPresentGenes(chrom, geneList);
-            var counts = present.GroupBy(g => g).ToDictionary(g => g.Key, g => g.Count());
+            var counts = present.ToLookup(g => g).ToDictionary(g => g.Key, g => g.Count());
             var allCounts = searched[chrom].Select(g => (g, counts.GetValueOrDefault(g.Name, 0)));
             res.Add(allCounts);
         }

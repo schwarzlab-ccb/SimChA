@@ -21,7 +21,7 @@ public class Karyotype
     public Karyotype(Karyotype other)
     {
         GenRef = other.GenRef;
-        _contigs = other._contigs.Select(ch => new Contig(ch)).ToList();
+        _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
     }

@@ -13,7 +13,7 @@ public static class RegionOps
     }
     
     public static List<Region> Copy(List<Region> regions)
-        => regions.Select(region => new Region(region)).ToList();
+        => regions.ConvertAll(reg => new Region(reg));
     
     public static List<Region> DeleteRange(List<Region> regions, long start, long end)
     {
@@ -135,7 +135,6 @@ public static class RegionOps
 
             seekPos += region.Length;
         }
-
         return (beforeRegions, afterRegions);
     }
     

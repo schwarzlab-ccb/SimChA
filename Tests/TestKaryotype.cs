@@ -346,7 +346,7 @@ public class TestKaryotype
         _kar.ApplyInternalDuplication(contigID, 50, 200);
         // Check that the SNV is present in both copies
         var contig = _kar.GetContig(contigID);
-        Assert.AreEqual(3, contig.CountRegions());
+        Assert.AreEqual(2, contig.CountRegions());
         var SNVs = contig.GetSNVs();
         Assert.IsNotEmpty(SNVs);
         Assert.AreEqual(SNVs[0], SNVs[1]);
