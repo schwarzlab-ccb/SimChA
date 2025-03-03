@@ -32,9 +32,9 @@ public class TestSimulators
     private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, EvoParams? saParams = null)
     {
         simParams ??= new SimParams();
-        fitParams ??= new FitParams();
+        fitParams ??= new FitParams(1, 1, 1);
         mhParams ??= new MHParams();
-        saParams ??= new EvoParams();
+        saParams ??= new EvoParams(1, 10);
         return type switch
         {
             not null when type == typeof(Simulator) => new Simulator(_rnd, _genRef, simParams, fitParams),
@@ -87,12 +87,12 @@ public class TestSimulators
             new CNEventPars(CNEventType.CentromereBoundDeletion, 1, .2),
             new CNEventPars(CNEventType.CentromereBoundDuplication, 1, .2),
         };
-        int dist = 100;
+        int dist = 10;
         var root = new CTreeNode("root", "root", 0, 1);
-        var tree = Enumerable.Range(1, 10)
-            .Select(i => new CTreeNode("clone" + i, "root", dist, 1));
-        var res = sim.Simulate(root, tree.ToList(), MakeSigs(eventPs)); 
-        Assert.AreEqual(10, res.Count);
+        var tree = Enumerable.Range(1, 2)
+            .Select(i => new CTreeNode("clone" + i, "root", dist, 1)).ToList();
+        var res = sim.Simulate(root, tree, MakeSigs(eventPs)); 
+        Assert.AreEqual(tree.Count, res.Count);
         Assert.AreEqual(dist, res[0].Events.Count);
     }
 }

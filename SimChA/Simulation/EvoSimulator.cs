@@ -14,23 +14,7 @@ public class EvoSimulator : Simulator
     {
         EvoParams = evoParams;
     }
-
-    private List<CNEventPars> GetEventPars(List<CNEventPars> pars, bool hasWGD)
-    {
-        if (true)
-        {
-            return pars;
-        }
-
-        var newPars = new List<CNEventPars>(pars);
-        foreach (var e in pars.Where(e => e.Type.ToString().EndsWith("Deletion")))
-        {
-            newPars[newPars.IndexOf(e)] = e with { Prob = e.Prob * EvoParams.EventCost };
-        }
-        var normalized = Factory.NormalizeEvents(newPars);
-        return normalized;
-    }
-
+    
     private (Karyotype newKar, BaseEventData eventData) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
     {
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
@@ -58,19 +42,16 @@ public class EvoSimulator : Simulator
         int mutDepth)
     {
         var childEvs = new List<CNEventDesc>();
-        bool hasWGD = false;
         int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-            var cnEventPars = GetEventPars(cnEventPs, hasWGD);
-            var (newKar, eventData) = GetNewEvent(cnEventPars, currentKar);
+            var (newKar, eventData) = GetNewEvent(cnEventPs, currentKar);
             double newFit = newKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit);
             
             childEvs.Add(newEv);
-            hasWGD |= eventData.EventType == CNEventType.WholeGenomeDoubling;
             currentKar = newKar;
         }
         return (currentKar, childEvs);
