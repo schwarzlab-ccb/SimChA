@@ -59,7 +59,6 @@
                 "Type": "ChromDeletion",
                 "Prob": 0.02382734802421689
             },
-
             {
                 "Type": "WholeGenomeDoubling",
                 "Prob": 0.007074905465888097
