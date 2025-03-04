@@ -256,7 +256,6 @@ public static class Parsers
     // Set the centromeres to the boundaries of the centromere regions (given that p and q parts are separated)
     public static Dictionary<string, GenRange> ParseCentromeres(TextReader centromereFile)
     {   
-        centromereFile.ReadLine(); // Skip header
         Dictionary<string, GenRange> cents = new();
 
         while (centromereFile.ReadLine() is { } line)
