@@ -25,6 +25,7 @@ The program has been tested on:
 * Windows 10 - PowerShell
 * Windows 10 - WSL2 Ubuntu
 * Ubuntu 20
+* Ubuntu 24.04
 * MacOS X 10 
 
 ### Simulation
@@ -153,26 +154,22 @@ Data should be provided as a path to a folder using the `--data` parameter (or l
 The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. 
 We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectively.
 
-@ CODY: In the below sections filenames should be provided.
-
 ### Chromosomes
+> `chromosomes.tsv`
 
-The chromosome contains the lengths and sex-specific information of individual chromosomes. 
-By default, there are two columns, one with the name of a chromosome, one with a number of bases.
-
-Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. 
-All the other are considers to be autosomes. 
-If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Any`.
+The chromosome file contains two columns, one with the name of a chromosome, one with its number of bases.
 
 Example file:
 
 ```
-chr1	248956422	Both
+chr1	248956422
 ...
-chrY	59373566	Male
+chrY	59373566
 ```
 
 ### TSG/OG/Eseentiality Score
+> `tsgs_select.tsv`, `ogs_select.tsv`, `essentials_select.tsv`
+
 We use three data files, providing the TSG/OG/Essentiality score. Each file is a tab-separated file with the following columns:
 
 * `Chromosome: string` - The name of the chromosome.
@@ -194,6 +191,24 @@ For each gene, the:
 * TSG score is the probability that the gene is a Tumor Suppresor Gene (TSG) 
 * OG score is the probability that the gene is an Oncogene (OG) 
 * Essentiality score is the log2 fold change in the reproducibility of a cell after a knock-out of the gene (both alleles).
+
+### Centromeres
+> `centromeres.tsv`
+
+Each chromosome has a centromere for each arm, defined by a start and an end. The centromere information is given by three columns: chromosome name, start point, end point. Each chromosome has two rows, corresponding to the portions of the centromere belonging to the p- and q-arms of the chromosome.
+
+It is also possible to provide a single row for each chromosome, corresponding to the whole centromeric region.
+
+Example file:
+
+```
+chr1    121500000   125000000
+chr1    125000000   128900000
+...
+chrY    11600000    12500000
+chrY    12500000    13400000
+```
+
 
 ## Signatures
 
