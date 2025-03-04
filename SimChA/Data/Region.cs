@@ -90,7 +90,12 @@ public class Region : GenRange
     public string GetSeq(GenRef genRef)
     {
         char[] regionSeq = genRef.GetGenContents(Chrom, (int) Start, (int) (End-Start));
-        if (SNVs != null && regionSeq.Length != 1 && regionSeq[0] != 'N')
+        // If the GenContents haven't been set, we return the null case
+        if (regionSeq.Length == 1 && regionSeq[0] == 'N') 
+        {
+            return new string(regionSeq);
+        }
+        if (SNVs != null)
         {
             foreach (var snv in SNVs)
             {
