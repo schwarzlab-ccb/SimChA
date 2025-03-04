@@ -181,45 +181,7 @@ public class FileIO
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
-
-    // @CODY: Is needed?
-    public static List<(double fitness, int eventCount)> ReadFitnesses(string filePath, FitParams fitParams)
-    {
-        string fileFullPath = Path.GetFullPath(filePath);
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        try
-        {
-            var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseClones(fitnessFile, fitParams);
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
-    // @CODY: Is needed?
-    public static Dictionary<string, (double, double, double, int)> ReadCloneComponents(string filePath)
-    {
-        string fileFullPath = Path.GetFullPath(filePath);
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        try
-        {
-            var fitnessFile = new StreamReader(fileFullPath);
-            return Parsers.ParseCloneComponents(fitnessFile);
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
+    
     public static Dictionary<string, StringBuilder> ReadFasta(List<string> allChrs, string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, GENOME_FASTA));
