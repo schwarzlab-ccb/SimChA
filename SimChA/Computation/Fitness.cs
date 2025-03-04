@@ -62,11 +62,9 @@ public static class Fitness
     private static bool IsAutosome(GenRef genRef, Gene gene) 
         => gene.Chrom != genRef.XChrName && gene.Chrom != genRef.YChrName;
     
-    // @CODY TODO: This only works for autosomes currently.
     public static double Zygosity(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, int count, bool normalizeGenes = false) 
         => normalizeGenes ?
-            geneCNs.Average(pair => IsAutosome(genRef, pair.gene) && pair.CN == count ? 1 : 0) :
-            geneCNs.Count(pair => IsAutosome(genRef, pair.gene) && pair.CN == count);
+            geneCNs.Average(pair => pair.CN == count ? 1 : 0) : geneCNs.Count(pair => pair.CN == count);
 
     private static IEnumerable<(Gene gene, int CN)> GenesForSex(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex) 
         => sex switch

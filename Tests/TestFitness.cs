@@ -81,6 +81,10 @@ public class TestFitness
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1), (MakeGene("chr2", 0.2), 0) };
         Assert.AreEqual(0.5, Fitness.Zygosity(genRef, testList, 1, true), EPSILON);
         Assert.AreEqual(1, Fitness.Zygosity(genRef, testList, 0), EPSILON);
+
+        var testSexList = new List<(Gene, int)> { (MakeGene("chrX", 0.1), 1), (MakeGene("chrY", 0.2), 0) };
+        Assert.AreEqual(0.5, Fitness.Zygosity(genRef, testList, 1, true), EPSILON);
+        Assert.AreEqual(1, Fitness.Zygosity(genRef, testList, 0), EPSILON);
     }
 
 
