@@ -93,6 +93,7 @@ public class TestKaryotype
         int nRegions = _kar.GetContig(0).CountRegions();
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
+        var contig = _kar.GetContig(0);
         var regions = _kar.FindChrRegions("chr1").ToList();
         Assert.AreEqual(nRegions + 2, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));

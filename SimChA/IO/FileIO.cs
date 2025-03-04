@@ -110,13 +110,9 @@ public class FileIO
         {
             foreach (var snv in sample.Karyotype.GetSNVs())
             {
-                if (genRef.GenContentsDict == null)
-                {
-                    throw new Exception("Genomic Content hasn't been set correctly to allow SNV list to be created");
-                }
-                char refBase = genRef.GenContentsDict[snv.Chrom][(int)snv.Pos];
+                var refBase = genRef.GetRefBase(snv.Chrom, (int)snv.Pos);
                 // The VCF should *not* be aware of SNVs that didn't end up altering the location in the final karyotype
-                if (char.ToUpper(refBase) != snv.Alt.ToString()[0])
+                if (refBase != snv.Alt)
                 {
                     outputFile.WriteLine($"{sample.SampleId}\t{snv.Chrom}\t{snv.Pos}\t.\t{refBase}\t{snv.Alt}");
                 }
@@ -181,7 +177,7 @@ public class FileIO
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
-    
+
     public static Dictionary<string, StringBuilder> ReadFasta(List<string> allChrs, string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, GENOME_FASTA));

@@ -138,14 +138,15 @@ public static class RegionOps
         return (beforeRegions, afterRegions);
     }
     
-    public static void PointMutateRegion(List<Region> regions, long location, Nucleotide newNucleotide)
+    public static void PointMutateRegion(List<Region> regions, long location, 
+        Nucleotide oldNucleotide, Nucleotide newNucleotide)
     {
         long seekPos = 0;
         foreach (var region in regions)
         {
             if (location >= seekPos && location < seekPos + region.Length)
             {
-                region.AddSNV(location - seekPos, newNucleotide);
+                region.AddSNV(location - seekPos, oldNucleotide, newNucleotide);
             }
             seekPos += region.Length;
         }        

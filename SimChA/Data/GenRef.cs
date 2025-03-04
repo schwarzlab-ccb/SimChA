@@ -27,7 +27,32 @@ public class GenRef
     
     // @CODY: The string should be obtained via a function rather than a direct access (make private)
     // In case of no genome, if called, a string of 'N" shoudl be returned
-    public Dictionary<string, StringBuilder>? GenContentsDict { get; }
+    private Dictionary<string, StringBuilder>? GenContentsDict { get; }
+    public char[] GetGenContents(string chrom, int start, int length)
+        => GenContentsDict != null 
+            ? GenContentsDict[chrom].ToString(start, length).ToCharArray() 
+            : ['N'];
+    static public Nucleotide CharToNucleotide(char c) 
+    => char.ToUpper(c) switch
+        {
+            'A' => Nucleotide.A,
+            'C' => Nucleotide.C,
+            'G' => Nucleotide.G,
+            'T' => Nucleotide.T,
+            _ => Nucleotide.N  // Default case for invalid characters
+        };
+    public Nucleotide GetRefBase(string chrom, int location)
+        => GenContentsDict != null 
+            ? CharToNucleotide(GenContentsDict[chrom].ToString(location, 1)[0])
+            : Nucleotide.N;
+    public Nucleotide GetRefBaseFromSeq(IEnumerable<string> seq, int location)
+    {
+        if (GenContentsDict == null) {
+            return Nucleotide.N;
+        }
+        return CharToNucleotide(seq.ElementAt((int)location)[0]);
+    }
+
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
     
     public GenRef(

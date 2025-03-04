@@ -53,17 +53,25 @@ public class Region : GenRange
         SNVs.AddRange(snvs);
     }
 
-    public void AddSNV(long offset, Nucleotide newNucleotide)
+    public void AddSNV(long offset, Nucleotide oldNucleotide, Nucleotide newNucleotide)
     {
         int index = SNVs.FindIndex(s => s.Pos == AbsStart + offset);
         if (index >= 0)
         {
-            // Update the existing SNV
-            SNVs[index] = SNVs[index] with { Alt = newNucleotide };
+            // Update the existing SNV if newNucleotide is different from ref
+            if (newNucleotide != oldNucleotide) 
+            {
+                SNVs[index] = SNVs[index] with { Alt = newNucleotide };
+            }
+            else
+            {
+                SNVs.RemoveAt(index);
+            }
+            
         }
         else
         {
-            SNVs.Add(new SNV(AbsStart + offset, Chrom, newNucleotide));
+            SNVs.Add(new SNV(AbsStart + offset, Chrom, oldNucleotide, newNucleotide));
         }
     }
     
@@ -81,8 +89,8 @@ public class Region : GenRange
 
     public string GetSeq(GenRef genRef)
     {
-        char[] regionSeq = genRef.GenContentsDict[Chrom].ToString((int) Start, (int) (End - Start)).ToCharArray();
-        if (SNVs != null)
+        char[] regionSeq = genRef.GetGenContents(Chrom, (int) Start, (int) (End-Start));
+        if (SNVs != null && regionSeq.Length != 1 && regionSeq[0] != 'N')
         {
             foreach (var snv in SNVs)
             {

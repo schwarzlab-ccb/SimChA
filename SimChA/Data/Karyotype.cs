@@ -263,7 +263,8 @@ public class Karyotype
     public void ApplyPointMutation(int contigID, long location, Nucleotide newNucleotide)
     {
         var contig = _contigs[contigID];
-        contig.PointMutate(location, newNucleotide);
+        var oldNucleotide = GenRef.GetRefBaseFromSeq(contig.GetSeq(GenRef), (int)location);
+        contig.PointMutate(location, oldNucleotide, newNucleotide);
     }
     
     public void MergeRegions()

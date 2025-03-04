@@ -268,8 +268,9 @@ public class TestRegions
         };
         const int location = 2;
         const Nucleotide newNucleotide = Nucleotide.A;
+        const Nucleotide oldNucleotide = Nucleotide.C;
         var mutatedRegions = RegionOps.Copy(regions);
-        RegionOps.PointMutateRegion(mutatedRegions, location, newNucleotide);
+        RegionOps.PointMutateRegion(mutatedRegions, location, oldNucleotide, newNucleotide);
         Assert.AreEqual(regions[0], mutatedRegions[0]);
         Assert.AreEqual(regions[1], mutatedRegions[1]);
         Assert.AreNotEqual(regions[2], mutatedRegions[2]);
@@ -291,8 +292,9 @@ public class TestRegions
         };
         const int location = 45;
         const Nucleotide newNucleotide = Nucleotide.A;
+        const Nucleotide oldNucleotide = Nucleotide.C;
         var mutatedRegions = RegionOps.Copy(regions);
-        RegionOps.PointMutateRegion(mutatedRegions, location, newNucleotide);
+        RegionOps.PointMutateRegion(mutatedRegions, location, oldNucleotide, newNucleotide);
         foreach (var region in mutatedRegions)
         {
             Assert.IsNotNull(region.SNVs);

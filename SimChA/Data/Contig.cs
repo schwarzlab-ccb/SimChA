@@ -82,7 +82,14 @@ public class Contig
         => _length > 0;
     
     public IEnumerable<string> GetSeq(GenRef genRef)
-        => Regions.Select(r => r.GetSeq(genRef));
+    {
+        var seq = new List<string>();
+        foreach (var r in Regions)
+        {
+            seq.Add(r.GetSeq(genRef));
+        }
+        return seq;
+    }
     
     public List<SNV> GetSNVs()
         => Regions.SelectMany(r => r.SNVs).ToList();
@@ -198,9 +205,9 @@ public class Contig
         Regions = RegionOps.ConcatRegions(Regions, other.Regions);
     }
     
-    public void PointMutate(long location, Nucleotide newNucleotide)
+    public void PointMutate(long location, Nucleotide oldNucleotide, Nucleotide newNucleotide)
     {
-        RegionOps.PointMutateRegion(Regions, location, newNucleotide);
+        RegionOps.PointMutateRegion(Regions, location, oldNucleotide, newNucleotide);
     }
     
     public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)
