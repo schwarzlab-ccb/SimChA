@@ -319,7 +319,6 @@ public static class Parsers
                 }
                 string chrNo = match.Value[1..];
                 Console.WriteLine($"Parsing the sequence for chr: " + chrNo);
-                // TODO: optimize the string builder
                 sequence = new StringBuilder("");
             }
             else

@@ -101,7 +101,6 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), VCF_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        // TODO: Do we need the header information?
         outputFile.WriteLine("##fileformat=VCFv4.3");
         outputFile.WriteLine("##source=SimChAV1.0");
         outputFile.WriteLine($"##reference=verily_{genRef.Name}_genome.fa");

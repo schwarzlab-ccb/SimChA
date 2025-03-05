@@ -299,8 +299,6 @@ public class TestRegions
         {
             Assert.IsNotNull(region.SNVs);
         }
-        // TODO: Why does DeleteRange remove the original mutatedRegions SNVDict?
-        // Does it matter?
         var finalRegions = RegionOps.DeleteRange(mutatedRegions, 30, 70);
         foreach (var region in finalRegions)
         {
