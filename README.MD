@@ -139,7 +139,11 @@ TODO
 
 #### `MHParams`
 
-@CODY
+The parameters controlling the Metropolis-Hastings mode of event simulation.
+
+* `NumIterations: int (1)`: The total number of trials to take in the Metropolis-Hastings algorithm.
+* `ThetaFitness: float (1.0) `: Controls how the variance of the acceptance. Higher values result in more exploration, i.e. the algorithm is more likely to accept worse proposals, while lower values will result in a more greedy algorithm, i.e. mostly only accepts improvements from the current state.
+* `MatchFitness: bool (false)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
 
 #### `SAParams`
 
