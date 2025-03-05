@@ -54,57 +54,47 @@ public class MHSimulator : Simulator
         return proposedEvents;
     }
 
-    private List<BaseEventData> GenEventsForTargetFitness(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents,
+    private List<BaseEventData> GetEvents(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents,
         double targetFitness)
     {
-        // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, cnEventPs);
         double currentFitness = GetFitness(new Karyotype(kar), currentEvents);
-        double bestDiff = double.PositiveInfinity;
+        
+        double bestValue = MHParams.MatchFitness ?  double.PositiveInfinity : currentFitness;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
         for (int i = 0; i < MHParams.NumIterations; i++)
         {
             var proposedEvents = GetNewProposal(cnEventPs, kar, currentEvents);
             double proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
-            if (AcceptProb(proposedFitness, currentFitness, targetFitness) > Rnd.NextDouble())
+
+            double acceptProb = MHParams.MatchFitness
+                ? AcceptProb(proposedFitness, currentFitness, targetFitness)
+                : AcceptProb(proposedFitness, currentFitness);
+
+            if (acceptProb > Rnd.NextDouble())
             {
                 currentEvents = proposedEvents;
-                double proposedDiff = Math.Abs(proposedFitness - targetFitness);
-                if (proposedDiff < bestDiff)
+                // Update best events based on the mode
+                if (MHParams.MatchFitness)
                 {
-                    bestDiff = proposedDiff;
-                    bestEvents = proposedEvents;
+                    double proposedDiff = Math.Abs(proposedFitness - targetFitness);
+                    if (proposedDiff < bestValue)
+                    {
+                        bestValue = proposedDiff;
+                        bestEvents = proposedEvents;
+                    }
+                }
+                else
+                {
+                    if (proposedFitness > bestValue)
+                    {
+                        bestValue = proposedFitness;
+                        bestEvents = proposedEvents;
+                    }
                 }
             }
         }
-
-        return bestEvents;
-    }
-
-    private List<BaseEventData> GenEventsForMaxFitness(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents)
-    {
-        // Generate a starting set of mutations and its potential
-        var currentEvents = InitEvents(kar, nEvents, cnEventPs);
-        double currentFitness = GetFitness(new Karyotype(kar), currentEvents);
-        double bestFitness = currentFitness;
-        var bestEvents = new List<BaseEventData>(currentEvents);
-
-        for (int i = 0; i < MHParams.NumIterations; i++)
-        {
-            var proposedEvents = GetNewProposal(cnEventPs, kar, currentEvents);
-            var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
-            if (AcceptProb(proposedFitness, currentFitness) > Rnd.NextDouble())
-            {
-                currentEvents = proposedEvents;
-                if (proposedFitness > bestFitness)
-                {
-                    bestFitness = proposedFitness;
-                    bestEvents = proposedEvents;
-                }
-            }
-        }
-
         return bestEvents;
     }
 
@@ -120,9 +110,7 @@ public class MHSimulator : Simulator
         double oldFitness = childKar.FitnessVal;
 
         int eventCount = SampleEventCount(cnChild);
-        var bestEvents = MHParams.MatchFitness
-            ? GenEventsForTargetFitness(cnEventPs, childKar, eventCount, targetFit)
-            : GenEventsForMaxFitness(cnEventPs, childKar, eventCount);
+        var bestEvents = GetEvents(cnEventPs, childKar, eventCount, targetFit);
 
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
