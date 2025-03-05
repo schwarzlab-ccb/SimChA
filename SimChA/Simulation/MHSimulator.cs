@@ -24,14 +24,14 @@ public class MHSimulator : Simulator
         ).ToList();
     }
 
-    private double GetFitnessPotential(double fitness, double targetFitness)
-        => -MHParams.ThetaFitness * Math.Abs((fitness - targetFitness) / targetFitness);
+    private double Gaussian(double f, double ft)
+        => Math.Exp(-Math.Pow(f - ft, 2.0)/(2*MHParams.ThetaFitness));
 
-    private double CalculatePotential(double proposedFitness)
-        => MHParams.ThetaFitness * proposedFitness;
+    private double AcceptProb(double newFit, double oldFit, double targetFitness)
+        => Gaussian(newFit, targetFitness) / Gaussian(oldFit, targetFitness);
 
-    private double CalculatePotential(double proposedFitness, double targetFitness)
-        => GetFitnessPotential(proposedFitness, targetFitness);
+    private double AcceptProb(double newFit, double oldFit)
+        => Math.Min(1, Math.Exp((newFit - oldFit)/MHParams.ThetaFitness));
 
     private double GetFitness(Karyotype kar, List<BaseEventData> events)
     {
@@ -48,12 +48,8 @@ public class MHSimulator : Simulator
         List<BaseEventData> oldEvents)
     {
         var proposedEvents = oldEvents.ToList();
-        // Select a random CNEventPars to modify
         int index = Rnd.Next(proposedEvents.Count);
-        var cnEventP = Rnd.NextDouble() < MHParams.SwapEventP
-            ? Rnd.PickRndElem(cnEventPs)
-            : proposedEvents[index].CNEventPars;
-        var newData = Sampling.GenerateCNEventData(Rnd, kar, cnEventP);
+        var newData = Sampling.GenerateCNEventData(Rnd, kar, Rnd.PickRndElem(cnEventPs));
         proposedEvents[index] = newData ?? throw new Exception("Failed to generate new event data.");
         return proposedEvents;
     }
@@ -64,32 +60,22 @@ public class MHSimulator : Simulator
         // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, cnEventPs);
         double currentFitness = GetFitness(new Karyotype(kar), currentEvents);
-        double currentPotential = CalculatePotential(currentFitness, targetFitness);
-        double bestDiff = 1000.0;
+        double bestDiff = double.PositiveInfinity;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
-        for (int i = 0; i < MHParams.NumSamplesTotal; i++)
+        for (int i = 0; i < MHParams.NumIterations; i++)
         {
             var proposedEvents = GetNewProposal(cnEventPs, kar, currentEvents);
-            double fitness = GetFitness(new Karyotype(kar), proposedEvents);
-            bool thresholdAccept = Math.Abs(1.0 - fitness / targetFitness) < MHParams.ThresholdFit;
-            // Calculate the new fitness of the proposed set of events on the clone
-            double proposalPotential = CalculatePotential(currentFitness, targetFitness);
-            double acceptProb = proposalPotential - currentPotential;
-            if (acceptProb >= Math.Log(Rnd.NextDouble()))
+            double proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
+            if (AcceptProb(proposedFitness, currentFitness, targetFitness) > Rnd.NextDouble())
             {
-                currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
-                double proposedDiff = Math.Abs(fitness - targetFitness);
+                double proposedDiff = Math.Abs(proposedFitness - targetFitness);
                 if (proposedDiff < bestDiff)
                 {
                     bestDiff = proposedDiff;
                     bestEvents = proposedEvents;
                 }
-
-                // Break out of the sampling if we have reached the threshold
-                // and have reached the minimum number of samples required
-                if (thresholdAccept && i > MHParams.NumSamplesMin) break;
             }
         }
 
@@ -101,20 +87,15 @@ public class MHSimulator : Simulator
         // Generate a starting set of mutations and its potential
         var currentEvents = InitEvents(kar, nEvents, cnEventPs);
         double currentFitness = GetFitness(new Karyotype(kar), currentEvents);
-        double currentPotential = CalculatePotential(currentFitness);
         double bestFitness = currentFitness;
         var bestEvents = new List<BaseEventData>(currentEvents);
 
-        for (int i = 0; i < MHParams.NumSamplesTotal; i++)
+        for (int i = 0; i < MHParams.NumIterations; i++)
         {
             var proposedEvents = GetNewProposal(cnEventPs, kar, currentEvents);
             var proposedFitness = GetFitness(new Karyotype(kar), proposedEvents);
-            // Calculate the new fitness of the proposed set of events on the clone
-            double proposalPotential = CalculatePotential(proposedFitness);
-            double acceptProb = proposalPotential - currentPotential;
-            if (acceptProb >= Math.Log(Rnd.NextDouble()))
+            if (AcceptProb(proposedFitness, currentFitness) > Rnd.NextDouble())
             {
-                currentPotential = proposalPotential;
                 currentEvents = proposedEvents;
                 if (proposedFitness > bestFitness)
                 {
