@@ -60,7 +60,7 @@
 		  {
 			"Type": "TailDeletion",
 			"Prob": 0,
-			"Size": 0,
+			"Size": 100000,
 			"Frag": 0
 		  },
 		  {
