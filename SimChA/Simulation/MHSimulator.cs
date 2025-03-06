@@ -35,12 +35,10 @@ public class MHSimulator : Simulator
 
     private double GetFitness(Karyotype kar, List<BaseEventData> events)
     {
-        // Probability of picking each event and their corresponding signature
         foreach (var eventData in events)
         {
             eventData.ApplyEvent(kar);
         }
-
         return kar.UpdateFitness(GenRef, FitParams);
     }
 
