@@ -75,12 +75,12 @@ public class GenRef
         bool useSNV = genContentsDict != null;
 
         // Create the haplotypes
-        var haplotypeOneF = CreateHaplotype(SexType.Female, true, useSNV);
-        var haplotypeTwoF = CreateHaplotype(SexType.Female,false, useSNV);
-        var haplotypeOneM = CreateHaplotype(SexType.Male,true, useSNV);
-        var haplotypeTwoM = CreateHaplotype(SexType.Male,false, useSNV);
-        var haplotypeOneA = CreateHaplotype(SexType.Any,true, useSNV);
-        var haplotypeTwoA = CreateHaplotype(SexType.Any,false, useSNV);
+        var haplotypeOneF = CreateHaplotype(SexType.Female, true);
+        var haplotypeTwoF = CreateHaplotype(SexType.Female,false);
+        var haplotypeOneM = CreateHaplotype(SexType.Male,true);
+        var haplotypeTwoM = CreateHaplotype(SexType.Male,false);
+        var haplotypeOneA = CreateHaplotype(SexType.Any,true);
+        var haplotypeTwoA = CreateHaplotype(SexType.Any,false);
         XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToList();
         XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToList();
         Autosome = haplotypeOneA.Concat(haplotypeTwoA).ToList();
@@ -155,6 +155,6 @@ public class GenRef
     private Region GetRegion(string chrNo, bool isFirstHaplotype) 
         => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype,  new List<SNV>());
     
-    private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap, bool useSNV = false)
+    private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap)
         => ChrIDsForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });
 }

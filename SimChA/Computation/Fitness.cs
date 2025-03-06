@@ -42,8 +42,6 @@ public static class Fitness
             _ => 2
         };
     }
-    public static double CountFn(double x)
-        => x < 0 ? -Math.Log(1.0 - x / 2.0) : Math.Log(1.0 + x);
 
     // 0/0 => 1, i.e. the genes not present in the given sex contributed their default score
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
