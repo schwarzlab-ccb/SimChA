@@ -72,7 +72,6 @@ public class GenRef
         AllChrs = ChrSex.Select(pair => pair.Key).ToList();
         YChrName = ChrSex.Where(pair => pair.Value == SexType.Male).Select(pair => pair.Key).FirstOrDefault("");
         XChrName = ChrSex.Where(pair => pair.Value == SexType.Female).Select(pair => pair.Key).FirstOrDefault("");
-        bool useSNV = genContentsDict != null;
 
         // Create the haplotypes
         var haplotypeOneF = CreateHaplotype(SexType.Female, true);
