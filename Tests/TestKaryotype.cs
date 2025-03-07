@@ -378,4 +378,11 @@ public class TestKaryotype
         // each event should create two new regions
         Assert.AreEqual(24, chrCopyNumbers.Count - dupCount * 2);
     }
+
+    /*[Test]
+    public void TestGetPresentGeneCounts()
+    {
+        var geneCounts = _kar.GetPresentGeneCounts();
+        // TODO: write this test
+    }*/
 }

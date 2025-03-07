@@ -52,6 +52,13 @@ public class GenRef
     }
 
     public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
+
+    public IEnumerable<Gene> GetTSGs
+        => GeneLists[GeneListType.TumorSuppressor].SelectMany(kvp => kvp.Value);
+    public IEnumerable<Gene> GetOGs
+        => GeneLists[GeneListType.Oncogene].SelectMany(kvp => kvp.Value);
+    public IEnumerable<Gene> GetEssGenes
+        => GeneLists[GeneListType.Essentiality].SelectMany(kvp => kvp.Value);
     
     public GenRef(
         string name,
@@ -65,6 +72,8 @@ public class GenRef
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         Centromeres = centromeres;
+        GeneLists = geneList;
+
         AutosomesCount = ChrSex.Count(x => x.Value == SexType.Any);
         YChrs = ChrSex.Where(pair => pair.Value != SexType.Female).Select(pair => pair.Key).ToList();
         XChrs = ChrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList();
@@ -91,7 +100,6 @@ public class GenRef
         XXGenomeLen = XXGenome.Sum(regions => regions.Sum(r => r.Length));
         AutosomeLen = Autosome.Sum(regions => regions.Sum(r => r.Length));
 
-        GeneLists = geneList;
         GenContentsDict = genContentsDict;
     }
     
@@ -150,9 +158,16 @@ public class GenRef
             SexType.Male => XYGenome,
             _ => Autosome
         };
+    private Dictionary<GeneListType, List<Gene> > GetRegionGenes(string chrNo)
+        => GeneLists.ToDictionary(
+            geneTypeList => geneTypeList.Key,
+            geneTypeList => geneTypeList.Value
+                    .Where(chromGenes => chromGenes.Key == chrNo)
+                    .SelectMany(genes => genes.Value).ToList()
+            );
     
     private Region GetRegion(string chrNo, bool isFirstHaplotype) 
-        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype,  new List<SNV>());
+        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype,  new List<SNV>(), GetRegionGenes(chrNo));
     
     private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap)
         => ChrIDsForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });

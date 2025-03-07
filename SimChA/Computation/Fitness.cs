@@ -14,9 +14,15 @@ public static class Fitness
     {
         bool normGenes = fParams.GeneNormalization;
         double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen()));
+        /*
         double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar), kar.Sex, normGenes));
         double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar), kar.Sex, normGenes));
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar), kar.Sex, normGenes));
+        */
+        var geneCounts = kar.GetPresentGeneCounts();
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GetOGs, geneCounts[GeneListType.Oncogene]), kar.Sex, normGenes));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GetTSGs, geneCounts[GeneListType.TumorSuppressor]), kar.Sex, normGenes));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GetEssGenes, geneCounts[GeneListType.Essentiality]), kar.Sex, normGenes));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     
@@ -79,6 +85,11 @@ public static class Fitness
         return normalizeGenes ? genesList.Average(calsGene) : genesList.Sum(calsGene);
     }
 
+    public static IEnumerable<(Gene, int)> CalcCNs(
+        IEnumerable<Gene> searched,
+        Dictionary<Gene, int> geneCNs) {
+        return searched.Select(g => (g, geneCNs.GetValueOrDefault(g, 0)));
+    }
     // TODO: The genes should exist on the karyotype actually
     public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<string, List<Gene>> searched, Karyotype karyotype)
     {

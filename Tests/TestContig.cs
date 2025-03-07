@@ -109,4 +109,11 @@ public class TestContig
         cents = _contig1.GetCentromeres(_genRef.Centromeres);
         Assert.AreEqual(2, cents.Count);
     }
+
+    /*[Test]
+    public void TestPresentGenes() 
+    {
+        var geneCounts = _contig1.GetPresentGeneCounts();
+        // TODO: write this test
+    }*/
 }

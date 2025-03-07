@@ -5,17 +5,27 @@ public class Region : GenRange
 {
     public bool Hap1 { get; }
     public List<SNV> SNVs { get; }
+
+    public Dictionary<GeneListType, List<Gene>>? PresentGenes { get; }
     
-    public Region(long start, long end, string chrom, bool hap1, List<SNV> snvs) : base(start, end, chrom)
+    public Region(long start, long end, string chrom, bool hap1, 
+        List<SNV> snvs, Dictionary<GeneListType, List<Gene>>? presentGenes = null) : base(start, end, chrom)
     {
         Hap1 = hap1;
         SNVs = snvs;
+        PresentGenes = presentGenes ?? new Dictionary<GeneListType, List<Gene>> 
+        {
+            {GeneListType.TumorSuppressor, []},
+            {GeneListType.Oncogene, []},
+            {GeneListType.Essentiality, []},
+        };
     }
 
     public Region(Region other) : base(other)
     {
         Hap1 = other.Hap1;
         SNVs = new List<SNV>(other.SNVs);
+        PresentGenes = new Dictionary<GeneListType, List<Gene> >(other.PresentGenes);
     }
 
     public override bool Equals(object? obj) 
@@ -24,20 +34,26 @@ public class Region : GenRange
     public void ResizeFront(long howMuch)
     {
         Start += howMuch;
-        UpdateSNVs();
+        UpdateRegion();
     }
     
     public void ResizeBack(long howMuch)
     {
         End = Start + howMuch;
-        UpdateSNVs();
+        UpdateRegion();
     }    
     
     public void ResizeBoth(long start, long end)
     {
         End = Start + end;
         Start += start;
+        UpdateRegion();
+    }
+
+    private void UpdateRegion()
+    {
         UpdateSNVs();
+        UpdatePresentGenes();
     }
     
     private void UpdateSNVs()
@@ -45,6 +61,17 @@ public class Region : GenRange
         foreach (var snv in SNVs.Where(snv => snv.Pos <= AbsStart || AbsEnd <= snv.Pos).ToList())
         {
             SNVs.Remove(snv);
+        }
+    }
+
+    private void UpdatePresentGenes() 
+    {
+        foreach (var type in PresentGenes.Keys)
+        {
+            foreach (var gene in PresentGenes[type].Where(g => !g.IsInsideOf(this)).ToList())
+            {
+                PresentGenes[type].Remove(gene);
+            }
         }
     }
 

@@ -317,4 +317,29 @@ public class TestRegions
         var range2 = new GenRange(0, 100, "chr1");
         Assert.AreEqual(range1, range2);
     }
+
+    [Test]
+    public void TestPresentGenes()
+    {
+        var tsg = new Gene(0, 10, "chr1" , "GENE1", 0.1);
+        var og = new Gene(20, 30, "chr1" , "GENE2", 0.2);
+        var ess = new Gene(40, 50, "chr1" , "GENE3", 0.3);
+        var presentGenes = new Dictionary<GeneListType, List<Gene>>
+        {
+            { GeneListType.TumorSuppressor, [tsg] },
+            { GeneListType.Oncogene, [og] },
+            { GeneListType.Essentiality, [ess] }
+        };
+        var r = new Region(0, 249250621, "chr1", true, new List<SNV>(), presentGenes);
+        Assert.NotNull(r.PresentGenes);
+        Assert.IsTrue(r.PresentGenes?.ContainsKey(GeneListType.TumorSuppressor));
+        Assert.AreEqual(1, r.PresentGenes?[GeneListType.TumorSuppressor].Count);
+        Assert.AreEqual(tsg, r.PresentGenes?[GeneListType.TumorSuppressor][0]);
+        Assert.IsTrue(r.PresentGenes?.ContainsKey(GeneListType.Oncogene));
+        Assert.AreEqual(1, r.PresentGenes?[GeneListType.Oncogene].Count);
+        Assert.AreEqual(og, r.PresentGenes?[GeneListType.Oncogene][0]);
+        Assert.IsTrue(r.PresentGenes?.ContainsKey(GeneListType.Essentiality));
+        Assert.AreEqual(1, r.PresentGenes?[GeneListType.Essentiality].Count);
+        Assert.AreEqual(ess, r.PresentGenes?[GeneListType.Essentiality][0]);
+    }
 }

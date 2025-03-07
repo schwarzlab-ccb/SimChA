@@ -8,6 +8,7 @@ public class Karyotype
     private GenRef GenRef { get; }
     public SexType Sex { get; }
     public double FitnessVal { get; private set; }
+
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
     
@@ -86,13 +87,40 @@ public class Karyotype
 
     public IEnumerable<string> GetSeq()
         => _contigs.SelectMany(c => c.GetSeq(GenRef).Concat(new List<string> {"\n"}));
-    
+
+    private bool IsEmpty()
+        => _contigs.All(c => c.Length == 0);
+
+    public Dictionary<GeneListType, Dictionary<Gene, int>> GetPresentGeneCounts()
+    {
+        if (IsEmpty())
+        {
+            return new Dictionary<GeneListType, Dictionary<Gene, int>> {
+                { GeneListType.TumorSuppressor, []},
+                { GeneListType.Oncogene, []},
+                { GeneListType.Essentiality, []},
+            };
+        }
+        return _contigs.SelectMany(c => c.GetPresentGeneCounts())
+            .GroupBy(kvp => kvp.Key) // Group by GeneListType
+            .ToDictionary(
+                group => group.Key, // GeneListType as key
+                group => group
+                    .SelectMany(kvp => kvp.Value) // Flatten the gene copy numbers
+                    .GroupBy(geneCNs => geneCNs.Key) // Group by gene
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Sum(geneKvp => geneKvp.Value) // Sum the counts of the same Gene
+                    )
+            );
+    }
+
     public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)
         => _contigs.SelectMany(c => c.GetPresentGenes(chrom, geneList));
 
     public double UpdateFitness(GenRef genRef, FitParams fParams)
         => FitnessVal = Fitness.Calculate(this, genRef, fParams);
-    
+
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
