@@ -331,7 +331,6 @@ public class TestRegions
             { GeneListType.Essentiality, [ess] }
         };
         var r = new Region(0, 249250621, "chr1", true, new List<SNV>(), presentGenes);
-        Assert.NotNull(r.PresentGenes);
         Assert.IsTrue(r.PresentGenes?.ContainsKey(GeneListType.TumorSuppressor));
         Assert.AreEqual(1, r.PresentGenes?[GeneListType.TumorSuppressor].Count);
         Assert.AreEqual(tsg, r.PresentGenes?[GeneListType.TumorSuppressor][0]);
@@ -341,5 +340,44 @@ public class TestRegions
         Assert.IsTrue(r.PresentGenes?.ContainsKey(GeneListType.Essentiality));
         Assert.AreEqual(1, r.PresentGenes?[GeneListType.Essentiality].Count);
         Assert.AreEqual(ess, r.PresentGenes?[GeneListType.Essentiality][0]);
+    }
+
+
+    [Test]
+    public void TestPresentGenesWithDeletion()
+    {
+        var tsg = new Gene(0, 10, "chr1" , "GENE1", 0.1);
+        var og = new Gene(20, 30, "chr1" , "GENE2", 0.2);
+        var ess = new Gene(40, 50, "chr1" , "GENE3", 0.3);
+        var presentGenes = new Dictionary<GeneListType, List<Gene>>
+        {
+            { GeneListType.TumorSuppressor, [tsg] },
+            { GeneListType.Oncogene, [og] },
+            { GeneListType.Essentiality, [ess] }
+        };
+        var r = new Region(0, 249250621, "chr1", true, new List<SNV>(), presentGenes);
+        var regions = new List<Region>{r};
+        // Delete a region affecting the og
+        regions = RegionOps.DeleteRange(regions, 15, 25);
+        var tsgRegion = regions[0];
+        var essRegion = regions[1];
+        // Check that the original region is unchanged
+        Assert.AreEqual(1,   r.PresentGenes?[GeneListType.TumorSuppressor].Count);
+        Assert.AreEqual(tsg, r.PresentGenes?[GeneListType.TumorSuppressor][0]);
+        Assert.AreEqual(1,   r.PresentGenes?[GeneListType.Oncogene].Count);
+        Assert.AreEqual(og,  r.PresentGenes?[GeneListType.Oncogene][0]);
+        Assert.AreEqual(1,   r.PresentGenes?[GeneListType.Essentiality].Count);
+        Assert.AreEqual(ess, r.PresentGenes?[GeneListType.Essentiality][0]);
+        // Check that the tsg and essential genes are intact
+        Assert.AreEqual(1,   tsgRegion.PresentGenes?[GeneListType.TumorSuppressor].Count);
+        Assert.AreEqual(tsg, tsgRegion.PresentGenes?[GeneListType.TumorSuppressor][0]);
+        Assert.AreEqual(0,   tsgRegion.PresentGenes?[GeneListType.Oncogene].Count);
+        Assert.AreEqual(0,   tsgRegion.PresentGenes?[GeneListType.Essentiality].Count);
+
+        Assert.AreEqual(1,   essRegion.PresentGenes?[GeneListType.Essentiality].Count);
+        Assert.AreEqual(ess, essRegion.PresentGenes?[GeneListType.Essentiality][0]);
+        Assert.AreEqual(0,   essRegion.PresentGenes?[GeneListType.Oncogene].Count);
+        Assert.AreEqual(0,   essRegion.PresentGenes?[GeneListType.TumorSuppressor].Count);
+
     }
 }

@@ -6,7 +6,7 @@ public class Region : GenRange
     public bool Hap1 { get; }
     public List<SNV> SNVs { get; }
 
-    public Dictionary<GeneListType, List<Gene>>? PresentGenes { get; }
+    public Dictionary<GeneListType, List<Gene>> PresentGenes { get; }
     
     public Region(long start, long end, string chrom, bool hap1, 
         List<SNV> snvs, Dictionary<GeneListType, List<Gene>>? presentGenes = null) : base(start, end, chrom)
@@ -25,7 +25,11 @@ public class Region : GenRange
     {
         Hap1 = other.Hap1;
         SNVs = new List<SNV>(other.SNVs);
-        PresentGenes = new Dictionary<GeneListType, List<Gene> >(other.PresentGenes);
+        PresentGenes = new Dictionary<GeneListType, List<Gene>>(other.PresentGenes
+            .ToDictionary(
+                kvp => kvp.Key, 
+                kvp => new List<Gene>(kvp.Value)
+            ));
     }
 
     public override bool Equals(object? obj) 
@@ -86,7 +90,7 @@ public class Region : GenRange
         if (index >= 0)
         {
             // Update the existing SNV if newNucleotide is different from ref
-            if (newNucleotide != oldNucleotide) 
+            if (newNucleotide != oldNucleotide)
             {
                 SNVs[index] = SNVs[index] with { Alt = newNucleotide };
             }
