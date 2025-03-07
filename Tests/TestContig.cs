@@ -110,10 +110,21 @@ public class TestContig
         Assert.AreEqual(2, cents.Count);
     }
 
-    /*[Test]
+    [Test]
     public void TestPresentGenes() 
     {
-        var geneCounts = _contig1.GetPresentGeneCounts();
-        // TODO: write this test
-    }*/
+        var contigCopy = new Contig(_contig1);
+        var tsgCount = _contig1.GetPresentGeneCounts()[GeneListType.TumorSuppressor].Count;
+        var ogCount  = _contig1.GetPresentGeneCounts()[GeneListType.Oncogene].Count;
+        var essCount = _contig1.GetPresentGeneCounts()[GeneListType.Essentiality].Count;
+        _contig1.DeleteRange(0, 200_000_000);
+        // Copy should remain unchanged
+        Assert.AreEqual(tsgCount, contigCopy.GetPresentGeneCounts()[GeneListType.TumorSuppressor].Count);
+        Assert.AreEqual(ogCount,  contigCopy.GetPresentGeneCounts()[GeneListType.Oncogene].Count);
+        Assert.AreEqual(essCount, contigCopy.GetPresentGeneCounts()[GeneListType.Essentiality].Count);
+        // Original should be different
+        Assert.AreNotEqual(tsgCount, _contig1.GetPresentGeneCounts()[GeneListType.TumorSuppressor].Count);
+        Assert.AreNotEqual(ogCount,  _contig1.GetPresentGeneCounts()[GeneListType.Oncogene].Count);
+        Assert.AreNotEqual(essCount, _contig1.GetPresentGeneCounts()[GeneListType.Essentiality].Count);
+    }
 }

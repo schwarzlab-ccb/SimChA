@@ -41,7 +41,11 @@ public class Contig
     {
         _regions = RegionOps.Copy(other.Regions);
         _length = other.Length;
-        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>> (other._presentGeneCounts);
+        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>> (other._presentGeneCounts
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp => new Dictionary<Gene, int>(kvp.Value)
+            ));
     }
 
     public static Contig Concat(IEnumerable<Contig> contigs)
@@ -117,7 +121,12 @@ public class Contig
     {
         Regions.Clear();
         _length = 0;
-        _presentGeneCounts.Clear();
+        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>>
+        {
+            {GeneListType.TumorSuppressor, []},
+            {GeneListType.Oncogene, []},
+            {GeneListType.Essentiality, []},
+        };
     }
 
     public void DeleteRange(long start, long end)
