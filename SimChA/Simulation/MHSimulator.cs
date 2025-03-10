@@ -108,12 +108,11 @@ public class MHSimulator : Simulator
         double oldFitness = childKar.FitnessVal;
 
         int eventCount = SampleEventCount(cnChild);
-        var bestEvents = GetEvents(cnEventPs, childKar, eventCount, targetFit);
+        var bestEvents = GetEvents(cnEventPs, new Karyotype(childKar), eventCount, targetFit);
 
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-
             var eventData = bestEvents[evNo - 1];
             eventData.ApplyEvent(childKar);
             double newFitness = childKar.UpdateFitness(GenRef, FitParams);

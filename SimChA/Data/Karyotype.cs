@@ -12,7 +12,7 @@ public class Karyotype
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
 
-    public Dictionary<GeneListType, Dictionary<Gene, int>> GeneCounts;
+    public Dictionary<GeneListType, Dictionary<Gene, int>> GeneCounts {get; private set;}
     
     public Karyotype(GenRef genRef, SexType sex)
     {
@@ -99,7 +99,8 @@ public class Karyotype
 
     public Dictionary<GeneListType, Dictionary<Gene, int>> GetPresentGeneCounts()
     {
-        return PresentGenes.GetGeneCounts(_contigs);
+        //return PresentGenes.GetGeneCounts(_contigs);
+        return GeneCounts;
     }
 
     public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)
@@ -111,9 +112,11 @@ public class Karyotype
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
+        var genesBefore = contig.PresentGenes.Genes;
         long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         contig.DeleteRange(tailStart, tailEnd);
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
     }
 
     public void ApplyTailDuplication(int contigID, long tailLen, bool fiveToThree)
@@ -123,8 +126,9 @@ public class Karyotype
         (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
         var newTail = new Contig(contig.GetSubContig(tailStart, tailEnd));
         _contigs.Add(newTail);
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, newTail.PresentGenes.Genes, false);
     }
-
+    // TODO: Implement Update GeneCounts
     public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
@@ -135,40 +139,52 @@ public class Karyotype
     public void ApplyContigDeletion(int contigID)
     {
         var contig = _contigs[contigID];
+        var lostGenes = contig.PresentGenes.Genes;
         contig.Clear();
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, lostGenes, true);
     }
     
     public void ApplyContigDuplication(int contigID)
     {
         var contig = _contigs[contigID];
         _contigs.Add(new Contig(contig));
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, contig.PresentGenes.Genes, false);
     }
 
     public void ApplyInternalDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
+        var genesBefore = contig.PresentGenes.Genes;
         contig.DuplicateRange(startPos, endPos);
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
     }
     
     public void ApplyInvertedDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
+        var genesBefore = contig.PresentGenes.Genes;
         contig.DuplicateRange(startPos, endPos);
         contig.InvertRange(endPos, endPos + (endPos - startPos));
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
     }
     
     public void ApplyInternalInversion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
+        var genesBefore = contig.PresentGenes.Genes;
         contig.InvertRange(startPos, endPos);
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
     }
 
     public void ApplyInternalDeletion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
+        var genesBefore = contig.PresentGenes.Genes;
         contig.DeleteRange(startPos, endPos);
+        GeneCounts = PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
     }
 
+    // TODO: Implement Update GeneCounts
     // Translocation might invert based on the orientation of the holiday Junction https://en.wikipedia.org/wiki/Holliday_junction
     public void ApplyTranslocation(int contigA, int contigB, long posA, long posB, bool inverted)
     {
@@ -187,14 +203,15 @@ public class Karyotype
     public void ApplyWGD()
     {
         _contigs.AddRange(_contigs.Select(ch => new Contig(ch)).ToList());
+        GeneCounts = PresentGenes.DoubleGeneCounts(GeneCounts);
     }
-
+    // TODO: Implement Update GeneCounts
     public void ApplyChromothripsis(int contigID, List<long> stops, IEnumerable<int> selection)
     {
         var contig = _contigs[contigID];
         contig.ScatterAndGather(stops, selection);
     }
-    
+    // TODO: Implement Update GeneCounts
     public void ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence, List<long> breakpoints)
     {
         var subContigs = 
@@ -209,7 +226,7 @@ public class Karyotype
             _contigs[contigIDs[i]] = newContigs[i];
         }
     }
-    
+    // TODO: Implement Update GeneCounts
     public void ApplyPyrgo(int contigID, List<(long start, long len)> frags)
     {
         var contig = _contigs[contigID];
@@ -220,7 +237,7 @@ public class Karyotype
             offset += len;
         }
     }
-
+    // TODO: Implement Update GeneCounts
     // Fragments that do not return to the original chromosome
     public void ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
     {
@@ -231,7 +248,7 @@ public class Karyotype
         }
         _contigs.Add(template);
     }    
-    
+    // TODO: Implement Update GeneCounts
     // First segment is the host, but there is no repetition
     public void ApplyTIBridge(List<(int id, long start, long len, bool dir)> frags) 
     {
@@ -244,7 +261,7 @@ public class Karyotype
         }
         host.InsertContig(template, frags[0].start);
     }    
-    
+    // TODO: Implement Update GeneCounts
     // First segment is the host, with repetition
     public void ApplyTICycle(List<(int id, long start, long len, bool dir)> frags)
     {
@@ -257,7 +274,7 @@ public class Karyotype
         }
         host.InsertContig(template, frags[0].start);
     }
-    
+    // TODO: Implement Update GeneCounts
     public void ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
     {
         var contig = _contigs[contigID];
@@ -275,6 +292,7 @@ public class Karyotype
             lastWasDeletion = !lastWasDeletion;
         }
     }
+    // TODO: Implement Update GeneCounts
     public void ApplyPointMutation(int contigID, long location, Nucleotide newNucleotide)
     {
         var contig = _contigs[contigID];

@@ -36,7 +36,9 @@ public class Contig
     {
         _regions = RegionOps.Copy(other.Regions);
         _length = other.Length;
-        PresentGenes = new PresentGenes(other.PresentGenes);
+        PresentGenes = other.Length > 0 
+            ? new PresentGenes(other.PresentGenes)
+            : new PresentGenes();
     }
 
     public static Contig Concat(IEnumerable<Contig> contigs)

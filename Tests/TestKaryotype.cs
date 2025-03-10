@@ -433,6 +433,15 @@ public class TestKaryotype
                 Assert.AreNotEqual(kvp.Value, value);
             }
         }
-
+    }
+    [Test]
+    public void TestContigIds()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        var idsAfter = _kar.ContigIds().ToList();
+        Assert.AreEqual(4, idsAfter[0]);
     }
 }
