@@ -11,12 +11,15 @@ public class Karyotype
 
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
+
+    public Dictionary<GeneListType, Dictionary<Gene, int>> GeneCounts;
     
     public Karyotype(GenRef genRef, SexType sex)
     {
         GenRef = genRef;
         _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
         Sex = sex;
+        GeneCounts = PresentGenes.GetGeneCounts(_contigs);
     }
     
     public Karyotype(Karyotype other)
@@ -25,6 +28,11 @@ public class Karyotype
         _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
+        GeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>> (
+            other.GeneCounts
+            .ToDictionary(kvp => kvp.Key,
+                kvp => kvp.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
+            );
     }
     
     public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
@@ -32,6 +40,7 @@ public class Karyotype
         GenRef = genRef;
         _contigs = contigs;
         Sex = sex;
+        GeneCounts = PresentGenes.GetGeneCounts(_contigs);
     }
 
     public int CountContigs() 
@@ -90,14 +99,6 @@ public class Karyotype
 
     public Dictionary<GeneListType, Dictionary<Gene, int>> GetPresentGeneCounts()
     {
-        /*if (IsEmpty())
-        {
-            return new Dictionary<GeneListType, Dictionary<Gene, int>> {
-                { GeneListType.TumorSuppressor, []},
-                { GeneListType.Oncogene, []},
-                { GeneListType.Essentiality, []},
-            };
-        }*/
         return PresentGenes.GetGeneCounts(_contigs);
     }
 
