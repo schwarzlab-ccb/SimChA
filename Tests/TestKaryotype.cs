@@ -379,10 +379,60 @@ public class TestKaryotype
         Assert.AreEqual(24, chrCopyNumbers.Count - dupCount * 2);
     }
 
-    /*[Test]
+    [Test]
     public void TestGetPresentGeneCounts()
     {
         var geneCounts = _kar.GetPresentGeneCounts();
-        // TODO: write this test
-    }*/
+        var tsgs = geneCounts[GeneListType.TumorSuppressor];
+        var ogs  = geneCounts[GeneListType.Oncogene];
+        var ess  = geneCounts[GeneListType.Essentiality];
+        for (int i = 0; i < 23; i++)
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        var newGeneCounts = _kar.GetPresentGeneCounts();
+        var newTsgs = newGeneCounts[GeneListType.TumorSuppressor];
+        var newOgs  = newGeneCounts[GeneListType.Oncogene];
+        var newEss  = newGeneCounts[GeneListType.Essentiality];
+        foreach (var kvp in tsgs)
+        {
+            if (!newTsgs.TryGetValue(kvp.Key, out int value))
+            {
+                Assert.AreEqual("chrX", kvp.Key.Chrom);
+            } else if ("chrY" == kvp.Key.Chrom)
+            {
+                Assert.AreEqual(kvp.Value, value);
+            } else 
+            {
+                Assert.AreNotEqual(kvp.Value, value);
+            }
+        }
+        foreach (var kvp in ogs)
+        {
+            if (!newOgs.TryGetValue(kvp.Key, out int value))
+            {
+                Assert.AreEqual("chrX", kvp.Key.Chrom);
+            } else if ("chrY" == kvp.Key.Chrom)
+            {
+                Assert.AreEqual(kvp.Value, value);
+            } else 
+            {
+                Assert.AreNotEqual(kvp.Value, value);
+            }
+            
+        }
+        foreach (var kvp in ess)
+        {
+            if (!newEss.TryGetValue(kvp.Key, out int value))
+            {
+                Assert.AreEqual("chrX", kvp.Key.Chrom);
+            } else if ("chrY" == kvp.Key.Chrom)
+            {
+                Assert.AreEqual(kvp.Value, value);
+            } else {
+                Assert.AreNotEqual(kvp.Value, value);
+            }
+        }
+
+    }
 }

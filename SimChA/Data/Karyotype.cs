@@ -88,31 +88,17 @@ public class Karyotype
     public IEnumerable<string> GetSeq()
         => _contigs.SelectMany(c => c.GetSeq(GenRef).Concat(new List<string> {"\n"}));
 
-    private bool IsEmpty()
-        => _contigs.All(c => c.Length == 0);
-
     public Dictionary<GeneListType, Dictionary<Gene, int>> GetPresentGeneCounts()
     {
-        if (IsEmpty())
+        /*if (IsEmpty())
         {
             return new Dictionary<GeneListType, Dictionary<Gene, int>> {
                 { GeneListType.TumorSuppressor, []},
                 { GeneListType.Oncogene, []},
                 { GeneListType.Essentiality, []},
             };
-        }
-        return _contigs.SelectMany(c => c.GetPresentGeneCounts())
-            .GroupBy(kvp => kvp.Key) // Group by GeneListType
-            .ToDictionary(
-                group => group.Key, // GeneListType as key
-                group => group
-                    .SelectMany(kvp => kvp.Value) // Flatten the gene copy numbers
-                    .GroupBy(geneCNs => geneCNs.Key) // Group by gene
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Sum(geneKvp => geneKvp.Value) // Sum the counts of the same Gene
-                    )
-            );
+        }*/
+        return PresentGenes.GetGeneCounts(_contigs);
     }
 
     public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)

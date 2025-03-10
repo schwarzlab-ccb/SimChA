@@ -6,30 +6,23 @@ public class Region : GenRange
     public bool Hap1 { get; }
     public List<SNV> SNVs { get; }
 
-    public Dictionary<GeneListType, List<Gene>> PresentGenes { get; }
+    public PresentGenes PresentGenes { get; }
     
     public Region(long start, long end, string chrom, bool hap1, 
         List<SNV> snvs, Dictionary<GeneListType, List<Gene>>? presentGenes = null) : base(start, end, chrom)
     {
         Hap1 = hap1;
         SNVs = snvs;
-        PresentGenes = presentGenes ?? new Dictionary<GeneListType, List<Gene>> 
-        {
-            {GeneListType.TumorSuppressor, []},
-            {GeneListType.Oncogene, []},
-            {GeneListType.Essentiality, []},
-        };
+        PresentGenes = presentGenes != null 
+            ? new PresentGenes(presentGenes)
+            : new PresentGenes();
     }
 
     public Region(Region other) : base(other)
     {
         Hap1 = other.Hap1;
         SNVs = new List<SNV>(other.SNVs);
-        PresentGenes = new Dictionary<GeneListType, List<Gene>>(other.PresentGenes
-            .ToDictionary(
-                kvp => kvp.Key, 
-                kvp => new List<Gene>(kvp.Value)
-            ));
+        PresentGenes = new PresentGenes(other.PresentGenes);
     }
 
     public override bool Equals(object? obj) 
@@ -70,11 +63,11 @@ public class Region : GenRange
 
     private void UpdatePresentGenes() 
     {
-        foreach (var type in PresentGenes.Keys)
+        foreach (var type in PresentGenes.Genes.Keys)
         {
-            foreach (var gene in PresentGenes[type].Where(g => !g.IsInsideOf(this)).ToList())
+            foreach (var gene in PresentGenes.Genes[type].Where(g => !g.IsInsideOf(this)).ToList())
             {
-                PresentGenes[type].Remove(gene);
+                PresentGenes.Genes[type].Remove(gene);
             }
         }
     }

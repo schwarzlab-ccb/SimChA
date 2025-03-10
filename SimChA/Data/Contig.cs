@@ -6,7 +6,7 @@ public class Contig
 {
     private long _length;
     private List<Region> _regions;
-    private Dictionary<GeneListType, Dictionary<Gene, int>> _presentGeneCounts;
+    public PresentGenes PresentGenes { get; private set;}
     private List<Region> Regions
     {
         get => _regions;
@@ -14,7 +14,7 @@ public class Contig
         {
             _regions = value;
             _length = _regions.Count > 0 ? RegionOps.CountLength(_regions) : 0;
-            _presentGeneCounts = RegionOps.CountGenes(_regions);
+            PresentGenes = PresentGenes.CollectGenes(_regions);
         }
     }
 
@@ -22,30 +22,21 @@ public class Contig
     {
         _regions = new List<Region>();
         _length = 0;
-        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>>
-        {
-            {GeneListType.TumorSuppressor, []},
-            {GeneListType.Oncogene, []},
-            {GeneListType.Essentiality, []},
-        };
+        PresentGenes = new PresentGenes();
     }
 
     public Contig(IEnumerable<Region> regions)
     {
         _regions = regions.ToList();
         _length = RegionOps.CountLength(_regions);
-        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>> (RegionOps.CountGenes(_regions));
+        PresentGenes = PresentGenes.CollectGenes(_regions);
     }
 
     public Contig(Contig other)
     {
         _regions = RegionOps.Copy(other.Regions);
         _length = other.Length;
-        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>> (other._presentGeneCounts
-            .ToDictionary(
-                kvp => kvp.Key,
-                kvp => new Dictionary<Gene, int>(kvp.Value)
-            ));
+        PresentGenes = new PresentGenes(other.PresentGenes);
     }
 
     public static Contig Concat(IEnumerable<Contig> contigs)
@@ -121,12 +112,7 @@ public class Contig
     {
         Regions.Clear();
         _length = 0;
-        _presentGeneCounts = new Dictionary<GeneListType, Dictionary<Gene, int>>
-        {
-            {GeneListType.TumorSuppressor, []},
-            {GeneListType.Oncogene, []},
-            {GeneListType.Essentiality, []},
-        };
+        PresentGenes = new PresentGenes();
     }
 
     public void DeleteRange(long start, long end)
@@ -261,6 +247,4 @@ public class Contig
     {
         Regions = RegionOps.MergeRegions(Regions);
     }
-    public Dictionary<GeneListType, Dictionary<Gene, int>> GetPresentGeneCounts()
-        => _presentGeneCounts;
 }

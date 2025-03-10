@@ -226,16 +226,4 @@ public static class RegionOps
     public static long CountLength(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
 
-    public static Dictionary<GeneListType, Dictionary<Gene, int>> CountGenes(IEnumerable<Region> regions)
-    {
-        return Enum.GetValues<GeneListType>()
-            .ToDictionary(
-                type => type,
-                type => regions
-                    .SelectMany(r => r.PresentGenes?.GetValueOrDefault(type, []) ?? []) // Get the List<Gene>
-                    .GroupBy(gene => gene) // Group by gene
-                    .ToDictionary(g => g.Key, g => g.Count()) // Count occurrences
-            );
-    }
-
 }
