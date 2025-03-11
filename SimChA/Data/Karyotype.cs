@@ -180,12 +180,13 @@ public class Karyotype
         PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     // Translocation might invert based on the orientation of the holiday Junction https://en.wikipedia.org/wiki/Holliday_junction
     public void ApplyTranslocation(int contigA, int contigB, long posA, long posB, bool inverted)
     {
         var refContig = _contigs[contigA];
+        PresentGenes.UpdateGeneCounts(GeneCounts, refContig.PresentGenes.Genes, null);
         var altContig = _contigs[contigB];
+        PresentGenes.UpdateGeneCounts(GeneCounts, altContig.PresentGenes.Genes, null);
         if (inverted)
         {
             altContig.Revert();
@@ -194,7 +195,9 @@ public class Karyotype
         var splitRef = refContig.Split(posA, true);
         var splitAlt = altContig.Split(posB, true);
         refContig.Join(splitAlt);
+        PresentGenes.UpdateGeneCounts(GeneCounts, null, refContig.PresentGenes.Genes);
         altContig.Join(splitRef);
+        PresentGenes.UpdateGeneCounts(GeneCounts, null, altContig.PresentGenes.Genes);
     }
 
     public void ApplyWGD()
@@ -286,10 +289,10 @@ public class Karyotype
         PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, host.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     public void ApplyRigma(int contigID, long rigmaStart, List<long> rigmaLens)
     {
         var contig = _contigs[contigID];
+        var genesToRemove = contig.PresentGenes.Genes;
         bool lastWasDeletion = false;
         foreach (long len in rigmaLens)
         {
@@ -304,11 +307,12 @@ public class Karyotype
 
             lastWasDeletion = !lastWasDeletion;
         }
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     public void ApplyPointMutation(int contigID, long location, Nucleotide newNucleotide)
     {
+        // NOTE: PointMutations do not currently affect GeneCounts list
         var contig = _contigs[contigID];
         var oldNucleotide = GenRef.GetRefBaseFromSeq(contig.GetSeq(GenRef), (int) location);
         contig.PointMutate(location, oldNucleotide, newNucleotide);
