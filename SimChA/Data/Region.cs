@@ -5,7 +5,6 @@ public class Region : GenRange
 {
     public bool Hap1 { get; }
     public List<SNV> SNVs { get; }
-
     public PresentGenes PresentGenes { get; }
     
     public Region(long start, long end, string chrom, bool hap1, 
