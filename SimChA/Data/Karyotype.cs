@@ -214,7 +214,6 @@ public class Karyotype
         PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     public void ApplyChromoplexy(List<int> contigIDs, List<List<long>> stops, IEnumerable<int> sequence,
         List<long> breakpoints)
     {
@@ -223,11 +222,16 @@ public class Karyotype
                 .Select(i => _contigs[contigIDs[i]].Scatter(stops[i]))
                 .SelectMany(x => x)
                 .ToList();
+        foreach (var c in subContigs)
+        {
+            PresentGenes.UpdateGeneCounts(GeneCounts, c.PresentGenes.Genes, null);
+        }
         var ordered = Contig.Concat(sequence.Select(i => subContigs[i]));
         var newContigs = ordered.Scatter(breakpoints).ToList();
         for (int i = 0; i < contigIDs.Count; i++)
         {
             _contigs[contigIDs[i]] = newContigs[i];
+            PresentGenes.UpdateGeneCounts(GeneCounts, null, newContigs[i].PresentGenes.Genes);
         }
     }
 
