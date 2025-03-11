@@ -19,7 +19,7 @@ public static class Fitness
         double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar), kar.Sex, normGenes));
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar), kar.Sex, normGenes));
         */
-        var geneCounts = kar.GetPresentGeneCounts();
+        var geneCounts = kar.GeneCounts;
         double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GetOGs, geneCounts[GeneListType.Oncogene]), kar.Sex, normGenes));
         double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GetTSGs, geneCounts[GeneListType.TumorSuppressor]), kar.Sex, normGenes));
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GetEssGenes, geneCounts[GeneListType.Essentiality]), kar.Sex, normGenes));

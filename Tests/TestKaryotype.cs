@@ -382,18 +382,18 @@ public class TestKaryotype
     [Test]
     public void TestGetPresentGeneCounts()
     {
-        var geneCounts = _kar.GetPresentGeneCounts();
+        var geneCounts = _kar.GeneCounts;
         var tsgs = geneCounts[GeneListType.TumorSuppressor];
-        var ogs  = geneCounts[GeneListType.Oncogene];
-        var ess  = geneCounts[GeneListType.Essentiality];
+        var ogs = geneCounts[GeneListType.Oncogene];
+        var ess = geneCounts[GeneListType.Essentiality];
         for (int i = 0; i < 23; i++)
         {
             _kar.ApplyContigDeletion(i);
         }
-        var newGeneCounts = _kar.GetPresentGeneCounts();
+        var newGeneCounts = _kar.GeneCounts;
         var newTsgs = newGeneCounts[GeneListType.TumorSuppressor];
-        var newOgs  = newGeneCounts[GeneListType.Oncogene];
-        var newEss  = newGeneCounts[GeneListType.Essentiality];
+        var newOgs = newGeneCounts[GeneListType.Oncogene];
+        var newEss = newGeneCounts[GeneListType.Essentiality];
         foreach (var kvp in tsgs)
         {
             if (!newTsgs.TryGetValue(kvp.Key, out int value))
@@ -407,6 +407,7 @@ public class TestKaryotype
                 Assert.AreNotEqual(kvp.Value, value);
             }
         }
+        
         foreach (var kvp in ogs)
         {
             if (!newOgs.TryGetValue(kvp.Key, out int value))
