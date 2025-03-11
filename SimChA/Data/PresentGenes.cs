@@ -38,29 +38,27 @@ public class PresentGenes
                     .SelectMany(c => c.PresentGenes.Genes.GetValueOrDefault(type, []) ?? [])
                     .ToLookup(gene => gene)
                     .ToDictionary(g => g.Key, g => g.Count()));
-
+    
     public static void UpdateGeneCounts(
         Dictionary<GeneListType, Dictionary<Gene, int>> current,
         Dictionary<GeneListType, List<Gene>>? toRemove,
         Dictionary<GeneListType, List<Gene>>? toAdd
     )
     {
-        foreach (var type in current.Keys)
+        foreach (var (type, geneDict) in current)
         {
-            var typeCurrent = current[type];
             if (toRemove != null)
             {
                 foreach (var gene in toRemove.GetValueOrDefault(type, []))
                 {
-                    typeCurrent[gene] -= 1;
+                    geneDict[gene] -= 1;
                 }
             }
-
             if (toAdd != null)
             {
                 foreach (var gene in toAdd.GetValueOrDefault(type, []))
                 {
-                    typeCurrent[gene] += 1;
+                    geneDict[gene] += 1;
                 }
             }
         }
