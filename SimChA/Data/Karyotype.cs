@@ -123,20 +123,21 @@ public class Karyotype
         PresentGenes.UpdateGeneCounts(GeneCounts, null, newTail.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
     {
         var contig = _contigs[contigID];
+        var genesToRemove = contig.PresentGenes.Genes;
         long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
         contig.Bridge(tailSplit, fiveToThree);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
     public void ApplyContigDeletion(int contigID)
     {
         var contig = _contigs[contigID];
-        var lostGenes = contig.PresentGenes.Genes;
+        var genesToRemove = contig.PresentGenes.Genes;
         contig.Clear();
-        PresentGenes.UpdateGeneCounts(GeneCounts, lostGenes, null);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, null);
     }
 
     public void ApplyContigDuplication(int contigID)
@@ -149,34 +150,34 @@ public class Karyotype
     public void ApplyInternalDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
-        var genesBefore = contig.PresentGenes.Genes;
+        var genesToRemove = contig.PresentGenes.Genes;
         contig.DuplicateRange(startPos, endPos);
-        PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
     public void ApplyInvertedDuplication(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
-        var genesBefore = contig.PresentGenes.Genes;
+        var genesToRemove = contig.PresentGenes.Genes;
         contig.DuplicateRange(startPos, endPos);
         contig.InvertRange(endPos, endPos + (endPos - startPos));
-        PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
     public void ApplyInternalInversion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
-        var genesBefore = contig.PresentGenes.Genes;
+        var genesToRemove = contig.PresentGenes.Genes;
         contig.InvertRange(startPos, endPos);
-        PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
     public void ApplyInternalDeletion(int contigID, long startPos, long endPos)
     {
         var contig = _contigs[contigID];
-        var genesBefore = contig.PresentGenes.Genes;
+        var genesToRemove = contig.PresentGenes.Genes;
         contig.DeleteRange(startPos, endPos);
-        PresentGenes.UpdateGeneCounts(GeneCounts, genesBefore, contig.PresentGenes.Genes);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
     // TODO: Implement Update GeneCounts
@@ -202,11 +203,12 @@ public class Karyotype
         PresentGenes.DoubleGeneCounts(GeneCounts);
     }
 
-    // TODO: Implement Update GeneCounts
     public void ApplyChromothripsis(int contigID, List<long> stops, IEnumerable<int> selection)
     {
         var contig = _contigs[contigID];
+        var genesToRemove = contig.PresentGenes.Genes;
         contig.ScatterAndGather(stops, selection);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
     // TODO: Implement Update GeneCounts
@@ -226,19 +228,19 @@ public class Karyotype
         }
     }
 
-    // TODO: Implement Update GeneCounts
     public void ApplyPyrgo(int contigID, List<(long start, long len)> frags)
     {
         var contig = _contigs[contigID];
+        var genesToRemove = contig.PresentGenes.Genes;
         long offset = 0;
         foreach ((long start, long len) in frags)
         {
             contig.DuplicateRange(start + offset, start + offset + len);
             offset += len;
         }
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, contig.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     // Fragments that do not return to the original chromosome
     public void ApplyTIChain(List<(int id, long start, long len, bool dir)> frags)
     {
@@ -249,13 +251,14 @@ public class Karyotype
         }
 
         _contigs.Add(template);
+        PresentGenes.UpdateGeneCounts(GeneCounts, null, template.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     // First segment is the host, but there is no repetition
     public void ApplyTIBridge(List<(int id, long start, long len, bool dir)> frags)
     {
         var host = _contigs[frags[0].id];
+        var genesToRemove = host.PresentGenes.Genes;
         var template = new Contig();
         foreach (var frag in frags.Skip(1))
         {
@@ -264,13 +267,14 @@ public class Karyotype
         }
 
         host.InsertContig(template, frags[0].start);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, host.PresentGenes.Genes);
     }
 
-    // TODO: Implement Update GeneCounts
     // First segment is the host, with repetition
     public void ApplyTICycle(List<(int id, long start, long len, bool dir)> frags)
     {
         var host = _contigs[frags[0].id];
+        var genesToRemove = host.PresentGenes.Genes;
         var template = new Contig();
         foreach (var frag in frags)
         {
@@ -279,6 +283,7 @@ public class Karyotype
         }
 
         host.InsertContig(template, frags[0].start);
+        PresentGenes.UpdateGeneCounts(GeneCounts, genesToRemove, host.PresentGenes.Genes);
     }
 
     // TODO: Implement Update GeneCounts

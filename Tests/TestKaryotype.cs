@@ -382,56 +382,45 @@ public class TestKaryotype
     [Test]
     public void TestGetPresentGeneCounts()
     {
-        var geneCounts = _kar.GeneCounts;
-        var tsgs = geneCounts[GeneListType.TumorSuppressor];
-        var ogs = geneCounts[GeneListType.Oncogene];
-        var ess = geneCounts[GeneListType.Essentiality];
+        // Assumes _kar is male
         for (int i = 0; i < 23; i++)
         {
             _kar.ApplyContigDeletion(i);
         }
-        var newGeneCounts = _kar.GeneCounts;
-        var newTsgs = newGeneCounts[GeneListType.TumorSuppressor];
-        var newOgs = newGeneCounts[GeneListType.Oncogene];
-        var newEss = newGeneCounts[GeneListType.Essentiality];
-        foreach (var kvp in tsgs)
+        var geneCounts = _kar.GeneCounts;
+        var tsgs = geneCounts[GeneListType.TumorSuppressor];
+        var ogs = geneCounts[GeneListType.Oncogene];
+        var ess = geneCounts[GeneListType.Essentiality];
+        foreach (var (gene, count) in tsgs)
         {
-            if (!newTsgs.TryGetValue(kvp.Key, out int value))
+            if (gene.Chrom != "chrX")
             {
-                Assert.AreEqual("chrX", kvp.Key.Chrom);
-            } else if ("chrY" == kvp.Key.Chrom)
+                Assert.AreEqual(1, count);
+            } else
             {
-                Assert.AreEqual(kvp.Value, value);
-            } else 
-            {
-                Assert.AreNotEqual(kvp.Value, value);
+                Assert.AreEqual(0, count);
             }
         }
         
-        foreach (var kvp in ogs)
+        foreach (var (gene, count) in ogs)
         {
-            if (!newOgs.TryGetValue(kvp.Key, out int value))
+            if (gene.Chrom != "chrX")
             {
-                Assert.AreEqual("chrX", kvp.Key.Chrom);
-            } else if ("chrY" == kvp.Key.Chrom)
+                Assert.AreEqual(1, count);
+            } else
             {
-                Assert.AreEqual(kvp.Value, value);
-            } else 
-            {
-                Assert.AreNotEqual(kvp.Value, value);
+                Assert.AreEqual(0, count);
             }
             
         }
-        foreach (var kvp in ess)
+        foreach (var (gene, count) in ess)
         {
-            if (!newEss.TryGetValue(kvp.Key, out int value))
+            if (gene.Chrom != "chrX")
             {
-                Assert.AreEqual("chrX", kvp.Key.Chrom);
-            } else if ("chrY" == kvp.Key.Chrom)
+                Assert.AreEqual(1, count);
+            } else
             {
-                Assert.AreEqual(kvp.Value, value);
-            } else {
-                Assert.AreNotEqual(kvp.Value, value);
+                Assert.AreEqual(0, count);
             }
         }
     }
