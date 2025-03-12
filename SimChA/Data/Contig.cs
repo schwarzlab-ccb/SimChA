@@ -4,10 +4,18 @@ namespace SimChA.Data;
 
 public class Contig
 {
-    public long Length { get; private set; }
-    public List<SNV> SNVs { get; private set; }
-    
-    public List<Gene> Genes { get; private set; }
+
+    private long _length = -1;
+    public long Length 
+        => _length < 0 ? _length = RegionOps.CountLength(_regions) : _length;
+
+    private List<SNV>? _snvs;
+    public List<SNV> SNVs 
+        => _snvs ??= _regions.SelectMany(r => r.SNVs).ToList();
+
+    private List<Gene>? _genes;
+    public List<Gene> Genes 
+        => _genes ??= _regions.SelectMany(r => r.Genes).ToList();
     
     private List<Region> _regions;
     private List<Region> Regions
@@ -16,28 +24,26 @@ public class Contig
         set
         {
             _regions = value;
-            Length = _regions.Count > 0 ? RegionOps.CountLength(_regions) : 0;
-            SNVs = _regions.SelectMany(r => r.SNVs).ToList();
-            Genes = _regions.SelectMany(r => r.Genes).ToList();
+            _length = -1;
+            _snvs = null;
+            _genes = null;
         }
     }
+
     public Contig()
     {
         _regions = [];
-        Length = 0;
-        SNVs = [];
-        Genes = [];
     }
 
     public Contig(IEnumerable<Region> regions) 
-        => Regions = regions.ToList();
+        => _regions = regions.ToList();
 
     public Contig(Contig other)
     {
         _regions = RegionOps.Copy(other.Regions);
-        Length = other.Length;
-        SNVs = [..other.SNVs];
-        Genes = [..other.Genes];
+        _length = other._length;
+        _snvs = other._snvs == null ? null : [..other._snvs];
+        _genes =  other._genes == null ? null : [..other._genes];
     }
 
     public static Contig Concat(IEnumerable<Contig> contigs)
@@ -99,8 +105,7 @@ public class Contig
 
     public void Clear()
     {
-        Regions.Clear();
-        Length = 0;
+        Regions = [];
     }
 
     public void DeleteRange(long start, long end)
@@ -202,7 +207,7 @@ public class Contig
     public void PointMutate(long location, Nucleotide oldNucleotide, Nucleotide newNucleotide)
     {
         RegionOps.PointMutateRegion(Regions, location, oldNucleotide, newNucleotide);
-        SNVs = _regions.SelectMany(r => r.SNVs).ToList();
+        _snvs = null;
     }
 
     public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
