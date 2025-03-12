@@ -56,10 +56,10 @@ public static class Parsers
             string sample = lineSplit[0];
             if (!sampleSegs.ContainsKey(sample))
             {
-                sampleSegs[sample] = new List<(string chrom, int start, int end, int cnA, int cnB)>();
+                sampleSegs[sample] = [];
             }
             string chrom = lineSplit[1];
-            if (autosomesOnly && chrom is "chrX" or "chrY")
+            if (autosomesOnly && (chrom == genRef.YChrName || chrom == genRef.XChrName))
             {
                 continue;
             }
@@ -84,11 +84,11 @@ public static class Parsers
                 chrXfound |= chrNo == "chrX";
                 for (int i = 0; i < cnA; i++)
                 {
-                    regionsA.Add(new Region(start, end, chrNo, true, new List<SNV>()));
+                    regionsA.Add(new Region(start, end, chrNo, true, [], []));
                 }
                 for (int i = 0; i < cnB; i++)
                 {
-                    regionsB.Add(new Region(start, end, chrNo, false, new List<SNV>()));
+                    regionsB.Add(new Region(start, end, chrNo, false, [], []));
                 }
             }
             
@@ -102,7 +102,7 @@ public static class Parsers
         return result;
     }
 
-    public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames)
+    public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames, GeneListType type)
     {
         // Pre-initialization
         var geneList = chrNames.ToDictionary(c => c, _ => new List<Gene>());
@@ -117,7 +117,7 @@ public static class Parsers
                 // Convert to zero-based [start, end) index 
                 int start = int.Parse(genString[1]) - 1;
                 int end = int.Parse(genString[2]);
-                var gene = new Gene(start, end, chrom, name, fitness);
+                var gene = new Gene(start, end, chrom, name, fitness, type);
                 geneList[chrom].Add(gene);
             }
         }

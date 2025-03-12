@@ -5,23 +5,21 @@ public class Region : GenRange
 {
     public bool Hap1 { get; }
     public List<SNV> SNVs { get; }
-    public PresentGenes PresentGenes { get; }
+    public List<Gene> Genes { get; }
     
     public Region(long start, long end, string chrom, bool hap1, 
-        List<SNV> snvs, Dictionary<GeneListType, List<Gene>>? presentGenes = null) : base(start, end, chrom)
+        List<SNV> snvs, List<Gene> presentGenes) : base(start, end, chrom)
     {
         Hap1 = hap1;
         SNVs = snvs;
-        PresentGenes = presentGenes != null 
-            ? new PresentGenes(presentGenes)
-            : new PresentGenes();
+        Genes = presentGenes;
     }
 
     public Region(Region other) : base(other)
     {
         Hap1 = other.Hap1;
         SNVs = [..other.SNVs];
-        PresentGenes = new PresentGenes(other.PresentGenes);
+        Genes = [..other.Genes];
     }
 
     public override bool Equals(object? obj) 
@@ -48,34 +46,10 @@ public class Region : GenRange
 
     private void UpdateRegion()
     {
-        UpdateSNVs();
-        UpdatePresentGenes();
+        SNVs.RemoveAll(snv => snv.Pos <= AbsStart || AbsEnd <= snv.Pos);
+        Genes.RemoveAll(g => !g.IsInsideOf(this));
     }
     
-    private void UpdateSNVs()
-    {
-        foreach (var snv in SNVs.Where(snv => snv.Pos <= AbsStart || AbsEnd <= snv.Pos).ToList())
-        {
-            SNVs.Remove(snv);
-        }
-    }
-
-    private void UpdatePresentGenes() 
-    {
-        foreach (var type in PresentGenes.Genes.Keys)
-        {
-            foreach (var gene in PresentGenes.Genes[type].Where(g => !g.IsInsideOf(this)).ToList())
-            {
-                PresentGenes.Genes[type].Remove(gene);
-            }
-        }
-    }
-
-    private void AddSNVs(List<SNV> snvs)
-    {
-        SNVs.AddRange(snvs);
-    }
-
     public void AddSNV(long offset, Nucleotide oldNucleotide, Nucleotide newNucleotide)
     {
         int index = SNVs.FindIndex(s => s.Pos == AbsStart + offset);
@@ -108,31 +82,29 @@ public class Region : GenRange
         => $"{HapString}{base.ToString()}";
 
     public int CountSNVs(long start, long end)
-        => SNVs?.Count(s => s.Pos >= start && s.Pos < end) ?? 0;
+        => SNVs.Count(s => s.Pos >= start && s.Pos < end);
 
     public string GetSeq(GenRef genRef)
     {
         char[] regionSeq = genRef.GetGenContents(Chrom, (int) Start, (int) (End-Start));
         // If the GenContents haven't been set, we return the null case
-        if (regionSeq.Length == 1 && regionSeq[0] == 'N') 
+        if (regionSeq is ['N']) 
         {
             return new string(regionSeq);
         }
-        if (SNVs != null)
+        foreach (var snv in SNVs)
         {
-            foreach (var snv in SNVs)
-            {
-                long loc = snv.Pos - Start;
-                regionSeq[(int)loc] = snv.Alt.ToString()[0];
-            }
+            long loc = snv.Pos - Start;
+            regionSeq[(int)loc] = snv.Alt.ToString()[0];
         }
         regionSeq = Forward ? regionSeq : regionSeq.Reverse().ToArray();
         return new string(regionSeq);
     }
 
-    public void MergeWith(Region cur)
+    public void MergeWithNext(Region next)
     {
-        End = cur.End;
-        AddSNVs(cur.SNVs);
+        End = next.End;
+        SNVs.AddRange(next.SNVs);
+        Genes.AddRange(next.Genes);
     }
 }

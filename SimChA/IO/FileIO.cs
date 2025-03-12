@@ -244,7 +244,7 @@ public class FileIO
             {
                 var geneFile = new StreamReader(fileFullPath);
                 var chrNames = chrSex.Select(pair => pair.Key).ToList();
-                geneLists[key] = Parsers.ParseGeneList(geneFile, chrNames);
+                geneLists[key] = Parsers.ParseGeneList(geneFile, chrNames, key);
             }
             catch (Exception e)
             {

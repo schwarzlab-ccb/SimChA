@@ -20,9 +20,9 @@ public static class Fitness
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar), kar.Sex, normGenes));
         */
         var geneCounts = kar.GeneCounts;
-        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GetOGs, geneCounts[GeneListType.Oncogene]), kar.Sex, normGenes));
-        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, CalcCNs(genRef.GetTSGs, geneCounts[GeneListType.TumorSuppressor]), kar.Sex, normGenes));
-        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GetEssGenes, geneCounts[GeneListType.Essentiality]), kar.Sex, normGenes));
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneListType.Oncogene], kar.Sex, normGenes));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneListType.TumorSuppressor], kar.Sex, normGenes));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(kar.GeneCounts[GeneListType.Essentiality], normGenes));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     
@@ -53,10 +53,11 @@ public static class Fitness
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
         => cn + (2 - ExpectedCN(genRef, g.Chrom, sex));
     
-    public static double TsgOgTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, SexType sex, bool normalizeGenes = false)
+    
+    public static double TsgOgTerm(GenRef genRef, Dictionary<Gene, int> geneCNs, SexType sex, bool normalizeGenes = false)
     {
-        Func<(Gene gene, int CN), double> calsGene = 
-            pair => Math.Log(1 + GetExpRatio(genRef, sex, pair.gene, pair.CN)) * pair.gene.DeltaFitness;
+        Func<KeyValuePair<Gene, int>, double> calsGene = 
+            pair => Math.Log(1 + GetExpRatio(genRef, sex, pair.Key, pair.Value)) * pair.Key.DeltaFitness;
 
         return normalizeGenes 
             ? geneCNs.Average(calsGene)
@@ -66,41 +67,19 @@ public static class Fitness
     private static bool IsAutosome(GenRef genRef, Gene gene) 
         => gene.Chrom != genRef.XChrName && gene.Chrom != genRef.YChrName;
     
-    public static double Zygosity(GenRef genRef, IEnumerable<(Gene gene, int CN)> geneCNs, int count, bool normalizeGenes = false) 
+    public static double Zygosity(Dictionary<Gene, int> geneCNs, int count, bool normalizeGenes = false) 
         => normalizeGenes ?
-            geneCNs.Average(pair => pair.CN == count ? 1 : 0) : geneCNs.Count(pair => pair.CN == count);
-
-    private static IEnumerable<(Gene gene, int CN)> GenesForSex(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex) 
-        => sex switch
-        {
-            SexType.Female => essCNs.Where(g => g.gene.Chrom != genRef.YChrName),
-            SexType.Male => essCNs,
-            _ => essCNs.Where(pair => IsAutosome(genRef, pair.gene))
-        };
+            geneCNs.Average(pair => pair.Value == count ? 1 : 0) : geneCNs.Count(pair => pair.Value == count);
     
-    public static double EssTerm(GenRef genRef, IEnumerable<(Gene gene, int CN)> essCNs, SexType sex, bool normalizeGenes = false)
+    public static double EssTerm(Dictionary<Gene, int> geneCNs, bool normalizeGenes = false)
     {
-        var genesList = GenesForSex(genRef, essCNs, sex);
-        Func<(Gene gene, int CN), double> calsGene = pair => Math.Min(pair.CN - 1, 0) * pair.gene.DeltaFitness;
-        return normalizeGenes ? genesList.Average(calsGene) : genesList.Sum(calsGene);
+        Func<KeyValuePair<Gene, int>, double> calsGene = 
+            pair => Math.Min(pair.Value - 1, 0) * pair.Key.DeltaFitness;
+        return normalizeGenes ? geneCNs.Average(calsGene) : geneCNs.Sum(calsGene);
     }
 
-    public static IEnumerable<(Gene, int)> CalcCNs(
-        IEnumerable<Gene> searched,
-        Dictionary<Gene, int> geneCNs) {
-        return searched.Select(g => (g, geneCNs.GetValueOrDefault(g, 0)));
-    }
-    // TODO: The genes should exist on the karyotype actually
-    public static IEnumerable<(Gene, int)> CalcCNs(Dictionary<string, List<Gene>> searched, Karyotype karyotype)
+    public static IEnumerable<(Gene, int)> CalcCNs(IEnumerable<Gene> searched, Dictionary<Gene, int> geneCNs) 
     {
-        List<IEnumerable<(Gene, int)>> res = new();
-        foreach ((string chrom, var geneList) in searched)
-        {
-            var present = karyotype.GetPresentGenes(chrom, geneList);
-            var counts = present.ToLookup(g => g).ToDictionary(g => g.Key, g => g.Count());
-            var allCounts = searched[chrom].Select(g => (g, counts.GetValueOrDefault(g.Name, 0)));
-            res.Add(allCounts);
-        }
-        return res.SelectMany(v => v);
+        return searched.Select(g => (g, geneCNs.GetValueOrDefault(g, 0)));
     }
 }

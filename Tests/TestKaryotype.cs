@@ -297,7 +297,7 @@ public class TestKaryotype
         
         var contig = _kar.GetContig(contigID);
         Assert.AreEqual(1, contig.CountRegions());
-        var SNVs = contig.GetSNVs();
+        var SNVs = contig.SNVs;
         Assert.NotNull(SNVs);
         Assert.AreEqual(1, SNVs.Count);
         Assert.AreEqual(loc, SNVs[0].Pos);
@@ -311,7 +311,7 @@ public class TestKaryotype
         
         contig = _kar.GetContig(contigID);
         Assert.AreEqual(1, contig.CountRegions());
-        SNVs = contig.GetSNVs();
+        SNVs = contig.SNVs;
         Assert.NotNull(SNVs);
         Assert.AreEqual(1, SNVs.Count);
         Assert.AreEqual(loc, SNVs[0].Pos);
@@ -331,7 +331,7 @@ public class TestKaryotype
         // Check that the SNV is not present
         var contig = _kar.GetContig(contigID);
         Assert.AreEqual(2, contig.CountRegions());
-        var snvs = contig.GetSNVs();
+        var snvs = contig.SNVs;
         Assert.IsEmpty(snvs);
     }
 
@@ -348,7 +348,7 @@ public class TestKaryotype
         // Check that the SNV is present in both copies
         var contig = _kar.GetContig(contigID);
         Assert.AreEqual(2, contig.CountRegions());
-        var SNVs = contig.GetSNVs();
+        var SNVs = contig.SNVs;
         Assert.IsNotEmpty(SNVs);
         Assert.AreEqual(SNVs[0], SNVs[1]);
         Assert.AreEqual(newNucleotide, SNVs[0].Alt);
@@ -356,7 +356,7 @@ public class TestKaryotype
         // If we alter one region, the other should not be affected
         var secondNucleotide = Nucleotide.G;
         _kar.ApplyPointMutation(contigID, loc, secondNucleotide);
-        SNVs = _kar.GetContig(contigID).GetSNVs();
+        SNVs = _kar.GetContig(contigID).SNVs;
         Assert.IsNotEmpty(SNVs);
         Assert.AreNotEqual(SNVs[0], SNVs[1]);
         Assert.AreEqual(secondNucleotide, SNVs[0].Alt);

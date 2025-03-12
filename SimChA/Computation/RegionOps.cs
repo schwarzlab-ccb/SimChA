@@ -212,7 +212,7 @@ public static class RegionOps
                 var last = newRegions[^1];
                 if (last.Chrom == cur.Chrom && last.End == cur.Start)
                 {
-                    last.MergeWith(cur);
+                    last.MergeWithNext(cur);
                 }
                 else
                 {

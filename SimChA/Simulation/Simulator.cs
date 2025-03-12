@@ -15,6 +15,7 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
     protected static BaseEventData CreatePassEvent() 
         => new(new CNEventPars(CNEventType.Pass, 1));
 
+    // TODO: Simulator does not currently implement AutosomesOnly
     public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
         var (cnEventPs, mixture) = Factory.MixSignatures(sigs);
