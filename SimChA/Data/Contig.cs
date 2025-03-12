@@ -202,6 +202,7 @@ public class Contig
     public void PointMutate(long location, Nucleotide oldNucleotide, Nucleotide newNucleotide)
     {
         RegionOps.PointMutateRegion(Regions, location, oldNucleotide, newNucleotide);
+        SNVs = _regions.SelectMany(r => r.SNVs).ToList();
     }
 
     public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
@@ -224,4 +225,7 @@ public class Contig
     {
         Regions = RegionOps.MergeRegions(Regions);
     }
+    
+    public int CountGeneType(GeneLT geneType)
+        => Genes.Count(g => g.ListType == geneType);
 }

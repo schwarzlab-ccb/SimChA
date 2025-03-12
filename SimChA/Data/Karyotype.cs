@@ -11,7 +11,7 @@ public class Karyotype
 
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
-    public Dictionary<GeneListType, Dictionary<Gene, int>> GeneCounts { get; }
+    public Dictionary<GeneLT, Dictionary<Gene, int>> GeneCounts { get; }
 
     public Karyotype(GenRef genRef, SexType sex)
     {

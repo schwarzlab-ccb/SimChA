@@ -20,9 +20,9 @@ public static class Fitness
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(genRef, CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar), kar.Sex, normGenes));
         */
         var geneCounts = kar.GeneCounts;
-        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneListType.Oncogene], kar.Sex, normGenes));
-        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneListType.TumorSuppressor], kar.Sex, normGenes));
-        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(kar.GeneCounts[GeneListType.Essentiality], normGenes));
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneLT.OG], kar.Sex, normGenes));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneLT.TSG], kar.Sex, normGenes));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(kar.GeneCounts[GeneLT.Ess], normGenes));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     
@@ -76,10 +76,5 @@ public static class Fitness
         Func<KeyValuePair<Gene, int>, double> calsGene = 
             pair => Math.Min(pair.Value - 1, 0) * pair.Key.DeltaFitness;
         return normalizeGenes ? geneCNs.Average(calsGene) : geneCNs.Sum(calsGene);
-    }
-
-    public static IEnumerable<(Gene, int)> CalcCNs(IEnumerable<Gene> searched, Dictionary<Gene, int> geneCNs) 
-    {
-        return searched.Select(g => (g, geneCNs.GetValueOrDefault(g, 0)));
     }
 }

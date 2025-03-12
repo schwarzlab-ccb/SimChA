@@ -223,14 +223,14 @@ public class FileIO
         }
     }
 
-    private static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
+    private static Dictionary<GeneLT, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
     {
-        var geneLists = new Dictionary<GeneListType, Dictionary<string, List<Gene>>>();
-        var fileMap = new Dictionary<GeneListType, string>
+        var geneLists = new Dictionary<GeneLT, Dictionary<string, List<Gene>>>();
+        var fileMap = new Dictionary<GeneLT, string>
         {
-            { GeneListType.TumorSuppressor, TSGS_TSV },
-            { GeneListType.Oncogene, OGS_TSV },
-            { GeneListType.Essentiality, ESSENTIALS_TSV }
+            { GeneLT.TSG, TSGS_TSV },
+            { GeneLT.OG, OGS_TSV },
+            { GeneLT.Ess, ESSENTIALS_TSV }
         };
         foreach ((var key, string filename) in fileMap)
         {

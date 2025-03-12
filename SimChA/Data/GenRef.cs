@@ -9,7 +9,7 @@ public class GenRef
         Dictionary<string, int> chrLengths,
         Dictionary<string, SexType> chrSex,
         Dictionary<string, GenRange> centromeres,
-        Dictionary<GeneListType, Dictionary<string, List<Gene>>> geneList,
+        Dictionary<GeneLT, Dictionary<string, List<Gene>>> geneList,
         Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
@@ -70,7 +70,7 @@ public class GenRef
 
     private Dictionary<string, StringBuilder>? GenContentsDict { get; }
 
-    public Dictionary<GeneListType, Dictionary<string, List<Gene>>> GeneLists { get; }
+    public Dictionary<GeneLT, Dictionary<string, List<Gene>>> GeneLists { get; }
 
     public char[] GetGenContents(string chrom, int start, int length)
         => GenContentsDict != null
@@ -173,9 +173,9 @@ public class GenRef
         return 2;
     }
     
-    public Dictionary<GeneListType, Dictionary<Gene, int>> GetInitialGenes(SexType sexType, bool empty = false)
+    public Dictionary<GeneLT, Dictionary<Gene, int>> GetInitialGenes(SexType sexType, bool empty = false)
     {
-        var res = new Dictionary<GeneListType, Dictionary<Gene, int>>();
+        var res = new Dictionary<GeneLT, Dictionary<Gene, int>>();
         foreach (var (type, genesPerChrom) in GeneLists)
         {
             res[type] = new Dictionary<Gene, int>();

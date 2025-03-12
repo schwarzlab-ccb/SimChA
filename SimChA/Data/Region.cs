@@ -107,4 +107,7 @@ public class Region : GenRange
         SNVs.AddRange(next.SNVs);
         Genes.AddRange(next.Genes);
     }
+    
+    public int CountGeneType(GeneLT geneType)
+        => Genes.Count(g => g.ListType == geneType);
 }
