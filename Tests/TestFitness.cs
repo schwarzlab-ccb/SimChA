@@ -60,31 +60,26 @@ public class TestFitness
     [Test]
     public void TestZygosity()
     {
-        var genRef = _refs[0];
         // Hemizygous
-        Assert.AreEqual(0, Fitness.Zygosity(genRef, new List<(Gene, int)>(), 1), EPSILON);
+        Assert.AreEqual(0, Fitness.Zygosity(new List<(Gene, int)>(), 1), EPSILON);
         // Nullizygous
-        Assert.AreEqual(0, Fitness.Zygosity(genRef, new List<(Gene, int)>(), 0), EPSILON);
+        Assert.AreEqual(0, Fitness.Zygosity(new List<(Gene, int)>(), 0), EPSILON);
         
         var testNoEffect = new List<(Gene, int)> { (MakeGene("chr1", 0), 2) };
-        Assert.AreEqual(0, Fitness.Zygosity(genRef, testNoEffect, 1), EPSILON);
-        Assert.AreEqual(0, Fitness.Zygosity(genRef, testNoEffect, 0, true), EPSILON);
+        Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, 0), EPSILON);
 
         var testMissing = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 0) };
-        Assert.AreEqual(0, Fitness.Zygosity(genRef, testMissing, 1), EPSILON);
-        Assert.AreEqual(1, Fitness.Zygosity(genRef, testMissing, 0, true), EPSILON);
+        Assert.AreEqual(1, Fitness.Zygosity(testMissing, 0), EPSILON);
 
         var testHaplosufficient = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1) };
-        Assert.AreEqual(1, Fitness.Zygosity(genRef, testHaplosufficient, 1), EPSILON);
-        Assert.AreEqual(0, Fitness.Zygosity(genRef, testHaplosufficient, 0, true), EPSILON);
+        Assert.AreEqual(0, Fitness.Zygosity(testHaplosufficient, 0), EPSILON);
         
         var testList = new List<(Gene, int)> { (MakeGene("chr1", 0.1), 1), (MakeGene("chr2", 0.2), 0) };
-        Assert.AreEqual(0.5, Fitness.Zygosity(genRef, testList, 1, true), EPSILON);
-        Assert.AreEqual(1, Fitness.Zygosity(genRef, testList, 0), EPSILON);
+        Assert.AreEqual(0.5, Fitness.Zygosity(testList, 1), EPSILON);
 
         var testSexList = new List<(Gene, int)> { (MakeGene("chrX", 0.1), 1), (MakeGene("chrY", 0.2), 0) };
-        Assert.AreEqual(0.5, Fitness.Zygosity(genRef, testList, 1, true), EPSILON);
-        Assert.AreEqual(1, Fitness.Zygosity(genRef, testList, 0), EPSILON);
+        Assert.AreEqual(0.5, Fitness.Zygosity(testList, 1), EPSILON);
+
     }
 
 

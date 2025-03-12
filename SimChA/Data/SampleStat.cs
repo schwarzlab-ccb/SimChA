@@ -70,8 +70,8 @@ public record SampleStat(
         double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.GeneNormalization);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
 
-        double hemizygosity = Fitness.Zygosity(genRef, essCNs, 1);
-        double nullizygosity = Fitness.Zygosity(genRef, essCNs, 0);
+        double hemizygosity = Fitness.Zygosity(essCNs, 1);
+        double nullizygosity = Fitness.Zygosity(essCNs, 0);
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 
