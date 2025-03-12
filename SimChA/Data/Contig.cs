@@ -4,7 +4,6 @@ namespace SimChA.Data;
 
 public class Contig
 {
-    private long _length;
     private List<Region> _regions;
     public PresentGenes PresentGenes { get; private set;}
     private List<Region> Regions
@@ -13,29 +12,29 @@ public class Contig
         set
         {
             _regions = value;
-            _length = _regions.Count > 0 ? RegionOps.CountLength(_regions) : 0;
+            Length = _regions.Count > 0 ? RegionOps.CountLength(_regions) : 0;
             PresentGenes = PresentGenes.CollectGenes(_regions);
         }
     }
 
     public Contig()
     {
-        _regions = new List<Region>();
-        _length = 0;
+        _regions = [];
+        Length = 0;
         PresentGenes = new PresentGenes();
     }
 
     public Contig(IEnumerable<Region> regions)
     {
         _regions = regions.ToList();
-        _length = RegionOps.CountLength(_regions);
+        Length = RegionOps.CountLength(_regions);
         PresentGenes = PresentGenes.CollectGenes(_regions);
     }
 
     public Contig(Contig other)
     {
         _regions = RegionOps.Copy(other.Regions);
-        _length = other.Length;
+        Length = other.Length;
         PresentGenes = other.Length > 0 
             ? new PresentGenes(other.PresentGenes)
             : new PresentGenes();
@@ -44,9 +43,8 @@ public class Contig
     public static Contig Concat(IEnumerable<Contig> contigs)
         => new(contigs.SelectMany(c => c.Regions));
     
-    public long Length
-        => _length;
-    
+    public long Length { get; private set; }
+
     public int CountRegions()
         => Regions.Count;
 
@@ -77,7 +75,7 @@ public class Contig
         {
             if (!breaks.ContainsKey(region.Chrom))
             {
-                breaks[region.Chrom] = new List<int>();
+                breaks[region.Chrom] = [];
             }
             breaks[region.Chrom].Add((int)region.AbsStart);
             breaks[region.Chrom].Add((int)region.AbsEnd);
@@ -86,18 +84,11 @@ public class Contig
     }
 
     public bool Any()
-        => _length > 0;
+        => Length > 0;
     
-    public IEnumerable<string> GetSeq(GenRef genRef)
-    {
-        var seq = new List<string>();
-        foreach (var r in Regions)
-        {
-            seq.Add(r.GetSeq(genRef));
-        }
-        return seq;
-    }
-    
+    public IEnumerable<string> GetSeq(GenRef genRef) 
+        => Regions.Select(r => r.GetSeq(genRef)).ToList();
+
     public List<SNV> GetSNVs()
         => Regions.SelectMany(r => r.SNVs).ToList();
 
@@ -113,7 +104,7 @@ public class Contig
     public void Clear()
     {
         Regions.Clear();
-        _length = 0;
+        Length = 0;
         PresentGenes = new PresentGenes();
     }
 
@@ -140,7 +131,7 @@ public class Contig
         RegionOps.Revert(inverse);
         var deleted = RegionOps.DeleteRange(Regions, invStart, invEnd);
         var (first, second) = RegionOps.SplitRegions(deleted, invStart);
-        Regions = RegionOps.ConcatRegions(new[] { first, inverse, second });
+        Regions = RegionOps.ConcatRegions([first, inverse, second]);
     }
 
     public void Revert()
@@ -153,7 +144,7 @@ public class Contig
         // TODO: Should be replace with TakeUntil and TakeFrom
         var (_, second) = RegionOps.SplitRegions(Regions, start);
         var (first, _) = RegionOps.SplitRegions(Regions, end);
-        Regions = RegionOps.ConcatRegions(new[] { first, second });
+        Regions = RegionOps.ConcatRegions([first, second]);
     }
 
     public void Bridge(long pos, bool cutFront)
@@ -204,7 +195,7 @@ public class Contig
         else
         {
             var (first, second) = RegionOps.SplitRegions(Regions, location);
-            Regions = RegionOps.ConcatRegions(new[] { first, other.Regions, second });
+            Regions = RegionOps.ConcatRegions([first, other.Regions, second]);
         }
     }
 
@@ -218,7 +209,6 @@ public class Contig
         RegionOps.PointMutateRegion(Regions, location, oldNucleotide, newNucleotide);
     }
     
-
     public IEnumerable<string> GetPresentGenes(string chrom, List<Gene> geneList)
         => Regions
             .Where(r => r.Chrom == chrom && r.Forward)
@@ -231,7 +221,7 @@ public class Contig
 
     public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
     {
-        List<(long start, long end)> centromereList = new();
+        List<(long start, long end)> centromereList = [];
         long currentPos = 0;
         foreach (var reg in Regions)
         {

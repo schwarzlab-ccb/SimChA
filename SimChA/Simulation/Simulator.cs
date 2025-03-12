@@ -5,20 +5,12 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class Simulator
+public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
 {
-    protected Random Rnd  { get; }
-    protected GenRef GenRef  { get; }
-    protected FitParams FitParams  { get; }
-    protected SimParams SimParams { get; }
-    
-    public Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
-    {
-        Rnd = rnd;
-        GenRef = genRef;
-        FitParams = fitParams;
-        SimParams = simParams;
-    }
+    protected Random Rnd  { get; } = rnd;
+    protected GenRef GenRef  { get; } = genRef;
+    protected FitParams FitParams  { get; } = fitParams;
+    protected SimParams SimParams { get; } = simParams;
 
     protected static BaseEventData CreatePassEvent() 
         => new(new CNEventPars(CNEventType.Pass, 1));

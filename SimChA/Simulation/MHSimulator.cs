@@ -5,15 +5,10 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class MHSimulator : Simulator
+public class MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, MHParams mhParams)
+    : Simulator(rnd, genRef, simParams, fitParams)
 {
-    private MHParams MHParams { get; }
-
-    public MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, MHParams mhParams)
-        : base(rnd, genRef, simParams, fitParams)
-    {
-        MHParams = mhParams;
-    }
+    private MHParams MHParams { get; } = mhParams;
 
     private List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
     {

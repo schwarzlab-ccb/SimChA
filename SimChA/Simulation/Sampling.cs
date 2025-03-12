@@ -72,7 +72,7 @@ public static class Sampling
         };
     }
 
-    public static double GetParetoScale(double mean) 
+    private static double GetParetoScale(double mean) 
         => 1.0/2.0*(-1.0 + Math.Sqrt(1.0 + 4.0*mean*mean));
 
     public static double SampleParetoLim(Random rnd, double mean)

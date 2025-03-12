@@ -149,7 +149,7 @@ public class FileIO
     public static (CTreeNode root, List<CTreeNode> tree) ReadCloneTree(string filePath, bool parseFitness)
     {
         string fileFullPath = Path.GetFullPath(filePath);
-        string fileFormat = filePath.Substring(filePath.Length - 3);
+        string fileFormat = filePath[^3..];
         if (fileFormat != "tsv" && fileFormat != "csv")
         {
             throw new Exception($"File {filePath} should be a tsv or csv.");
@@ -177,7 +177,7 @@ public class FileIO
         }
     }
 
-    public static Dictionary<string, StringBuilder> ReadFasta(List<string> allChrs, string folder)
+    private static Dictionary<string, StringBuilder> ReadFasta(List<string> allChrs, string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, GENOME_FASTA));
         if (!File.Exists(fileFullPath))
@@ -222,8 +222,8 @@ public class FileIO
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
-    
-    public static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
+
+    private static Dictionary<GeneListType, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
     {
         var geneLists = new Dictionary<GeneListType, Dictionary<string, List<Gene>>>();
         var fileMap = new Dictionary<GeneListType, string>

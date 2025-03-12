@@ -20,7 +20,7 @@ public class Region : GenRange
     public Region(Region other) : base(other)
     {
         Hap1 = other.Hap1;
-        SNVs = new List<SNV>(other.SNVs);
+        SNVs = [..other.SNVs];
         PresentGenes = new PresentGenes(other.PresentGenes);
     }
 
