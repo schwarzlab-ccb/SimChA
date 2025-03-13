@@ -161,7 +161,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitParams(0.001, 0.01, 0.000_1, true);
+        var fit = new FitParams(0.001, 0.01, 0.000_1, true, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 
@@ -171,7 +171,7 @@ public class TestFitness
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
         karyotype.MergeRegions();
-        var fit = new FitParams(0.001, 0.01, 0.000_1, true);
+        var fit = new FitParams(0.001, 0.01, 0.000_1, true, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 

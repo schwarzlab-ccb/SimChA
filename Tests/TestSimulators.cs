@@ -16,9 +16,9 @@ public class TestSimulators
     private GenRef _genRef;
     
     private static List<Signature> MakeSigs(List<CNEventPars> eventPs) 
-        => new() { new ("TestSig", 1, eventPs) };
+        => [new("TestSig", 1, eventPs)];
     
-    private static List<CTreeNode> EmptyTree(CTreeNode node) => new() { node };
+    private static List<CTreeNode> EmptyTree(CTreeNode node) => [node];
 
     private List<Signature> _baseEvs;
 
@@ -72,21 +72,21 @@ public class TestSimulators
     public void TestSimulatorsBase(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);
-        List<CNEventPars> eventPs = new()
-        {
-            new CNEventPars(CNEventType.ChromDuplication, 1),
-            new CNEventPars(CNEventType.ChromDeletion, 1),
-            new CNEventPars(CNEventType.ArmDeletion, 1),
-            new CNEventPars(CNEventType.ArmDuplication, 1),
-            new CNEventPars(CNEventType.InternalDeletion, 1, .1),
-            new CNEventPars(CNEventType.InternalDuplication, 1, .1),
-            new CNEventPars(CNEventType.InternalInversion, 1, .1),
-            new CNEventPars(CNEventType.InvertedDuplication, 1, .1),
-            new CNEventPars(CNEventType.TailDeletion, 1, .3),
-            new CNEventPars(CNEventType.TailDuplication, 1, .3),
-            new CNEventPars(CNEventType.CentromereBoundDeletion, 1, .2),
-            new CNEventPars(CNEventType.CentromereBoundDuplication, 1, .2),
-        };
+        List<CNEventPars> eventPs =
+        [
+            new(CNEventType.ChromDuplication, 1),
+            new(CNEventType.ChromDeletion, 1),
+            new(CNEventType.ArmDeletion, 1),
+            new(CNEventType.ArmDuplication, 1),
+            new(CNEventType.InternalDeletion, 1, .1),
+            new(CNEventType.InternalDuplication, 1, .1),
+            new(CNEventType.InternalInversion, 1, .1),
+            new(CNEventType.InvertedDuplication, 1, .1),
+            new(CNEventType.TailDeletion, 1, .3),
+            new(CNEventType.TailDuplication, 1, .3),
+            new(CNEventType.CentromereBoundDeletion, 1, .2),
+            new(CNEventType.CentromereBoundDuplication, 1, .2)
+        ];
         int dist = 10;
         var root = new CTreeNode("root", "root", 0, 1);
         var tree = Enumerable.Range(1, 2)

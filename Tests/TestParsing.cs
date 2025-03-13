@@ -27,7 +27,7 @@ public class TestParsing
     [Test]
     public void TestConfigSerialization()
     {
-        var config = new SimChAConfig(new SimParams(), new ChAParams(), new FitParams());
+        var config = new SimChAConfig(new SimParams(), new FitParams());
         var options = new JsonSerializerOptions { WriteIndented = true };
         string serialized = JsonSerializer.Serialize(config, options);
         var deserialized = JsonSerializer.Deserialize<SimChAConfig>(serialized);
@@ -41,7 +41,7 @@ public class TestParsing
     [Test]
     public void TestParseGeneLists()
     {
-        var tsgList = _genRef.AllChrs.ToDictionary(t => t, t => new List<Gene>());
+        var tsgList = _genRef.AllChrs.ToDictionary(t => t, _ => new List<Gene>());
 
         string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
 

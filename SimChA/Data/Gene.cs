@@ -5,6 +5,5 @@ public class Gene(long start, long end, string chrom, string name, double deltaF
 {
     public string Name { get; } = name;
     public double DeltaFitness { get; } = deltaFitness;
-    
     public GeneLT ListType { get; } = listType;
 }

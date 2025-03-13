@@ -2,7 +2,6 @@
 using SimChA.Computation;
 namespace SimChA.Data;
 
-
 public record SampleStat(
     string SampleId,
     string ParentId,

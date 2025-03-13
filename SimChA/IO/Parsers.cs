@@ -93,7 +93,7 @@ public static class Parsers
             
             var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
             var sexType = chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
-            var kar = new Karyotype(genRef, newRegs,  sexType);
+            var kar = new Karyotype(genRef, newRegs, sexType);
             result[sample] = kar;
         }
 

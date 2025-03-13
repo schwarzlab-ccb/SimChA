@@ -20,7 +20,7 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
     {
         var (cnEventPs, mixture) = Factory.MixSignatures(sigs);
         var res = new List<Sample>();
-        var sex = Sampling.GetSex(Rnd, SimParams.Sex);
+        var sex = FitParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
         var rootKar = new Karyotype(GenRef, sex);
         if (SimParams.TetraploidStart)
         {

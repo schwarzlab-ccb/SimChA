@@ -4,7 +4,6 @@ namespace SimChA.Data;
 
 public class Contig
 {
-
     private long _length = -1;
     public long Length 
         => _length < 0 ? _length = RegionOps.CountLength(_regions) : _length;

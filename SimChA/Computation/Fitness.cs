@@ -47,15 +47,11 @@ public static class Fitness
     private static double GetExpRatio(GenRef genRef, SexType sex, Gene g, int cn)
         => cn + (2 - ExpectedCN(genRef, g.Chrom, sex));
     
-    
     public static double TsgOgTerm(GenRef genRef, Dictionary<Gene, int> geneCNs, SexType sex, bool normalizeGenes = false)
     {
         Func<KeyValuePair<Gene, int>, double> calsGene = 
             pair => Math.Log(1 + GetExpRatio(genRef, sex, pair.Key, pair.Value)) * pair.Key.DeltaFitness;
-
-        return normalizeGenes 
-            ? geneCNs.Average(calsGene)
-            : geneCNs.Sum(calsGene);
+        return normalizeGenes ? geneCNs.Average(calsGene) : geneCNs.Sum(calsGene);
     }
 
     private static bool IsAutosome(GenRef genRef, Gene gene) 

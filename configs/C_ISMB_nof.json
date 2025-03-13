@@ -1,11 +1,8 @@
 {
     "SimParams": {
+        "Seed": 0,
         "RateMean": 89.82,
         "RateDist": "Geometric"
-    },
-    "ChAParams": {
-        "Seed": 0,
-        "AutosomesOnly": true
     },
     "FitParams": { },
     "EvoParams": { },
