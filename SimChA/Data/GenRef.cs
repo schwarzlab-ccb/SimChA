@@ -195,7 +195,7 @@ public class GenRef
         => GeneLists.SelectMany(geneTypeList => geneTypeList.Value[chrNo]);
 
     private Region GetRegion(string chrNo, bool isFirstHaplotype)
-        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, [], GetRegionGenes(chrNo).ToList());
+        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetRegionGenes(chrNo).ToList());
 
     private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap)
         => ChrIDsForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });

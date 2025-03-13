@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -73,8 +72,8 @@ public static class Parsers
         // Convert samples to karyotypes
         foreach ((string sample, var segs) in sampleSegs)
         {
-            List<Region> regionsA = new();
-            List<Region> regionsB = new();
+            List<Region> regionsA = [];
+            List<Region> regionsB = [];
             bool chrYfound = false;
             bool chrXfound = false;
             
@@ -84,11 +83,11 @@ public static class Parsers
                 chrXfound |= chrNo == "chrX";
                 for (int i = 0; i < cnA; i++)
                 {
-                    regionsA.Add(new Region(start, end, chrNo, true, [], []));
+                    regionsA.Add(new Region(start, end, chrNo, true, null, []));
                 }
                 for (int i = 0; i < cnB; i++)
                 {
-                    regionsB.Add(new Region(start, end, chrNo, false, [], []));
+                    regionsB.Add(new Region(start, end, chrNo, false, null, []));
                 }
             }
             

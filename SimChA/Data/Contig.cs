@@ -40,7 +40,7 @@ public class Contig
 
     public Contig(Contig other)
     {
-        _regions = RegionOps.Copy(other.Regions);
+        _regions = [..other._regions];
         _length = other._length;
         _snvs = other._snvs == null ? null : [..other._snvs];
         _genes =  other._genes == null ? null : [..other._genes];

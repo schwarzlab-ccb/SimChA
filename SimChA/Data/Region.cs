@@ -4,22 +4,26 @@
 public class Region : GenRange
 {
     public bool Hap1 { get; }
-    public List<SNV> SNVs { get; }
-    public List<Gene> Genes { get; }
+
+    private List<SNV>? _snvs;
+    public List<SNV> SNVs => _snvs ??= [];
     
-    public Region(long start, long end, string chrom, bool hap1, 
-        List<SNV> snvs, List<Gene> presentGenes) : base(start, end, chrom)
+    private List<Gene>? _genes;
+    public List<Gene> Genes => _genes ??= [];
+    
+    public Region(long start, long end, string chrom, bool hap1, List<SNV>? snvs, List<Gene>? genes) 
+        : base(start, end, chrom)
     {
         Hap1 = hap1;
-        SNVs = snvs;
-        Genes = presentGenes;
+        _snvs = snvs;
+        _genes = genes;
     }
 
     public Region(Region other) : base(other)
     {
         Hap1 = other.Hap1;
-        SNVs = [..other.SNVs];
-        Genes = [..other.Genes];
+        _snvs = other._snvs == null ? null : [..other._snvs];
+        _genes = other._genes == null ? null : [..other._genes];
     }
 
     public override bool Equals(object? obj) 
