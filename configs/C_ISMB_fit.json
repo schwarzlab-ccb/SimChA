@@ -1,16 +1,14 @@
 {
   "SimParams": {
+    "Seed": 0,
     "RateMean": 89.82,
     "RateDist": "Geometric"
-  },
-  "ChAParams": {
-    "Seed": 0,
-    "AutosomesOnly": true
   },
   "FitParams": {
     "Stress":  4,
     "TsgOg": 0.06,
     "Essentiality": 0.5,
+    "AutosomesOnly": true,
     "GeneNormalization": false
   },
   "EvoParams": {

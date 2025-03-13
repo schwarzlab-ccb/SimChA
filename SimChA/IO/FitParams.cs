@@ -7,5 +7,6 @@ public record FitParams
     double Stress = 0,
     double TsgOg = 0,
     double Essentiality = 0,
+    bool AutosomesOnly = false,
     bool GeneNormalization = false
 );

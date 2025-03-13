@@ -1,13 +1,9 @@
 namespace SimChA.Data;
 
-public class Gene : GenRange
+public class Gene(long start, long end, string chrom, string name, double deltaFitness, GeneLT listType)
+    : GenRange(start, end, chrom)
 {
-    public string Name { get; }
-    public double DeltaFitness { get; }
-    
-    public Gene(long start, long end, string chrom, string name, double deltaFitness) : base(start, end, chrom)
-    {
-        Name = name;
-        DeltaFitness = deltaFitness;
-    }
+    public string Name { get; } = name;
+    public double DeltaFitness { get; } = deltaFitness;
+    public GeneLT ListType { get; } = listType;
 }

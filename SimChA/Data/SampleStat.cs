@@ -2,7 +2,6 @@
 using SimChA.Computation;
 namespace SimChA.Data;
 
-
 public record SampleStat(
     string SampleId,
     string ParentId,
@@ -59,19 +58,14 @@ public record SampleStat(
         var kar = sample.Karyotype;
 
         double ploidy = CalcPloidy(kar, genRef);
-
-        var tsgCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.TumorSuppressor], kar);
-        var ogCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Oncogene], kar);
-        var essCNs = Fitness.CalcCNs(genRef.GeneLists[GeneListType.Essentiality], kar).ToList();
-
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
-        double tsg = Fitness.TsgOgTerm(genRef, tsgCNs, kar.Sex, fParams.GeneNormalization);
-        double og = Fitness.TsgOgTerm(genRef, ogCNs, kar.Sex, fParams.GeneNormalization);
-        double ess = Fitness.EssTerm(genRef, essCNs, kar.Sex, fParams.GeneNormalization);
+        double tsg = Fitness.TsgOgTerm(genRef, kar.GeneCounts[GeneLT.TSG], kar.Sex, fParams.GeneNormalization);
+        double og = Fitness.TsgOgTerm(genRef, kar.GeneCounts[GeneLT.OG], kar.Sex, fParams.GeneNormalization);
+        double ess = Fitness.EssTerm(kar.GeneCounts[GeneLT.Ess], fParams.GeneNormalization);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
 
-        double hemizygosity = Fitness.Zygosity(essCNs, 1);
-        double nullizygosity = Fitness.Zygosity(essCNs, 0);
+        double hemizygosity = Fitness.Zygosity(kar.GeneCounts[GeneLT.Ess], 1);
+        double nullizygosity = Fitness.Zygosity(kar.GeneCounts[GeneLT.Ess], 0);
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 

@@ -1,19 +1,12 @@
 ﻿namespace SimChA.Data;
 
-public class CopyNumber : GenRange
+public class CopyNumber(long start, long end, string chrom, int cnh1, int cnh2, int nsnvs)
+    : GenRange(start, end, chrom)
 {
-    public int CNH1 { get; }
-    public int CNH2 { get; }
-    public int NSNVs { get; }
-    
-    public CopyNumber(long start, long end, string chrom, int cnh1, int cnh2, int nsnvs)
-        : base(start, end, chrom)
-    {
-        CNH1 = cnh1;
-        CNH2 = cnh2;
-        NSNVs = nsnvs;
-    }
-    
+    public int CNH1 { get; } = cnh1;
+    public int CNH2 { get; } = cnh2;
+    public int NSNVs { get; } = nsnvs;
+
     private static string NaIfNegStr(int val)
         => val < 0 ? "NA" : $"{val}";
 

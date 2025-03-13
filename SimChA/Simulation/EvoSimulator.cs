@@ -5,16 +5,11 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class EvoSimulator : Simulator
+public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, EvoParams evoParams)
+    : Simulator(rnd, genRef, simParams, fitParams)
 {
-    private EvoParams EvoParams { get; }
+    private EvoParams EvoParams { get; } = evoParams;
 
-    public EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, EvoParams evoParams) 
-        : base(rnd, genRef, simParams, fitParams)
-    {
-        EvoParams = evoParams;
-    }
-    
     private (Karyotype newKar, BaseEventData eventData) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
     {
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)

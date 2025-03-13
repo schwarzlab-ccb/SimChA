@@ -54,13 +54,14 @@ if (options.Simulate)
 else
 {
     Console.WriteLine("Reading samples from data:");
-    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.ChAParams.AutosomesOnly);
+    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.FitParams.AutosomesOnly);
 }
 
 // Score and segment samples
 var sampleStats = new List<SampleStat>();
 var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
-var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
+var chrNames = config.FitParams.AutosomesOnly ? genRef.AutChrs : genRef.AllChrs;
+var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(chrNames, samples) : null;
 foreach (var sample in samples)
 {
     Console.Write($"\rAnalyzing sample {sample.SampleId}.".PadRight(80));

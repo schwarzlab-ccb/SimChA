@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommandLine;
 using NUnit.Framework;
 using SimChA.Data;
 using SimChA.IO;
@@ -109,22 +110,17 @@ public class TestContig
         cents = _contig1.GetCentromeres(_genRef.Centromeres);
         Assert.AreEqual(2, cents.Count);
     }
-
+    
     [Test]
-    public void TestPresentGenes() 
+    public void TestPresentGenes([Values] GeneLT geneType) 
     {
+        int geneCount = _contig1.CountGeneType(geneType);
         var contigCopy = new Contig(_contig1);
-        var tsgCount = _contig1.PresentGenes.Genes[GeneListType.TumorSuppressor].Count;
-        var ogCount  = _contig1.PresentGenes.Genes[GeneListType.Oncogene].Count;
-        var essCount = _contig1.PresentGenes.Genes[GeneListType.Essentiality].Count;
+        
         _contig1.DeleteRange(0, 200_000_000);
-        // Copy should remain unchanged
-        Assert.AreEqual(tsgCount, contigCopy.PresentGenes.Genes[GeneListType.TumorSuppressor].Count);
-        Assert.AreEqual(ogCount,  contigCopy.PresentGenes.Genes[GeneListType.Oncogene].Count);
-        Assert.AreEqual(essCount, contigCopy.PresentGenes.Genes[GeneListType.Essentiality].Count);
         // Original should be different
-        Assert.AreNotEqual(tsgCount, _contig1.PresentGenes.Genes[GeneListType.TumorSuppressor].Count);
-        Assert.AreNotEqual(ogCount,  _contig1.PresentGenes.Genes[GeneListType.Oncogene].Count);
-        Assert.AreNotEqual(essCount, _contig1.PresentGenes.Genes[GeneListType.Essentiality].Count);
+        Assert.AreNotEqual(geneCount, _contig1.CountGeneType(geneType));
+        // Copy should remain unchanged
+        Assert.AreEqual(geneCount, contigCopy.CountGeneType(geneType));
     }
 }

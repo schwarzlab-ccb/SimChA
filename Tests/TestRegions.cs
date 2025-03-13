@@ -14,7 +14,7 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
-        _cRegion = new Region(0, 249250621, "chr1", true, new List<SNV>());
+        _cRegion = new Region(0, 249250621, "chr1", true, [], []);
     }
 
     [Test]
@@ -30,7 +30,7 @@ public class TestRegions
         Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, "chr1")));
         Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, "chr1")));
 
-        var gene = new Gene(69090, 70008, "chr1" , "OR4F5", 0.142321064);
+        var gene = new Gene(69090, 70008, "chr1" , "OR4F5", 0.142321064, GeneLT.TSG);
         var range = new GenRange(0, 249250621, "chr1");
         Assert.IsTrue(range.Overlaps(gene));
     }
@@ -85,15 +85,15 @@ public class TestRegions
         var regions = new List<Region>
         {
 
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(2, 3, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var res = new List<Region>
         {
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         Assert.AreEqual(res, RegionOps.DeleteRange(regions, 1, 3));
     }
@@ -103,29 +103,29 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(2, 3, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var mergeAll = new List<Region>
         {
-            new(0, 4, "chr1", true, new List<SNV>()),
+            new(0, 4, "chr1", true, [], []),
         };
         Assert.AreEqual(mergeAll, RegionOps.MergeRegions(regions));
         
         var mergeAllInverted = new List<Region>
         {
-            new(-4, -2, "chr1", true, new List<SNV>()),
-            new(-2, 0, "chr1", true, new List<SNV>())
+            new(-4, -2, "chr1", true, [], []),
+            new(-2, 0, "chr1", true, [], [])
         };
         var merged = RegionOps.MergeRegions(mergeAllInverted);
         RegionOps.Revert(merged);
         Assert.AreEqual(mergeAll, merged);
         mergeAllInverted = new List<Region>
         {
-            new(-4, -2, "chr1", true, new List<SNV>()),
-            new(-2, 0, "chr1", true, new List<SNV>())
+            new(-4, -2, "chr1", true, [], []),
+            new(-2, 0, "chr1", true, [], [])
         };
         RegionOps.Revert(mergeAllInverted);
         merged =  RegionOps.MergeRegions(mergeAllInverted);
@@ -133,29 +133,29 @@ public class TestRegions
 
         regions = new List<Region>
         {
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(-3, -2, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(-3, -2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var mergeOneInverted = new List<Region>
         {
-            new(0, 2, "chr1", true, new List<SNV>()),
-            new(-3, -2, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 2, "chr1", true, [], []),
+            new(-3, -2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         Assert.AreEqual(mergeOneInverted, RegionOps.MergeRegions(regions));
 
         regions = new List<Region>
         {
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var mergeGapped = new List<Region>
         {
-            new(0, 2, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         Assert.AreEqual(mergeGapped, RegionOps.MergeRegions(regions));
     }
@@ -181,15 +181,15 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(2, 3, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var res = new List<Region>
         {
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(2, 3, "chr1", true, new List<SNV>()),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
         };
         var copy = RegionOps.CopyRange(regions, 1, 3);
         Assert.AreEqual(res, copy);
@@ -228,7 +228,7 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            new(0, 2, "chr1", true, new List<SNV>())
+            new(0, 2, "chr1", true, [], [])
         };
         var (before, after) = RegionOps.SplitRegions(regions, 1);
         Assert.AreEqual(1, RegionOps.CountLength(after));
@@ -261,10 +261,10 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            new(0, 1, "chr1", true, new List<SNV>()),
-            new(1, 2, "chr1", true, new List<SNV>()),
-            new(2, 3, "chr1", true, new List<SNV>()),
-            new(3, 4, "chr1", true, new List<SNV>())
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         const int location = 2;
         const Nucleotide newNucleotide = Nucleotide.A;
@@ -288,7 +288,7 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            new(0, 100, "chr1", true, new List<SNV>()),
+            new(0, 100, "chr1", true, [], []),
         };
         const int location = 45;
         const Nucleotide newNucleotide = Nucleotide.A;
@@ -309,75 +309,41 @@ public class TestRegions
     [Test]
     public void TestEquality()
     {
-        var region1 = new Region(0, 100, "chr1", true, new List<SNV>());
-        var region2 = new Region(0, 100, "chr1", true, new List<SNV>());
+        var region1 = new Region(0, 100, "chr1", true, [], []);
+        var region2 = new Region(0, 100, "chr1", true, [], []);
         Assert.AreEqual(region1, region2);
         
         var range1 = new GenRange(0, 100, "chr1");
         var range2 = new GenRange(0, 100, "chr1");
         Assert.AreEqual(range1, range2);
     }
-
-    [Test]
-    public void TestPresentGenes()
-    {
-        var tsg = new Gene(0, 10, "chr1" , "GENE1", 0.1);
-        var og = new Gene(20, 30, "chr1" , "GENE2", 0.2);
-        var ess = new Gene(40, 50, "chr1" , "GENE3", 0.3);
-        var presentGenes = new Dictionary<GeneListType, List<Gene>>
-        {
-            { GeneListType.TumorSuppressor, [tsg] },
-            { GeneListType.Oncogene, [og] },
-            { GeneListType.Essentiality, [ess] }
-        };
-        var r = new Region(0, 249250621, "chr1", true, new List<SNV>(), presentGenes);
-        Assert.IsTrue(r.PresentGenes.Genes.ContainsKey(GeneListType.TumorSuppressor));
-        Assert.AreEqual(1, r.PresentGenes.Genes[GeneListType.TumorSuppressor].Count);
-        Assert.AreEqual(tsg, r.PresentGenes.Genes[GeneListType.TumorSuppressor][0]);
-        Assert.IsTrue(r.PresentGenes.Genes.ContainsKey(GeneListType.Oncogene));
-        Assert.AreEqual(1, r.PresentGenes.Genes[GeneListType.Oncogene].Count);
-        Assert.AreEqual(og, r.PresentGenes.Genes[GeneListType.Oncogene][0]);
-        Assert.IsTrue(r.PresentGenes.Genes.ContainsKey(GeneListType.Essentiality));
-        Assert.AreEqual(1, r.PresentGenes.Genes[GeneListType.Essentiality].Count);
-        Assert.AreEqual(ess, r.PresentGenes.Genes[GeneListType.Essentiality][0]);
-    }
-
-
+    
     [Test]
     public void TestPresentGenesWithDeletion()
     {
-        var tsg = new Gene(0, 10, "chr1" , "GENE1", 0.1);
-        var og = new Gene(20, 30, "chr1" , "GENE2", 0.2);
-        var ess = new Gene(40, 50, "chr1" , "GENE3", 0.3);
-        var presentGenes = new Dictionary<GeneListType, List<Gene>>
-        {
-            { GeneListType.TumorSuppressor, [tsg] },
-            { GeneListType.Oncogene, [og] },
-            { GeneListType.Essentiality, [ess] }
-        };
-        var r = new Region(0, 249250621, "chr1", true, new List<SNV>(), presentGenes);
+        var tsg = new Gene(0, 10, "chr1" , "GENE1", 0.1, GeneLT.TSG);
+        var og = new Gene(20, 30, "chr1" , "GENE2", 0.2, GeneLT.OG);
+        var ess = new Gene(40, 50, "chr1" , "GENE3", 0.3, GeneLT.Ess);
+        var r = new Region(0, 249250621, "chr1", true, [], [tsg, og, ess]);
         var regions = new List<Region>{r};
         // Delete a region affecting the og
         regions = RegionOps.DeleteRange(regions, 15, 25);
         var tsgRegion = regions[0];
         var essRegion = regions[1];
         // Check that the original region is unchanged
-        Assert.AreEqual(1,   r.PresentGenes.Genes[GeneListType.TumorSuppressor].Count);
-        Assert.AreEqual(tsg, r.PresentGenes.Genes[GeneListType.TumorSuppressor][0]);
-        Assert.AreEqual(1,   r.PresentGenes.Genes[GeneListType.Oncogene].Count);
-        Assert.AreEqual(og,  r.PresentGenes.Genes[GeneListType.Oncogene][0]);
-        Assert.AreEqual(1,   r.PresentGenes.Genes[GeneListType.Essentiality].Count);
-        Assert.AreEqual(ess, r.PresentGenes.Genes[GeneListType.Essentiality][0]);
+        Assert.AreEqual(1, r.CountGeneType(GeneLT.TSG));
+        Assert.AreEqual(1, r.CountGeneType(GeneLT.OG));
+        Assert.AreEqual(1, r.CountGeneType(GeneLT.Ess));
+        
         // Check that the tsg and essential genes are intact
-        Assert.AreEqual(1,   tsgRegion.PresentGenes.Genes[GeneListType.TumorSuppressor].Count);
-        Assert.AreEqual(tsg, tsgRegion.PresentGenes.Genes[GeneListType.TumorSuppressor][0]);
-        Assert.AreEqual(0,   tsgRegion.PresentGenes.Genes[GeneListType.Oncogene].Count);
-        Assert.AreEqual(0,   tsgRegion.PresentGenes.Genes[GeneListType.Essentiality].Count);
+        Assert.AreEqual(1, tsgRegion.CountGeneType(GeneLT.TSG));
+        Assert.AreEqual(0, tsgRegion.CountGeneType(GeneLT.OG));
+        Assert.AreEqual(0, tsgRegion.CountGeneType(GeneLT.Ess));
 
-        Assert.AreEqual(1,   essRegion.PresentGenes.Genes[GeneListType.Essentiality].Count);
-        Assert.AreEqual(ess, essRegion.PresentGenes.Genes[GeneListType.Essentiality][0]);
-        Assert.AreEqual(0,   essRegion.PresentGenes.Genes[GeneListType.Oncogene].Count);
-        Assert.AreEqual(0,   essRegion.PresentGenes.Genes[GeneListType.TumorSuppressor].Count);
+        Assert.AreEqual(0, essRegion.CountGeneType(GeneLT.TSG));
+        Assert.AreEqual(0, essRegion.CountGeneType(GeneLT.OG));
+        Assert.AreEqual(1, essRegion.CountGeneType(GeneLT.Ess));
+
 
     }
 }

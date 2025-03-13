@@ -5,29 +5,22 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class Simulator
+public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
 {
-    protected Random Rnd  { get; }
-    protected GenRef GenRef  { get; }
-    protected FitParams FitParams  { get; }
-    protected SimParams SimParams { get; }
-    
-    public Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
-    {
-        Rnd = rnd;
-        GenRef = genRef;
-        FitParams = fitParams;
-        SimParams = simParams;
-    }
+    protected Random Rnd  { get; } = rnd;
+    protected GenRef GenRef  { get; } = genRef;
+    protected FitParams FitParams  { get; } = fitParams;
+    protected SimParams SimParams { get; } = simParams;
 
     protected static BaseEventData CreatePassEvent() 
         => new(new CNEventPars(CNEventType.Pass, 1));
 
+    // TODO: Simulator does not currently implement AutosomesOnly
     public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
         var (cnEventPs, mixture) = Factory.MixSignatures(sigs);
         var res = new List<Sample>();
-        var sex = Sampling.GetSex(Rnd, SimParams.Sex);
+        var sex = FitParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
         var rootKar = new Karyotype(GenRef, sex);
         if (SimParams.TetraploidStart)
         {

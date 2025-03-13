@@ -6,7 +6,6 @@ namespace SimChA.IO;
 
 public record SimChAConfig(
     SimParams SimParams,
-    ChAParams ChAParams,
     FitParams FitParams,
     List<Signature>? Signatures = null,
     EvoParams? EvoParams = null,

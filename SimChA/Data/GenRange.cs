@@ -1,24 +1,12 @@
 ﻿namespace SimChA.Data;
 
-public class GenRange
+public class GenRange(long start, long end, string chrom)
 {
-    public long Start { get; protected set; }
-    public long End { get; protected set; }
-    public string Chrom { get; }
-    
-    public GenRange(long start, long end, string chrom)
-    {
-        Start = start;
-        End = end;
-        Chrom = chrom;
-    }
-    
-    public GenRange(GenRange other)
-    {
-        Start = other.Start;
-        End = other.End;
-        Chrom = other.Chrom;
-    }
+    public long Start { get; protected set; } = start;
+    public long End { get; protected set; } = end;
+    public string Chrom { get; } = chrom;
+
+    protected GenRange(GenRange other) : this(other.Start, other.End, other.Chrom) { }
 
     public override bool Equals(object? obj) 
         => obj is GenRange other && Start == other.Start && End == other.End && Chrom == other.Chrom;
