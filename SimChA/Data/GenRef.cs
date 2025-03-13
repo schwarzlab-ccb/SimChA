@@ -181,6 +181,10 @@ public class GenRef
             res[type] = new Dictionary<Gene, int>();
             foreach (var (chrom, genes) in genesPerChrom)
             {
+                if (chrom == XChrName && sexType == SexType.Any || chrom == YChrName && sexType != SexType.Male)
+                {
+                    continue;
+                }
                 int expCount = empty ? 0 : GetExpCount(chrom, sexType);
                 foreach (var gene in genes)
                 {
@@ -199,4 +203,7 @@ public class GenRef
 
     private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap)
         => ChrIDsForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });
+
+    public IEnumerable<Gene> GetGenesBetween(string chrNo, int start, int end)
+        => GeneLists.SelectMany(pair => pair.Value[chrNo].SkipWhile(g => g.Start < start).TakeWhile(g => g.End <= end));
 }

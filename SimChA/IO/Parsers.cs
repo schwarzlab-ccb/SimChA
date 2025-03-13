@@ -83,14 +83,15 @@ public static class Parsers
                 chrXfound |= chrNo == "chrX";
                 for (int i = 0; i < cnA; i++)
                 {
-                    regionsA.Add(new Region(start, end, chrNo, true, null, []));
+                    var genes = genRef.GetGenesBetween(chrNo, start, end).ToList();
+                    regionsA.Add(new Region(start, end, chrNo, true, null, genes));
                 }
                 for (int i = 0; i < cnB; i++)
                 {
-                    regionsB.Add(new Region(start, end, chrNo, false, null, []));
+                    var genes = genRef.GetGenesBetween(chrNo, start, end).ToList();
+                    regionsB.Add(new Region(start, end, chrNo, false, null, genes));
                 }
             }
-            
             var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
             var sexType = chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
             var kar = new Karyotype(genRef, newRegs, sexType);

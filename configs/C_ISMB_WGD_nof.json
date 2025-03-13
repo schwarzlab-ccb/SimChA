@@ -4,7 +4,9 @@
         "RateMean": 89.82,
         "RateDist": "Geometric"
     },
-    "FitParams": { },
+    "FitParams": { 
+        "AutosomesOnly": true
+    },
     "EvoParams": { },
     "Signatures": [
         {

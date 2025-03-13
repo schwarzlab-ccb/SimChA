@@ -111,10 +111,10 @@ public class TestFitness
             [MakeGene("chrX", 0.1)] = 2, 
         };
         var xyGeneX = new Dictionary<Gene, int> {
-            [MakeGene("chrX", 0.1)] = 1, 
+            [MakeGene("chrX", 0.1)] = 2, 
         };
         var xyGeneY = new Dictionary<Gene, int> {
-            [MakeGene("chrY", 0.1)] = 1, 
+            [MakeGene("chrY", 0.1)] = 2, 
         };
         
         Assert.AreEqual(
@@ -161,7 +161,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitParams(0.001, 0.01, 0.000_1, true, true);
+        var fit = new FitParams(0.001, 0.001, 0.00_1, true, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 
@@ -171,12 +171,12 @@ public class TestFitness
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
         karyotype.MergeRegions();
-        var fit = new FitParams(0.001, 0.01, 0.000_1, true, true);
+        var fit = new FitParams(0.001, 0.001, 0.001, true, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 
     [Test]
-    public void TestReferenceFitness([Values] SexType sex, [Values(0, 1)] int refId, [Values(-1, 0, 1)] int myInt)
+    public void TestReferenceFitness([Values] SexType sex, [Values(0,1)] int refId)
     {
         var genRef = _refs[refId];
         var kar = new Karyotype(genRef, sex);
