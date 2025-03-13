@@ -60,7 +60,8 @@ else
 // Score and segment samples
 var sampleStats = new List<SampleStat>();
 var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
-var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
+var chrNames = config.ChAParams.AutosomesOnly ? genRef.AutChrs : genRef.AllChrs;
+var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(chrNames, samples) : null;
 foreach (var sample in samples)
 {
     Console.Write($"\rAnalyzing sample {sample.SampleId}.".PadRight(80));

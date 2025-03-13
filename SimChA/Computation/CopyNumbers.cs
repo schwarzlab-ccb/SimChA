@@ -9,7 +9,7 @@ public static class CopyNumbers
         var breaks = samples.Select(s => s.Karyotype.CalcBreaks()).ToList();
         var segmentation = chromNames.ToDictionary(
             chrom => chrom, 
-            chrom => breaks.SelectMany(br => br[chrom]).ToHashSet().OrderBy(val => val).ToList());
+            chrom => breaks.SelectMany(br => br.GetValueOrDefault(chrom, [])).ToHashSet().OrderBy(b => b).ToList());
         return segmentation;
     }
 
