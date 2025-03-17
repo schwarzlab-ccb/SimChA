@@ -35,19 +35,19 @@ public static class Fitness
     
     public static double TsgOgTerm(List<Gene> genes, List<int> geneCNs, bool normalizeGenes = false)
     {
-        double sum = genes.Select((t, i) => Math.Log(1 + geneCNs[i]) * t.Score).Sum();
+        double sum = genes.Select(gene=> Math.Log(1 + geneCNs[gene.GeneId]) * gene.Score).Sum();
         return normalizeGenes ? sum / genes.Count : sum;
     }
 
-    public static double Zygosity(List<int> geneCNs, int count, bool normalizeGenes = false)
+    public static double Zygosity(List<Gene> genes, List<int> geneCNs, int count, bool normalizeGenes = false)
     {
-        double sum = geneCNs.Sum(i => i == count ? 1 : 0);
+        double sum = genes.Sum(gene => geneCNs[gene.GeneId] == count ? 1 : 0);
         return normalizeGenes ? sum / geneCNs.Count : sum;
     }
     
     public static double EssTerm(List<Gene> genes, List<int> geneCNs, bool normalizeGenes = false)
     {
-        double sum = genes.Select((t, i) => Math.Min(geneCNs[i] - 1, 0) * t.Score).Sum();
+        double sum = genes.Select(gene => Math.Min(geneCNs[gene.GeneId] - 1, 0) * gene.Score).Sum();
         return normalizeGenes ? sum / genes.Count : sum;
     }
 }

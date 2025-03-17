@@ -65,8 +65,8 @@ public record SampleStat(
         double ess = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.GeneNormalization);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
 
-        double hemizygosity = Fitness.Zygosity(kar.GeneCounts[(int) GeneLT.Ess], 1);
-        double nullizygosity = Fitness.Zygosity(kar.GeneCounts[(int) GeneLT.Ess], 0);
+        double hemizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 1);
+        double nullizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 0);
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 
