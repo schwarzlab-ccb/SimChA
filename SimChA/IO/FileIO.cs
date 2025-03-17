@@ -162,7 +162,7 @@ public class FileIO
         try
         {
             var cloneFile = new StreamReader(fileFullPath);
-            var tree = Parsers.ParseClonesWithEvents(cloneFile, parseFitness, separator);
+            var tree = Parsers.ParseClones(cloneFile, parseFitness, separator);
             var selfParent = tree.FindAll(n => n.ParentId == n.CloneId);
             return selfParent.Count switch
             {
