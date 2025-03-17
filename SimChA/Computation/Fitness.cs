@@ -14,9 +14,9 @@ public static class Fitness
     {
         bool normGenes = fParams.GeneNormalization;
         double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen()));
-        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneLT.OG], kar.Sex, normGenes));
-        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[GeneLT.TSG], kar.Sex, normGenes));
-        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(kar.GeneCounts[GeneLT.Ess], normGenes));
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.OG], kar.Sex, normGenes));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.TSG], kar.Sex, normGenes));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(kar.GeneCounts[(int) GeneLT.Ess], normGenes));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     

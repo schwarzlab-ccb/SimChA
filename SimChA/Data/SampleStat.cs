@@ -59,13 +59,13 @@ public record SampleStat(
 
         double ploidy = CalcPloidy(kar, genRef);
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
-        double tsg = Fitness.TsgOgTerm(genRef, kar.GeneCounts[GeneLT.TSG], kar.Sex, fParams.GeneNormalization);
-        double og = Fitness.TsgOgTerm(genRef, kar.GeneCounts[GeneLT.OG], kar.Sex, fParams.GeneNormalization);
-        double ess = Fitness.EssTerm(kar.GeneCounts[GeneLT.Ess], fParams.GeneNormalization);
+        double tsg = Fitness.TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.TSG], kar.Sex, fParams.GeneNormalization);
+        double og = Fitness.TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.OG], kar.Sex, fParams.GeneNormalization);
+        double ess = Fitness.EssTerm(kar.GeneCounts[(int) GeneLT.Ess], fParams.GeneNormalization);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
 
-        double hemizygosity = Fitness.Zygosity(kar.GeneCounts[GeneLT.Ess], 1);
-        double nullizygosity = Fitness.Zygosity(kar.GeneCounts[GeneLT.Ess], 0);
+        double hemizygosity = Fitness.Zygosity(kar.GeneCounts[(int) GeneLT.Ess], 1);
+        double nullizygosity = Fitness.Zygosity(kar.GeneCounts[(int) GeneLT.Ess], 0);
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 

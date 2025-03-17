@@ -2,7 +2,7 @@
 
 public enum GeneLT
 {   
-    TSG,
-    OG,
-    Ess
+    TSG = 0,
+    OG = 1,
+    Ess = 2
 }

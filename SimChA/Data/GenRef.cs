@@ -173,13 +173,12 @@ public class GenRef
         return 2;
     }
     
-    public Dictionary<GeneLT, Dictionary<Gene, int>> GetInitialGenes(SexType sexType, bool empty = false)
+    public List<Dictionary<Gene, int>> GetInitialGenes(SexType sexType, bool empty = false)
     {
-        var res = new Dictionary<GeneLT, Dictionary<Gene, int>>();
+        var res = new List<Dictionary<Gene, int>> { new(), new(), new() };
         foreach (var (type, genesPerChrom) in GeneLists)
         {
-            res[type] = new Dictionary<Gene, int>();
-            foreach (var (chrom, genes) in genesPerChrom)
+            foreach ((string chrom, var genes) in genesPerChrom)
             {
                 if (chrom == XChrName && sexType == SexType.Any || chrom == YChrName && sexType != SexType.Male)
                 {
@@ -188,7 +187,7 @@ public class GenRef
                 int expCount = empty ? 0 : GetExpCount(chrom, sexType);
                 foreach (var gene in genes)
                 {
-                    res[type][gene] = expCount;
+                    res[(int) type][gene] = expCount;
                 }
             }
         }

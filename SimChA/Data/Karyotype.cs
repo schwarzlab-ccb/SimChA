@@ -11,7 +11,7 @@ public class Karyotype
 
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
-    public Dictionary<GeneLT, Dictionary<Gene, int>> GeneCounts { get; }
+    public List<Dictionary<Gene, int>> GeneCounts { get; }
 
     public Karyotype(GenRef genRef, SexType sex)
     {
@@ -27,10 +27,7 @@ public class Karyotype
         _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
-        GeneCounts = other.GeneCounts.ToDictionary(
-            kvp => kvp.Key,
-            kvp => new Dictionary<Gene, int>(kvp.Value)
-        );
+        GeneCounts = other.GeneCounts.ConvertAll(geneDict => new Dictionary<Gene, int>(geneDict));
     }
 
     public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
@@ -329,7 +326,7 @@ public class Karyotype
     {
         foreach (var gene in contig.Genes)
         {
-            GeneCounts[gene.ListType][gene] -= 1;
+            GeneCounts[(int) gene.ListType][gene] -= 1;
         }
     }
 
@@ -337,13 +334,13 @@ public class Karyotype
     {
         foreach (var gene in contig.Genes)
         {
-            GeneCounts[gene.ListType][gene] += 1;
+            GeneCounts[(int) gene.ListType][gene] += 1;
         }
     }
     
     private void DoubleGeneCounts()
     {
-        foreach (var (_, geneCounts) in GeneCounts)
+        foreach (var geneCounts in GeneCounts)
         {
             foreach (var gene in geneCounts.Keys)
             {

@@ -388,9 +388,9 @@ public class TestKaryotype
             _kar.ApplyContigDeletion(i);
         }
         var geneCounts = _kar.GeneCounts;
-        var tsgs = geneCounts[GeneLT.TSG];
-        var ogs = geneCounts[GeneLT.OG];
-        var ess = geneCounts[GeneLT.Ess];
+        var tsgs = geneCounts[(int) GeneLT.TSG];
+        var ogs = geneCounts[(int) GeneLT.OG];
+        var ess = geneCounts[(int) GeneLT.Ess];
         foreach (var (gene, count) in tsgs)
         {
             if (gene.Chrom != "chrX")

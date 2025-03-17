@@ -10,9 +10,10 @@ public class FileIO
 {
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
-    private const string ESSENTIALS_TSV = "essentials_select.tsv";
-    private const string OGS_TSV = "ogs_select.tsv";
-    private const string TSGS_TSV = "tsgs_select.tsv";
+    private const string SUBSET = "select";
+    private const string ESSENTIALS_TSV = $"essentials_{SUBSET}.tsv";
+    private const string OGS_TSV = $"ogs_{SUBSET}.tsv";
+    private const string TSGS_TSV = $"tsgs_{SUBSET}.tsv";
     private const string GENOME_FASTA = "genome.fa";
     private const string CENTROMERES_TSV = "centromeres.tsv";
     // input
@@ -24,8 +25,6 @@ public class FileIO
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
-    // private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
-    // private const string TREE_FILENAME = "tree.tsv";
     
     private string Timestamp { get; }
     private string OutFolder { get; }

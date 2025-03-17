@@ -180,8 +180,8 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var kar = new Karyotype(genRef, sex);
-        double tsg = Fitness.TsgOgTerm(genRef, kar.GeneCounts[GeneLT.TSG], sex);
-        double og = Fitness.TsgOgTerm(genRef, kar.GeneCounts[GeneLT.OG], sex);
+        double tsg = Fitness.TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.TSG], sex);
+        double og = Fitness.TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.OG], sex);
         Assert.AreEqual(tsg, og, EPSILON);
     }
 }
