@@ -2,6 +2,7 @@
 
 namespace SimChA.Data;
 
+// Lists prefixed with Sex hold values for all SexTypes
 public class GenRef
 {
     public string Name { get; }
@@ -10,16 +11,16 @@ public class GenRef
     public Dictionary<string, GenRange> Centromeres { get; }
     public string YChrName { get; }
     public string XChrName { get; }
-    public List<List<List<Region>>> Genomes { get; }
-    public List<long> GenomeLens { get; }
-    public List<long> ReferenceLens { get; }
+    public List<List<Region>> SexGenome { get; }
+    public List<long> SexGenomeLen { get; }
+    public List<long> SexReferenceLen { get; }
     public List<List<string>> SexChromNames { get; }
     public List<string> AllChrNames => SexChromNames[(int)SexType.Male];
-    public int AutosomesCount => SexChromNames[(int) SexType.Any].Count;
+    public int AutosomesCount => SexChromNames[(int)SexType.Any].Count;
     private List<Dictionary<string, List<Gene>>> GeneChromMap { get; }
-    public List<List<List<Gene>>> GeneLists { get; }
+    public List<List<Gene[]>> SexGeneLists { get; }
     private Dictionary<string, StringBuilder>? GenContentsDict { get; }
-    
+
     public GenRef(
         string name,
         Dictionary<string, int> chrLengths,
@@ -37,27 +38,28 @@ public class GenRef
 
         YChrName = ChrSex.Where(pair => pair.Value == SexType.Male).Select(pair => pair.Key).FirstOrDefault("");
         XChrName = ChrSex.Where(pair => pair.Value == SexType.Female).Select(pair => pair.Key).FirstOrDefault("");
-        SexChromNames = [
+        SexChromNames =
+        [
             ChrSex.Where(pair => pair.Value == SexType.Any).Select(pair => pair.Key).ToList(),
             ChrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList(),
             ChrSex.Select(pair => pair.Key).ToList()
         ];
-        Genomes = Enum.GetValues(typeof(SexType)).Cast<SexType>().Select(t
-            => CreateHaplotype(t, true).Concat(CreateHaplotype(t, false)).ToList())
+        SexGenome = Enum.GetValues(typeof(SexType)).Cast<SexType>().Select(t
+                => CreateHaplotype(t, true).Concat(CreateHaplotype(t, false)).ToList())
             .ToList();
-        GenomeLens = Genomes.Select(genome 
-            => genome.Sum(regs => regs.Sum(reg => reg.Length)))
+        SexGenomeLen = SexGenome.Select(genome => genome.Sum(chromReg => chromReg.Length)).ToList();
+        SexReferenceLen = SexChromNames.Select(sexList
+                => sexList.Sum(chrName => (long)chrLengths[chrName]))
             .ToList();
-        ReferenceLens = SexChromNames.Select(sexList
-            => sexList.Sum(chrName => (long) chrLengths[chrName]))
-            .ToList();
-        GeneLists = SexChromNames.Select(chrs => GeneChromMap.Select(map 
-                => CreateGeneList(chrs, map)).ToList())
+        SexGeneLists = SexChromNames.Select(chrs
+                => GeneChromMap.Select(map
+                        => CreateGeneList(chrs, map).ToArray())
+                    .ToList())
             .ToList();
     }
 
-    private static List<Gene> CreateGeneList(List<string> chrs, Dictionary<string, List<Gene>> geneChromMap)
-        => chrs.SelectMany(chrom => geneChromMap[chrom]).OrderBy(g => g.GeneId).ToList();
+    private static IEnumerable<Gene> CreateGeneList(List<string> chrs, Dictionary<string, List<Gene>> geneChromMap)
+        => chrs.SelectMany(chrom => geneChromMap[chrom]).OrderBy(g => g.GeneId);
 
     public char[] GetGenContents(string chrom, int start, int length)
         => GenContentsDict == null
@@ -80,16 +82,16 @@ public class GenRef
             : CharToNucleotide(GenContentsDict[chrom].ToString(location, 1)[0]);
 
     public Nucleotide GetRefBaseFromSeq(IEnumerable<string> seq, int location)
-        => GenContentsDict == null 
-            ? Nucleotide.N 
+        => GenContentsDict == null
+            ? Nucleotide.N
             : CharToNucleotide(seq.ElementAt(location)[0]);
-    
+
     private List<string> ChrNamesForHap(SexType sex, bool firstHaplotype = true)
         => (firstHaplotype, sex) switch
         {
-            (true, SexType.Male) => SexChromNames[(int) SexType.Female],
-            (false, SexType.Male) => SexChromNames[(int) SexType.Any].Concat([YChrName]).ToList(),
-            _ => SexChromNames[(int) sex]
+            (true, SexType.Male) => SexChromNames[(int)SexType.Female],
+            (false, SexType.Male) => SexChromNames[(int)SexType.Any].Concat([YChrName]).ToList(),
+            _ => SexChromNames[(int)sex]
         };
 
     private int GetExpCount(string chrom, SexType sexType)
@@ -103,13 +105,15 @@ public class GenRef
                 _ => 0
             };
         }
+
         if (chrom == YChrName)
         {
             return sexType == SexType.Male ? 1 : 0;
         }
+
         return 2;
     }
-    
+
     public List<int[]> GetInitialGeneCounts(SexType sexType, bool keepEmpty)
     {
         List<int[]> res = [];
@@ -122,15 +126,17 @@ public class GenRef
                 foreach ((string chrom, var genes) in genesPerChrom)
                 {
                     // In male the sex chromosomes have CN == 1, otherwise all are 2
-                    int expCount = keepEmpty ? 0: GetExpCount(chrom, sexType);
+                    int expCount = keepEmpty ? 0 : GetExpCount(chrom, sexType);
                     foreach (var gene in genes)
                     {
                         typeCounts[gene.GeneId] = expCount;
                     }
                 }
             }
+
             res.Add(typeCounts);
         }
+
         return res;
     }
 
@@ -140,8 +146,8 @@ public class GenRef
     private Region GetRegion(string chrNo, bool isFirstHaplotype)
         => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetChromGenes(chrNo).ToList());
 
-    private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap)
-        => ChrNamesForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });
+    private IEnumerable<Region> CreateHaplotype(SexType sex, bool firstHap)
+        => ChrNamesForHap(sex, firstHap).Select(chr => GetRegion(chr, firstHap));
 
     public IEnumerable<Gene> GetGenesBetween(string chrNo, int start, int end)
         => GeneChromMap.SelectMany(chrGenes => chrGenes[chrNo]

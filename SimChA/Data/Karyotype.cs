@@ -16,7 +16,7 @@ public class Karyotype
     public Karyotype(GenRef genRef, SexType sex)
     {
         GenRef = genRef;
-        _contigs = genRef.Genomes[(int) sex].Select(reg => new Contig(reg)).ToList();
+        _contigs = genRef.SexGenome[(int) sex].Select(reg => new Contig([reg])).ToList();
         Sex = sex;
         GeneCounts = genRef.GetInitialGeneCounts(sex, false);
     }

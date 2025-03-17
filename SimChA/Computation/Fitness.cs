@@ -13,8 +13,8 @@ public static class Fitness
     public static double Calculate(Karyotype kar, GenRef genRef, FitParams fParams)
     {
         bool normGenes = fParams.GeneNormalization;
-        double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.GenomeLens[(int) kar.Sex], kar.GenomeLen()));
-        var geneData = genRef.GeneLists[(int)kar.Sex];
+        double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.SexGenomeLen[(int) kar.Sex], kar.GenomeLen()));
+        var geneData = genRef.SexGeneLists[(int)kar.Sex];
         double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], normGenes));
         double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], normGenes));
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], normGenes));
@@ -33,21 +33,21 @@ public static class Fitness
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double)refBaseCount);
     
-    public static double TsgOgTerm(List<Gene> genes, int[] geneCNs, bool normalizeGenes = false)
+    public static double TsgOgTerm(Gene[] genes, int[] geneCNs, bool normalizeGenes = false)
     {
         double sum = genes.Select(gene=> Math.Log(1 + geneCNs[gene.GeneId]) * gene.Score).Sum();
-        return normalizeGenes ? sum / genes.Count : sum;
+        return normalizeGenes ? sum / genes.Length : sum;
     }
 
-    public static double Zygosity(List<Gene> genes, int[] geneCNs, int count, bool normalizeGenes = false)
+    public static double Zygosity(Gene[] genes, int[] geneCNs, int count, bool normalizeGenes = false)
     {
         double sum = genes.Sum(gene => geneCNs[gene.GeneId] == count ? 1 : 0);
-        return normalizeGenes ? sum / genes.Count : sum;
+        return normalizeGenes ? sum / genes.Length : sum;
     }
     
-    public static double EssTerm(List<Gene> genes, int[] geneCNs, bool normalizeGenes = false)
+    public static double EssTerm(Gene[] genes, int[] geneCNs, bool normalizeGenes = false)
     {
         double sum = genes.Select(gene => Math.Min(geneCNs[gene.GeneId] - 1, 0) * gene.Score).Sum();
-        return normalizeGenes ? sum / genes.Count : sum;
+        return normalizeGenes ? sum / genes.Length : sum;
     }
 }

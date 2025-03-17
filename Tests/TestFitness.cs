@@ -30,16 +30,16 @@ public class TestFitness
     {
         Assert.AreEqual(0, Fitness.EssTerm( [], []), EPSILON);
         
-        List<Gene> testNoEffect = [MakeGene("chr1", 0, 0)];
+        Gene[] testNoEffect = [MakeGene("chr1", 0, 0)];
         Assert.AreEqual(0, Fitness.EssTerm(testNoEffect, [0]), EPSILON);
         
-        List<Gene> testMissing = [MakeGene("chr1", 0.1, 0)];
+        Gene[] testMissing = [MakeGene("chr1", 0.1, 0)];
         Assert.AreEqual(-0.1, Fitness.EssTerm(testMissing, [0]), EPSILON);
 
-        List<Gene> testHaplosufficient = [MakeGene("chr1", 0.1, 0)];
+        Gene[] testHaplosufficient = [MakeGene("chr1", 0.1, 0)];
         Assert.AreEqual(0, Fitness.EssTerm(testHaplosufficient, [1]), EPSILON);
 
-        List<Gene> testList = [
+        Gene[] testList = [
             MakeGene("chr1", 0.1, 0), 
             MakeGene("chr2", 0.2, 1)
         ];
@@ -54,19 +54,19 @@ public class TestFitness
         // Nullizygous
         Assert.AreEqual(0, Fitness.Zygosity([], [], 0), EPSILON);
         
-        List<Gene> testNoEffect = [MakeGene("chr1", 0, 0)];
+        Gene[] testNoEffect = [MakeGene("chr1", 0, 0)];
         Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, [2], 1), EPSILON);
         Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, [2], 0, true), EPSILON);
 
-        List<Gene> testMissing = [MakeGene("chr1", 0.1, 0)];
+        Gene[] testMissing = [MakeGene("chr1", 0.1, 0)];
         Assert.AreEqual(0, Fitness.Zygosity(testMissing, [0], 1), EPSILON);
         Assert.AreEqual(1, Fitness.Zygosity(testMissing, [0],0, true), EPSILON);
 
-        List<Gene> testHaplosufficient = [MakeGene("chr1", 0.1, 0)];
+        Gene[] testHaplosufficient = [MakeGene("chr1", 0.1, 0)];
         Assert.AreEqual(1, Fitness.Zygosity(testHaplosufficient, [1],1), EPSILON);
         Assert.AreEqual(0, Fitness.Zygosity(testHaplosufficient, [1],0, true), EPSILON);
         
-        List<Gene> testList = [
+        Gene[] testList = [
             MakeGene("chr1", 0.1, 0), 
             MakeGene("chr2", 0.2, 1)
         ];
@@ -78,9 +78,9 @@ public class TestFitness
     public void TestEmptyTsgOgAut([Values] SexType sex, [Values(0,1)] int refId)
     {
         
-        var geneList = _refs[refId].GeneLists[(int) sex];
+        var geneList = _refs[refId].SexGeneLists[(int) sex];
         var emptyGenes = _refs[refId].GetInitialGeneCounts(sex, true);
-        for (int geneLT = 0; geneLT < 3; geneLT++)
+        foreach (int geneLT in Enumerable.Range(0, geneList.Count))
         {
             Assert.AreEqual(Fitness.TsgOgTerm(geneList[geneLT], emptyGenes[geneLT]), 0, EPSILON);
         }
@@ -89,16 +89,16 @@ public class TestFitness
     [Test]
     public void TestTsgOgAut([Values] SexType sex, [Values(0,1)] int refId)
     {
-        List<Gene> testNoEffect = [MakeGene("chr1", 0, 0)];
+        Gene[] testNoEffect = [MakeGene("chr1", 0, 0)];
         Assert.AreEqual(Fitness.TsgOgTerm(testNoEffect, [0]), 0, EPSILON);
 
-        List<Gene> testOg = [MakeGene("chr1", 0.1, 0)];
+        Gene[] testOg = [MakeGene("chr1", 0.1, 0)];
         Assert.Greater(Fitness.TsgOgTerm(testOg, [1]), 0);
 
-        List<Gene> testTsg = [MakeGene("chr1", -0.1, 0)];
+        Gene[] testTsg = [MakeGene("chr1", -0.1, 0)];
         Assert.Less(Fitness.TsgOgTerm(testTsg, [1]), 0);
 
-        List<Gene> testList =
+        Gene[] testList =
         [
             MakeGene("chr1", 0.1, 0),
             MakeGene("chr1", -0.1, 1)
@@ -112,7 +112,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var kar = new Karyotype(genRef, sex);
-        long genLen = genRef.GenomeLens[(int)sex];
+        long genLen = genRef.SexGenomeLen[(int)sex];
         Assert.AreEqual(0, Fitness.StressTerm(genLen, kar.GenomeLen()), EPSILON);
         kar.ApplyWGD(); // Double all
         Assert.AreEqual(-1, Fitness.StressTerm(genLen, kar.GenomeLen()), EPSILON);
@@ -126,13 +126,13 @@ public class TestFitness
         var genRef = _refs[refId];
         var karA = new Karyotype(genRef, SexType.Any);
         var karB = new Karyotype(genRef, SexType.Any);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Any], karA.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.SexGenomeLen[(int) SexType.Any], karA.GenomeLen()), EPSILON);
         karA.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Any], karA.GenomeLen()), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.SexGenomeLen[(int) SexType.Any], karA.GenomeLen()), EPSILON);
         karA.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Any], karA.GenomeLen()), EPSILON);
-        foreach (int i in Enumerable.Range(0, genRef.Genomes[(int) SexType.Any].Count / 2)) { karB.ApplyContigDeletion(i); }
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Male], karB.GenomeLen()), EPSILON);
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.SexGenomeLen[(int) SexType.Any], karA.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.SexGenome[(int) SexType.Any].Count / 2)) { karB.ApplyContigDeletion(i); }
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.SexGenomeLen[(int) SexType.Male], karB.GenomeLen()), EPSILON);
     }
 
     [Test]
@@ -158,7 +158,7 @@ public class TestFitness
     public void TestReferenceFitness([Values] SexType sex, [Values(0,1)] int refId)
     {
         var kar = new Karyotype(_refs[refId], sex);
-        var genes = _refs[refId].GeneLists[(int) sex];
+        var genes = _refs[refId].SexGeneLists[(int) sex];
         double tsg = Fitness.TsgOgTerm(genes[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG]);
         double og = Fitness.TsgOgTerm(genes[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.OG]);
         Assert.AreEqual(tsg, og, EPSILON);

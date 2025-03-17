@@ -97,7 +97,7 @@ public class TestParsing
     {
         Assert.AreEqual("hg19", _genRef.Name);
         Assert.AreEqual(22, _genRef.AutosomesCount);
-        Assert.AreEqual(46, _genRef.Genomes[(int) SexType.Female].Count);
+        Assert.AreEqual(46, _genRef.SexGenome[(int) SexType.Female].Count);
     }
 
     [Test]

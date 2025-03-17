@@ -212,13 +212,13 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(_genRef.GenomeLens[(int) _kar.Sex], _kar.GenomeLen());
+        Assert.AreEqual(_genRef.SexGenomeLen[(int) _kar.Sex], _kar.GenomeLen());
     }
     
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.Genomes[(int) SexType.Female].Count; i++)
+        for (int i = 0; i < _genRef.SexGenome[(int) SexType.Female].Count; i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }
@@ -388,7 +388,7 @@ public class TestKaryotype
         {
             _kar.ApplyContigDeletion(i);
         }
-        foreach (var gene in _genRef.GeneLists[(int)_kar.Sex][(int) geneType])
+        foreach (var gene in _genRef.SexGeneLists[(int)_kar.Sex][(int) geneType])
         {
             int count = _kar.GeneCounts[(int)geneType][gene.GeneId];
             Assert.AreEqual(gene.Chrom != "chrX" ? 1 : 0, count);
