@@ -22,27 +22,27 @@ public class TestFitness
         _refs = [FileIO.ReadGenRef(TestParsing.HG_19_PATH), FileIO.ReadGenRef(TestParsing.HG_38_PATH)];
     }
     
-    private static Gene MakeGene(string chrNo, double deltaFitness)
-        => new(0, 50, chrNo, $"G{chrNo}", deltaFitness, GeneLT.OG);
+    private static Gene MakeGene(string chrNo, double deltaFitness, int index)
+        => new(0, 50, chrNo, index, deltaFitness, GeneLT.OG);
 
     [Test]
     public void TestEssTerm([Values] SexType sex, [Values(0,1)] int refId)
     {
         Assert.AreEqual(0, Fitness.EssTerm( []), EPSILON);
         
-        var testNoEffect = new Dictionary<Gene, int> { [MakeGene("chr1", 0)] = 0 };
+        var testNoEffect = new Dictionary<Gene, int> { [MakeGene("chr1", 0, 0)] = 0 };
         Assert.AreEqual(0, Fitness.EssTerm(testNoEffect), EPSILON);
         
-        var testMissing = new Dictionary<Gene, int> { [MakeGene("chr1", 0.1)] = 0 };
+        var testMissing = new Dictionary<Gene, int> { [MakeGene("chr1", 0.1, 0)] = 0 };
         Assert.AreEqual(-0.1, Fitness.EssTerm(testMissing), EPSILON);
 
-        var testHaplosufficient = new Dictionary<Gene, int> { [MakeGene("chr1", 0.1)] = 1 };
+        var testHaplosufficient = new Dictionary<Gene, int> { [MakeGene("chr1", 0.1, 0)] = 1 };
         Assert.AreEqual(0, Fitness.EssTerm(testHaplosufficient), EPSILON);
         
         var testList = new Dictionary<Gene, int>
         {
-            [MakeGene("chr1", 0.1)] = 0,
-            [MakeGene("chr2", 0.2)] = 0
+            [MakeGene("chr1", 0.1, 0)] = 0,
+            [MakeGene("chr2", 0.2, 1)] = 0
         };
         Assert.AreEqual(-0.1 + -0.2, Fitness.EssTerm(testList), EPSILON);
     }
@@ -55,22 +55,22 @@ public class TestFitness
         // Nullizygous
         Assert.AreEqual(0, Fitness.Zygosity([], 0), EPSILON);
         
-        var testNoEffect = new Dictionary<Gene, int> { [MakeGene("chr1", 0)] = 2 };
+        var testNoEffect = new Dictionary<Gene, int> { [MakeGene("chr1", 0, 0)] = 2 };
         Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, 1), EPSILON);
         Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, 0, true), EPSILON);
 
-        var testMissing = new Dictionary<Gene, int>{ [MakeGene("chr1", 0.1)] = 0 };
+        var testMissing = new Dictionary<Gene, int>{ [MakeGene("chr1", 0.1, 0)] = 0 };
         Assert.AreEqual(0, Fitness.Zygosity(testMissing, 1), EPSILON);
         Assert.AreEqual(1, Fitness.Zygosity(testMissing, 0, true), EPSILON);
 
-        var testHaplosufficient =new Dictionary<Gene, int>{ [MakeGene("chr1", 0.1)] =  1 };
+        var testHaplosufficient =new Dictionary<Gene, int>{ [MakeGene("chr1", 0.1, 0)] =  1 };
         Assert.AreEqual(1, Fitness.Zygosity(testHaplosufficient, 1), EPSILON);
         Assert.AreEqual(0, Fitness.Zygosity(testHaplosufficient, 0, true), EPSILON);
         
         var testList = new Dictionary<Gene, int>
         { 
-            [MakeGene("chr1", 0.1)] = 1, 
-            [MakeGene("chr2", 0.2)] = 0 
+            [MakeGene("chr1", 0.1, 0)] = 1, 
+            [MakeGene("chr2", 0.2, 1)] = 0 
         };
         Assert.AreEqual(0.5, Fitness.Zygosity(testList, 1, true), EPSILON);
         Assert.AreEqual(1, Fitness.Zygosity(testList, 0), EPSILON);
@@ -85,19 +85,19 @@ public class TestFitness
         var genRef = _refs[refId];
         Assert.AreEqual(Fitness.TsgOgTerm(genRef, [], sex), 0, EPSILON);
         
-        var testNoEffect = new Dictionary<Gene, int>{[MakeGene("chr1", 0)] = 0};
+        var testNoEffect = new Dictionary<Gene, int>{[MakeGene("chr1", 0, 0)] = 0};
         Assert.AreEqual(Fitness.TsgOgTerm(genRef, testNoEffect, sex), 0, EPSILON);
 
-        var testOg = new Dictionary<Gene, int>{[MakeGene("chr1", 0.1)] = 1};
+        var testOg = new Dictionary<Gene, int>{[MakeGene("chr1", 0.1, 0)] = 1};
         Assert.Greater(Fitness.TsgOgTerm(genRef, testOg, sex), 0);
 
-        var testTsg = new Dictionary<Gene, int>{[MakeGene("chr1", -0.1)] = 1};
+        var testTsg = new Dictionary<Gene, int>{[MakeGene("chr1", -0.1, 0)] = 1};
         Assert.Less(Fitness.TsgOgTerm(genRef, testTsg, sex), 0);
 
         var testList = new Dictionary<Gene, int>
         {
-            [MakeGene("chr1", 0.1)] = 2, 
-            [MakeGene("chr1", -0.1)] = 2 
+            [MakeGene("chr1", 0.1, 0)] = 2, 
+            [MakeGene("chr1", -0.1, 1)] = 2 
         };
         Assert.AreEqual(Fitness.TsgOgTerm(genRef, testList, sex), 0, EPSILON);
     }
@@ -108,13 +108,13 @@ public class TestFitness
         var genRef = _refs[refId];
         var xxGene = new Dictionary<Gene, int> 
         {
-            [MakeGene("chrX", 0.1)] = 2, 
+            [MakeGene("chrX", 0.1, 0)] = 2, 
         };
         var xyGeneX = new Dictionary<Gene, int> {
-            [MakeGene("chrX", 0.1)] = 2, 
+            [MakeGene("chrX", 0.1, 0)] = 2, 
         };
         var xyGeneY = new Dictionary<Gene, int> {
-            [MakeGene("chrY", 0.1)] = 2, 
+            [MakeGene("chrY", 0.1, 0)] = 2, 
         };
         
         Assert.AreEqual(

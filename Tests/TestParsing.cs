@@ -45,13 +45,13 @@ public class TestParsing
 
         string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
 
-        var gene1 = new Gene(0, 50, "chr1", "TSG1",0.001, GeneLT.TSG);
+        var gene1 = new Gene(0, 50, "chr1", 0,0.001, GeneLT.TSG);
         tsgList["chr1"].Add(gene1);
         var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs, GeneLT.TSG);
         Assert.AreEqual(tsgList, listFromString);
 
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
-        var gene2 = new Gene(99, 5000, "chr2", "TSG2", 0.01, GeneLT.TSG);
+        var gene2 = new Gene(99, 5000, "chr2", 1, 0.01, GeneLT.TSG);
         tsgList["chr2"].Add(gene2);
         listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrs, GeneLT.TSG);
         Assert.AreEqual(tsgList, listFromString);

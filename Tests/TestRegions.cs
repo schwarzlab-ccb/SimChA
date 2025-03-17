@@ -30,7 +30,7 @@ public class TestRegions
         Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, "chr1")));
         Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, "chr1")));
 
-        var gene = new Gene(69090, 70008, "chr1" , "OR4F5", 0.142321064, GeneLT.TSG);
+        var gene = new Gene(69090, 70008, "chr1" , 0, 0.142321064, GeneLT.TSG);
         var range = new GenRange(0, 249250621, "chr1");
         Assert.IsTrue(range.Overlaps(gene));
     }
@@ -101,62 +101,62 @@ public class TestRegions
     [Test]
     public void TestMergeRegions()
     {
-        var regions = new List<Region>
-        {
+        List<Region> regions =
+        [
             new(0, 1, "chr1", true, [], []),
             new(1, 2, "chr1", true, [], []),
             new(2, 3, "chr1", true, [], []),
             new(3, 4, "chr1", true, [], [])
-        };
-        var mergeAll = new List<Region>
-        {
-            new(0, 4, "chr1", true, [], []),
-        };
+        ];
+        List<Region> mergeAll =
+        [
+            new(0, 4, "chr1", true, [], [])
+        ];
         Assert.AreEqual(mergeAll, RegionOps.MergeRegions(regions));
         
-        var mergeAllInverted = new List<Region>
-        {
+        List<Region> mergeAllInverted =
+        [
             new(-4, -2, "chr1", true, [], []),
             new(-2, 0, "chr1", true, [], [])
-        };
+        ];
         var merged = RegionOps.MergeRegions(mergeAllInverted);
         RegionOps.Revert(merged);
         Assert.AreEqual(mergeAll, merged);
-        mergeAllInverted = new List<Region>
-        {
+        mergeAllInverted =
+        [
             new(-4, -2, "chr1", true, [], []),
             new(-2, 0, "chr1", true, [], [])
-        };
+        ];
         RegionOps.Revert(mergeAllInverted);
         merged =  RegionOps.MergeRegions(mergeAllInverted);
         Assert.AreEqual(mergeAll, merged);
 
-        regions = new List<Region>
-        {
+        regions =
+        [
             new(0, 1, "chr1", true, [], []),
             new(1, 2, "chr1", true, [], []),
             new(-3, -2, "chr1", true, [], []),
             new(3, 4, "chr1", true, [], [])
-        };
-        var mergeOneInverted = new List<Region>
-        {
+        ];
+        List<Region> mergeOneInverted =
+        [
             new(0, 2, "chr1", true, [], []),
             new(-3, -2, "chr1", true, [], []),
             new(3, 4, "chr1", true, [], [])
-        };
+        ];
         Assert.AreEqual(mergeOneInverted, RegionOps.MergeRegions(regions));
 
-        regions = new List<Region>
-        {
+        regions =
+        [
             new(0, 1, "chr1", true, [], []),
             new(1, 2, "chr1", true, [], []),
             new(3, 4, "chr1", true, [], [])
-        };
-        var mergeGapped = new List<Region>
-        {
+        ];
+        List<Region> mergeGapped =
+        [
             new(0, 2, "chr1", true, [], []),
             new(3, 4, "chr1", true, [], [])
-        };
+        ];
         Assert.AreEqual(mergeGapped, RegionOps.MergeRegions(regions));
     }
 
@@ -321,9 +321,9 @@ public class TestRegions
     [Test]
     public void TestPresentGenesWithDeletion()
     {
-        var tsg = new Gene(0, 10, "chr1" , "GENE1", 0.1, GeneLT.TSG);
-        var og = new Gene(20, 30, "chr1" , "GENE2", 0.2, GeneLT.OG);
-        var ess = new Gene(40, 50, "chr1" , "GENE3", 0.3, GeneLT.Ess);
+        var tsg = new Gene(0, 10, "chr1" , 0, 0.1, GeneLT.TSG);
+        var og = new Gene(20, 30, "chr1" , 1, 0.2, GeneLT.OG);
+        var ess = new Gene(40, 50, "chr1" , 2, 0.3, GeneLT.Ess);
         var r = new Region(0, 249250621, "chr1", true, [], [tsg, og, ess]);
         var regions = new List<Region>{r};
         // Delete a region affecting the og
@@ -343,7 +343,5 @@ public class TestRegions
         Assert.AreEqual(0, essRegion.CountGeneType(GeneLT.TSG));
         Assert.AreEqual(0, essRegion.CountGeneType(GeneLT.OG));
         Assert.AreEqual(1, essRegion.CountGeneType(GeneLT.Ess));
-
-
     }
 }

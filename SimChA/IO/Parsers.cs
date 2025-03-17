@@ -106,6 +106,7 @@ public static class Parsers
     {
         // Pre-initialization
         var geneList = chrNames.ToDictionary(c => c, _ => new List<Gene>());
+        int listIndex = 0;
         while (geneFile.ReadLine() is { } line)
         {
             if (line != "")
@@ -117,8 +118,9 @@ public static class Parsers
                 // Convert to zero-based [start, end) index 
                 int start = int.Parse(genString[1]) - 1;
                 int end = int.Parse(genString[2]);
-                var gene = new Gene(start, end, chrom, name, fitness, type);
+                var gene = new Gene(start, end, chrom, listIndex, fitness, type);
                 geneList[chrom].Add(gene);
+                listIndex += 1;
             }
         }
         foreach (var pair in geneList)
