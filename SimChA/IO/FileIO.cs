@@ -222,18 +222,17 @@ public class FileIO
         }
     }
 
-    private static Dictionary<GeneLT, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
+    private static List<Dictionary<string, List<Gene>>> MapGenesToChroms(string folder, Dictionary<string, SexType> chrSex)
     {
-        var geneLists = new Dictionary<GeneLT, Dictionary<string, List<Gene>>>();
-        var fileMap = new Dictionary<GeneLT, string>
-        {
+        List<Dictionary<string, List<Gene>>> geneLists = [];
+        Dictionary<GeneLT, string> fileMap = new() {
             { GeneLT.TSG, TSGS_TSV },
             { GeneLT.OG, OGS_TSV },
             { GeneLT.Ess, ESSENTIALS_TSV }
         };
-        foreach ((var key, string filename) in fileMap)
+        for (int i = 0; i < fileMap.Count; i++)
         {
-            string filePath = Path.Combine(folder, filename);
+            string filePath = Path.Combine(folder, fileMap[(GeneLT) i]);
             string fileFullPath = Path.GetFullPath(filePath);
             if (!File.Exists(fileFullPath))
             {
@@ -243,7 +242,7 @@ public class FileIO
             {
                 var geneFile = new StreamReader(fileFullPath);
                 var chrNames = chrSex.Select(pair => pair.Key).ToList();
-                geneLists[key] = Parsers.ParseGeneList(geneFile, chrNames, key);
+                geneLists.Add(Parsers.ParseGeneList(geneFile, chrNames, (GeneLT) i));
             }
             catch (Exception e)
             {
@@ -320,7 +319,7 @@ public class FileIO
         var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
-        var geneLists = ReadGeneLists(dataFolder, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, centromeres, geneLists, genContentsDict);
+        var geneChromMap = MapGenesToChroms(dataFolder, chrSex);
+        return new GenRef(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
     }
 }

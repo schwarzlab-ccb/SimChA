@@ -54,7 +54,7 @@ public class TestCopyNumbers
         var genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, false);
         var kar = new Karyotype(genRef, sex);
         var cnRef = CopyNumbers.CalcCNs(kar).ToList();
-        Assert.AreEqual(genRef.ChrCount(sex, false), cnRef.Count);
+        Assert.AreEqual(genRef.ChromNames[(int) sex].Count, cnRef.Count);
         double ploidyRef = CopyNumbers.CalcPloidy(genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
     }

@@ -30,7 +30,7 @@ public class TestRegions
         Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, "chr1")));
         Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, "chr1")));
 
-        var gene = new Gene(69090, 70008, "chr1" , 0, 0.142321064, GeneLT.TSG);
+        var gene = new Gene(69090, 70008, "chr1" , GeneLT.TSG, 0, 0.142321064 );
         var range = new GenRange(0, 249250621, "chr1");
         Assert.IsTrue(range.Overlaps(gene));
     }
@@ -321,9 +321,9 @@ public class TestRegions
     [Test]
     public void TestPresentGenesWithDeletion()
     {
-        var tsg = new Gene(0, 10, "chr1" , 0, 0.1, GeneLT.TSG);
-        var og = new Gene(20, 30, "chr1" , 1, 0.2, GeneLT.OG);
-        var ess = new Gene(40, 50, "chr1" , 2, 0.3, GeneLT.Ess);
+        var tsg = new Gene(0, 10, "chr1", GeneLT.TSG, 0, 0.1);
+        var og = new Gene(20, 30, "chr1", GeneLT.OG, 0, 0.2);
+        var ess = new Gene(40, 50, "chr1", GeneLT.Ess, 0, 0.3);
         var r = new Region(0, 249250621, "chr1", true, [], [tsg, og, ess]);
         var regions = new List<Region>{r};
         // Delete a region affecting the og

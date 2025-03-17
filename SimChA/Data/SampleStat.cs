@@ -59,7 +59,7 @@ public record SampleStat(
 
         double ploidy = CalcPloidy(kar, genRef);
         double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
-        var geneData = genRef.GeneData[(int) kar.Sex];
+        var geneData = genRef.GeneLists[(int) kar.Sex];
         double tsg = Fitness.TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], fParams.GeneNormalization);
         double og = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], fParams.GeneNormalization);
         double ess = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.GeneNormalization);

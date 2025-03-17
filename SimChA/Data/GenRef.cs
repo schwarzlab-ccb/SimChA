@@ -6,100 +6,65 @@ public class GenRef
 {
     public string Name { get; }
     public Dictionary<string, int> ChrLengths { get; }
-    public Dictionary<string, SexType> ChrSex { get; }
+    private Dictionary<string, SexType> ChrSex { get; }
     public Dictionary<string, GenRange> Centromeres { get; }
     public int AutosomesCount { get; }
-    private List<List<Region>> XYGenome { get; }
-    private List<List<Region>> XXGenome { get; }
-    private List<List<Region>> Autosome { get; }
-    private long XYLinLen { get; }
-    private long XXLinLen { get; }
-    public long AutosomeLinLen { get; }
-    private long XYGenomeLen { get; }
-    private long XXGenomeLen { get; }
-    public long AutosomeLen { get; }
-    private List<string> YChrs { get; }
-    private List<string> XChrs { get; }
-    public List<string> AllChrs { get; }
-    public List<string> AutChrs { get; }
     public string YChrName { get; }
     public string XChrName { get; }
+    public List<List<List<Region>>> Genomes { get; } // TODO: reduce nesting
+    public List<long> GenomeLens { get; }
+    public List<long> ReferenceLens { get; }
+    public List<List<string>> ChromNames { get; }
+    public List<string> AllChrs { get; }
     private Dictionary<string, StringBuilder>? GenContentsDict { get; }
-
-    private readonly Dictionary<GeneLT, Dictionary<string, List<Gene>>> _geneLists;
-
-    public List<List<List<Gene>>> GeneData;
+    private List<Dictionary<string, List<Gene>>> GeneChromMap { get; }
+    public List<List<List<Gene>>> GeneLists { get; }
     
     public GenRef(
         string name,
         Dictionary<string, int> chrLengths,
         Dictionary<string, SexType> chrSex,
         Dictionary<string, GenRange> centromeres,
-        Dictionary<GeneLT, Dictionary<string, List<Gene>>> geneList,
+        List<Dictionary<string, List<Gene>>> geneChromMap,
         Dictionary<string, StringBuilder>? genContentsDict = null)
     {
         Name = name;
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         Centromeres = centromeres;
-        _geneLists = geneList;
+        GeneChromMap = geneChromMap;
 
         AutosomesCount = ChrSex.Count(x => x.Value == SexType.Any);
-        YChrs = ChrSex.Where(pair => pair.Value != SexType.Female).Select(pair => pair.Key).ToList();
-        XChrs = ChrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList();
-        AutChrs = ChrSex.Where(pair => pair.Value == SexType.Any).Select(pair => pair.Key).ToList();
-        AllChrs = ChrSex.Select(pair => pair.Key).ToList();
         YChrName = ChrSex.Where(pair => pair.Value == SexType.Male).Select(pair => pair.Key).FirstOrDefault("");
         XChrName = ChrSex.Where(pair => pair.Value == SexType.Female).Select(pair => pair.Key).FirstOrDefault("");
-
-        // Create the haplotypes
-        var haplotypeOneF = CreateHaplotype(SexType.Female, true);
-        var haplotypeTwoF = CreateHaplotype(SexType.Female, false);
-        var haplotypeOneM = CreateHaplotype(SexType.Male, true);
-        var haplotypeTwoM = CreateHaplotype(SexType.Male, false);
-        var haplotypeOneA = CreateHaplotype(SexType.Any, true);
-        var haplotypeTwoA = CreateHaplotype(SexType.Any, false);
-        XYGenome = haplotypeOneM.Concat(haplotypeTwoM).ToList();
-        XXGenome = haplotypeOneF.Concat(haplotypeTwoF).ToList();
-        Autosome = haplotypeOneA.Concat(haplotypeTwoA).ToList();
-
-        XYLinLen = YChrs.Select(c => (long)chrLengths[c]).Sum();
-        XXLinLen = XChrs.Select(c => (long)chrLengths[c]).Sum();
-        AutosomeLinLen = AutChrs.Select(c => (long)chrLengths[c]).Sum();
-        XYGenomeLen = XYGenome.Sum(regions => regions.Sum(r => r.Length));
-        XXGenomeLen = XXGenome.Sum(regions => regions.Sum(r => r.Length));
-        AutosomeLen = Autosome.Sum(regions => regions.Sum(r => r.Length));
-
+        ChromNames =
+        [
+            ChrSex.Where(pair => pair.Value == SexType.Any).Select(pair => pair.Key).ToList(),
+            ChrSex.Where(pair => pair.Value != SexType.Male).Select(pair => pair.Key).ToList(),
+            ChrSex.Select(pair => pair.Key).ToList()
+        ];
+        AllChrs = ChromNames[^1];
+        Genomes =
+        [
+            CreateHaplotype(SexType.Any, true).Concat(CreateHaplotype(SexType.Any, false)).ToList(),
+            CreateHaplotype(SexType.Female, true).Concat(CreateHaplotype(SexType.Female, false)).ToList(),
+            CreateHaplotype(SexType.Male, true).Concat(CreateHaplotype(SexType.Male, false)).ToList()
+        ];
+        GenomeLens = Genomes.Select(genome => genome.Sum(regs => regs.Sum(reg => reg.Length))).ToList();
+        ReferenceLens = ChromNames.Select(sexList => sexList.Sum(chrName => (long) chrLengths[chrName])).ToList();
         GenContentsDict = genContentsDict;
-        CreateGeneLookUp();
+
+        GeneLists = ChromNames
+            .Select(chrs => GeneChromMap.Select(map => CreateGeneList(chrs, map)).ToList())
+            .ToList();
     }
 
-    private void CreateGeneLookUp()
-    {
-        GeneData = [];
-        foreach (SexType sexType in Enum.GetValues(typeof(SexType)))
-        {
-            List<List<Gene>> sexList = [];
-            foreach (var (_, genesPerChrom) in _geneLists)
-            {
-                List<Gene> typeList = [];
-                foreach ((string chrom, var genes) in genesPerChrom)
-                {
-                    if (chrom == YChrName && sexType != SexType.Male || chrom == XChrName && sexType == SexType.Any)
-                    {
-                        continue;
-                    }
-                    typeList.AddRange(genes);
-                }
-                sexList.Add(typeList);
-            }
-            GeneData.Add(sexList);
-        }
-    }
-
+    private static List<Gene> CreateGeneList(List<string> chrs, Dictionary<string, List<Gene>> geneChromMap)
+        => chrs.SelectMany(chrom => geneChromMap[chrom]).OrderBy(g => g.GeneId).ToList();
+    
     public char[] GetGenContents(string chrom, int start, int length)
         => GenContentsDict != null
-            ? GenContentsDict[chrom].ToString(start, length).ToCharArray()
+            ? [..GenContentsDict[chrom].ToString(start, length)]
             : ['N'];
 
     private static Nucleotide CharToNucleotide(char c)
@@ -120,96 +85,48 @@ public class GenRef
     public Nucleotide GetRefBaseFromSeq(IEnumerable<string> seq, int location)
         => GenContentsDict == null ? Nucleotide.N : CharToNucleotide(seq.ElementAt(location)[0]);
 
-    public int ChrCount(SexType sex, bool diploid = true)
-        => (diploid, sex) switch
-        {
-            (true, SexType.Female) => XChrs.Count * 2,
-            (true, SexType.Male) => YChrs.Count * 2,
-            (true, SexType.Any) => AutChrs.Count * 2,
-            (false, SexType.Female) => XChrs.Count,
-            (false, SexType.Male) => AllChrs.Count,
-            (false, SexType.Any) => AutChrs.Count,
-            _ => throw new ArgumentOutOfRangeException($"Missing chromosome counts for {sex}, {diploid}")
-        };
+    // TODO: Remove
+    public int ContigCount(SexType sex, bool diploid = true)
+        => Genomes[(int) sex].Count / (diploid ? 1 : 2);
 
+    // TODO: Remove
     public long GetGenomeLen(SexType sex, bool diploid = true)
-        => (diploid, sex) switch
-        {
-            (true, SexType.Female) => XXGenomeLen,
-            (true, SexType.Male) => XYGenomeLen,
-            (true, SexType.Any) => AutosomeLen,
-            (false, SexType.Female) => XXLinLen,
-            (false, SexType.Male) => XYLinLen,
-            (false, SexType.Any) => AutosomeLinLen,
-            _ => throw new ArgumentOutOfRangeException($"Missing genome length for {sex}, {diploid}")
-        };
-
-    public IEnumerable<string> ChrIDsForSex(SexType sex)
-        => sex switch
-        {
-            SexType.Female => XChrs,
-            SexType.Male => AllChrs,
-            _ => AutChrs
-        };
-
-    private List<string> ChrIDsForHap(SexType sex, bool firstHaplotype = true)
+        => diploid ? GenomeLens[(int)sex] : ReferenceLens[(int)sex];
+    
+    private List<string> ChrNamesForHap(SexType sex, bool firstHaplotype = true)
         => (firstHaplotype, sex) switch
         {
-            (true, SexType.Female) => XChrs,
-            (true, SexType.Male) => XChrs,
-            (true, SexType.Any) => AutChrs,
-            (false, SexType.Female) => XChrs,
-            (false, SexType.Male) => YChrs,
-            (false, SexType.Any) => AutChrs,
-            _ => throw new ArgumentOutOfRangeException($"Missing chr IDs for {sex}, {firstHaplotype}")
+            (true, SexType.Male) => ChromNames[(int) SexType.Female],
+            (false, SexType.Male) => ChromNames[(int) SexType.Any].Concat([YChrName]).ToList(),
+            _ => ChromNames[(int) sex]
         };
-
-    public List<List<Region>> GetGenotype(SexType sexType)
-        => sexType switch
-        {
-            SexType.Female => XXGenome,
-            SexType.Male => XYGenome,
-            _ => Autosome
-        };
-
+    
     public int GetExpCount(string chrom, SexType sexType)
     {
         if (chrom == XChrName)
         {
-            if (sexType == SexType.Female)
-            {
-                return 2;
-            }
-
-            if (sexType == SexType.Male)
-            {
-                return 1;
-            }
-            return 0;
+            return sexType == SexType.Female ? 2 : sexType == SexType.Male ? 1 : 0;
         }
         if (chrom == YChrName)
         {
-            if (sexType == SexType.Male)
-            {
-                return 1;
-            }
-            return 0;
+            return sexType == SexType.Male ? 1 : 0;
         }
         return 2;
     }
     
-    public List<List<int>> GetInitialGeneCounts(SexType sexType, bool keepEmpty = false)
+    public List<List<int>> GetInitialGeneCounts(SexType sexType, bool keepEmpty)
     {
         List<List<int>> res = [];
-        foreach (var (geneLT, genesPerChrom) in _geneLists)
+        foreach (var genesPerChrom in GeneChromMap)
         {
-            int genesPerType = genesPerChrom.Sum(pair => pair.Value.Count);
-            var typeCounts = Enumerable.Repeat(0, genesPerType).ToList();
+            int geneCount = genesPerChrom.Sum(pair => pair.Value.Count);
+            var typeCounts = Enumerable.Repeat(0, geneCount).ToList();
             if (!keepEmpty)
             {
                 foreach ((string chrom, var genes) in genesPerChrom)
                 {
-                    int expCount = keepEmpty ? 0 : GetExpCount(chrom, sexType);
+                    // In male the sex chromosomes have CN == 1, otherwise all are 2
+                    int expCount = keepEmpty ? 0: GetExpCount(chrom, sexType);
                     foreach (var gene in genes)
                     {
                         typeCounts[gene.GeneId] = expCount;
@@ -221,15 +138,18 @@ public class GenRef
         return res;
     }
 
-    private IEnumerable<Gene> GetRegionGenes(string chrNo)
-        => _geneLists.SelectMany(geneTypeList => geneTypeList.Value[chrNo]);
+    private IEnumerable<Gene> GetChromGenes(string chrNo)
+        => GeneChromMap.SelectMany(chrGenes => chrGenes[chrNo]);
 
     private Region GetRegion(string chrNo, bool isFirstHaplotype)
-        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetRegionGenes(chrNo).ToList());
+        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetChromGenes(chrNo).ToList());
 
     private IEnumerable<List<Region>> CreateHaplotype(SexType sex, bool firstHap)
-        => ChrIDsForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });
+        => ChrNamesForHap(sex, firstHap).Select(chr => new List<Region> { GetRegion(chr, firstHap) });
 
     public IEnumerable<Gene> GetGenesBetween(string chrNo, int start, int end)
-        => _geneLists.SelectMany(pair => pair.Value[chrNo].SkipWhile(g => g.Start < start).TakeWhile(g => g.End <= end));
+        => GeneChromMap.SelectMany(chrGenes => chrGenes[chrNo]
+            .SkipWhile(g => g.Start < start)
+            .TakeWhile(g => g.End <= end)
+        );
 }

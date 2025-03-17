@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommandLine;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.EventData;
@@ -217,7 +218,7 @@ public class TestKaryotype
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.ChrCount(SexType.Female, true); i++)
+        for (int i = 0; i < _genRef.ContigCount(SexType.Female, true); i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }
@@ -380,50 +381,20 @@ public class TestKaryotype
     }
 
     [Test]
-    public void TestGetPresentGeneCounts()
+    public void TestGetPresentGeneCounts([Values] GeneLT geneType)
     {
         // Assumes _kar is male
         for (int i = 0; i < 23; i++)
         {
             _kar.ApplyContigDeletion(i);
         }
-        var geneCounts = _kar.GeneCounts;
-        var tsgs = geneCounts[(int) GeneLT.TSG];
-        var ogs = geneCounts[(int) GeneLT.OG];
-        var ess = geneCounts[(int) GeneLT.Ess];
-        foreach (var (gene, count) in tsgs)
+        foreach (var gene in _genRef.GeneLists[(int)_kar.Sex][(int) geneType])
         {
-            if (gene.Chrom != "chrX")
-            {
-                Assert.AreEqual(1, count);
-            } else
-            {
-                Assert.AreEqual(0, count);
-            }
-        }
-        
-        foreach (var (gene, count) in ogs)
-        {
-            if (gene.Chrom != "chrX")
-            {
-                Assert.AreEqual(1, count);
-            } else
-            {
-                Assert.AreEqual(0, count);
-            }
-            
-        }
-        foreach (var (gene, count) in ess)
-        {
-            if (gene.Chrom != "chrX")
-            {
-                Assert.AreEqual(1, count);
-            } else
-            {
-                Assert.AreEqual(0, count);
-            }
+            int count = _kar.GeneCounts[(int)geneType][gene.GeneId];
+            Assert.AreEqual(gene.Chrom != "chrX" ? 1 : 0, count);
         }
     }
+    
     [Test]
     public void TestContigIds()
     {

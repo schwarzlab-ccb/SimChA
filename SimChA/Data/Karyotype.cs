@@ -16,7 +16,7 @@ public class Karyotype
     public Karyotype(GenRef genRef, SexType sex)
     {
         GenRef = genRef;
-        _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.Genomes[(int) sex].Select(reg => new Contig(reg)).ToList();
         Sex = sex;
         GeneCounts = genRef.GetInitialGeneCounts(sex, false);
     }
@@ -53,7 +53,7 @@ public class Karyotype
 
     public Dictionary<string, List<int>> CalcBreaks()
     {
-        var breakSets = GenRef.ChrIDsForSex(Sex).ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
+        var breakSets = GenRef.ChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
         foreach (var contig in _contigs)
         {
             foreach ((string chrom, var breaks) in contig.CalcBreaks())
@@ -340,11 +340,11 @@ public class Karyotype
     
     private void DoubleGeneCounts()
     {
-        foreach (var geneCounts in GeneCounts)
+        foreach (var listCount in GeneCounts)
         {
-            for (int j = 0; j < geneCounts.Count; j++)
+            for (int i = 0; i < listCount.Count; i++)
             {
-                geneCounts[j] *= 2;
+                listCount[i] *= 2;
             }
         }
     }
