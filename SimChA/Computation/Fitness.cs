@@ -14,9 +14,10 @@ public static class Fitness
     {
         bool normGenes = fParams.GeneNormalization;
         double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen()));
-        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.OG], kar.Sex, normGenes));
-        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(genRef, kar.GeneCounts[(int) GeneLT.TSG], kar.Sex, normGenes));
-        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(kar.GeneCounts[(int) GeneLT.Ess], normGenes));
+        var geneData = genRef.GeneData[(int)kar.Sex];
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], normGenes));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], normGenes));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], normGenes));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     
@@ -32,21 +33,21 @@ public static class Fitness
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double)refBaseCount);
     
-    public static double TsgOgTerm(GenRef genRef, Dictionary<Gene, int> geneCNs, SexType sex, bool normalizeGenes = false)
+    public static double TsgOgTerm(List<Gene> genes, List<int> geneCNs, bool normalizeGenes = false)
     {
-        Func<KeyValuePair<Gene, int>, double> calsGene = 
-            pair => Math.Log(1 + pair.Value) * pair.Key.DeltaFitness;
-        return normalizeGenes ? geneCNs.Average(calsGene) : geneCNs.Sum(calsGene);
+        double sum = genes.Select((t, i) => Math.Log(1 + geneCNs[i]) * t.Score).Sum();
+        return normalizeGenes ? sum / genes.Count : sum;
+    }
+
+    public static double Zygosity(List<int> geneCNs, int count, bool normalizeGenes = false)
+    {
+        double sum = geneCNs.Sum(i => i == count ? 1 : 0);
+        return normalizeGenes ? sum / geneCNs.Count : sum;
     }
     
-    public static double Zygosity(Dictionary<Gene, int> geneCNs, int count, bool normalizeGenes = false) 
-        => normalizeGenes ?
-            geneCNs.Average(pair => pair.Value == count ? 1 : 0) : geneCNs.Count(pair => pair.Value == count);
-    
-    public static double EssTerm(Dictionary<Gene, int> geneCNs, bool normalizeGenes = false)
+    public static double EssTerm(List<Gene> genes, List<int> geneCNs, bool normalizeGenes = false)
     {
-        Func<KeyValuePair<Gene, int>, double> calsGene = 
-            pair => Math.Min(pair.Value - 1, 0) * pair.Key.DeltaFitness;
-        return normalizeGenes ? geneCNs.Average(calsGene) : geneCNs.Sum(calsGene);
+        double sum = genes.Select((t, i) => Math.Min(geneCNs[i] - 1, 0) * t.Score).Sum();
+        return normalizeGenes ? sum / genes.Count : sum;
     }
 }

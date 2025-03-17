@@ -109,19 +109,21 @@ public static class Parsers
         int listIndex = 0;
         while (geneFile.ReadLine() is { } line)
         {
-            if (line != "")
+            if (line == "")
             {
-                string[] genString = line.Split('\t');
-                string name = genString[3];
-                double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
-                string chrom = genString[0];
-                // Convert to zero-based [start, end) index 
-                int start = int.Parse(genString[1]) - 1;
-                int end = int.Parse(genString[2]);
-                var gene = new Gene(start, end, chrom, listIndex, fitness, type);
-                geneList[chrom].Add(gene);
-                listIndex += 1;
+                continue;
             }
+
+            string[] genString = line.Split('\t');
+            string name = genString[3];
+            double fitness = double.Parse(genString[4], CultureInfo.InvariantCulture.NumberFormat);
+            string chrom = genString[0];
+            // Convert to zero-based [start, end) index 
+            int start = int.Parse(genString[1]) - 1;
+            int end = int.Parse(genString[2]);
+            var gene = new Gene(start, end, chrom, type, listIndex, fitness);
+            geneList[chrom].Add(gene);
+            listIndex += 1;
         }
         foreach (var pair in geneList)
         {

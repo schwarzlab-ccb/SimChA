@@ -11,14 +11,14 @@ public class Karyotype
 
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
-    public List<Dictionary<Gene, int>> GeneCounts { get; }
+    public List<List<int>> GeneCounts { get; }
 
     public Karyotype(GenRef genRef, SexType sex)
     {
         GenRef = genRef;
         _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
         Sex = sex;
-        GeneCounts = genRef.GetInitialGenes(sex, false);
+        GeneCounts = genRef.GetInitialGeneCounts(sex, false);
     }
 
     public Karyotype(Karyotype other)
@@ -27,7 +27,7 @@ public class Karyotype
         _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
-        GeneCounts = other.GeneCounts.ConvertAll(geneDict => new Dictionary<Gene, int>(geneDict));
+        GeneCounts = other.GeneCounts.ConvertAll(geneCounts => new List<int>(geneCounts));
     }
 
     public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
@@ -35,7 +35,7 @@ public class Karyotype
         GenRef = genRef;
         _contigs = contigs;
         Sex = sex;
-        GeneCounts = genRef.GetInitialGenes(sex, true);
+        GeneCounts = genRef.GetInitialGeneCounts(sex, true);
         foreach (var contig in _contigs)
         {
             AddGenes(contig);
@@ -326,7 +326,7 @@ public class Karyotype
     {
         foreach (var gene in contig.Genes)
         {
-            GeneCounts[(int) gene.ListType][gene] -= 1;
+            GeneCounts[(int) gene.ListType][gene.GeneId] -= 1;
         }
     }
 
@@ -334,7 +334,7 @@ public class Karyotype
     {
         foreach (var gene in contig.Genes)
         {
-            GeneCounts[(int) gene.ListType][gene] += 1;
+            GeneCounts[(int) gene.ListType][gene.GeneId] += 1;
         }
     }
     
@@ -342,9 +342,9 @@ public class Karyotype
     {
         foreach (var geneCounts in GeneCounts)
         {
-            foreach (var gene in geneCounts.Keys)
+            for (int j = 0; j < geneCounts.Count; j++)
             {
-                geneCounts[gene] *= 2;
+                geneCounts[j] *= 2;
             }
         }
     }
