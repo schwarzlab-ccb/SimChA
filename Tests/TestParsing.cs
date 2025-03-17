@@ -65,7 +65,7 @@ public class TestParsing
                                  "1,0,1,149897,0,339690,2,0,1.44,0.8619\n" +
                                  "5,1,1,310270,0,426497,3,0,1.728,0.3025\n" +
                                  "6,1,1,423957,0,583948,3,0,1.728,0.4133";
-        var clones = Parsers.ParseClonesWithEvents(new StringReader(clonesStr), true, ",");
+        var clones = Parsers.ParseClones(new StringReader(clonesStr), true, ",");
         Assert.AreEqual(4, clones.Count);
         Assert.AreEqual("0", clones[0].CloneId);
         Assert.AreEqual("0", clones[1].ParentId);
