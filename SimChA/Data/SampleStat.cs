@@ -51,14 +51,14 @@ public record SampleStat(
         $"\t{Mixture}";
 
     public static double CalcPloidy(Karyotype kar, GenRef genRef)
-        => 2.0 * kar.GenomeLen() / genRef.GetGenomeLen(kar.Sex);
+        => 2.0 * kar.GenomeLen() / genRef.GenomeLens[(int) kar.Sex];
     
     public static SampleStat GetSampleStat(Sample sample, GenRef genRef, FitParams fParams)
     {
         var kar = sample.Karyotype;
 
         double ploidy = CalcPloidy(kar, genRef);
-        double stress = Fitness.StressTerm(genRef.GetGenomeLen(kar.Sex), kar.GenomeLen());
+        double stress = Fitness.StressTerm(genRef.GenomeLens[(int) kar.Sex], kar.GenomeLen());
         var geneData = genRef.GeneLists[(int) kar.Sex];
         double tsg = Fitness.TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], fParams.GeneNormalization);
         double og = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], fParams.GeneNormalization);

@@ -11,7 +11,7 @@ public class Karyotype
 
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
-    public List<List<int>> GeneCounts { get; }
+    public List<int[]> GeneCounts { get; }
 
     public Karyotype(GenRef genRef, SexType sex)
     {
@@ -27,7 +27,7 @@ public class Karyotype
         _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
-        GeneCounts = other.GeneCounts.ConvertAll(geneCounts => new List<int>(geneCounts));
+        GeneCounts = other.GeneCounts.Select(geneCounts => (int[]) geneCounts.Clone()).ToList();
     }
 
     public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
@@ -53,7 +53,7 @@ public class Karyotype
 
     public Dictionary<string, List<int>> CalcBreaks()
     {
-        var breakSets = GenRef.ChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
+        var breakSets = GenRef.SexChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
         foreach (var contig in _contigs)
         {
             foreach ((string chrom, var breaks) in contig.CalcBreaks())
@@ -340,9 +340,9 @@ public class Karyotype
     
     private void DoubleGeneCounts()
     {
-        foreach (var listCount in GeneCounts)
+        foreach (int[] listCount in GeneCounts)
         {
-            for (int i = 0; i < listCount.Count; i++)
+            for (int i = 0; i < listCount.Length; i++)
             {
                 listCount[i] *= 2;
             }

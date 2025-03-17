@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using CommandLine;
 using SimChA.IO;
 using SimChA.Simulation;
 using SimChA.Data;
-using CommandLine;
 using SimChA.Computation;
 
 // Configuration
@@ -60,7 +60,7 @@ else
 // Score and segment samples
 var sampleStats = new List<SampleStat>();
 var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
-var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
+var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrNames, samples) : null;
 
 Console.WriteLine("Analyzing samples:");
 foreach (var sample in samples)

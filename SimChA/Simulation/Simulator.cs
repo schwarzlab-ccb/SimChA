@@ -51,7 +51,7 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
         int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
+            Console.Write($"Sample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80) + "\r");
             var eventP = Rnd.PickRndElem(cnEventPs);
             var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreatePassEvent();
             eventData.ApplyEvent(childKar);

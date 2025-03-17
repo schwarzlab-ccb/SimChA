@@ -212,13 +212,13 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(_genRef.GetGenomeLen(_kar.Sex), _kar.GenomeLen());
+        Assert.AreEqual(_genRef.GenomeLens[(int) _kar.Sex], _kar.GenomeLen());
     }
     
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.ContigCount(SexType.Female, true); i++)
+        for (int i = 0; i < _genRef.Genomes[(int) SexType.Female].Count; i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }

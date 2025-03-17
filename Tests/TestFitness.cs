@@ -112,11 +112,12 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var kar = new Karyotype(genRef, sex);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(sex), kar.GenomeLen()), EPSILON);
+        long genLen = genRef.GenomeLens[(int)sex];
+        Assert.AreEqual(0, Fitness.StressTerm(genLen, kar.GenomeLen()), EPSILON);
         kar.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(sex), kar.GenomeLen()), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genLen, kar.GenomeLen()), EPSILON);
         kar.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(sex), kar.GenomeLen()), EPSILON);
+        Assert.AreEqual(-3, Fitness.StressTerm(genLen, kar.GenomeLen()), EPSILON);
     }
 
     [Test]
@@ -125,13 +126,13 @@ public class TestFitness
         var genRef = _refs[refId];
         var karA = new Karyotype(genRef, SexType.Any);
         var karB = new Karyotype(genRef, SexType.Any);
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Any), karA.GenomeLen()), EPSILON);
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Any], karA.GenomeLen()), EPSILON);
         karA.ApplyWGD(); // Double all
-        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Any), karA.GenomeLen()), EPSILON);
+        Assert.AreEqual(-1, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Any], karA.GenomeLen()), EPSILON);
         karA.ApplyWGD(); // Double all
-        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Any), karA.GenomeLen()), EPSILON);
-        foreach (int i in Enumerable.Range(0, genRef.ContigCount(SexType.Any, false))) { karB.ApplyContigDeletion(i); }
-        Assert.AreEqual(0, Fitness.StressTerm(genRef.GetGenomeLen(SexType.Male), karB.GenomeLen()), EPSILON);
+        Assert.AreEqual(-3, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Any], karA.GenomeLen()), EPSILON);
+        foreach (int i in Enumerable.Range(0, genRef.Genomes[(int) SexType.Any].Count / 2)) { karB.ApplyContigDeletion(i); }
+        Assert.AreEqual(0, Fitness.StressTerm(genRef.GenomeLens[(int) SexType.Male], karB.GenomeLen()), EPSILON);
     }
 
     [Test]
