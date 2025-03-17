@@ -52,10 +52,11 @@ public static class Parsers
         while (cnaFile.ReadLine() is { } line)
         {
             string[] lineSplit = line.Split('\t');
-            string sample = lineSplit[0];
-            if (!sampleSegs.ContainsKey(sample))
+            string sampleId = lineSplit[0];
+            if (!sampleSegs.ContainsKey(sampleId))
             {
-                sampleSegs[sample] = [];
+                sampleSegs[sampleId] = [];
+                Console.Write($"Reading sample {sampleId}.".PadRight(80) + "\r");
             }
             string chrom = lineSplit[1];
             if (autosomesOnly && (chrom == genRef.YChrName || chrom == genRef.XChrName))
@@ -66,12 +67,13 @@ public static class Parsers
             int end = int.Parse(lineSplit[3]);
             int cnA = (int) Math.Round(float.Parse(lineSplit[4]));
             int cnB = (int) Math.Round(float.Parse(lineSplit[5]));
-            sampleSegs[sample].Add((chrom, start, end, cnA, cnB));
+            sampleSegs[sampleId].Add((chrom, start, end, cnA, cnB));
         }
         
         // Convert samples to karyotypes
-        foreach ((string sample, var segs) in sampleSegs)
+        foreach ((string sampleId, var segs) in sampleSegs)
         {
+            Console.Write($"Creating karyotype for sample {sampleId}.".PadRight(80) + "\r");
             List<Region> regionsA = [];
             List<Region> regionsB = [];
             bool chrYfound = false;
@@ -95,7 +97,7 @@ public static class Parsers
             var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
             var sexType = chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
             var kar = new Karyotype(genRef, newRegs, sexType);
-            result[sample] = kar;
+            result[sampleId] = kar;
         }
 
         // Add the last sample

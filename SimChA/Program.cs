@@ -61,9 +61,11 @@ else
 var sampleStats = new List<SampleStat>();
 var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
 var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrs, samples) : null;
+
+Console.WriteLine("Analyzing samples:");
 foreach (var sample in samples)
 {
-    Console.Write($"\rAnalyzing sample {sample.SampleId}.".PadRight(80));
+    Console.Write($"Analyzing sample {sample.SampleId}.".PadRight(80) + "\r");
     sampleStats.Add(SampleStat.GetSampleStat(sample, genRef, config.FitParams));
     if (options.CalcSegments)
     {

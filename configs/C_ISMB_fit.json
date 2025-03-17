@@ -6,7 +6,7 @@
   },
   "FitParams": {
     "Stress":  4,
-    "TsgOg": 0.06,
+    "TsgOg": 0.05,
     "Essentiality": 0.5,
     "AutosomesOnly": true,
     "GeneNormalization": false

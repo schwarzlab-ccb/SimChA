@@ -37,6 +37,5 @@ public static class CopyNumbers
         => karyotype.CalcCNs(breaks ?? karyotype.CalcBreaks());
 
     public static double CalcPloidy(GenRef genRef, List<CopyNumber> copyNumbers, SexType sex)
-        => 2 * copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() 
-           / (float) genRef.GetGenomeLen(sex);
+        => 2 * copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() / (float) genRef.GetGenomeLen(sex);
 }
