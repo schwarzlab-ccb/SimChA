@@ -10,9 +10,10 @@ public class FileIO
 {
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
-    private const string ESSENTIALS_TSV = "essentials_select.tsv";
-    private const string OGS_TSV = "ogs_select.tsv";
-    private const string TSGS_TSV = "tsgs_select.tsv";
+    private const string SUBSET = "select";
+    private const string ESSENTIALS_TSV = $"essentials_{SUBSET}.tsv";
+    private const string OGS_TSV = $"ogs_{SUBSET}.tsv";
+    private const string TSGS_TSV = $"tsgs_{SUBSET}.tsv";
     private const string GENOME_FASTA = "genome.fa";
     private const string CENTROMERES_TSV = "centromeres.tsv";
     // input
@@ -24,8 +25,6 @@ public class FileIO
     private const string KARYOTYPES_FILENAME = "karyotypes.tsv";
     private const string CN_EVENTS_FILENAME = "events.tsv";
     private const string VCF_FILENAME = "vcf.tsv";
-    // private const string FITNESSES_FILENAME = "mcmc_fitnesses.tsv";
-    // private const string TREE_FILENAME = "tree.tsv";
     
     private string Timestamp { get; }
     private string OutFolder { get; }
@@ -223,18 +222,17 @@ public class FileIO
         }
     }
 
-    private static Dictionary<GeneLT, Dictionary<string, List<Gene>>> ReadGeneLists(string folder, Dictionary<string, SexType> chrSex)
+    private static List<Dictionary<string, List<Gene>>> MapGenesToChroms(string folder, Dictionary<string, SexType> chrSex)
     {
-        var geneLists = new Dictionary<GeneLT, Dictionary<string, List<Gene>>>();
-        var fileMap = new Dictionary<GeneLT, string>
-        {
+        List<Dictionary<string, List<Gene>>> geneLists = [];
+        Dictionary<GeneLT, string> fileMap = new() {
             { GeneLT.TSG, TSGS_TSV },
             { GeneLT.OG, OGS_TSV },
             { GeneLT.Ess, ESSENTIALS_TSV }
         };
-        foreach ((var key, string filename) in fileMap)
+        for (int i = 0; i < fileMap.Count; i++)
         {
-            string filePath = Path.Combine(folder, filename);
+            string filePath = Path.Combine(folder, fileMap[(GeneLT) i]);
             string fileFullPath = Path.GetFullPath(filePath);
             if (!File.Exists(fileFullPath))
             {
@@ -244,7 +242,7 @@ public class FileIO
             {
                 var geneFile = new StreamReader(fileFullPath);
                 var chrNames = chrSex.Select(pair => pair.Key).ToList();
-                geneLists[key] = Parsers.ParseGeneList(geneFile, chrNames, key);
+                geneLists.Add(Parsers.ParseGeneList(geneFile, chrNames, (GeneLT) i));
             }
             catch (Exception e)
             {
@@ -321,7 +319,7 @@ public class FileIO
         var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
-        var geneLists = ReadGeneLists(dataFolder, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, centromeres, geneLists, genContentsDict);
+        var geneChromMap = MapGenesToChroms(dataFolder, chrSex);
+        return new GenRef(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
     }
 }

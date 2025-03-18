@@ -21,8 +21,8 @@ public class TestContig
     public void Setup()
     {
         _genRef = FileIO.ReadGenRef("./../../../../data/hg19");
-        _contig1 = new Contig(_genRef.GetGenotype(SexType.Female).First());
-        _contigX = new Contig(_genRef.GetGenotype(SexType.Female).Last());
+        _contig1 = new Contig([_genRef.SexGenome[(int) SexType.Female].First()]);
+        _contigX = new Contig([_genRef.SexGenome[(int) SexType.Female].Last()]);
     }
     
     [Test]

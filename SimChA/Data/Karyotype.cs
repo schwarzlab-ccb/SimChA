@@ -11,14 +11,14 @@ public class Karyotype
 
     // NOTE: Empty contigs are retained in the list, but not reported. This way the initial indexing is preserved.
     private readonly List<Contig> _contigs;
-    public Dictionary<GeneLT, Dictionary<Gene, int>> GeneCounts { get; }
+    public List<int[]> GeneCounts { get; }
 
     public Karyotype(GenRef genRef, SexType sex)
     {
         GenRef = genRef;
-        _contigs = genRef.GetGenotype(sex).Select(region => new Contig(region)).ToList();
+        _contigs = genRef.SexGenome[(int) sex].Select(reg => new Contig([reg])).ToList();
         Sex = sex;
-        GeneCounts = genRef.GetInitialGenes(sex, false);
+        GeneCounts = genRef.GetInitialGeneCounts(sex, false);
     }
 
     public Karyotype(Karyotype other)
@@ -27,10 +27,7 @@ public class Karyotype
         _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
-        GeneCounts = other.GeneCounts.ToDictionary(
-            kvp => kvp.Key,
-            kvp => new Dictionary<Gene, int>(kvp.Value)
-        );
+        GeneCounts = other.GeneCounts.Select(geneCounts => (int[]) geneCounts.Clone()).ToList();
     }
 
     public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
@@ -38,7 +35,7 @@ public class Karyotype
         GenRef = genRef;
         _contigs = contigs;
         Sex = sex;
-        GeneCounts = genRef.GetInitialGenes(sex, true);
+        GeneCounts = genRef.GetInitialGeneCounts(sex, true);
         foreach (var contig in _contigs)
         {
             AddGenes(contig);
@@ -56,7 +53,7 @@ public class Karyotype
 
     public Dictionary<string, List<int>> CalcBreaks()
     {
-        var breakSets = GenRef.ChrIDsForSex(Sex).ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
+        var breakSets = GenRef.SexChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
         foreach (var contig in _contigs)
         {
             foreach ((string chrom, var breaks) in contig.CalcBreaks())
@@ -329,7 +326,7 @@ public class Karyotype
     {
         foreach (var gene in contig.Genes)
         {
-            GeneCounts[gene.ListType][gene] -= 1;
+            GeneCounts[(int) gene.ListType][gene.GeneId] -= 1;
         }
     }
 
@@ -337,17 +334,17 @@ public class Karyotype
     {
         foreach (var gene in contig.Genes)
         {
-            GeneCounts[gene.ListType][gene] += 1;
+            GeneCounts[(int) gene.ListType][gene.GeneId] += 1;
         }
     }
     
     private void DoubleGeneCounts()
     {
-        foreach (var (_, geneCounts) in GeneCounts)
+        foreach (int[] listCount in GeneCounts)
         {
-            foreach (var gene in geneCounts.Keys)
+            for (int i = 0; i < listCount.Length; i++)
             {
-                geneCounts[gene] *= 2;
+                listCount[i] *= 2;
             }
         }
     }

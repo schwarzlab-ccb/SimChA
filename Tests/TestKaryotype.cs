@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommandLine;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.EventData;
@@ -211,13 +212,13 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(_genRef.GetGenomeLen(_kar.Sex), _kar.GenomeLen());
+        Assert.AreEqual(_genRef.SexGenomeLen[(int) _kar.Sex], _kar.GenomeLen());
     }
     
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.ChrCount(SexType.Female, true); i++)
+        for (int i = 0; i < _genRef.SexGenome[(int) SexType.Female].Count; i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }
@@ -380,50 +381,20 @@ public class TestKaryotype
     }
 
     [Test]
-    public void TestGetPresentGeneCounts()
+    public void TestGetPresentGeneCounts([Values] GeneLT geneType)
     {
         // Assumes _kar is male
         for (int i = 0; i < 23; i++)
         {
             _kar.ApplyContigDeletion(i);
         }
-        var geneCounts = _kar.GeneCounts;
-        var tsgs = geneCounts[GeneLT.TSG];
-        var ogs = geneCounts[GeneLT.OG];
-        var ess = geneCounts[GeneLT.Ess];
-        foreach (var (gene, count) in tsgs)
+        foreach (var gene in _genRef.SexGeneLists[(int)_kar.Sex][(int) geneType])
         {
-            if (gene.Chrom != "chrX")
-            {
-                Assert.AreEqual(1, count);
-            } else
-            {
-                Assert.AreEqual(0, count);
-            }
-        }
-        
-        foreach (var (gene, count) in ogs)
-        {
-            if (gene.Chrom != "chrX")
-            {
-                Assert.AreEqual(1, count);
-            } else
-            {
-                Assert.AreEqual(0, count);
-            }
-            
-        }
-        foreach (var (gene, count) in ess)
-        {
-            if (gene.Chrom != "chrX")
-            {
-                Assert.AreEqual(1, count);
-            } else
-            {
-                Assert.AreEqual(0, count);
-            }
+            int count = _kar.GeneCounts[(int)geneType][gene.GeneId];
+            Assert.AreEqual(gene.Chrom != "chrX" ? 1 : 0, count);
         }
     }
+    
     [Test]
     public void TestContigIds()
     {
