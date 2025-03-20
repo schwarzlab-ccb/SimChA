@@ -134,7 +134,7 @@ public static class Parsers
         return geneList;
     }
 
-    public static List<CTreeNode> ParseClonesWithEvents(TextReader cloneStream, bool parseFitness, string sep)
+    public static List<CTreeNode> ParseClones(TextReader cloneStream, bool parseFitness, string sep)
     {
         const string idKey = "ID";
         const string parentIDKey = "ParentID";
@@ -170,31 +170,6 @@ public static class Parsers
             clones.Add(clone);
         }
         return clones;
-    }
-
-    public static List<(double fitness, int eventCount)> ParseClones(TextReader fitnessStream, FitParams fParams)
-    {
-        var output = new List<(double fitness, int eventCount)>();
-        string? firstLine = fitnessStream.ReadLine();
-        if (firstLine == null)
-        {
-            throw new Exception("Fitness file is empty.");
-        }
-        // Continue past the header
-        while (fitnessStream.ReadLine() is { } line)
-        {
-            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
-            double stressTerm = double.Parse(lineSplit[4], CultureInfo.InvariantCulture.NumberFormat)*fParams.Stress;
-            double tsg = double.Parse(lineSplit[5], CultureInfo.InvariantCulture.NumberFormat);
-            double og  = double.Parse(lineSplit[6], CultureInfo.InvariantCulture.NumberFormat);
-            double tsgogTerm = (og + tsg) * fParams.TsgOg;
-            double essTerm = double.Parse(lineSplit[7], CultureInfo.InvariantCulture.NumberFormat)*fParams.Essentiality;
-            double totalFitness = 1.0 + (stressTerm + tsgogTerm + essTerm);
-            // If the file includes data on how many chromosomal events the sample underwent
-            int eventCount = lineSplit.Count >= 9 ? int.Parse(lineSplit[8]) : -1;
-            output.Add((totalFitness, eventCount));
-        }
-        return output;
     }
 
     public static Dictionary<string, (double, double, double, int)> ParseCloneComponents(TextReader fitnessStream)
