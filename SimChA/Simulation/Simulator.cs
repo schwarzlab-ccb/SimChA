@@ -33,7 +33,11 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
 
     protected int SampleEventCount(CTreeNode node)
     {
-        double events = node.Distance >= 0 ? node.Distance : SimParams.RateMean;
+        if (node.Distance == 0)
+        {
+            return 0;
+        }
+        double events = node.Distance > 0 ? node.Distance : SimParams.RateMean;
         return Sampling.SampleDiscDist(Rnd, SimParams.RateDist, events);
     }
     
