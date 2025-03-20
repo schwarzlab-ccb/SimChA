@@ -1,6 +1,4 @@
-﻿using SimChA.DataTypes;
-
-namespace SimChA.Computation;
+﻿namespace SimChA.Computation;
 
 public static class Extensions
 {

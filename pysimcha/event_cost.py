@@ -94,7 +94,8 @@ square_fig = (7,4)
 #df["total"] = df["ll"] + df["ratios"] 
 #df.to_csv("event_cost_0_10_with_ratios.tsv", sep="\t", index=False)
 df = pd.read_csv("event_cost_0_10_with_ratios.tsv",sep="\t")
-pivot_df = df.pivot_table(index="event_cost", columns="alpha", values="total")
+df["log"] = df["total"]
+pivot_df = df.pivot_table(index="event_cost", columns="alpha", values="log")
 # Find the minimum error value and its corresponding p_wgd and alpha
 min_error_location = np.unravel_index(np.argmin(pivot_df.values), pivot_df.shape)
 best_r_loss = pivot_df.index[min_error_location[0]]
@@ -114,10 +115,11 @@ c = model.intercept_
 
 # Plot the error surface
 fig, ax = plt.subplots(1, figsize=square_fig)
-contour = ax.contourf(pivot_df.columns, pivot_df.index, pivot_df.values, levels=100, linestyles=None)
-contour.set_clim(3,10)
-fig.colorbar(contour, ax=ax)
-label = r'Best score: $\alpha$ - ' +f"{best_alpha:.3f}, " + "Event Cost - " + f"{best_r_loss:.3f}, " r"$p_{\mathrm{wgd}}$ - " + f"{best_pwgd:.3f}"
+levels = np.linspace(3.6, 10, 31)
+contour = ax.contourf(pivot_df.columns, pivot_df.index, pivot_df.values, levels=levels, linestyles=None, extend='max')
+contour.set_clim(levels[0], levels[-1])
+cbar = fig.colorbar(contour, ax=ax, extend='max')
+label = r'Best score: $\alpha$ - ' +f"{best_alpha:.3f}, " + "m - " + f"{best_r_loss:.3f}, " r"$p_{\mathrm{wgd}}$ - " + f"{best_pwgd:.3f}"
 ax.plot(best_alpha, best_r_loss, 'r*', markersize=12, label=label)
 
 x_vals = np.linspace(df["alpha"].min(), df["alpha"].max(), 500)
@@ -125,8 +127,8 @@ y_vals = m * x_vals + c
 ax.plot(x_vals, y_vals, color="w", label=f"y = {m:.3f}x+ {c:.3f}")
 
 ax.set_xlabel(r'Stress parameter - $\alpha$')
-ax.set_ylabel(r'Event Cost')
-ax.set_title(r'Stress vs Post-WGD Event Cost Error Surface')
+ax.set_ylabel(r'Multiplication Factor - $m$')
+ax.set_title(r'Effect of $\alpha$ and $m$ on WGD+ Samples')
 ax.legend()
 fig.savefig("../img/event_cost_total.png", dpi=300, bbox_inches="tight")
 fig.savefig("../img/event_cost_total.pdf")

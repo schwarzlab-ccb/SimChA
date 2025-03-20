@@ -2,12 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using CommandLine;
 using NUnit.Framework;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.IO;
-using SimChA.Simulation;
 
 namespace Tests;
 
@@ -21,75 +20,82 @@ public class TestContig
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef("./../../../../data/hg19");
-        _contig1 = new Contig(_genRef.GetGenotype(SexEnum.Female).First());
-        _contigX = new Contig(_genRef.GetGenotype(SexEnum.Female).Last());
+        _genRef = FileIO.ReadGenRef("./../../../../data/hg19");
+        _contig1 = new Contig([_genRef.SexGenome[(int) SexType.Female].First()]);
+        _contigX = new Contig([_genRef.SexGenome[(int) SexType.Female].Last()]);
     }
     
     [Test]
     public void TestSplit()
     {
-        long remainderLen = _contig1.Length() - 1000;
+        long remainderLen = _contig1.Length - 1000;
         var rest = _contig1.Split(1000, true);
-        Assert.AreEqual(1000, _contig1.Length());
-        Assert.AreEqual(remainderLen, rest.Length());
+        Assert.AreEqual(1000, _contig1.Length);
+        Assert.AreEqual(remainderLen, rest.Length);
     }
 
     [Test]
     public void TestJoin()
     {
-        long combinedLen = _contig1.Length() + _contigX.Length(); 
+        long combinedLen = _contig1.Length + _contigX.Length; 
         _contig1.Join(_contigX);
-        Assert.AreEqual(combinedLen, _contig1.Length());
+        Assert.AreEqual(combinedLen, _contig1.Length);
     }
 
     [Test]
     public void TestInversion()
     {
-        long length = _contig1.Length(); 
-        _contig1.InvertRange(length / 4, length * 3 / 4);
-        Assert.AreEqual(length, _contig1.Length());
+        long length = _contig1.Length;
+        for (int i = 0; i < 10; i++)
+        {
+            _contig1.InvertRange(i * 1000000, i * 2000000);
+        }
+
+        Assert.AreEqual(length, _contig1.Length);
     }
 
     [Test]
     public void TestReplication()
     {
-        long length = _contig1.Length() + 900;
-        _contig1.DuplicateRange(100, 1000);
-        Assert.AreEqual(length, _contig1.Length());
+        long length = _contig1.Length + 10 * 900;
+        for (int i = 0; i < 10; i++)
+        {
+            _contig1.DuplicateRange(i*1000 + 100, i*1000 + 1000);
+        }
+        Assert.AreEqual(length, _contig1.Length);
     }
     
     [Test]
     public void TestBridgeFront()
     {
-        long length = (_contig1.Length() - 1000) * 2;
+        long length = (_contig1.Length - 1000) * 2;
         _contig1.Bridge(1000, true);
-        Assert.AreEqual(length, _contig1.Length());
+        Assert.AreEqual(length, _contig1.Length);
         _contig1.Bridge(1000, false);
-        Assert.AreEqual(1000*2, _contig1.Length());
+        Assert.AreEqual(1000*2, _contig1.Length);
     }
 
     [Test]
     public void TestScatterAndGather()
     {
-        long length = _contig1.Length();
+        long length = _contig1.Length;
         _contig1.ScatterAndGather(new List<long>{1000, 2000, 3000}, new List<int>{3, 1, 2, 0});
-        Assert.AreEqual(length, _contig1.Length());
+        Assert.AreEqual(length, _contig1.Length);
     }
 
     [Test]
     public void TestGetRandomRegion()
     {
-        var res = _contig1.GetSubContig(1, _contig1.Length() - 1);
-        Assert.LessOrEqual(_contig1.Length() - 2, res.Length());
+        var res = _contig1.GetSubContig(1, _contig1.Length - 1);
+        Assert.LessOrEqual(_contig1.Length - 2, res.Length);
     }
 
     [Test]
     public void TestInsertContig()
     {
         var copyOfContig1 = new Contig(_contig1);
-        copyOfContig1.InsertContig(_contigX, _contig1.Length() / 2);
-        Assert.AreEqual(_contig1.Length() + _contigX.Length(), copyOfContig1.Length());
+        copyOfContig1.InsertContig(_contigX, _contig1.Length / 2);
+        Assert.AreEqual(_contig1.Length + _contigX.Length, copyOfContig1.Length);
     }
 
     [Test]
@@ -103,5 +109,18 @@ public class TestContig
         _contig1.Bridge(1000, true);
         cents = _contig1.GetCentromeres(_genRef.Centromeres);
         Assert.AreEqual(2, cents.Count);
+    }
+    
+    [Test]
+    public void TestPresentGenes([Values] GeneLT geneType) 
+    {
+        int geneCount = _contig1.CountGeneType(geneType);
+        var contigCopy = new Contig(_contig1);
+        
+        _contig1.DeleteRange(0, 200_000_000);
+        // Original should be different
+        Assert.AreNotEqual(geneCount, _contig1.CountGeneType(geneType));
+        // Copy should remain unchanged
+        Assert.AreEqual(geneCount, contigCopy.CountGeneType(geneType));
     }
 }

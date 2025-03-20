@@ -1,96 +1,86 @@
 ﻿using SimChA.Computation;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.EventData;
-using EDists = Extreme.Statistics.Distributions;
+using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class Simulator
+public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
 {
-    protected readonly Random Rnd;
-    protected readonly GenRef GenRef;
-    protected int Counter;
+    protected Random Rnd  { get; } = rnd;
+    protected GenRef GenRef  { get; } = genRef;
+    protected FitParams FitParams  { get; } = fitParams;
+    protected SimParams SimParams { get; } = simParams;
 
-    public Simulator(Random rnd, GenRef genRef)
+    protected static BaseEventData CreatePassEvent() 
+        => new(new CNEventPars(CNEventType.Pass, 1));
+
+    // TODO: Simulator does not currently implement AutosomesOnly
+    public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
-        Rnd = rnd;
-        GenRef = genRef;
+        var (cnEventPs, mixture) = Factory.MixSignatures(sigs);
+        var res = new List<Sample>();
+        var sex = FitParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
+        var rootKar = new Karyotype(GenRef, sex);
+        if (SimParams.TetraploidStart)
+        {
+            rootKar.ApplyWGD();
+        }
+        rootKar.UpdateFitness(GenRef, FitParams);
+        ApplyCNEventsRec(root, cloneTree, cnEventPs, mixture, res, rootKar, 0);
+        return res;
     }
 
-    public virtual void SampleEvents(Sample sample)
+    protected int SampleEventCount(CTreeNode node)
     {
-        if (sample.EventPars == null || !sample.EventPars.Any())
-        {
-            throw new Exception("No events to sample from.");
-        }
-        Counter = 1;
-        var (root, childLookUp) = CloneComp.CreateLookUp(sample.Clones);
-        sample.Kars[root.CloneId] = new Karyotype(GenRef, sample.Sex);
-        // TODO: Check if 1 is the correct number of events!
-        ApplyCNEventsRec(sample, root, childLookUp, 1);
+        double events = node.Distance > 0 ? node.Distance : SimParams.RateMean;
+        return Sampling.SampleDiscDist(Rnd, SimParams.RateDist, events);
     }
     
-    private void ApplyCNEventsRec(Sample sample, CloneIn node, 
-        IReadOnlyDictionary<string, List<CloneIn>> clones, int eventCount)
+    protected double SampleFit(CTreeNode node)
+        => node.Fitness > 0 ? node.Fitness : Sampling.SampleContDist(Rnd, SimParams.FitDist, SimParams.FitMean);
+
+    protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
+        Karyotype parentKar, 
+        CTreeNode cnChild, 
+        List<CNEventPars> cnEventPs, 
+        int mutDepth)
     {
-        foreach (var child in clones[node.CloneId])
+        var childKar = new Karyotype(parentKar);
+        var childEvs = new List<CNEventDesc>();
+        int eventCount = SampleEventCount(cnChild);
+        for (int evNo = 1; evNo <= eventCount; evNo++)
         {
-            var childKar = new Karyotype(sample.Kars[node.CloneId]);
-            sample.Kars[child.CloneId] = childKar;
-            var childEvs = new List<CNEventDesc>();
-            sample.EventDescs[child.CloneId] = childEvs;
-            for (int mutNo = 0; mutNo < child.Distance; mutNo++)
-            {
-                Console.Write($"\rSample {sample.SampleId}. Clone {Counter}/{clones.Count}. Event {mutNo + 1}/{child.Distance}.".PadRight(80));
-                var eventP = Rnd.PickRndElem(sample.EventPars);
-                var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP);
-                // TODO: we should log this somewhere for the user to know that we didn't sample the exact number of events
-                if (eventData == null)
-                    continue;
-                eventData.ApplyEvent(childKar);
-                var abberation = new CNEventDesc(eventP.Type, eventCount + mutNo, eventData.ToString());
-                childEvs.Add(abberation);
-            }
-            Counter++;
-            if (child.CloneId != node.CloneId)
-            {
-                ApplyCNEventsRec(sample, child, clones, eventCount + child.Distance);
-            }
-        }
+            Console.Write($"Sample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80) + "\r");
+            var eventP = Rnd.PickRndElem(cnEventPs);
+            var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreatePassEvent();
+            eventData.ApplyEvent(childKar);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo);
+            childEvs.Add(newEv);
+        } 
+        return (childKar, childEvs);
     }
 
-    public static List<Sample> SamplesFromProfiles(Dictionary<string, Karyotype> profiles)
-        => (from profile in profiles
-            let clones = new List<CloneIn> { new("0", "-1", 0, 0) }
-            select new Sample(profile.Key, profile.Value.Sex, clones, new List<CNEventPars>(),
-                new Dictionary<string, double>(), new Dictionary<string, Signature>())
-            { Kars = { ["0"] = profile.Value } }).ToList();
-
-    public List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
+    private void ApplyCNEventsRec(
+        CTreeNode parent, 
+        List<CTreeNode> cloneTree, 
+        List<CNEventPars> cnEventPs,
+        Dictionary<string, double> mixture,
+        List<Sample> sampleList,
+        Karyotype parentKar,
+        int mutDepth)
     {
-        var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
-        return eventPs.Select(
-            e =>
-            {
-                var newEventD = Sampling.GenerateCNEventData(Rnd, kar, e) 
-                                ?? throw new Exception("Failed to initialize event data.");
-                return newEventD;
-            }
-        ).ToList();
-    }
-    public List<(double fitness, int eventCount)> FitnessListFromSamples(SimParams simParams, Dictionary<string, Karyotype> profiles, Dictionary<string, int> eventCounts)
-    {
-        var output = new List<(double fitness, int eventCount)>();
-        var samples = SamplesFromProfiles(profiles);
-        foreach (var sample in samples)
+        var children = cloneTree.Where(c => c.ParentId == parent.CloneId).ToList();
+        foreach (var child in children)
         {
-            int total = sample.Clones.Count;
-            foreach (var clone in sample.Clones)
+            var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth);
+            var newClone = new Sample(parent.CloneId, child.CloneId, childKar, childEvs, mixture);
+            sampleList.Add(newClone);
+            
+            if (child.CloneId != parent.CloneId)
             {
-                sample.CloneStats[clone.CloneId] = CNProfile.GetCloneStats(sample, clone, GenRef, simParams.Fitness, sample.Kars);
-                output.Add((sample.CloneStats[clone.CloneId].Fitness, eventCounts[sample.SampleId]));
+                ApplyCNEventsRec(child, cloneTree, cnEventPs, mixture, sampleList, childKar, mutDepth + childEvs.Count);
             }
         }
-        return output;
     }
 }

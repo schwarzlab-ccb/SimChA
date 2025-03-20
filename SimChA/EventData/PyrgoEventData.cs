@@ -1,6 +1,5 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using Extreme.Statistics.Distributions;
+﻿using Extreme.Statistics.Distributions;
+using SimChA.Data;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -12,15 +11,14 @@ public record PyrgoEventData : ContigEventData
     public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
     {
         ContigId = contigId;
-        long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Size);
+        long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frac);
         long pyrgoStart = Sampling.GetPos(rnd, contigLen - pyrgoFrag);
-        
         int fracCount = GeometricDistribution.Sample(rnd, 1.0 / cnEventPars.Frag) + 1;
         
         FragmentsList = new List<(long, long)>();
         for (int i = 0; i < fracCount; i++)
         {
-            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, cnEventPars.Size / cnEventPars.Frag);
+            long fracLen = Sampling.GetExpSeg(rnd, pyrgoFrag, cnEventPars.Frac / cnEventPars.Frag);
             long fracStart = Sampling.GetPos(rnd, pyrgoFrag - fracLen);
             FragmentsList.Add((pyrgoStart + fracStart, fracLen));
         }
@@ -29,6 +27,6 @@ public record PyrgoEventData : ContigEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyPyrgo(ContigId, FragmentsList);
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};frags:{string.Join(",", FragmentsList)}";
 }

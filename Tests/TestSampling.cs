@@ -5,15 +5,13 @@ using MathNet.Numerics.Statistics;
 using NUnit.Framework;
 using SimChA.Computation;
 using SimChA.Simulation;
-using SimChA.IO;
-using SimChA.DataTypes;
 
 namespace Tests;
 
 [TestFixture]
 public class TestSampling
 {
-    Random _rnd;
+    private Random _rnd;
     
     [SetUp]
     public void Setup()
@@ -21,13 +19,29 @@ public class TestSampling
         _rnd = new Random(0);
     }
 
-    [Test]
-    public void TestDistSampling([Values] Distribution dist)
+    [TestCase(0.001), TestCase(0.01), TestCase(0.1), TestCase(0.5)]
+    public void TestParetoSampling(double mean)
     {
-        var reps = Enumerable.Range(0, 100).ToList();
-        var res = reps.Select(i => Sampling.SampleDist(_rnd, dist, 100)).Mean();
-        Assert.GreaterOrEqual(res, 50);
-        Assert.LessOrEqual(res, 150);
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleParetoLim(_rnd, mean)).Mean();
+        Assert.Greater(res, mean * 0.5);
+        Assert.Less(res, mean * 1.5);
+        Console.Write(res);
+    }
+
+    [Test]
+    public void TestContSampling([Values(DistType.Exponential, DistType.Normal)] DistType dist, [Values(0.01, 0.1, 1, 10, 100)] double mean)
+    {
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Mean();
+        Assert.Greater(res, mean * 0.5);
+        Assert.Less(res, mean * 1.5);
+    }
+    
+    [Test]
+    public void TestDiscSampling([Values(DistType.Geometric, DistType.Poisson)] DistType dist, [Values(1, 10, 100)] double mean)
+    {
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Mean();
+        Assert.Greater(res, mean * 0.5);
+        Assert.Less(res, mean * 1.5);
     }
 
     [Test]
@@ -55,7 +69,7 @@ public class TestSampling
     [Test]
     public void TestGetNormSeg()
     {
-        Assert.AreEqual(127097, Sampling.GetNormSeg(_rnd, 1_000_000, 0.1));
+        Assert.AreEqual(119319, Sampling.GetNormSeg(_rnd, 1_000_000, 0.1));
     }
 
     [Test]
@@ -76,7 +90,7 @@ public class TestSampling
         {
             var rnd = new Random();
             var probs = new List<double> { 0.1, 0.2, 0.0, -1.0, 0.3, 0.4 };
-            int index = Extensions.PickRndIndex(rnd, probs);
+            int index = rnd.PickRndIndex(probs);
             Assert.GreaterOrEqual(index, 0);
             Assert.Less(index, probs.Count);
             Assert.AreNotEqual(index, 2);

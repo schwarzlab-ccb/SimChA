@@ -1,5 +1,5 @@
+using SimChA.Data;
 using SimChA.Simulation;
-using SimChA.DataTypes;
 
 namespace SimChA.EventData;
 
@@ -17,9 +17,9 @@ public record PointMutationData : ContigEventData
     
     public override void ApplyEvent(Karyotype kar)
     {
-        kar.ApplySNV(ContigId, Location, Base);
+        kar.ApplyPointMutation(ContigId, Location, Base);
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};location:{Location};base:{Base}";
 }

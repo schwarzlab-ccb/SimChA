@@ -4,12 +4,19 @@ SimChA is a research project at SchwarzLab.
 
 ## Requirements
 
+> Git 2.4+ with Git-LFS
+
 ### TL;DR; 
 
-The program can be run on a platform of your choice in the provided *Conda* environment. Inside of the repo run 
+The program can be run on a platform of your choice in the provided *Conda* environment. 
+The following commands should make SimChA display the available commands.
+
 ```
+git clone git@bitbucket.org:schwarzlab/simcha.git
+cd simcha
 conda env create --file simcha.yml
 conda activate simcha
+dotnet run --project SimChA -- --help
 ```
 
 ### Tested platforms
@@ -18,13 +25,14 @@ The program has been tested on:
 * Windows 10 - PowerShell
 * Windows 10 - WSL2 Ubuntu
 * Ubuntu 20
+* Ubuntu 24.04
 * MacOS X 10 
 
 ### Simulation
 
 The simulation code is written in **C# 8**. **.NET 8.0** is requred. We recommend installation using *Conda*:
 ```
-conda install -c conda-forge dotnet git-lfs
+conda install -c conda-forge dotnet
 ``` 
 
 ### Data analysis
@@ -32,13 +40,6 @@ conda install -c conda-forge dotnet git-lfs
 The analysis code is written in **Python 3.11**. The following packages are required (either from *Conda* or *Pip*):
 ```
 conda install -c conda-forge -c bioconda biopython matplotlib numpy pandas seaborn pillow lifelines
-```
-
-### Gene Data
-
-The gene data (e.g. PCAWG, TSGs and OGs) is stored using the Git LFS system, so in order for SimChA to work, in the root directory of the project, run:
-```
-git lfs pull
 ```
 
 ### Somatic Nucleotide Variants (SNVs)
@@ -58,7 +59,6 @@ The default execution is:
 git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
 dotnet run --project SimChA
-./plots.sh
 ```
 
 The results will be written to the folder `./out`
@@ -68,57 +68,112 @@ The results will be written to the folder `./out`
 Use `dotnet run -- [options]` to specify any of the following:
 
 ```
-  -O, --output    (Default: ./out) The path to the output files.
-  -C, --config    (Default: ./default_params.json) A json file with configuration of the experiment.
-  -T --tree path     A path to a newick with a phylogenetic tree. The file must contain columns "ID", "ParentID", and "Distance". For MCMC, also "Fitness" must be included.
-  -R --repeats n   Will run the simulation and generate n independent samples.
-  -M --mcmc      Will run the MCMC algorithm to match the clode fitness to the fitness given in the tree file or 1 if no tree file is given.
-  -P --profile path   A path to a file with copy number profiles.
-  -D --data (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used. If you want to use either of the flags "--variants" or "--fasta", you must also have the corresponding reference genome, named genome.fa in the same directory.
-  -s  Calculate consistent copy numbers segmentation in addition to a normal CN file. The output file, consistent_CNs.tsv, will have NA if the original sample did not have data in a given region. Note! This file is going to be very large if you have many samples.
-  -V, --variants     Generate a Variant Call Format-like (VCF) file at the end of the run.
-  -F, --fasta       Generate the FASTA file of the produced karyotype (Note: this currently only works for single-sample simulations).
+ 
+  -O, --output                 (Default: ./out) The path to the output files.
+
+  -C, --config                 (Default: ./default_params.json) A json file with configuration of the experiment.
+
+  -T, --tree                   A clone file that describes the tree to be built.
+
+  -R, --repeats                (Default: 1) Number of repeats to generate if the distance parameter is used.
+
+  -P, --cnprofiles             File with CNAs, will cause the program to write a scoring file.
+
+  -D, --data                   (Default: ./data/hg19) The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores. The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name 
+                               as the assembly used.
+
+  -e, --evolution-mode         (Default: false) Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.
+
+  -m, --mcmc-mode              (Default: false) The model will be run in MCMC mode. In this mode the fitness of the samples will be matched using the Metropolis-Hastings algorithm.
+
+  -s, --segments               (Default: false) Write out copy numbers segments.
+
+  -S, --consistent-segments    (Default: false) Write out copy number segments under a minimum consistent segmentation.
+
+  -k, --karyotypes             (Default: false) Write out karyotypes. Unlike CN segments, Karyotypes retain information about the connections between segments.
+
+  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype.
+
+  -f, --fasta                  (Default: false) Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.
+
+  --help                       Display this help screen.
+
+  --version                    Display version information.
 ```
 
-### Parameters
+### Configuration
 
-Default parameters are found in the file: `default_params.json`. The exact parameters are dependent on the execution mode. The parameters are:
+Default parameters are found in the file: `simcha_config.json`. The exact parameters are dependent on the execution mode. The parameters are:
 
+#### `SimParams`
 
-#### Common (R, T, P)
-* `Fitness: { Stress: int, TsgOg: int, Essentiality: int }` - The fitness function to use. The fitness is calculated as the product of the three scores. The scores are weighted by the parameters.
+The parameters controlling the simulation of events.
 
-#### Simulation mode only (R, T)
-* `Seed: int` - The seed for the random number generator.
-* `Sex: ["Female", "Male", "None"]` - Whether to simulate exclusively female chromosome, male chromosome, or randomly select from the two.
-* `AutosomesOnly: bool` - Choose whether to simulate sex chromosomes or not.
+* `Seed: int (0)`: The seed for the random number generator. If < 0, the seed will be generated randomly on runtime.
+* `Sex: ["Any", "Male", "Female"] ("Any")`: One of `Any`, `Male`, `Female`. If `Any`, then samples' sex will be generated with a random.
+* `RateDist: ["Uniform", "Geometric", "Poisson"] ("Uniform")` - The distribution of the mutation rate.
+* `RateMean: float (1.0)`: the mean of the mutation rate (mutations between two nodes).
+* `FitDist: ["Uniform", "Exponential", "Normal"] ("Uniform")`: The distribution of the fitness delta between two samples.
+* `FitMean: float (1.0)`: the mean of the fitness delta between two samples.
 
-#### Repeats mode only (R)
-* `EventCount: double` - The mean number of events per sample.
-* `EventDist: ["Uniform", "Geometric", "Poisson"]` - The distribution of the number of events per sample. Uniform means all with be exactly the `EventCount`.
+See section TODO on how the mutation rate and fitness delta are used.
 
-#### MCMC mode (M)
+#### `ChAParams`
+
+The parameters relating to the structure of chromosomal aberrations. The parameters are:
+
+*  `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
+
+#### `FitParams`
+
+The parameters controlling the fitness of the samples. 
+
+* `Stress: float (0.0)`: Stress penalizes abnormally high ploidy.
+* `TsgOg: float (0.0)`: Affected by the number of Tumor Suppressors (TSG) and Oncogenes (OG) in the sample. TSG loss and OG gain increase fitness.
+* `Essentiality: float (0.0)`: Penalizes full loss of essential genes.
+* `GeneNormalization: bool (false)`: If true, `TsgOg` and `Essentiality` are normalized by the number of TSG, OG, and Essential genes in the sample.
+
+#### `Signatures`
+
 TODO
+
+#### `MHParams`
+
+The parameters controlling the Metropolis-Hastings mode of event simulation.
+
+* `NumIterations: int (1)`: The total number of trials to take in the Metropolis-Hastings algorithm.
+* `ThetaFitness: float (1.0) `: Controls how the variance of the acceptance. Higher values result in more exploration, i.e. the algorithm is more likely to accept worse proposals, while lower values will result in a more greedy algorithm, i.e. mostly only accepts improvements from the current state.
+* `MatchFitness: bool (false)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
+
+#### `SAParams`
+
+TODO
+
+* `Acceptance: float (0.0)`: 
+* `MaxTries: int (1)`: 
 
 ## Input Data
 
-Data should be provided as a path to a folder using the `--data` parameter. The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectivelly. 
+Data should be provided as a path to a folder using the `--data` parameter (or left empty for default). 
+The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. 
+We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectively.
 
 ### Chromosomes
+> `chromosomes.tsv`
 
-The chromosome contains the lengths and sex-specific information of individual chromosomes. By default there are two columns, one with the name of a chromosome, one with a number of basises.
-
-Unless the third column is provided, the penultimate chromosome is considered to be the X chromosome and the ultimate to be Y. All the other are considers to be autosomes. If you want to specify the information directly, the third column can contain a string with on of the following `Female`, `Male`, `Both`.
+The chromosome file contains two columns, one with the name of a chromosome, one with its number of bases.
 
 Example file:
 
 ```
-chr1	248956422	Both
+chr1	248956422
 ...
-chrY	59373566	Male
+chrY	59373566
 ```
 
 ### TSG/OG/Eseentiality Score
+> `tsgs_select.tsv`, `ogs_select.tsv`, `essentials_select.tsv`
+
 We use three data files, providing the TSG/OG/Essentiality score. Each file is a tab-separated file with the following columns:
 
 * `Chromosome: string` - The name of the chromosome.
@@ -141,13 +196,32 @@ For each gene, the:
 * OG score is the probability that the gene is an Oncogene (OG) 
 * Essentiality score is the log2 fold change in the reproducibility of a cell after a knock-out of the gene (both alleles).
 
+### Centromeres
+> `centromeres.tsv`
+
+Each chromosome has a centromere for each arm, defined by a start and an end. The centromere information is given by three columns: chromosome name, start point, end point. Each chromosome has two rows, corresponding to the portions of the centromere belonging to the p- and q-arms of the chromosome.
+
+It is also possible to provide a single row for each chromosome, corresponding to the whole centromeric region.
+
+Example file:
+
+```
+chr1    121500000   125000000
+chr1    125000000   128900000
+...
+chrY    11600000    12500000
+chrY    12500000    13400000
+```
+
+
 ## Signatures
 
 SimChA simulates events based on mutational signatures. Each signature is a set of events and their associated parameters, for example consider the following excerpt from a configuration file:
 
 ```
-"Signatures" : {
-  "WChE_example" : {
+"Signatures" : [
+  {
+    "Name" : "WoleChromEvents"
     "Prob": 1,
     "Events": [
       {
@@ -160,31 +234,42 @@ SimChA simulates events based on mutational signatures. Each signature is a set 
       }        
     ]
   },
-  "Internal_example" : {
+  {
+    "Name": "InternalEvents"
     "Prob": 5,
     "Events": [
       {
         "Type": "InternalDeletion",
-        "Prob": 1
+        "Prob": 1,
         "Size": 1000000
-      }      
+      },
+      {
+        "Type": "InternalDuplication",
+        "Prob": 7,
+        "Size": 500000
+      }
     ]
   }
-}
+]
 ```
-These are two signatures, one for Whole Chromosome Events (WChE) and one for Internal events. The likelihood of a signature being selected is 1 : 5, meaning the Internal is 5 times as likely. 
+These are two signatures, one for Whole Chromosome Events and one for Internal events. The likelihood of a signature being selected is 1 : 5, meaning the Internal is 5 times as likely. 
 
-If the WChE is selected, the probability of a deletion compared to duplication is 1 : 2. SimChA works with *contigs*, i.e. contiguous sequences of bases. A deletion or duplication will be a deletion or duplication of a contig. A contig may be comprised of parts of different chromosomes, e.g. after a translocation, however at the start of simulation, the set of contigs is the same as the set of chromosomes.
+If the WholeChromEvent is selected, the probability of a deletion compared to duplication is 1 : 2. SimChA works with *contigs*, i.e. contiguous sequences of bases. A deletion or duplication will be a deletion or duplication of a contig. A contig may be comprised of parts of different chromosomes, e.g. after a translocation, however at the start of simulation, the set of contigs is the same as the set of chromosomes.
 
-If the Internal Deletion is selected, the mean size of a deleted segment will be 1MB, distributed exponentially.
+If the Internal Deletion is selected, the mean size of a deleted segment will be 1MB, distributed exponentially, while Internal Duplication events will have a mean segment size of 500kB.
 
 Each Event has an associated type and a probability, which is relative to all the other events in the signature. The following events are available:
 
-* `ChromDeletion`
 * `ChromDuplication`
+* `ChromDeletion`
+* `TailDuplication`
 * `TailDeletion`
-* `InternalDeletion`
+* `CentromereBoundDuplication`
+* `CentromereBoundDeletion`
+* `ArmDuplication`
+* `ArmDeletion`
 * `InternalDuplication`
+* `InternalDeletion`
 * `InternalInversion`
 * `InvertedDuplication`
 * `Translocation`
@@ -202,7 +287,7 @@ Each Event has an associated type and a probability, which is relative to all th
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Size: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal events.
+* `Size: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 ### Chromosome Deletion (Prob)
@@ -274,11 +359,9 @@ Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/
 TODO: check
 
 ### Pyrgo 
-![Pyrgo](./doc/img/pyrgo_128.png)
 TODO
 
 ### Rigma
-![Rigma](./doc/img/rigma_128.png)
 TODO
 
 ### Template Insertion Chain
@@ -289,7 +372,6 @@ TODO
 
 ### Template Insertion Bridge
 TODO
-
 
 ## Output
 
@@ -328,13 +410,16 @@ The start position is inclusive, the end exclusive.
 
 Information about the individual events in the simulation. The columns are:
 
-| Id | 	EventType	| EventString	| dFitness |	tFitness |	Mutations |
-|----|------------|-------------|----------|-----------|------------|
-|  0 | ChromDuplication | contig:23 | 11.53782375 | 11.53782375 | 1 |
+| sample_id | 	 event_type	   |  depth | EventString	| delta_fitness |	total_fitness |	time |
+|-----------|------------------|----|-------------|----------|-----------|------------|
+|  sample_0 | ChromDuplication | 12 | contig:23 | 0.53782375 | 11.53782375 | 12.7 |
+
+This example row tells us that 12th event sample_0 underwent was a chromosomal duplication event, affecting
+contig 23, which increased the sample's fitness by ~0.54 to ~11.54, and the event occurred at time 12.7 (units).
 
 #### 'vcf.tsv'
 
-Generates a simple VCF file of all the observable (i.e. final and nucleotide-changing) SNVs that occurred to the samples during simulation. The columns are:
+Generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. The columns are:
 
 `##fileformat=VCFv4.3`
 
@@ -344,24 +429,20 @@ Generates a simple VCF file of all the observable (i.e. final and nucleotide-cha
 
 | `#SAMPLEID` | 	CHROM	| POS	| ID |	REF |	ALT |
 |----|------------|-------------|----------|-----------|------------|
-|  0 | chr1 | 8114090 | . | a | C |
+|  0 | chr1 | 8114090 | . | A | C |
 
 #### 'genome.fa'
 
 *Note that this only currently works with single-sample simulations* 
 
-Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include 
+Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include
 
+### Plots
 
-### Plots (created by `./plots.sh`)
-
-In order to run `./plots.sh` you first have to install the consistent segmentation routine with by running `python setup.py build_ext --inplace` in the `simcha/scripts/segmentation_cython` directory (with [Cython](https://anaconda.org/anaconda/cython) installed).
-
-#### `copy_numbers_heatmap.png` 
-The copy number tracks
+TODO
 
 ## Contact
-Email questions, feature requests and bug reports to Adam Streck, adam.streck@mdc-berlin.de.
+Email questions, feature requests and bug reports to Adam Streck, `a.streck@iccb-cologne.org`.
 
 ## License
 SimChA is available under the MIT License.

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommandLine;
 using NUnit.Framework;
 using SimChA.Computation;
-using SimChA.DataTypes;
 using SimChA.EventData;
 using SimChA.IO;
 using SimChA.Simulation;
-using System.Text;
+using SimChA.Data;
 
 namespace Tests;
 
@@ -17,25 +17,26 @@ public class TestKaryotype
     private Karyotype _kar;
     private Random _rnd;
     private CNEventPars _del;
-    private CNEventPars _dup;
     private GenRef _genRef;
     private const int TEST_FRAC = 1000;
-    const string DATA_PATH = "./../../../../data/hg19";
     
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         var eventData = Sampling.GenerateCNEventData(rnd, kar, cnEventPars);
+        if (eventData == null)
+        {
+            throw new Exception("Could not generate event data.");
+        }
         eventData.ApplyEvent(kar);
     }
     
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.GetGenRef(DATA_PATH);
-        _kar = new Karyotype(_genRef, SexEnum.Male);
+        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH);
+        _kar = new Karyotype(_genRef, SexType.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
-        _dup = new CNEventPars(CNEventType.ChromDuplication, 1);
     }
 
     // Test for each AberrationEnum value
@@ -90,26 +91,27 @@ public class TestKaryotype
     public void TestInternalInversion()
     {
         long len = _kar.ContigLen(0);
-        int nRegions = _kar.GetContig(0).GetRegions().Count;
+        int nRegions = _kar.GetContig(0).CountRegions();
         _kar.ApplyInternalInversion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len, _kar.ContigLen(0));
-        var regions = _kar.FindRegionsOfChr("chr1").ToList();
+        var contig = _kar.GetContig(0);
+        var regions = _kar.FindChrRegions("chr1").ToList();
         Assert.AreEqual(nRegions + 2, regions.Count(r => r.Hap1));
         Assert.AreEqual(1, regions.Count(r => !r.Forward));
-        Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).Start);
+        Assert.AreEqual(-2 * TEST_FRAC, regions.First(r => !r.Forward).Start);
+        Assert.AreEqual(TEST_FRAC, regions.First(r => !r.Forward).AbsStart);
+        Assert.AreEqual(-TEST_FRAC, regions.First(r => !r.Forward).End);
+        Assert.AreEqual(2 * TEST_FRAC, regions.First(r => !r.Forward).AbsEnd);
     }
     
     [Test]
     public void TestInvertedDuplication()
     {
         long len = _kar.ContigLen(0);
-        int nRegions = RegionOps.GlueNeighbours(_kar.GetContig(0).GetRegions()).Count;
         _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
-        var gluedRegions = RegionOps.GlueNeighbours(_kar.FindRegionsOfChr("chr1").ToList());
-        Assert.AreEqual(nRegions + 1, gluedRegions.Count(r => r.Hap1));
-        Assert.AreEqual(1, gluedRegions.Count(r => !r.Forward));
-        Assert.AreEqual(TEST_FRAC, gluedRegions.First(r => !r.Forward).Start);
+        _kar.ApplyInvertedDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
+        Assert.AreEqual(len + 2 * TEST_FRAC, _kar.ContigLen(0));
     }
     
     [Test]
@@ -157,16 +159,16 @@ public class TestKaryotype
     [Test]
     public void TestTranslocation()
     {
-        long contig0Len = _kar.ContigLen(0);
-        long chrLen = RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList());
+        long contigLen = _kar.ContigLen(0);
+        long chrLen = RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList());
         
-        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, false);
-        Assert.AreEqual(contig0Len, _kar.ContigLen(1));
-        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
+        _kar.ApplyTranslocation(0, 1, TEST_FRAC, 2 * TEST_FRAC, true);
+        Assert.AreEqual(contigLen + TEST_FRAC, _kar.ContigLen(1));
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList()));
 
-        _kar.ApplyTranslocation(0, 1, TEST_FRAC, TEST_FRAC, true);
-        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindRegionsOfChr("chr1").ToList()));
-        Assert.AreEqual(contig0Len, _kar.ContigLen(0));
+        _kar.ApplyTranslocation(0, 1, 4 * TEST_FRAC,  3 * TEST_FRAC, true);
+        Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList()));
+        Assert.AreEqual(contigLen + TEST_FRAC * 2, _kar.ContigLen(0));
         Console.WriteLine(_kar);
     }
     
@@ -210,34 +212,17 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(_genRef.GetGenomeLen(_kar.Sex), _kar.GenomeLen());
+        Assert.AreEqual(_genRef.SexGenomeLen[(int) _kar.Sex], _kar.GenomeLen());
     }
     
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.ChrCount(SexEnum.Female, true); i++)
+        for (int i = 0; i < _genRef.SexGenome[(int) SexType.Female].Count; i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }
         Assert.AreEqual("[]", _kar.ToString());
-    }
-
-    private Gene MakeGene(string chrNo) 
-        => new("G" + chrNo, new Region(0, 50, chrNo, false), _rnd.NextDouble());
-
-    [Test]
-    public void TestGetPresentGenes()
-    {
-        var chrNums = _genRef.AllChrs;
-        var tsgOgLists = chrNums.ToDictionary(c => c, c => new List<Gene> { MakeGene(c) });
-        var tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
-        
-        // Removes a gene and a contig at the same time
-        ApplyRandomEvent(_rnd, _kar, _del);
-        tsgOgsPresent = _kar.GetPresentGenes(tsgOgLists);
-        Assert.AreEqual(_kar.CountContigs(), tsgOgsPresent.Count);
     }
     
     [Test]
@@ -308,32 +293,30 @@ public class TestKaryotype
         const int contigID = 0;
         var newNucleotide = Nucleotide.C;
 
-        _kar.ApplySNV(contigID, loc, newNucleotide);
+        _kar.ApplyPointMutation(contigID, loc, newNucleotide);
         Assert.AreEqual(46, _kar.CountContigs());
         
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(1, regions.Count);
-
-        var SNVDict = regions[0].SNVDict;
-        Assert.NotNull(SNVDict);
-        Assert.AreEqual(1, SNVDict.Keys.ToList().Count);
-        Assert.AreEqual(loc, SNVDict.Keys.ToList()[0]);
-        Assert.AreEqual(newNucleotide, SNVDict[loc]);
+        var contig = _kar.GetContig(contigID);
+        Assert.AreEqual(1, contig.CountRegions());
+        var SNVs = contig.SNVs;
+        Assert.NotNull(SNVs);
+        Assert.AreEqual(1, SNVs.Count);
+        Assert.AreEqual(loc, SNVs[0].Pos);
+        Assert.AreEqual(newNucleotide, SNVs[0].Alt);
 
         // Try a repeated SNV
         newNucleotide = Nucleotide.G;
-        _kar.ApplySNV(contigID, loc, newNucleotide);
+        _kar.ApplyPointMutation(contigID, loc, newNucleotide);
 
         Assert.AreEqual(46, _kar.CountContigs());
         
-        regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(1, regions.Count);
-
-        SNVDict = regions[0].SNVDict;
-        Assert.NotNull(SNVDict);
-        Assert.AreEqual(1, SNVDict.Keys.ToList().Count);
-        Assert.AreEqual(loc, SNVDict.Keys.ToList()[0]);
-        Assert.AreEqual(newNucleotide, SNVDict[loc]);
+        contig = _kar.GetContig(contigID);
+        Assert.AreEqual(1, contig.CountRegions());
+        SNVs = contig.SNVs;
+        Assert.NotNull(SNVs);
+        Assert.AreEqual(1, SNVs.Count);
+        Assert.AreEqual(loc, SNVs[0].Pos);
+        Assert.AreEqual(newNucleotide, SNVs[0].Alt);
     }
 
     [Test]
@@ -343,16 +326,14 @@ public class TestKaryotype
         const int contigID = 0;
         var newNucleotide = Nucleotide.C;
         // Apply the SNV
-        _kar.ApplySNV(contigID, loc, newNucleotide);
+        _kar.ApplyPointMutation(contigID, loc, newNucleotide);
         // Apply a deletion that covers the SNV
         _kar.ApplyInternalDeletion(contigID, 50, 200);
         // Check that the SNV is not present
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(2, regions.Count);
-        foreach (var region in regions)
-        {
-            Assert.Null(region.SNVDict);
-        }
+        var contig = _kar.GetContig(contigID);
+        Assert.AreEqual(2, contig.CountRegions());
+        var snvs = contig.SNVs;
+        Assert.IsEmpty(snvs);
     }
 
     [Test]
@@ -362,15 +343,66 @@ public class TestKaryotype
         const int contigID = 0;
         var newNucleotide = Nucleotide.C;
         // Apply the SNV
-        _kar.ApplySNV(contigID, loc, newNucleotide);
-        // Apply a deletion that covers the SNV
+        _kar.ApplyPointMutation(contigID, loc, newNucleotide);
+        // Apply a duplication that covers the SNV
         _kar.ApplyInternalDuplication(contigID, 50, 200);
-        // Check that the SNV is not present
-        var regions = _kar.GetContig(contigID).GetRegions();
-        Assert.AreEqual(3, regions.Count);
-        Assert.Null(regions[0].SNVDict);
-        Assert.NotNull(regions[1].SNVDict);
-        Assert.NotNull(regions[2].SNVDict);
-        Assert.AreEqual(regions[1].SNVDict, regions[2].SNVDict);
+        // Check that the SNV is present in both copies
+        var contig = _kar.GetContig(contigID);
+        Assert.AreEqual(2, contig.CountRegions());
+        var SNVs = contig.SNVs;
+        Assert.IsNotEmpty(SNVs);
+        Assert.AreEqual(SNVs[0], SNVs[1]);
+        Assert.AreEqual(newNucleotide, SNVs[0].Alt);
+
+        // If we alter one region, the other should not be affected
+        var secondNucleotide = Nucleotide.G;
+        _kar.ApplyPointMutation(contigID, loc, secondNucleotide);
+        SNVs = _kar.GetContig(contigID).SNVs;
+        Assert.IsNotEmpty(SNVs);
+        Assert.AreNotEqual(SNVs[0], SNVs[1]);
+        Assert.AreEqual(secondNucleotide, SNVs[0].Alt);
+        Assert.AreEqual(newNucleotide, SNVs[1].Alt);
+    }
+
+    [Test]
+    public void TestCalcChrCopyNumbers()
+    {
+        var dupEv = new CNEventPars(CNEventType.InternalDuplication, 1, .1);
+        int dupCount = 100;
+        for (int i = 0; i < dupCount; i++)
+        {
+            ApplyRandomEvent(_rnd, _kar, dupEv);
+        }
+
+        var breaks = _kar.CalcBreaks();
+        var chrCopyNumbers = _kar.CalcCNs(breaks);
+        // each event should create two new regions
+        Assert.AreEqual(24, chrCopyNumbers.Count - dupCount * 2);
+    }
+
+    [Test]
+    public void TestGetPresentGeneCounts([Values] GeneLT geneType)
+    {
+        // Assumes _kar is male
+        for (int i = 0; i < 23; i++)
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        foreach (var gene in _genRef.SexGeneLists[(int)_kar.Sex][(int) geneType])
+        {
+            int count = _kar.GeneCounts[(int)geneType][gene.GeneId];
+            Assert.AreEqual(gene.Chrom != "chrX" ? 1 : 0, count);
+        }
+    }
+    
+    [Test]
+    public void TestContigIds()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        var idsAfter = _kar.ContigIds().ToList();
+        Assert.AreEqual(4, idsAfter[0]);
     }
 }

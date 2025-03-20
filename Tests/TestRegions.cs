@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Extreme.DataAnalysis.Models;
 using NUnit.Framework;
 using SimChA.Computation;
-using SimChA.DataTypes;
-using SimChA.Simulation;
+using SimChA.Data;
 
 namespace Tests;
 
@@ -16,7 +14,7 @@ public class TestRegions
     [SetUp]
     public void Setup()
     {
-        _cRegion = new Region(0, 249250621, "chr1", true, true);
+        _cRegion = new Region(0, 249250621, "chr1", true, [], []);
     }
 
     [Test]
@@ -32,9 +30,9 @@ public class TestRegions
         Assert.IsTrue(testRange.Overlaps(new GenRange(1999, 3000, "chr1")));
         Assert.IsFalse(testRange.Overlaps(new GenRange(2000, 3000, "chr1")));
 
-        var gene = new Gene("OR4F5", new GenRange(69090, 70008, "chr1"), 0.142321064);
+        var gene = new Gene(69090, 70008, "chr1" , GeneLT.TSG, 0, 0.142321064 );
         var range = new GenRange(0, 249250621, "chr1");
-        Assert.IsTrue(range.Overlaps(gene.Range));
+        Assert.IsTrue(range.Overlaps(gene));
     }
 
     [Test]
@@ -44,40 +42,41 @@ public class TestRegions
         // Start and end within a region
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 1000, RegionOps.CountLength(regions));
         // Start and end within a region (out of two)
         regions = RegionOps.DeleteRange(regions, 2000, 4000);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 3000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 3000, RegionOps.CountLength(regions));
         // Two neighbouring regions
         regions = RegionOps.DeleteRange(regions, 1500, 2500);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 4000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 4000, RegionOps.CountLength(regions));
         // Cut region out
         regions = RegionOps.DeleteRange(regions, 500, 2500);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 6000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 6000, RegionOps.CountLength(regions));
         // Remove region from front
         regions = RegionOps.DeleteRange(regions, 0, 500);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 6500, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 6500, RegionOps.CountLength(regions));
         // oversized range selection
         regions = RegionOps.DeleteRange(regions, -1000, _cRegion.Length);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(0, Contig.Length(regions));
+        Assert.AreEqual(0, RegionOps.CountLength(regions));
     }
     
     [Test]
     public void TestDeleteInverted()
     {
-        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var regions = new List<Region> { _cRegion };
+        RegionOps.Revert(regions);
         var newRegions = RegionOps.DeleteRange(regions, 1000, 2000);
         Assert.AreEqual(1000, newRegions[0].Length);
         Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].Length);
-        Assert.AreEqual(_cRegion.Length - 1000, newRegions[0].Start);
-        Assert.AreEqual(_cRegion.Length, newRegions[0].End);
-        Assert.AreEqual(0, newRegions[1].Start);
-        Assert.AreEqual(_cRegion.Length - 2000, newRegions[1].End);
+        Assert.AreEqual(-_cRegion.Length, newRegions[0].Start);
+        Assert.AreEqual(-_cRegion.Length + 1000, newRegions[0].End);
+        Assert.AreEqual(-_cRegion.Length + 2000, newRegions[1].Start);
+        Assert.AreEqual(0, newRegions[1].End);
     }
 
     [Test]
@@ -85,159 +84,79 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var res = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         Assert.AreEqual(res, RegionOps.DeleteRange(regions, 1, 3));
     }
     
     [Test]
-    public void TestDeleteArm()
-    {
-        var regions = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        var pArm = new List<Region>
-        {
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        Assert.AreEqual(pArm, RegionOps.DeleteArm(regions, 1, true, false));
-        regions = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        var qArm = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true)
-        };
-        Assert.AreEqual(qArm, RegionOps.DeleteArm(regions, 1, false, false));
-        regions = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        var pArmWithCentromere = new List<Region>
-        {
-            new QArm(2, 3, "chr1", true, true)
-        };
-        Assert.AreEqual(pArmWithCentromere, RegionOps.DeleteArm(regions, 1, true, true));
-        regions = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        var qArmWithCentromere = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true)
-        };
-        Assert.AreEqual(qArmWithCentromere, RegionOps.DeleteArm(regions, 1, false, true));
-    }
-
-    [Test]
-    public void TestGetArm()
-    {
-        var regions = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        var qArm = new List<Region>
-        {
-            new QArm(2, 3, "chr1", true, true)
-        };
-        Assert.AreEqual(qArm, RegionOps.GetArm(regions, 1, false, false));
-        var pArm = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true)
-        };
-        Assert.AreEqual(pArm, RegionOps.GetArm(regions, 1, true, false));
-        var qArmWithCentromere = new List<Region>
-        {
-            new Centromere(1, 2, "chr1", true, true),
-            new QArm(2, 3, "chr1", true, true)
-        };
-        Assert.AreEqual(qArmWithCentromere, RegionOps.GetArm(regions, 1, false, true));
-        var pArmWithCentromere = new List<Region>
-        {
-            new PArm(0, 1, "chr1", true, true),
-            new Centromere(1, 2, "chr1", true, true)
-        };
-        Assert.AreEqual(pArmWithCentromere, RegionOps.GetArm(regions, 1, true, true));        
-    }
-
-    [Test]
     public void TestMergeRegions()
     {
-        var regions = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
-        };
-        var mergeAll = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 4 },
-        };
+        List<Region> regions =
+        [
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
+        ];
+        List<Region> mergeAll =
+        [
+            new(0, 4, "chr1", true, [], [])
+        ];
         Assert.AreEqual(mergeAll, RegionOps.MergeRegions(regions));
+        
+        List<Region> mergeAllInverted =
+        [
+            new(-4, -2, "chr1", true, [], []),
+            new(-2, 0, "chr1", true, [], [])
+        ];
+        var merged = RegionOps.MergeRegions(mergeAllInverted);
+        RegionOps.Revert(merged);
+        Assert.AreEqual(mergeAll, merged);
+        mergeAllInverted =
+        [
+            new(-4, -2, "chr1", true, [], []),
+            new(-2, 0, "chr1", true, [], [])
+        ];
+        RegionOps.Revert(mergeAllInverted);
+        merged =  RegionOps.MergeRegions(mergeAllInverted);
+        Assert.AreEqual(mergeAll, merged);
 
-        regions = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3, Forward = false },
-            _cRegion with { Start = 3, End = 4, Forward = false }
-        };
-        var mergeAllInverted = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 2},
-            _cRegion with { Start = 2, End = 4, Forward = false },
-        };
-        Assert.AreEqual(mergeAllInverted, RegionOps.MergeRegions(regions));
-
-        regions = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3, Forward = false },
-            _cRegion with { Start = 3, End = 4}
-        };
-        var mergeOneInverted = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 2},
-            _cRegion with { Start = 2, End = 3, Forward = false },
-            _cRegion with { Start = 3, End = 4}
-        };
+        regions =
+        [
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(-3, -2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
+        ];
+        List<Region> mergeOneInverted =
+        [
+            new(0, 2, "chr1", true, [], []),
+            new(-3, -2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
+        ];
         Assert.AreEqual(mergeOneInverted, RegionOps.MergeRegions(regions));
 
-        regions = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 3, End = 4}
-        };
-        var mergeGapped = new List<Region>
-        {
-            _cRegion with { Start = 0, End = 2},
-            _cRegion with { Start = 3, End = 4}
-        };
+        regions =
+        [
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
+        ];
+        List<Region> mergeGapped =
+        [
+            new(0, 2, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
+        ];
         Assert.AreEqual(mergeGapped, RegionOps.MergeRegions(regions));
     }
 
@@ -248,13 +167,13 @@ public class TestRegions
         // Start and end within a region
         var regCopy = RegionOps.CopyRange(regions, 500, 3500);
         Console.WriteLine(Contig.ToString(regCopy));
-        Assert.AreEqual(3000, Contig.Length(regCopy));
+        Assert.AreEqual(3000, RegionOps.CountLength(regCopy));
         // Copy across regions
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
         regions = RegionOps.DeleteRange(regions, 4000, 5000);
         regCopy = RegionOps.CopyRange(regions, 500, 3500);
         Console.WriteLine(Contig.ToString(regCopy));
-        Assert.AreEqual(3000, Contig.Length(regCopy));
+        Assert.AreEqual(3000, RegionOps.CountLength(regCopy));
     }
 
     [Test]
@@ -262,46 +181,46 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
         var res = new List<Region>
         {
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 }
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
         };
-        Assert.AreEqual(res, RegionOps.CopyRange(regions, 1, 3));
+        var copy = RegionOps.CopyRange(regions, 1, 3);
+        Assert.AreEqual(res, copy);
     }
 
     [Test]
     public void TestCopyInverted()
     {
-        var regions = RegionOps.InvertRegions(new List<Region> { _cRegion });
+        var regions = new List<Region> { _cRegion };
+        RegionOps.Revert(regions);
         // Start and end within a region
         var regCopy = RegionOps.CopyRange(regions, 1000, 2000);
         Assert.AreEqual(1, regions.Count);
         Assert.AreEqual(1000, regCopy[0].Length);
-        Assert.AreEqual(_cRegion.Length - 2000, regCopy[0].Start);
-        Assert.AreEqual(_cRegion.Length - 1000, regCopy[0].End);
+        Assert.AreEqual(-_cRegion.Length + 1000, regCopy[0].Start);
+        Assert.AreEqual(-_cRegion.Length + 2000, regCopy[0].End);
     }
 
     [Test]
     public void TestSplit()
     {
         var regions = new List<Region> { _cRegion };
-        
         var (before, after) = RegionOps.SplitRegions(regions, 2000);
         Assert.AreEqual(2000, before[0].Length);
-        Assert.AreEqual(regions[0]  with { End = 2000}, before[0]);
-        Assert.AreEqual(regions[0]  with { Start = 2000}, after[0]);
+        Assert.AreEqual(2000, before[0].End);
+        Assert.AreEqual(2000, after[0].Start);
 
-        regions = RegionOps.InvertRegions(regions);
+        RegionOps.Revert(regions);
         (before, after) = RegionOps.SplitRegions(regions, 2000);
         Assert.AreEqual(2000, before[0].Length);
-        Assert.AreEqual(regions[0] with { Start = _cRegion.Length - 2000}, before[0]);
-        Assert.AreEqual(regions[0] with { End = _cRegion.Length - 2000}, after[0]);
+        Assert.AreEqual(_cRegion.Length - 2000,  after[0].Length);
     }
     
     [Test]
@@ -309,10 +228,10 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 2 }
+            new(0, 2, "chr1", true, [], [])
         };
         var (before, after) = RegionOps.SplitRegions(regions, 1);
-        Assert.AreEqual(1, Contig.Length(after));
+        Assert.AreEqual(1, RegionOps.CountLength(after));
     }
     
     [Test]
@@ -320,9 +239,9 @@ public class TestRegions
     {
         var regions = new List<Region> { _cRegion };
         regions = RegionOps.DeleteRange(regions, 1000, 2000);
-        regions = RegionOps.InvertRegions(regions);
+        RegionOps.Revert(regions);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length - 1000, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length - 1000, RegionOps.CountLength(regions));
     }
     
     [Test]
@@ -331,10 +250,10 @@ public class TestRegions
         var regions = new List<Region> { _cRegion };
         regions = RegionOps.ConcatRegions(regions, regions);
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length * 2, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length * 2, RegionOps.CountLength(regions));
         regions = RegionOps.ConcatRegions(new[] {regions, regions });
         Console.WriteLine(Contig.ToString(regions));
-        Assert.AreEqual(_cRegion.Length * 4, Contig.Length(regions));
+        Assert.AreEqual(_cRegion.Length * 4, RegionOps.CountLength(regions));
     }
 
     [Test]
@@ -342,62 +261,87 @@ public class TestRegions
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 1, "chr1", true, [], []),
+            new(1, 2, "chr1", true, [], []),
+            new(2, 3, "chr1", true, [], []),
+            new(3, 4, "chr1", true, [], [])
         };
-        var location = 2;
-        var newNucleotide = Nucleotide.A;
-        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        const int location = 2;
+        const Nucleotide newNucleotide = Nucleotide.A;
+        const Nucleotide oldNucleotide = Nucleotide.C;
+        var mutatedRegions = RegionOps.Copy(regions);
+        RegionOps.PointMutateRegion(mutatedRegions, location, oldNucleotide, newNucleotide);
         Assert.AreEqual(regions[0], mutatedRegions[0]);
         Assert.AreEqual(regions[1], mutatedRegions[1]);
         Assert.AreNotEqual(regions[2], mutatedRegions[2]);
         Assert.AreEqual(regions[3], mutatedRegions[3]);
 
-        Assert.NotNull(mutatedRegions[2].SNVDict);
-        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVDict[location]);
+        Assert.IsNotNull(mutatedRegions[2].SNVs);
+        Assert.AreEqual(1, mutatedRegions[2].SNVs!.Count);
+        Assert.AreEqual(location, mutatedRegions[2].SNVs![0].Pos);
+        Assert.AreEqual(newNucleotide, mutatedRegions[2].SNVs![0].Alt);
 
     }
 
     [Test]
-    public void TestFindRegion()
+    public void TestUpdateSNVs()
     {
         var regions = new List<Region>
         {
-            _cRegion with { Start = 0, End = 1 },
-            _cRegion with { Start = 1, End = 2 },
-            _cRegion with { Start = 2, End = 3 },
-            _cRegion with { Start = 3, End = 4 }
+            new(0, 100, "chr1", true, [], []),
         };
-        var location = 2;
-        (var region, var internalLocation) = RegionOps.FindRegion(regions, location);
-
-        Assert.AreEqual(regions[2], region);
-        Assert.AreEqual(location, internalLocation);
-
-    }
-
-    [Test]
-    public void TestUpdateSNVDict()
-    {
-        var regions = new List<Region>
-        {
-            _cRegion with {Start = 0, End = 100}
-        };
-        var location = 45;
-        var newNucleotide = Nucleotide.A;
-        var mutatedRegions = RegionOps.PointMutateRegion(regions, location, newNucleotide);
+        const int location = 45;
+        const Nucleotide newNucleotide = Nucleotide.A;
+        const Nucleotide oldNucleotide = Nucleotide.C;
+        var mutatedRegions = RegionOps.Copy(regions);
+        RegionOps.PointMutateRegion(mutatedRegions, location, oldNucleotide, newNucleotide);
         foreach (var region in mutatedRegions)
         {
-            Assert.IsNotNull(region.SNVDict);
+            Assert.IsNotNull(region.SNVs);
         }
-        // TODO: Why does DeleteRange remove the original mutatedRegions SNVDict?
-        // Does it matter?
         var finalRegions = RegionOps.DeleteRange(mutatedRegions, 30, 70);
         foreach (var region in finalRegions)
         {
-            Assert.IsNull(region.SNVDict);
+            Assert.IsEmpty(region.SNVs);
         }
+    }
+
+    [Test]
+    public void TestEquality()
+    {
+        var region1 = new Region(0, 100, "chr1", true, [], []);
+        var region2 = new Region(0, 100, "chr1", true, [], []);
+        Assert.AreEqual(region1, region2);
+        
+        var range1 = new GenRange(0, 100, "chr1");
+        var range2 = new GenRange(0, 100, "chr1");
+        Assert.AreEqual(range1, range2);
+    }
+    
+    [Test]
+    public void TestPresentGenesWithDeletion()
+    {
+        var tsg = new Gene(0, 10, "chr1", GeneLT.TSG, 0, 0.1);
+        var og = new Gene(20, 30, "chr1", GeneLT.OG, 0, 0.2);
+        var ess = new Gene(40, 50, "chr1", GeneLT.Ess, 0, 0.3);
+        var r = new Region(0, 249250621, "chr1", true, [], [tsg, og, ess]);
+        var regions = new List<Region>{r};
+        // Delete a region affecting the og
+        regions = RegionOps.DeleteRange(regions, 15, 25);
+        var tsgRegion = regions[0];
+        var essRegion = regions[1];
+        // Check that the original region is unchanged
+        Assert.AreEqual(1, r.CountGeneType(GeneLT.TSG));
+        Assert.AreEqual(1, r.CountGeneType(GeneLT.OG));
+        Assert.AreEqual(1, r.CountGeneType(GeneLT.Ess));
+        
+        // Check that the tsg and essential genes are intact
+        Assert.AreEqual(1, tsgRegion.CountGeneType(GeneLT.TSG));
+        Assert.AreEqual(0, tsgRegion.CountGeneType(GeneLT.OG));
+        Assert.AreEqual(0, tsgRegion.CountGeneType(GeneLT.Ess));
+
+        Assert.AreEqual(0, essRegion.CountGeneType(GeneLT.TSG));
+        Assert.AreEqual(0, essRegion.CountGeneType(GeneLT.OG));
+        Assert.AreEqual(1, essRegion.CountGeneType(GeneLT.Ess));
     }
 }

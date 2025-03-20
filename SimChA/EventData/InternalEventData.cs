@@ -1,5 +1,5 @@
-using System.Security.Cryptography;
 using SimChA.Computation;
+using SimChA.Data;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -12,7 +12,7 @@ public record InternalEventData : ContigEventData
     // Constructor used for internal events
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
     {   
-        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
+        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         //Start = rnd.NextInt64(segLen, contigLen-segLen);
         Start = Sampling.GetPos(rnd, contigLen - segLen); 
         End = Start + segLen;
@@ -24,7 +24,7 @@ public record InternalEventData : ContigEventData
     {
         var (start, end) = centromeres.Shuffle(rnd).First();
         var pos = rnd.NextInt64(start, end);
-        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Size);
+        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         if (rnd.CoinFlip())
         {
             Start = pos;
@@ -60,6 +60,6 @@ public record InternalEventData : ContigEventData
         }
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contig:{ContigId};start:{Start};end:{End}";
 }

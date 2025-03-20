@@ -1,6 +1,4 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.Simulation;
+﻿using SimChA.Data;
 
 namespace SimChA.EventData;
 
@@ -21,6 +19,6 @@ public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEvent
         }
     }
     
-    public override string ToString() 
+    public override string EventDesc() 
         => $"contig:{ContigId}";
 }

@@ -1,8 +1,6 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using Extreme.Statistics.Distributions;
+﻿using Extreme.Statistics.Distributions;
 using SimChA.Computation;
-using SimChA.DataTypes;
+using SimChA.Data;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -23,7 +21,7 @@ public record TemplatedEventData : BaseEventData
             // First segment of a bridge, or first and last on a chain do not have a length
             bool skipLen = i == 0 && cnEventPars.Type != CNEventType.TICycle ||
                            i == contigCount - 1 && cnEventPars.Type == CNEventType.TIChain;
-            long fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Size);
+            long fragLen = skipLen ? 0L : Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frac);
             long fragStart = Sampling.GetPos(rnd, contigLen - fragLen);
             bool dir = i == 0 || rnd.CoinFlip();
             Frags.Add((id, fragStart, fragLen, dir));
@@ -46,6 +44,6 @@ public record TemplatedEventData : BaseEventData
         }
     }
 
-    public override string ToString()
+    public override string EventDesc()
         => string.Join(",", Frags.Select(x => $"({x.id},{x.start},{x.len},{Region.DirToStr(x.dir)})"));
 }

@@ -1,6 +1,5 @@
-﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
-
-using SimChA.Computation;
+﻿using SimChA.Computation;
+using SimChA.Data;
 using SimChA.Simulation;
 
 namespace SimChA.EventData;
@@ -21,7 +20,7 @@ public record ChromoplexyEventData : BaseEventData
         int totalFrags = 0;
         for (int i = 0; i < contigCount; i++)
         {
-            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd, seq[i].len / (double) cnEventPars.Size), seq[i].len - 2);
+            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd, seq[i].len / (double) cnEventPars.Frac), seq[i].len - 2);
             if (partsCount > 1)
             {
                 totalLen += seq[i].len;
@@ -37,7 +36,7 @@ public record ChromoplexyEventData : BaseEventData
     public override void ApplyEvent(Karyotype kar)
         => kar.ApplyChromoplexy(ContigIds, Stops, Sequence, Breakpoints);
 
-    public override string ToString()
+    public override string EventDesc()
         => $"contigs:[{string.Join(",", ContigIds)}];" +
            $"stops:[{string.Join(",", Stops.Select(s => $"[{string.Join(",", s)}]"))}];" +
            $"sequence:[{string.Join(",", Sequence)}];" +
