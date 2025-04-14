@@ -14,14 +14,14 @@ public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPar
     {
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
+            if (SampleStat.CalcPloidy(currentKar, GenRef) > 32)
+            {
+                break;
+            }
             var cnEventP = Rnd.PickRndElem(cnEventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, cnEventP);
             if (eventData != null)
             {
-                if (SampleStat.CalcPloidy(currentKar, GenRef) > 32)
-                {
-                    break;
-                }
                 var proposedKar = new Karyotype(currentKar);
                 eventData.ApplyEvent(proposedKar);
                 double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
