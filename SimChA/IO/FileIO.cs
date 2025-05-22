@@ -10,7 +10,7 @@ public class FileIO
 {
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
-    private const string SUBSET = "select";
+    private const string SUBSET = "cnsistent_all";
     private const string ESSENTIALS_TSV = $"essentials_{SUBSET}.tsv";
     private const string OGS_TSV = $"ogs_{SUBSET}.tsv";
     private const string TSGS_TSV = $"tsgs_{SUBSET}.tsv";
