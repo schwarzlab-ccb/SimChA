@@ -16,12 +16,13 @@ public class TestParsing
     public const string DATA_PATH = "./../../../../data/";
     public const string HG_19_PATH = DATA_PATH + "./hg19";
     public const string HG_38_PATH = DATA_PATH + "./hg38";
+    public const string GENE_FOLDER = "./Davoli_select";
     private GenRef _genRef;
 
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef(HG_19_PATH);
+        _genRef = FileIO.ReadGenRef(HG_19_PATH, GENE_FOLDER);
     }
     
     [Test]

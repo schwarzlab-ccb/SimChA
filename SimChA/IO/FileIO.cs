@@ -10,10 +10,9 @@ public class FileIO
 {
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
-    private const string SUBSET = "select";
-    private const string ESSENTIALS_TSV = $"essentials_{SUBSET}.tsv";
-    private const string OGS_TSV = $"ogs_{SUBSET}.tsv";
-    private const string TSGS_TSV = $"tsgs_{SUBSET}.tsv";
+    private const string ESSENTIALS_TSV = "essentials.tsv";
+    private const string OGS_TSV = "ogs.tsv";
+    private const string TSGS_TSV = "tsgs.tsv";
     private const string GENOME_FASTA = "genome.fa";
     private const string CENTROMERES_TSV = "centromeres.tsv";
     // input
@@ -312,14 +311,15 @@ public class FileIO
         }
     }
 
-    public static GenRef ReadGenRef(string dataFolder, bool useVariants = false)
+    public static GenRef ReadGenRef(string dataFolder, string genesFolder, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex) = ReadChromosomes(dataFolder);
         var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
-        var geneChromMap = MapGenesToChroms(dataFolder, chrSex);
+        string genesPath = Path.Combine(Path.GetFullPath(dataFolder), genesFolder);
+        var geneChromMap = MapGenesToChroms(genesPath, chrSex);
         return new GenRef(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
     }
 }

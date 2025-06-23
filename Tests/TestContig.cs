@@ -20,7 +20,7 @@ public class TestContig
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef("./../../../../data/hg19");
+        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
         _contig1 = new Contig([_genRef.SexGenome[(int) SexType.Female].First()]);
         _contigX = new Contig([_genRef.SexGenome[(int) SexType.Female].Last()]);
     }
