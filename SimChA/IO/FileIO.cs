@@ -251,7 +251,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
+    public static List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly, bool zeroIndexed)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -261,7 +261,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, autosomesOnly);
+            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, autosomesOnly, zeroIndexed);
             var samples = new List<Sample>();
             foreach ((string sampleId, var karyotype) in profiles)
             {

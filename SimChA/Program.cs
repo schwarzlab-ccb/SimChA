@@ -54,7 +54,7 @@ if (options.Simulate)
 else
 {
     Console.WriteLine("Reading samples from data:");
-    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.FitParams.AutosomesOnly);
+    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.FitParams.AutosomesOnly, options.ZeroIndexed);
 }
 
 // Score and segment samples

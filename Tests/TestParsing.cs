@@ -83,7 +83,7 @@ public class TestParsing
                                 "1\tchr3\t62226\t171636043\t2\t3\n" +
                                 "2\tchrX\t2\t6\t1\t0\n" +
                                 "2\tchrY\t3\t4\t0\t1";
-        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false);
+        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false, false);
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
         Assert.AreEqual(2, profiles["1"].FindChrRegions("chr1").Count()); 

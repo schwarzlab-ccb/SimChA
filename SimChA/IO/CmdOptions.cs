@@ -45,7 +45,10 @@ public class CmdOptions
 
     [Option('f', "fasta", Required = false, Default = false, HelpText = "Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.")]
     public bool WriteFasta { get; set; }
-    
+
+    [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
+    public bool ZeroIndexed { get; set; }
+
     public ExecMode ExecMode
     {
         get

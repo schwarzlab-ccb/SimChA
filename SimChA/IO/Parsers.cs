@@ -33,7 +33,8 @@ public static class Parsers
     
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
-    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, bool autosomesOnly)
+    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, 
+        bool autosomesOnly, bool zeroIndexed)
     {
         Dictionary<string, Karyotype> result = new();
     
@@ -63,7 +64,7 @@ public static class Parsers
             {
                 continue;
             }
-            int start = int.Parse(lineSplit[2]) - 1;
+            int start = zeroIndexed ? int.Parse(lineSplit[2]) :  int.Parse(lineSplit[2]) - 1;
             int end = int.Parse(lineSplit[3]);
             int cnA = (int) Math.Round(float.Parse(lineSplit[4]));
             int cnB = (int) Math.Round(float.Parse(lineSplit[5]));
