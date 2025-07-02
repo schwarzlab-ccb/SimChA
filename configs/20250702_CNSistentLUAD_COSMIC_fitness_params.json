@@ -5,14 +5,14 @@
         "RateDist": "Geometric"
     },
     "FitParams": {
-        "Stress": 46.49659331290299,
-        "TsgOg": 2.3571130102321156,
-        "Essentiality": 0.00285201575132632,
+        "Stress": 12.79582250156,
+        "TsgOg": 8.933688566054004,
+        "Essentiality": 5.314703735711084,
         "AutosomesOnly": true,
         "GeneNormalization": false
     },
     "EvoParams": {
-        "Acceptance": 2.596528093558347,
+        "Acceptance": 0.3402766184653405,
         "MaxTries": 100
     },
     "Signatures": [
@@ -68,7 +68,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.07119567123272996
+                    "Prob": 0.0736812284305167
                 }
             ]
         }
