@@ -14,7 +14,6 @@ public record SampleStat(
     double Og,
     double Ess,
     int MutCount,
-    double Hemizygosity,
     double Nullizygosity,
     string Mixture)
 {
@@ -30,7 +29,6 @@ public record SampleStat(
            "\tog" +
            "\tess" +
            "\tdist" +
-           "\themizygosity" +
            "\tnullizygosity" + 
            "\tmixture";
     
@@ -46,7 +44,6 @@ public record SampleStat(
         $"\t{Og}" +
         $"\t{Ess}" +
         $"\t{MutCount}" +
-        $"\t{Hemizygosity}" +
         $"\t{Nullizygosity}" +
         $"\t{Mixture}";
 
@@ -64,13 +61,12 @@ public record SampleStat(
         double og = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], fParams.GeneNormalization);
         double ess = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.GeneNormalization);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
-
-        double hemizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 1);
+        
         double nullizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 0);
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 
-            sample.Events.Count, hemizygosity, nullizygosity, sample.MixtureString());
+            sample.Events.Count, nullizygosity, sample.MixtureString());
         return res;
     }
 }
