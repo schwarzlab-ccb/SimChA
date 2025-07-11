@@ -34,9 +34,23 @@ public class FileIO
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
         OutFolder = outFolder;
-        if (!Directory.Exists(OutFolder))
+    }
+
+    public bool CreateOutFolder()
+    {
+        try
         {
+            if (Directory.Exists(OutFolder))
+            {
+                return false;
+            }
             Directory.CreateDirectory(OutFolder);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
     
