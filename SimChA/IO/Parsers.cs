@@ -185,6 +185,22 @@ public static class Parsers
         // Pre-initialization
         var geneList = chrNames.ToDictionary(c => c, _ => new List<Gene>());
         int listIndex = 0;
+        string? firstLine = geneFile.ReadLine();
+        if (firstLine == null)
+        {
+            throw new Exception("Gene file is empty.");
+        }
+        string[] columns = firstLine.Split('\t');
+        if (firstLine.Split('\t').Length < 5)
+        {
+            throw new Exception("Gene file does not contain at least 5 columns.");
+        }
+        if (columns[0] != "chrom" || columns[1] != "start" || columns[2] != "end" || 
+            columns[3] != "name" || columns[4] != "score")
+        {
+            throw new Exception("Gene file does not contain the expected header: chorm\tstart\tend\tname\tscore.");
+        }
+        
         while (geneFile.ReadLine() is { } line)
         {
             if (line == "")
