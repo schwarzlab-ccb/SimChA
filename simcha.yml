@@ -4,7 +4,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - dotnet>=6.0.201,<7
+  - dotnet=8
   - git-lfs
   - python>=3.10
   - pandas
