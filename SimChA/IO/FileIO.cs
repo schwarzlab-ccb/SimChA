@@ -145,14 +145,14 @@ public class FileIO
         }
     }
 
-    public void WriteSamples(List<SampleStat> cloneStats)
+    public void WriteSamples(List<SampleStat> sampleStats)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
         file.WriteLine(SampleStat.Header());
 
-        foreach (var clone in cloneStats)
+        foreach (var clone in sampleStats)
         {
             file.WriteLine(clone.ToString());
         }

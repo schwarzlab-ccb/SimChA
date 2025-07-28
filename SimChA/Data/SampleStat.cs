@@ -15,7 +15,8 @@ public record SampleStat(
     double Ess,
     int MutCount,
     double Nullizygosity,
-    string Mixture)
+    string Mixture,
+    int NumProposedEvents)
 {
     public static string Header() 
         => "sample_id" +
@@ -30,7 +31,8 @@ public record SampleStat(
            "\tess" +
            "\tdist" +
            "\tnullizygosity" + 
-           "\tmixture";
+           "\tmixture"+
+           "\tn_proposed_events";
     
     public override string ToString() =>
         $"{SampleId}" +
@@ -45,7 +47,8 @@ public record SampleStat(
         $"\t{Ess}" +
         $"\t{MutCount}" +
         $"\t{Nullizygosity}" +
-        $"\t{Mixture}";
+        $"\t{Mixture}"+
+        $"\t{NumProposedEvents}";
 
     public static double CalcPloidy(Karyotype kar, GenRef genRef)
         => 2.0 * kar.GenomeLen() / genRef.SexGenomeLen[(int) kar.Sex];
@@ -63,10 +66,12 @@ public record SampleStat(
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
         
         double nullizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 0);
+        int nAcceptedEvents = sample.Events.Count;
+        int nProposedEvents = sample.Events.Sum(e => e.NumTries) + nAcceptedEvents;
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 
-            sample.Events.Count, nullizygosity, sample.MixtureString());
+            nAcceptedEvents, nullizygosity, sample.MixtureString(), nProposedEvents);
         return res;
     }
 }
