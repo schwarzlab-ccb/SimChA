@@ -54,9 +54,10 @@ public static class Parsers
         {
             string[] lineSplit = line.Split('\t');
             string sampleId = lineSplit[0];
-            if (!sampleSegs.ContainsKey(sampleId))
+            if (!sampleSegs.TryGetValue(sampleId, out List<(string chrom, int start, int end, int cnA, int cnB)>? value))
             {
-                sampleSegs[sampleId] = [];
+                value = ([]);
+                sampleSegs[sampleId] = value;
                 Console.Write($"Reading sample {sampleId}.".PadRight(80) + "\r");
             }
             string chrom = lineSplit[1];
@@ -68,7 +69,7 @@ public static class Parsers
             int end = int.Parse(lineSplit[3]);
             int cnA = (int) Math.Round(float.Parse(lineSplit[4]));
             int cnB = (int) Math.Round(float.Parse(lineSplit[5]));
-            sampleSegs[sampleId].Add((chrom, start, end, cnA, cnB));
+            value.Add((chrom, start, end, cnA, cnB));
         }
         
         // Convert samples to karyotypes
