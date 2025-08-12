@@ -74,35 +74,110 @@ public static class Parsers
         foreach ((string sampleId, var segs) in sampleSegs)
         {
             Console.Write($"Creating karyotype for sample {sampleId}.".PadRight(80) + "\r");
-            List<Region> regionsA = [];
-            List<Region> regionsB = [];
+
+            List<(string chr, int start, int end, int cn)> hapA = [];
+            List<(string chr, int start, int end, int cn)> hapB = [];
             bool chrYfound = false;
             bool chrXfound = false;
-            
-            foreach ((string chrNo, int start, int end, int cnA, int cnB) in segs)
+
+            foreach ((string chr, int start, int end, int cnA, int cnB) in segs)
             {
-                chrYfound |= chrNo == "chrY";
-                chrXfound |= chrNo == "chrX";
-                for (int i = 0; i < cnA; i++)
-                {
-                    var genes = genRef.GetGenesBetween(chrNo, start, end).ToList();
-                    regionsA.Add(new Region(start, end, chrNo, true, null, genes));
-                }
-                for (int i = 0; i < cnB; i++)
-                {
-                    var genes = genRef.GetGenesBetween(chrNo, start, end).ToList();
-                    regionsB.Add(new Region(start, end, chrNo, false, null, genes));
-                }
+                hapA.Add((chr, start, end, cnA));
+                hapB.Add((chr, start, end, cnB));
+                chrYfound |= chr == "chrY";
+                chrXfound |= chr == "chrX";
             }
+
+            var regionsA = BuildHaplotypeRegions(hapA, true, genRef);
+            var regionsB = BuildHaplotypeRegions(hapB, false, genRef);
             var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
             var sexType = chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
-            var kar = new Karyotype(genRef, newRegs, sexType);
-            result[sampleId] = kar;
+            result[sampleId] = new Karyotype(genRef, newRegs, sexType);
         }
 
         // Add the last sample
         return result;
     }
+
+    static List<Region> BuildHaplotypeRegions(List<(string chr, int start, int end, int cn)> segments, bool isHapA, GenRef genRef)
+    {
+        var regions = new List<Region>();
+
+        // Group by chromosome
+        var chrGroups = segments.GroupBy(s => s.chr);
+
+        foreach (var chrGroup in chrGroups)
+        {
+            var chr = chrGroup.Key;
+
+            // Copy-counted intervals
+            var intervals = chrGroup
+                .Select(s => new { s.start, s.end, count = s.cn })
+                .OrderBy(s => s.start)
+                .ToList();
+
+            // Keep track of how many copies are left per interval
+            var counts = intervals.Select(x => x.count).ToArray();
+
+            while (counts.Any(c => c > 0))
+            {
+                // Build a new layer
+                int currentStart = -1;
+                int currentEnd = -1;
+
+                var usedIndexes = new List<int>();
+
+                for (int pos = 0; pos < intervals.Count; pos++)
+                {
+                    if (counts[pos] > 0)
+                    {
+                        // Either start new region or extend it
+                        if (currentStart == -1)
+                        {
+                            currentStart = intervals[pos].start;
+                            currentEnd = intervals[pos].end;
+                        }
+                        else if (intervals[pos].start <= currentEnd)
+                        {
+                            // overlapping → extend
+                            currentEnd = Math.Max(currentEnd, intervals[pos].end);
+                        }
+                        else
+                        {
+                            break; // non-overlapping: end the region
+                        }
+
+                        usedIndexes.Add(pos);
+                    }
+                    else if (currentStart != -1)
+                    {
+                        break; // as soon as we hit a gap, we break
+                    }
+                }
+
+                if (currentStart != -1)
+                {
+                    // Form region
+                    var genes = genRef.GetGenesBetween(chr, currentStart, currentEnd).ToList();
+                    regions.Add(new Region(currentStart, currentEnd, chr, isHapA, null, genes));
+
+                    // Decrement one copy from each contributing interval
+                    foreach (int i in usedIndexes)
+                    {
+                        counts[i]--;
+                    }
+                }
+                else
+                {
+                    break; // no more intervals to use
+                }
+            }
+        }
+
+        return regions;
+    }
+
+
 
     public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames, GeneLT type)
     {
