@@ -14,9 +14,9 @@ public record SampleStat(
     double Og,
     double Ess,
     int MutCount,
-    double Hemizygosity,
     double Nullizygosity,
-    string Mixture)
+    string Mixture,
+    int NumRejectedEvents)
 {
     public static string Header() 
         => "sample_id" +
@@ -30,9 +30,9 @@ public record SampleStat(
            "\tog" +
            "\tess" +
            "\tdist" +
-           "\themizygosity" +
            "\tnullizygosity" + 
-           "\tmixture";
+           "\tmixture"+
+           "\tn_rejected_events";
     
     public override string ToString() =>
         $"{SampleId}" +
@@ -46,9 +46,9 @@ public record SampleStat(
         $"\t{Og}" +
         $"\t{Ess}" +
         $"\t{MutCount}" +
-        $"\t{Hemizygosity}" +
         $"\t{Nullizygosity}" +
-        $"\t{Mixture}";
+        $"\t{Mixture}"+
+        $"\t{NumRejectedEvents}";
 
     public static double CalcPloidy(Karyotype kar, GenRef genRef)
         => 2.0 * kar.GenomeLen() / genRef.SexGenomeLen[(int) kar.Sex];
@@ -64,13 +64,13 @@ public record SampleStat(
         double og = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], fParams.GeneNormalization);
         double ess = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.GeneNormalization);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
-
-        double hemizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 1);
+        
         double nullizygosity = Fitness.Zygosity(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], 0);
+        int nRejectedEvents = sample.Events.Sum(e => e.NumRejections);
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
             kar.FitnessVal, stress, tsg, og, ess, 
-            sample.Events.Count, hemizygosity, nullizygosity, sample.MixtureString());
+            sample.Events.Count, nullizygosity, sample.MixtureString(), nRejectedEvents);
         return res;
     }
 }

@@ -19,7 +19,7 @@ public class TestFitness
     [SetUp]
     public void Setup()
     {
-        _refs = [FileIO.ReadGenRef(TestParsing.HG_19_PATH), FileIO.ReadGenRef(TestParsing.HG_38_PATH)];
+        _refs = [FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER), FileIO.ReadGenRef(TestParsing.HG_38_PATH, TestParsing.GENE_FOLDER)];
     }
     
     private static Gene MakeGene(string chrNo, double deltaFitness, int index)

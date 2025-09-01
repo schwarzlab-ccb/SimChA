@@ -10,7 +10,7 @@ public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPar
 {
     private EvoParams EvoParams { get; } = evoParams;
 
-    private (Karyotype newKar, BaseEventData eventData) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
+    private (Karyotype newKar, BaseEventData eventData, int numTries) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
     {
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
@@ -27,11 +27,11 @@ public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPar
                 double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
                 if (Math.Exp(proposedFitness - currentKar.FitnessVal - EvoParams.Acceptance) > Rnd.NextDouble())
                 {
-                    return (proposedKar, eventData);
+                    return (proposedKar, eventData, tryNo);
                 }
             }
         }
-        return (currentKar, CreatePassEvent());
+        return (currentKar, CreatePassEvent(), EvoParams.MaxTries);
     }
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
@@ -45,10 +45,10 @@ public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPar
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-            var (newKar, eventData) = GetNewEvent(cnEventPs, currentKar);
+            var (newKar, eventData, numTries) = GetNewEvent(cnEventPs, currentKar);
             double newFit = newKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries);
             
             childEvs.Add(newEv);
             currentKar = newKar;

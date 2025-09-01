@@ -16,12 +16,13 @@ public class TestParsing
     public const string DATA_PATH = "./../../../../data/";
     public const string HG_19_PATH = DATA_PATH + "./hg19";
     public const string HG_38_PATH = DATA_PATH + "./hg38";
+    public const string GENE_FOLDER = "./Davoli_select";
     private GenRef _genRef;
 
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef(HG_19_PATH);
+        _genRef = FileIO.ReadGenRef(HG_19_PATH, GENE_FOLDER);
     }
     
     [Test]
@@ -82,7 +83,7 @@ public class TestParsing
                                 "1\tchr3\t62226\t171636043\t2\t3\n" +
                                 "2\tchrX\t2\t6\t1\t0\n" +
                                 "2\tchrY\t3\t4\t0\t1";
-        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false);
+        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false, false);
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
         Assert.AreEqual(2, profiles["1"].FindChrRegions("chr1").Count()); 

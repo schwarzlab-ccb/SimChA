@@ -10,10 +10,9 @@ public class FileIO
 {
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
-    private const string SUBSET = "select";
-    private const string ESSENTIALS_TSV = $"essentials_{SUBSET}.tsv";
-    private const string OGS_TSV = $"ogs_{SUBSET}.tsv";
-    private const string TSGS_TSV = $"tsgs_{SUBSET}.tsv";
+    private const string ESSENTIALS_TSV = "essentials.tsv";
+    private const string OGS_TSV = "ogs.tsv";
+    private const string TSGS_TSV = "tsgs.tsv";
     private const string GENOME_FASTA = "genome.fa";
     private const string CENTROMERES_TSV = "centromeres.tsv";
     // input
@@ -35,9 +34,23 @@ public class FileIO
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
         OutFolder = outFolder;
-        if (!Directory.Exists(OutFolder))
+    }
+
+    public bool CreateOutFolder()
+    {
+        try
         {
+            if (Directory.Exists(OutFolder))
+            {
+                return false;
+            }
             Directory.CreateDirectory(OutFolder);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
     
@@ -132,14 +145,14 @@ public class FileIO
         }
     }
 
-    public void WriteSamples(List<SampleStat> cloneStats)
+    public void WriteSamples(List<SampleStat> sampleStats)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), SAMPLES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var file = new StreamWriter(outPath);
         file.WriteLine(SampleStat.Header());
 
-        foreach (var clone in cloneStats)
+        foreach (var clone in sampleStats)
         {
             file.WriteLine(clone.ToString());
         }
@@ -252,7 +265,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly)
+    public static List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly, bool zeroIndexed)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -262,7 +275,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, autosomesOnly);
+            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, autosomesOnly, zeroIndexed);
             var samples = new List<Sample>();
             foreach ((string sampleId, var karyotype) in profiles)
             {
@@ -312,14 +325,15 @@ public class FileIO
         }
     }
 
-    public static GenRef ReadGenRef(string dataFolder, bool useVariants = false)
+    public static GenRef ReadGenRef(string dataFolder, string genesFolder, bool useVariants = false)
     {
         string refName = Path.GetFileName(dataFolder);
         var (chrLengths, chrSex) = ReadChromosomes(dataFolder);
         var centromeres = ReadCentromeres(dataFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
-        var geneChromMap = MapGenesToChroms(dataFolder, chrSex);
+        string genesPath = Path.Combine(Path.GetFullPath(dataFolder), genesFolder);
+        var geneChromMap = MapGenesToChroms(genesPath, chrSex);
         return new GenRef(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
     }
 }

@@ -17,7 +17,7 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH);
+        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
         _rnd = new Random(0);
     }
 
@@ -51,11 +51,10 @@ public class TestCopyNumbers
     [Test]
     public void TestCalcAutosomeCNs([Values] SexType sex)
     {
-        var genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, false);
-        var kar = new Karyotype(genRef, sex);
+        var kar = new Karyotype(_genRef, sex);
         var cnRef = CopyNumbers.CalcCNs(kar).ToList();
-        Assert.AreEqual(genRef.SexChromNames[(int) sex].Count, cnRef.Count);
-        double ploidyRef = CopyNumbers.CalcPloidy(genRef, cnRef, sex);
+        Assert.AreEqual(_genRef.SexChromNames[(int) sex].Count, cnRef.Count);
+        double ploidyRef = CopyNumbers.CalcPloidy(_genRef, cnRef, sex);
         Assert.AreEqual(2, ploidyRef);
     }
 

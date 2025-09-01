@@ -19,9 +19,11 @@ public class CmdOptions
     [Option('P', "cnprofiles", Required = false, Default = "", HelpText = "File with CNAs, will cause the program to write a scoring file.")]
     public string CNProfiles { get; set; }
 
-    [Option('D', "data", Required = false, Default = "./data/hg19", HelpText = "The path for the tsv-files with the chromosome list, and the essential-, tsg- and og-genes with scores." +
-                                                                               " The files should be named: chromosomes.tsv, essential.tsv, tsg.tsv, og.tsv and contained in a folder with the same name as the assembly used.")]
-    public string DataFolder { get; set; }
+    [Option('A', "assembly", Required = false, Default = "./data/hg19", HelpText = "The path to the folder with assembly-related files.")]
+    public string AssemblyFolder { get; set; }
+    
+    [Option('G', "genes", Required = false, Default="./Davoli_select", HelpText = "The path to the folder with the gene-score files, relative to the assembly folder. The genes should be mapped to the provided assembly.")]
+    public string GeneFolder { get; set; }
     
     [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.")]
     public bool EvolutionMode { get; set; }
@@ -43,7 +45,10 @@ public class CmdOptions
 
     [Option('f', "fasta", Required = false, Default = false, HelpText = "Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.")]
     public bool WriteFasta { get; set; }
-    
+
+    [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
+    public bool ZeroIndexed { get; set; }
+
     public ExecMode ExecMode
     {
         get

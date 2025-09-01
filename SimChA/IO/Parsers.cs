@@ -33,7 +33,8 @@ public static class Parsers
     
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
-    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, bool autosomesOnly)
+    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, 
+        bool autosomesOnly, bool zeroIndexed)
     {
         Dictionary<string, Karyotype> result = new();
     
@@ -53,9 +54,10 @@ public static class Parsers
         {
             string[] lineSplit = line.Split('\t');
             string sampleId = lineSplit[0];
-            if (!sampleSegs.ContainsKey(sampleId))
+            if (!sampleSegs.TryGetValue(sampleId, out List<(string chrom, int start, int end, int cnA, int cnB)>? value))
             {
-                sampleSegs[sampleId] = [];
+                value = ([]);
+                sampleSegs[sampleId] = value;
                 Console.Write($"Reading sample {sampleId}.".PadRight(80) + "\r");
             }
             string chrom = lineSplit[1];
@@ -63,11 +65,11 @@ public static class Parsers
             {
                 continue;
             }
-            int start = int.Parse(lineSplit[2]) - 1;
+            int start = zeroIndexed ? int.Parse(lineSplit[2]) :  int.Parse(lineSplit[2]) - 1;
             int end = int.Parse(lineSplit[3]);
             int cnA = (int) Math.Round(float.Parse(lineSplit[4]));
             int cnB = (int) Math.Round(float.Parse(lineSplit[5]));
-            sampleSegs[sampleId].Add((chrom, start, end, cnA, cnB));
+            value.Add((chrom, start, end, cnA, cnB));
         }
         
         // Convert samples to karyotypes
@@ -184,6 +186,22 @@ public static class Parsers
         // Pre-initialization
         var geneList = chrNames.ToDictionary(c => c, _ => new List<Gene>());
         int listIndex = 0;
+        string? firstLine = geneFile.ReadLine();
+        if (firstLine == null)
+        {
+            throw new Exception("Gene file is empty.");
+        }
+        string[] columns = firstLine.Split('\t');
+        if (firstLine.Split('\t').Length < 5)
+        {
+            throw new Exception("Gene file does not contain at least 5 columns.");
+        }
+        if (columns[0] != "chrom" || columns[1] != "start" || columns[2] != "end" || 
+            columns[3] != "name" || columns[4] != "score")
+        {
+            throw new Exception("Gene file does not contain the expected header: chorm\tstart\tend\tname\tscore.");
+        }
+        
         while (geneFile.ReadLine() is { } line)
         {
             if (line == "")
