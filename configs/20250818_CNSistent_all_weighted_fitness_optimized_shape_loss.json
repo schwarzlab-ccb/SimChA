@@ -1,0 +1,97 @@
+{
+  "SimParams": {
+    "Seed": 0,
+    "Sex": "Any",
+    "RateDist": "Geometric",
+    "RateMean": 89.82,
+    "FitDist": "Uniform",
+    "FitMean": 1,
+    "TetraploidStart": false
+  },
+  "FitParams": {
+    "Stress": 8.879022406452343,
+    "TsgOg": 47.27920217978516,
+    "Essentiality": 22.96794319515757,
+    "AutosomesOnly": true,
+    "GeneNormalization": false
+  },
+  "Signatures": [
+    {
+      "Name": "CNVs",
+      "Prob": 1,
+      "Events": [
+        {
+          "Type": "ArmDuplication",
+          "Prob": 0.012466549071422344,
+          "Frac": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ArmDeletion",
+          "Prob": 0.012133716523920349,
+          "Frac": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "CentromereBoundDuplication",
+          "Prob": 0.020839341645483872,
+          "Frac": 0.09837232529455073,
+          "Frag": 0
+        },
+        {
+          "Type": "CentromereBoundDeletion",
+          "Prob": 0.012157190859764317,
+          "Frac": 0.1315579141331199,
+          "Frag": 0
+        },
+        {
+          "Type": "InternalDuplication",
+          "Prob": 0.4710745880254059,
+          "Frac": 0.03199072548077375,
+          "Frag": 0
+        },
+        {
+          "Type": "InternalDeletion",
+          "Prob": 0.20539205494335977,
+          "Frac": 0.051515309628065206,
+          "Frag": 0
+        },
+        {
+          "Type": "TailDuplication",
+          "Prob": 0.10211587602867893,
+          "Frac": 0.28791997712033157,
+          "Frag": 0
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 0.0975107143575745,
+          "Frac": 0.3217236046221925,
+          "Frag": 0
+        },
+        {
+          "Type": "ChromDuplication",
+          "Prob": 0.01274295565182304,
+          "Frac": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "ChromDeletion",
+          "Prob": 0.06254097371193404,
+          "Frac": 0,
+          "Frag": 0
+        },
+        {
+          "Type": "WholeGenomeDoubling",
+          "Prob": 0.17601459156312171,
+          "Frac": 0,
+          "Frag": 0
+        }
+      ]
+    }
+  ],
+  "EvoParams": {
+    "Acceptance": 0.8684230439464997,
+    "MaxTries": 100
+  },
+  "MHParams": null
+}

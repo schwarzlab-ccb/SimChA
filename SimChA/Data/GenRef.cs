@@ -117,7 +117,19 @@ public class GenRef
     public List<int[]> GetInitialGeneCounts(SexType sexType, bool keepEmpty)
     {
         List<int[]> res = [];
-        foreach (var genesPerChrom in GeneChromMap)
+
+        // Filter chromosomes according to sexType
+        var filteredGeneChromMap = GeneChromMap.Select(map =>
+        {
+            var filtered = map.Where(pair =>
+                (sexType == SexType.Any && pair.Key != XChrName && pair.Key != YChrName) ||
+                (sexType == SexType.Male && pair.Key != YChrName) ||
+                (sexType == SexType.Female)
+            ).ToDictionary(pair => pair.Key, pair => pair.Value);
+            return filtered;
+        });
+
+        foreach (var genesPerChrom in filteredGeneChromMap)
         {
             int geneCount = genesPerChrom.Sum(pair => pair.Value.Count);
             int[] typeCounts = new int[geneCount];
@@ -133,7 +145,6 @@ public class GenRef
                     }
                 }
             }
-
             res.Add(typeCounts);
         }
 
