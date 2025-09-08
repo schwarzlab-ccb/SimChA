@@ -5,14 +5,14 @@
     "RateDist": "Geometric"
   },
   "FitParams": {
-    "Stress": 60,
-    "TsgOg": 1.15,
-    "Essentiality": 10,
+    "Stress": 2.5758,
+    "TsgOg": 20,
+    "Essentiality": 1350,
     "AutosomesOnly": true,
-    "GeneNormalization": false
+    "GeneNormalization": true
   },
   "EvoParams": {
-    "Acceptance": 0.25,
+    "Acceptance": 1.6,
     "MaxTries": 100
   },
   "Signatures": [
