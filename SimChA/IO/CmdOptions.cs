@@ -49,7 +49,7 @@ public class CmdOptions
     [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
     public bool ZeroIndexed { get; set; }
     
-    [Option("root", Required = false, Default = false, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
+    [Option("root", Required = false, Default = null, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
     public string RootFolder { get; set; }
 
     public ExecMode ExecMode
