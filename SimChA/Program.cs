@@ -20,6 +20,13 @@ watch.Start();
 
 // Input
 var options = cmdOptions.Value;
+
+// Set working directory if RootFolder is specified
+if (!string.IsNullOrEmpty(options.RootFolder))
+{
+    Environment.CurrentDirectory = options.RootFolder;
+}
+
 var selMode = options.SelectionMode;
 var config = FileIO.ReadSimChAConfig(options.ConfigFile);
 var rnd = new Random(config.SimParams.Seed);
