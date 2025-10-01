@@ -126,7 +126,7 @@ The parameters controlling the fitness of the samples.
 * `TsgOg: float (0.0)`: Affected by the number of Tumor Suppressors (TSG) and Oncogenes (OG) in the sample. TSG loss and OG gain increase fitness.
 * `Essentiality: float (0.0)`: Penalizes full loss of essential genes.
 * `GeneNormalization: bool (false)`: If true, `TsgOg` and `Essentiality` are normalized by the number of TSG, OG, and Essential genes in the sample.
-*  `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
+* `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
 
 #### `Signatures`
 

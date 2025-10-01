@@ -7,7 +7,7 @@ namespace SimChA.Simulation;
 
 public static class Factory
 {
-    public static Simulator GetSimulator(Random rnd, GenRef genRef, SimChAConfig simChAConfig, SelectionMode selMode)
+    public static Simulator GetSimulator(Random rnd, RefGen refGen, SimChAConfig simChAConfig, SelectionMode selMode)
     {
         var sampleParams = simChAConfig.SimParams;
         var fitParams = simChAConfig.FitParams;
@@ -16,15 +16,15 @@ public static class Factory
             case SelectionMode.MetropolisHastings:
                 var mcParams = simChAConfig.MHParams ?? throw new Exception(
                     "Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
-                return new MHSimulator(rnd, genRef, sampleParams, fitParams, mcParams);
+                return new MHSimulator(rnd, refGen, sampleParams, fitParams, mcParams);
 
             case SelectionMode.Evolution:
                 var evoParams = simChAConfig.EvoParams ?? throw new Exception(
                     "Error: EvoParams not set. Cannot perform evolution without evolution parameters. Please set EvoParams in the config file.");
-                return new EvoSimulator(rnd, genRef, sampleParams, fitParams, evoParams);
+                return new EvoSimulator(rnd, refGen, sampleParams, fitParams, evoParams);
 
             case SelectionMode.MonteCarlo:
-                return new Simulator(rnd, genRef, sampleParams, fitParams);
+                return new Simulator(rnd, refGen, sampleParams, fitParams);
 
             default:
                 throw new Exception("Error: No selection mode set.");

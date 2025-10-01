@@ -32,7 +32,7 @@ var config = FileIO.ReadSimChAConfig(options.ConfigFile);
 var rnd = new Random(config.SimParams.Seed);
 var files = new FileIO(options.OutputPath);
 files.CreateOutFolder();
-var genRef = FileIO.ReadGenRef(options.AssemblyFolder, options.GeneFolder, options.ShouldParseGenome);
+var genRef = FileIO.ReadGenRef(FileIO.DATA_FOLDER, config.SimParams.Assembly, config.FitParams.GeneSet, options.ShouldParseGenome);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
 // Construct samples
@@ -62,7 +62,7 @@ if (options.Simulate)
 else
 {
     Console.WriteLine("Reading samples from data:");
-    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.FitParams.AutosomesOnly, options.ZeroIndexed);
+    samples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.SimParams.AutosomesOnly, options.ZeroIndexed);
 }
 
 // Score and segment samples

@@ -18,12 +18,6 @@ public class CmdOptions
     
     [Option('P', "cnprofiles", Required = false, Default = "", HelpText = "File with CNAs, will cause the program to write a scoring file.")]
     public string CNProfiles { get; set; }
-
-    [Option('A', "assembly", Required = false, Default = "./data/hg19", HelpText = "The path to the folder with assembly-related files.")]
-    public string AssemblyFolder { get; set; }
-    
-    [Option('G', "genes", Required = false, Default="./Davoli_select", HelpText = "The path to the folder with the gene-score files, relative to the assembly folder. The genes should be mapped to the provided assembly.")]
-    public string GeneFolder { get; set; }
     
     [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.")]
     public bool EvolutionMode { get; set; }
@@ -49,7 +43,7 @@ public class CmdOptions
     [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
     public bool ZeroIndexed { get; set; }
     
-    [Option("root", Required = false, Default = null, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
+    [Option("root", Required = false, Default = ".", HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
     public string RootFolder { get; set; }
 
     public ExecMode ExecMode

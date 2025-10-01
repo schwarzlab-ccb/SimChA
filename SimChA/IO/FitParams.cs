@@ -1,5 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2023, adam.streck@gmail.com
 
+using SimChA.Computation;
+
 namespace SimChA.IO;
 
 public record FitParams
@@ -7,6 +9,6 @@ public record FitParams
     double Stress = 0,
     double TsgOg = 0,
     double Essentiality = 0,
-    bool AutosomesOnly = false,
-    bool GeneNormalization = false
+    bool GeneNormalization = false,
+    string GeneSet = "Empty"
 );

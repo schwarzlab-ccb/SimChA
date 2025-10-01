@@ -14,7 +14,7 @@ public class TestFitness
 {
     private const double EPSILON = 0.00001;
 
-    private List<GenRef> _refs;
+    private List<RefGen> _refs;
 
     [SetUp]
     public void Setup()
@@ -140,7 +140,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitParams(0.001, 0.001, 0.00_1, true, true);
+        var fit = new FitParams(0.001, 0.001, 0.00_1, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 
@@ -150,7 +150,7 @@ public class TestFitness
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
         karyotype.MergeRegions();
-        var fit = new FitParams(0.001, 0.001, 0.001, true, true);
+        var fit = new FitParams(0.001, 0.001, 0.001, true);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 

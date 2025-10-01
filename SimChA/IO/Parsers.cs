@@ -11,7 +11,10 @@ public static class Parsers
     public static SimChAConfig ParseSimParams(string serializedJSON)
     {
         SimChAConfig? res;
-        var options = new JsonSerializerOptions { IncludeFields = true };
+        var options = new JsonSerializerOptions
+        {
+            IncludeFields = true
+        };
         try
         {
             res = JsonSerializer.Deserialize<SimChAConfig>(serializedJSON, options);
@@ -33,7 +36,7 @@ public static class Parsers
     
     // Expected format is that there is a header and the columns contain:
     // SampleID, Chr, Start, End, CN hap1, CN hap2
-    public static Dictionary<string, Karyotype> ParseCNAProfile(GenRef genRef, TextReader cnaFile, 
+    public static Dictionary<string, Karyotype> ParseCNAProfile(RefGen refGen, TextReader cnaFile, 
         bool autosomesOnly, bool zeroIndexed)
     {
         Dictionary<string, Karyotype> result = new();
@@ -61,7 +64,7 @@ public static class Parsers
                 Console.Write($"Reading sample {sampleId}.".PadRight(80) + "\r");
             }
             string chrom = lineSplit[1];
-            if (autosomesOnly && (chrom == genRef.YChrName || chrom == genRef.XChrName))
+            if (autosomesOnly && (chrom == refGen.YChrName || chrom == refGen.XChrName))
             {
                 continue;
             }
@@ -90,18 +93,18 @@ public static class Parsers
                 chrXfound |= chr == "chrX";
             }
 
-            var regionsA = BuildHaplotypeRegions(hapA, true, genRef);
-            var regionsB = BuildHaplotypeRegions(hapB, false, genRef);
+            var regionsA = BuildHaplotypeRegions(hapA, true, refGen);
+            var regionsB = BuildHaplotypeRegions(hapB, false, refGen);
             var newRegs = new List<Contig> { new(regionsA), new(regionsB) };
             var sexType = chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
-            result[sampleId] = new Karyotype(genRef, newRegs, sexType);
+            result[sampleId] = new Karyotype(refGen, newRegs, sexType);
         }
 
         // Add the last sample
         return result;
     }
 
-    static List<Region> BuildHaplotypeRegions(List<(string chr, int start, int end, int cn)> segments, bool isHapA, GenRef genRef)
+    static List<Region> BuildHaplotypeRegions(List<(string chr, int start, int end, int cn)> segments, bool isHapA, RefGen refGen)
     {
         var regions = new List<Region>();
 
@@ -110,7 +113,7 @@ public static class Parsers
 
         foreach (var chrGroup in chrGroups)
         {
-            var chr = chrGroup.Key;
+            string chr = chrGroup.Key;
 
             // Copy-counted intervals
             var intervals = chrGroup
@@ -119,7 +122,7 @@ public static class Parsers
                 .ToList();
 
             // Keep track of how many copies are left per interval
-            var counts = intervals.Select(x => x.count).ToArray();
+            int[] counts = intervals.Select(x => x.count).ToArray();
 
             while (counts.Any(c => c > 0))
             {
@@ -160,7 +163,7 @@ public static class Parsers
                 if (currentStart != -1)
                 {
                     // Form region
-                    var genes = genRef.GetGenesBetween(chr, currentStart, currentEnd).ToList();
+                    var genes = refGen.GetGenesBetween(chr, currentStart, currentEnd).ToList();
                     regions.Add(new Region(currentStart, currentEnd, chr, isHapA, null, genes));
 
                     // Decrement one copy from each contributing interval
@@ -196,10 +199,13 @@ public static class Parsers
         {
             throw new Exception("Gene file does not contain at least 5 columns.");
         }
-        if (columns[0] != "chrom" || columns[1] != "start" || columns[2] != "end" || 
-            columns[3] != "name" || columns[4] != "score")
+        if (columns[0] != "chrom" 
+            || columns[1] != "start" 
+            || columns[2] != "end"
+            || columns[3] != "name" 
+            || columns[4] != "score")
         {
-            throw new Exception("Gene file does not contain the expected header: chorm\tstart\tend\tname\tscore.");
+            throw new Exception("Gene file does not contain the expected header: chrom\tstart\tend\tname\tscore.");
         }
         
         while (geneFile.ReadLine() is { } line)

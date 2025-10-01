@@ -6,14 +6,14 @@
     "RateMean": 89.82,
     "FitDist": "Uniform",
     "FitMean": 1,
-    "TetraploidStart": false
+    "AutosomesOnly": true
   },
   "FitParams": {
     "Stress": 4.969099153818576,
     "TsgOg": 0.14231580366654928,
     "Essentiality": 1.326342973205489,
-    "AutosomesOnly": true,
-    "GeneNormalization": false
+    "GeneNormalization": false,
+    "GeneSet": "Davoli_Select"
   },
   "Signatures": [
     {

@@ -2,10 +2,11 @@
     "SimParams": {
         "Seed": 0,
         "RateMean": 89.82,
-        "RateDist": "Geometric"
+        "RateDist": "Geometric",
+        "AutosomesOnly": true
     },
     "FitParams": {
-        "AutosomesOnly": true
+        "GeneSet": "Empty"
     },
     "EvoParams": { },
     "Signatures": [{

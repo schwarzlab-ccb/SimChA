@@ -8,6 +8,9 @@ namespace SimChA.IO;
 
 public class FileIO
 {
+    // path
+    public const string DATA_FOLDER = "data";
+    
     // data
     private const string CHROMOSOMES_TSV = "chromosomes.tsv";
     private const string ESSENTIALS_TSV = "essentials.tsv";
@@ -15,6 +18,7 @@ public class FileIO
     private const string TSGS_TSV = "tsgs.tsv";
     private const string GENOME_FASTA = "genome.fa";
     private const string CENTROMERES_TSV = "centromeres.tsv";
+    
     // input
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
     
@@ -108,20 +112,20 @@ public class FileIO
         }
     }
     
-    public void WriteVCF(GenRef genRef, List<Sample> samples)
+    public void WriteVCF(RefGen refGen, List<Sample> samples)
     {
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), VCF_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
         outputFile.WriteLine("##fileformat=VCFv4.3");
         outputFile.WriteLine("##source=SimChAV1.0");
-        outputFile.WriteLine($"##reference=verily_{genRef.Name}_genome.fa");
+        outputFile.WriteLine($"##reference=verily_{refGen.Name}_genome.fa");
         outputFile.WriteLine("#SAMPLEID\tCHROM\tPOS\tID\tREF\tALT");
         foreach (var sample in samples)
         {
             foreach (var snv in sample.Karyotype.GetSNVs())
             {
-                var refBase = genRef.GetRefBase(snv.Chrom, (int)snv.Pos);
+                var refBase = refGen.GetRefBase(snv.Chrom, (int)snv.Pos);
                 // The VCF should *not* be aware of SNVs that didn't end up altering the location in the final karyotype
                 if (refBase != snv.Alt)
                 {
@@ -265,7 +269,7 @@ public class FileIO
         return geneLists;
     }
 
-    public static List<Sample> ReadProfiles(GenRef genRef, string cnaProfile, bool autosomesOnly, bool zeroIndexed)
+    public static List<Sample> ReadProfiles(RefGen refGen, string cnaProfile, bool autosomesOnly, bool zeroIndexed)
     {
         string fileFullPath = Path.GetFullPath(cnaProfile);
         if (!File.Exists(fileFullPath))
@@ -275,7 +279,7 @@ public class FileIO
         try
         {
             var cnaFile = new StreamReader(fileFullPath);
-            var profiles = Parsers.ParseCNAProfile(genRef, cnaFile, autosomesOnly, zeroIndexed);
+            var profiles = Parsers.ParseCNAProfile(refGen, cnaFile, autosomesOnly, zeroIndexed);
             var samples = new List<Sample>();
             foreach ((string sampleId, var karyotype) in profiles)
             {
@@ -325,15 +329,29 @@ public class FileIO
         }
     }
 
-    public static GenRef ReadGenRef(string dataFolder, string genesFolder, bool useVariants = false)
+    public static RefGen ReadGenRef(string dataFolder, string refName, string genesName, bool useVariants = false)
     {
-        string refName = Path.GetFileName(dataFolder);
-        var (chrLengths, chrSex) = ReadChromosomes(dataFolder);
-        var centromeres = ReadCentromeres(dataFolder);
+        string dataFullPath = Path.GetFullPath(dataFolder);
+        if (!Path.Exists(dataFullPath))
+        {
+            throw new ArgumentException($"Data folder does not exist: {dataFullPath}");
+        }
+        string assemblyFolder = Path.Combine(dataFullPath, refName); 
+        if (!Path.Exists(assemblyFolder))
+        {
+            throw new ArgumentException($"Assembly folder does not exist: {assemblyFolder}");
+        }
+        string genesFolder = Path.Combine(Path.GetFullPath(assemblyFolder), genesName);
+        if (!Path.Exists(genesFolder))
+        {
+            throw new ArgumentException($"Genes folder does not exist: {genesFolder}");
+        }
+        
+        var (chrLengths, chrSex) = ReadChromosomes(assemblyFolder);
+        var centromeres = ReadCentromeres(assemblyFolder);
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
-        var genContentsDict = useVariants ? ReadFasta(allChrs, dataFolder) : null;
-        string genesPath = Path.Combine(Path.GetFullPath(dataFolder), genesFolder);
-        var geneChromMap = MapGenesToChroms(genesPath, chrSex);
-        return new GenRef(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
+        var genContentsDict = useVariants ? ReadFasta(allChrs, assemblyFolder) : null;
+        var geneChromMap = MapGenesToChroms(genesFolder, chrSex);
+        return new RefGen(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
     }
 }

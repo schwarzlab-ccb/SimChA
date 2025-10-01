@@ -5,8 +5,8 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, MHParams mhParams)
-    : Simulator(rnd, genRef, simParams, fitParams)
+public class MHSimulator(Random rnd, RefGen refGen, SimParams simParams, FitParams fitParams, MHParams mhParams)
+    : Simulator(rnd, refGen, simParams, fitParams)
 {
     private MHParams MHParams { get; } = mhParams;
 
@@ -34,7 +34,7 @@ public class MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPara
         {
             eventData.ApplyEvent(kar);
         }
-        return kar.UpdateFitness(GenRef, FitParams);
+        return kar.UpdateFitness(RefGen, FitParams);
     }
 
     private List<BaseEventData> GetNewProposal(List<CNEventPars> cnEventPs, Karyotype kar,
@@ -99,7 +99,7 @@ public class MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPara
     {
         var childKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        double targetFit = SampleFit(cnChild);
+        double targetFit = cnChild.Fitness;
         double oldFitness = childKar.FitnessVal;
 
         int eventCount = SampleEventCount(cnChild);
@@ -110,7 +110,7 @@ public class MHSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPara
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
             var eventData = bestEvents[evNo - 1];
             eventData.ApplyEvent(childKar);
-            double newFitness = childKar.UpdateFitness(GenRef, FitParams);
+            double newFitness = childKar.UpdateFitness(RefGen, FitParams);
             double dFit = newFitness - oldFitness;
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFitness);
             childEvs.Add(newEv);

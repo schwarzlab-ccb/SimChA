@@ -17,7 +17,7 @@ public class TestKaryotype
     private Karyotype _kar;
     private Random _rnd;
     private CNEventPars _del;
-    private GenRef _genRef;
+    private RefGen _refGen;
     private const int TEST_FRAC = 1000;
     
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)
@@ -33,8 +33,8 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
-        _kar = new Karyotype(_genRef, SexType.Male);
+        _refGen = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
+        _kar = new Karyotype(_refGen, SexType.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
     }
@@ -212,13 +212,13 @@ public class TestKaryotype
         var breakpoints = new List<long> { _kar.ContigLen(2), _kar.ContigLen(1) };
         _kar.ApplyChromoplexy(ids, stops, sequence, breakpoints);
         Assert.AreEqual(46, _kar.CountContigs());
-        Assert.AreEqual(_genRef.SexGenomeLen[(int) _kar.Sex], _kar.GenomeLen());
+        Assert.AreEqual(_refGen.SexGenomeLen[(int) _kar.Sex], _kar.GenomeLen());
     }
     
     [Test]
     public void TestClean()
     {
-        for (int i = 0; i < _genRef.SexGenome[(int) SexType.Female].Count; i++)
+        for (int i = 0; i < _refGen.SexGenome[(int) SexType.Female].Count; i++)
         {
             ApplyRandomEvent(_rnd, _kar, _del);
         }
@@ -388,7 +388,7 @@ public class TestKaryotype
         {
             _kar.ApplyContigDeletion(i);
         }
-        foreach (var gene in _genRef.SexGeneLists[(int)_kar.Sex][(int) geneType])
+        foreach (var gene in _refGen.SexGeneLists[(int)_kar.Sex][(int) geneType])
         {
             int count = _kar.GeneCounts[(int)geneType][gene.GeneId];
             Assert.AreEqual(gene.Chrom != "chrX" ? 1 : 0, count);

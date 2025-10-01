@@ -5,8 +5,8 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams, EvoParams evoParams)
-    : Simulator(rnd, genRef, simParams, fitParams)
+public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitParams fitParams, EvoParams evoParams)
+    : Simulator(rnd, refGen, simParams, fitParams)
 {
     private EvoParams EvoParams { get; } = evoParams;
 
@@ -14,21 +14,23 @@ public class EvoSimulator(Random rnd, GenRef genRef, SimParams simParams, FitPar
     {
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
-            if (SampleStat.CalcPloidy(currentKar, GenRef) > 32)
+            if (SampleStat.CalcPloidy(currentKar, RefGen) > 32)
             {
                 break;
             }
             var cnEventP = Rnd.PickRndElem(cnEventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, cnEventP);
-            if (eventData != null)
+            if (eventData == null)
             {
-                var proposedKar = new Karyotype(currentKar);
-                eventData.ApplyEvent(proposedKar);
-                double proposedFitness = proposedKar.UpdateFitness(GenRef, FitParams);
-                if (Math.Exp(proposedFitness - currentKar.FitnessVal - EvoParams.Acceptance) > Rnd.NextDouble())
-                {
-                    return (proposedKar, eventData, tryNo);
-                }
+                continue;
+            }
+
+            var proposedKar = new Karyotype(currentKar);
+            eventData.ApplyEvent(proposedKar);
+            double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
+            if (Math.Exp(proposedFitness - currentKar.FitnessVal - EvoParams.Acceptance) > Rnd.NextDouble())
+            {
+                return (proposedKar, eventData, tryNo);
             }
         }
         return (currentKar, CreatePassEvent(), EvoParams.MaxTries);

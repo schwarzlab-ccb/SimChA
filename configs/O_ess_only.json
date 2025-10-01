@@ -2,14 +2,15 @@
   "SimParams": {
     "Seed": 0,
     "RateMean": 89.82,
-    "RateDist": "Geometric"
+    "RateDist": "Geometric",
+    "AutosomesOnly": true
   },
   "FitParams": {
     "Stress":  0,
     "TsgOg": 0,
     "Essentiality": 1,
-    "AutosomesOnly": true,
-    "GeneNormalization": false
+    "GeneNormalization": false,
+    "GeneSet": "Davoli_Select"
   },
   "EvoParams": {
     "Acceptance": 1,

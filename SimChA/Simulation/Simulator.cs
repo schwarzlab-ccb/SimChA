@@ -5,10 +5,10 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams fitParams)
+public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams fitParams)
 {
     protected Random Rnd  { get; } = rnd;
-    protected GenRef GenRef  { get; } = genRef;
+    protected RefGen RefGen  { get; } = refGen;
     protected FitParams FitParams  { get; } = fitParams;
     protected SimParams SimParams { get; } = simParams;
 
@@ -19,13 +19,13 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
     {
         var (cnEventPs, sampleMixture) = Factory.MixSignatures(Rnd, sigs, SimParams.Mixture);
         var res = new List<Sample>();
-        var sex = FitParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
-        var rootKar = new Karyotype(GenRef, sex);
+        var sex = SimParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
+        var rootKar = new Karyotype(RefGen, sex);
         if (SimParams.TetraploidStart)
         {
             rootKar.ApplyWGD();
         }
-        rootKar.UpdateFitness(GenRef, FitParams);
+        rootKar.UpdateFitness(RefGen, FitParams);
         ApplyCNEventsRec(root, cloneTree, cnEventPs, sampleMixture, res, rootKar, 0);
         return res;
     }
@@ -40,9 +40,6 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
         return Sampling.SampleDiscDist(Rnd, SimParams.RateDist, events);
     }
     
-    protected double SampleFit(CTreeNode node)
-        => node.Fitness > 0 ? node.Fitness : Sampling.SampleContDist(Rnd, SimParams.FitDist, SimParams.FitMean);
-
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
         CTreeNode cnChild, 

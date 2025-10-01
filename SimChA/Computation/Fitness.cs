@@ -10,11 +10,11 @@ public static class Fitness
     private static double CalcTerm(double parameter, Func<double> termCalculation)
         => parameter > EPSILON ? termCalculation() * parameter : 0.0;
 
-    public static double Calculate(Karyotype kar, GenRef genRef, FitParams fParams)
+    public static double Calculate(Karyotype kar, RefGen refGen, FitParams fParams)
     {
         bool normGenes = fParams.GeneNormalization;
-        double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(genRef.SexGenomeLen[(int) kar.Sex], kar.GenomeLen()));
-        var geneData = genRef.SexGeneLists[(int)kar.Sex];
+        double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(refGen.SexGenomeLen[(int) kar.Sex], kar.GenomeLen()));
+        var geneData = refGen.SexGeneLists[(int)kar.Sex];
         double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], normGenes));
         double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], normGenes));
         double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], normGenes));

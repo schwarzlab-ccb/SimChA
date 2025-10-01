@@ -1,9 +1,7 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using CommandLine;
 using NUnit.Framework;
 using SimChA.Data;
 using SimChA.IO;
@@ -13,16 +11,16 @@ namespace Tests;
 [TestFixture]
 public class TestContig
 {
-    private GenRef _genRef;
+    private RefGen _refGen;
     private Contig _contig1;
     private Contig _contigX;
     
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
-        _contig1 = new Contig([_genRef.SexGenome[(int) SexType.Female].First()]);
-        _contigX = new Contig([_genRef.SexGenome[(int) SexType.Female].Last()]);
+        _refGen = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
+        _contig1 = new Contig([_refGen.SexGenome[(int) SexType.Female].First()]);
+        _contigX = new Contig([_refGen.SexGenome[(int) SexType.Female].Last()]);
     }
     
     [Test]
@@ -101,13 +99,13 @@ public class TestContig
     [Test]
     public void TestGetCentromeres()
     {
-        var cents = _contig1.GetCentromeres(_genRef.Centromeres);
+        var cents = _contig1.GetCentromeres(_refGen.Centromeres);
         Assert.AreEqual(1, cents.Count);
         Assert.AreEqual(121500000, cents[0].start);;
         Assert.AreEqual(128900000, cents[0].end);
         
         _contig1.Bridge(1000, true);
-        cents = _contig1.GetCentromeres(_genRef.Centromeres);
+        cents = _contig1.GetCentromeres(_refGen.Centromeres);
         Assert.AreEqual(2, cents.Count);
     }
     

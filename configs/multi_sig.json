@@ -3,14 +3,15 @@
     "Seed": 0,
     "RateMean": 89.82,
     "Mixture": "Single",
-    "RateDist": "Geometric"
+    "RateDist": "Geometric",
+    "AutosomesOnly": true
   },
   "FitParams": {
     "Stress": 37.71744218640556,
     "TsgOg": 0.8569312406481151,
     "Essentiality": 0.22634250620228702,
-    "AutosomesOnly": true,
-    "GeneNormalization": false
+    "GeneNormalization": false,
+    "GeneSet": "Davoli_Select"
   },
   "EvoParams": {
     "Acceptance": 0.5378325406523139,

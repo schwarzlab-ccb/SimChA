@@ -3,7 +3,7 @@
 namespace SimChA.Data;
 
 // Lists prefixed with Sex hold values for all SexTypes
-public class GenRef
+public class RefGen
 {
     public string Name { get; }
     public Dictionary<string, int> ChrLengths { get; }
@@ -21,7 +21,7 @@ public class GenRef
     public List<List<Gene[]>> SexGeneLists { get; }
     private Dictionary<string, StringBuilder>? GenContentsDict { get; }
 
-    public GenRef(
+    public RefGen(
         string name,
         Dictionary<string, int> chrLengths,
         Dictionary<string, SexType> chrSex,

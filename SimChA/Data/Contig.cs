@@ -51,8 +51,8 @@ public class Contig
     public bool Any()
         => Length > 0;
     
-    public IEnumerable<string> GetSeq(GenRef genRef) 
-        => Regions.Select(r => r.GetSeq(genRef)).ToList();
+    public IEnumerable<string> GetSeq(RefGen refGen) 
+        => Regions.Select(r => r.GetSeq(refGen)).ToList();
     
     public int CountRegions()
         => Regions.Count;

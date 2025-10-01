@@ -13,7 +13,7 @@ namespace Tests;
 public class TestSimulators
 {
     private Random _rnd;
-    private GenRef _genRef;
+    private RefGen _refGen;
     
     private static List<Signature> MakeSigs(List<CNEventPars> eventPs) 
         => [new("TestSig", 1, eventPs)];
@@ -26,7 +26,7 @@ public class TestSimulators
     public void Setup()
     {
         _rnd = new Random(0);
-        _genRef = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
+        _refGen = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
     }
     
     private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, EvoParams? saParams = null)
@@ -37,9 +37,9 @@ public class TestSimulators
         saParams ??= new EvoParams(1, 10);
         return type switch
         {
-            not null when type == typeof(Simulator) => new Simulator(_rnd, _genRef, simParams, fitParams),
-            not null when type == typeof(MHSimulator) => new MHSimulator(_rnd, _genRef, simParams, fitParams, mhParams),
-            not null when type == typeof(EvoSimulator) => new EvoSimulator(_rnd, _genRef, simParams, fitParams, saParams),
+            not null when type == typeof(Simulator) => new Simulator(_rnd, _refGen, simParams, fitParams),
+            not null when type == typeof(MHSimulator) => new MHSimulator(_rnd, _refGen, simParams, fitParams, mhParams),
+            not null when type == typeof(EvoSimulator) => new EvoSimulator(_rnd, _refGen, simParams, fitParams, saParams),
             _ => throw new ArgumentException("Unknown simulator type")
         };
     }

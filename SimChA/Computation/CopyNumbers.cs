@@ -36,6 +36,6 @@ public static class CopyNumbers
     public static List<CopyNumber> CalcCNs(Karyotype karyotype, IDictionary<string, List<int>>? breaks = null) 
         => karyotype.CalcCNs(breaks ?? karyotype.CalcBreaks());
 
-    public static double CalcPloidy(GenRef genRef, List<CopyNumber> copyNumbers, SexType sex)
-        => 2 * copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() / (float) genRef.SexGenomeLen[(int)sex];
+    public static double CalcPloidy(RefGen refGen, List<CopyNumber> copyNumbers, SexType sex)
+        => 2 * copyNumbers.Select(c => c.Length * (c.CNH1 + c.CNH2)).Sum() / (float) refGen.SexGenomeLen[(int)sex];
 }

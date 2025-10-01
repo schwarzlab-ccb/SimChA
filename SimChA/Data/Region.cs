@@ -88,9 +88,9 @@ public class Region : GenRange
     public int CountSNVs(long start, long end)
         => SNVs.Count(s => s.Pos >= start && s.Pos < end);
 
-    public string GetSeq(GenRef genRef)
+    public string GetSeq(RefGen refGen)
     {
-        char[] regionSeq = genRef.GetGenContents(Chrom, (int) Start, (int) (End-Start));
+        char[] regionSeq = refGen.GetGenContents(Chrom, (int) Start, (int) (End-Start));
         // If the GenContents haven't been set, we return the null case
         if (regionSeq is ['N']) 
         {

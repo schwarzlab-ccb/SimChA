@@ -5,7 +5,7 @@ namespace SimChA.Data;
 
 public class Karyotype
 {
-    private GenRef GenRef { get; }
+    private RefGen RefGen { get; }
     public SexType Sex { get; }
     public double FitnessVal { get; private set; }
 
@@ -13,29 +13,29 @@ public class Karyotype
     private readonly List<Contig> _contigs;
     public List<int[]> GeneCounts { get; }
 
-    public Karyotype(GenRef genRef, SexType sex)
+    public Karyotype(RefGen refGen, SexType sex)
     {
-        GenRef = genRef;
-        _contigs = genRef.SexGenome[(int) sex].Select(reg => new Contig([reg])).ToList();
+        RefGen = refGen;
+        _contigs = refGen.SexGenome[(int) sex].Select(reg => new Contig([reg])).ToList();
         Sex = sex;
-        GeneCounts = genRef.GetInitialGeneCounts(sex, false);
+        GeneCounts = refGen.GetInitialGeneCounts(sex, false);
     }
 
     public Karyotype(Karyotype other)
     {
-        GenRef = other.GenRef;
+        RefGen = other.RefGen;
         _contigs = other._contigs.ConvertAll(ch => new Contig(ch));
         Sex = other.Sex;
         FitnessVal = other.FitnessVal;
         GeneCounts = other.GeneCounts.Select(geneCounts => (int[]) geneCounts.Clone()).ToList();
     }
 
-    public Karyotype(GenRef genRef, List<Contig> contigs, SexType sex)
+    public Karyotype(RefGen refGen, List<Contig> contigs, SexType sex)
     {
-        GenRef = genRef;
+        RefGen = refGen;
         _contigs = contigs;
         Sex = sex;
-        GeneCounts = genRef.GetInitialGeneCounts(sex, true);
+        GeneCounts = refGen.GetInitialGeneCounts(sex, true);
         foreach (var contig in _contigs)
         {
             AddGenes(contig);
@@ -53,7 +53,7 @@ public class Karyotype
 
     public Dictionary<string, List<int>> CalcBreaks()
     {
-        var breakSets = GenRef.SexChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, GenRef.ChrLengths[c]});
+        var breakSets = RefGen.SexChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, RefGen.ChrLengths[c]});
         foreach (var contig in _contigs)
         {
             foreach ((string chrom, var breaks) in contig.CalcBreaks())
@@ -85,7 +85,7 @@ public class Karyotype
         => contigId < _contigs.Count ? _contigs[contigId].Length : 0;
 
     public List<(long start, long end)> GetCentromeres(int contigId)
-        => _contigs[contigId].GetCentromeres(GenRef.Centromeres);
+        => _contigs[contigId].GetCentromeres(RefGen.Centromeres);
 
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length);
@@ -95,10 +95,10 @@ public class Karyotype
         => _contigs[contigID];
 
     public IEnumerable<string> GetSeq()
-        => _contigs.SelectMany(c => c.GetSeq(GenRef).Concat(new List<string> {"\n"}));
+        => _contigs.SelectMany(c => c.GetSeq(RefGen).Concat(new List<string> {"\n"}));
     
-    public double UpdateFitness(GenRef genRef, FitParams fParams)
-        => FitnessVal = Fitness.Calculate(this, genRef, fParams);
+    public double UpdateFitness(RefGen refGen, FitParams fParams)
+        => FitnessVal = Fitness.Calculate(this, refGen, fParams);
 
     public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
     {
@@ -313,7 +313,7 @@ public class Karyotype
     {
         // NOTE: PointMutations do not currently affect GeneCounts list
         var contig = _contigs[contigID];
-        var oldNucleotide = GenRef.GetRefBaseFromSeq(contig.GetSeq(GenRef), (int) location);
+        var oldNucleotide = RefGen.GetRefBaseFromSeq(contig.GetSeq(RefGen), (int) location);
         contig.PointMutate(location, oldNucleotide, newNucleotide);
     }
 

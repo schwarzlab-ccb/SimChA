@@ -17,12 +17,12 @@ public class TestParsing
     public const string HG_19_PATH = DATA_PATH + "./hg19";
     public const string HG_38_PATH = DATA_PATH + "./hg38";
     public const string GENE_FOLDER = "./Davoli_select";
-    private GenRef _genRef;
+    private RefGen _refGen;
 
     [SetUp]
     public void Setup()
     {
-        _genRef = FileIO.ReadGenRef(HG_19_PATH, GENE_FOLDER);
+        _refGen = FileIO.ReadGenRef(HG_19_PATH, GENE_FOLDER);
     }
     
     [Test]
@@ -42,19 +42,19 @@ public class TestParsing
     [Test]
     public void TestParseGeneLists()
     {
-        var tsgList = _genRef.AllChrNames.ToDictionary(t => t, _ => new List<Gene>());
+        var tsgList = _refGen.AllChrNames.ToDictionary(t => t, _ => new List<Gene>());
 
         string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
 
         var gene1 = new Gene(0, 50, "chr1", GeneLT.TSG, 0,0.001);
         tsgList["chr1"].Add(gene1);
-        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrNames, GeneLT.TSG);
+        var listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _refGen.AllChrNames, GeneLT.TSG);
         Assert.AreEqual(tsgList, listFromString);
 
         genesTSG += "\nchr2\t100\t5000\tTSG2\t0.01";
         var gene2 = new Gene(99, 5000, "chr2", GeneLT.TSG, 1, 0.01);
         tsgList["chr2"].Add(gene2);
-        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _genRef.AllChrNames, GeneLT.TSG);
+        listFromString = Parsers.ParseGeneList(new StringReader(genesTSG), _refGen.AllChrNames, GeneLT.TSG);
         Assert.AreEqual(tsgList, listFromString);
     }
     
@@ -83,7 +83,7 @@ public class TestParsing
                                 "1\tchr3\t62226\t171636043\t2\t3\n" +
                                 "2\tchrX\t2\t6\t1\t0\n" +
                                 "2\tchrY\t3\t4\t0\t1";
-        var profiles = Parsers.ParseCNAProfile(_genRef, new StringReader(dummyFile), false, false);
+        var profiles = Parsers.ParseCNAProfile(_refGen, new StringReader(dummyFile), false, false);
         Assert.AreEqual(2, profiles.Count);
         Assert.AreEqual(2, profiles["1"].CountContigs());
         Assert.AreEqual(2, profiles["1"].FindChrRegions("chr1").Count()); 
@@ -96,9 +96,9 @@ public class TestParsing
     [Test]
     public void TestParseChromFile()
     {
-        Assert.AreEqual("hg19", _genRef.Name);
-        Assert.AreEqual(22, _genRef.AutosomesCount);
-        Assert.AreEqual(46, _genRef.SexGenome[(int) SexType.Female].Count);
+        Assert.AreEqual("hg19", _refGen.Name);
+        Assert.AreEqual(22, _refGen.AutosomesCount);
+        Assert.AreEqual(46, _refGen.SexGenome[(int) SexType.Female].Count);
     }
 
     [Test]

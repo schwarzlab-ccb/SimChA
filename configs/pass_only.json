@@ -6,11 +6,6 @@
     "RateDist": "Geometric"
   },
   "FitParams": {
-    "Stress": 2.6,
-    "TsgOg": 0,
-    "Essentiality": 0,
-    "AutosomesOnly": true,
-    "GeneNormalization": false
   },
   "EvoParams": {
     "Acceptance": 0,
