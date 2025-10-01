@@ -116,14 +116,7 @@ The parameters controlling the simulation of events.
 * `RateMean: float (1.0)`: the mean of the mutation rate (mutations between two nodes).
 * `FitDist: ["Uniform", "Exponential", "Normal"] ("Uniform")`: The distribution of the fitness delta between two samples.
 * `FitMean: float (1.0)`: the mean of the fitness delta between two samples.
-
-See section TODO on how the mutation rate and fitness delta are used.
-
-#### `ChAParams`
-
-The parameters relating to the structure of chromosomal aberrations. The parameters are:
-
-*  `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
+* `Mixture: ["Single", "Constant", "Dirichle"]`: In case of multiple signatures, how are these mixed for each sample. `Single` means that only one signature is used (selected based on its relative probability), `Constant` means that each signature has a fixed probability of being selected, while `Dirichle` means that the probabilities are drawn from a Dirichlet distribution.
 
 #### `FitParams`
 
@@ -133,6 +126,7 @@ The parameters controlling the fitness of the samples.
 * `TsgOg: float (0.0)`: Affected by the number of Tumor Suppressors (TSG) and Oncogenes (OG) in the sample. TSG loss and OG gain increase fitness.
 * `Essentiality: float (0.0)`: Penalizes full loss of essential genes.
 * `GeneNormalization: bool (false)`: If true, `TsgOg` and `Essentiality` are normalized by the number of TSG, OG, and Essential genes in the sample.
+*  `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
 
 #### `Signatures`
 
@@ -146,12 +140,12 @@ The parameters controlling the Metropolis-Hastings mode of event simulation.
 * `ThetaFitness: float (1.0) `: Controls how the variance of the acceptance. Higher values result in more exploration, i.e. the algorithm is more likely to accept worse proposals, while lower values will result in a more greedy algorithm, i.e. mostly only accepts improvements from the current state.
 * `MatchFitness: bool (false)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
 
-#### `SAParams`
+#### `EvoParams`
 
-TODO
+The parameters controlling the evolutionary mode of event simulation (selection of events based on fitness).
 
-* `Acceptance: float (0.0)`: 
-* `MaxTries: int (1)`: 
+* `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
+* `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
 
 ## Input Data
 

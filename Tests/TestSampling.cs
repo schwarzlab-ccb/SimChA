@@ -75,14 +75,14 @@ public class TestSampling
     [Test]
     public void TestDirichlet()
     {
-        var mixture = Sampling.CreateRandomMixture(_rnd, new[] {1000.0, 1.0, 0.001});
+        var mixture = Sampling.CreateRandomMixture(_rnd, [1000.0, 1.0, 0.001]);
         Assert.AreEqual(3, mixture.Count);
         Assert.AreEqual(1.0, mixture.Sum(), 1e-6);
         mixture.ForEach(x => Assert.GreaterOrEqual(x, 0.0));
         Assert.GreaterOrEqual(mixture[0], mixture[1]);
         Assert.GreaterOrEqual(mixture[1], mixture[2]);
     }
-
+    
     [Test]
     public void TestIndexPicker()
     {

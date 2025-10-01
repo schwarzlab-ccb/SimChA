@@ -61,7 +61,7 @@ public class TestSimulators
     {
         var sim = GetSimulator(simulatorType);
         var eventPs = new List<CNEventPars> { new(CNEventType.ChromDeletion, 1) };
-        int dist = 50;
+        const int dist = 50;
         var node = new CTreeNode("root", "root", dist, 1);
         var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs)); 
         Assert.AreEqual(1, res.Count);

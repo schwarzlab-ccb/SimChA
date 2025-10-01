@@ -10,5 +10,6 @@ public record SimParams(
     double RateMean = 1,
     DistType FitDist = DistType.Uniform,
     double FitMean = 1,
-    bool TetraploidStart = false
+    bool TetraploidStart = false,
+    MixtureType Mixture = MixtureType.Constant
 );

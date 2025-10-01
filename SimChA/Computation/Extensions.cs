@@ -31,7 +31,7 @@ public static class Extensions
             action(item);
         }
     }
-    public static int PickRndIndex(this Random rnd, List<double> elems) 
+    public static int PickRndIndex(this Random rnd, IList<double> elems) 
     {
         double val = rnd.NextDouble();
         for (int i = 0; i < elems.Count; i++)
@@ -44,7 +44,7 @@ public static class Extensions
         }
         return elems.Count - 1;
     }
-    public static int PickRndIndex<T>(this Random rnd, List<T> elems) where T : IHasProb
+    public static int PickRndIndex<T>(this Random rnd, IList<T> elems) where T : IHasProb
     {
         double val = rnd.NextDouble();
         for (int i = 0; i < elems.Count; i++)

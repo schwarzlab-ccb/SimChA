@@ -1,4 +1,5 @@
-﻿using SimChA.Data;
+﻿using System.Diagnostics;
+using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
 
@@ -106,29 +107,25 @@ public static class Factory
         }
         return validSigs;
     }
-
-    public static (List<CNEventPars>, Dictionary<string, double> mixture) MixSignatures(List<Signature> signatures, Dictionary<string, double>? probs = null)
+    
+    public static (List<CNEventPars>, Dictionary<string, double> mixture) MixSignatures(Random rnd, List<Signature> sigs, MixtureType mixType)
     {
-        if (probs != null)
-        {
-            if (probs.Count != signatures.Count)
-            {
-                throw new ArgumentException("probs must have the same length as signatures");
-            }
-            if (Math.Abs(probs.Values.Sum() - 1) > 1e-9)
-            {
-                throw new ArgumentException("probs must sum to 1");
-            }
-        }
-        var events = new List<CNEventPars>();
+        double probSum = sigs.Sum(x => x.Prob);
+        var concentrations = sigs.Select(x => x.Prob / probSum).ToList();
+        var probabilities = Sampling.ConcentrationsToProbabilities(rnd, concentrations, mixType);
         var mixture = new Dictionary<string, double>();
-        double sigProbSum = signatures.Sum(sig => sig.Prob);
-        foreach((string sigId, double prob, var cnEventParsList) in signatures)
+        var events = new List<CNEventPars>();
+        for (int i = 0; i < sigs.Count; i++)
         {
-            double sigProb = probs == null ? prob / sigProbSum : probs[sigId];
-            mixture.Add(sigId, sigProb);
-            
-            var selectedEvs = cnEventParsList.Where(ev => ev.Prob > 0).ToList();
+            var sig = sigs[i];
+            double sigProb = probabilities[i];
+            mixture.Add(sig.Name, sigProb);
+            if (!(sigProb > 0))
+            {
+                continue;
+            }
+
+            var selectedEvs = sig.Events.Where(ev => ev.Prob > 0).ToList();
             double evsProbSum = selectedEvs.Sum(ev => ev.Prob);
             events.AddRange(selectedEvs.Select(cnEventP => cnEventP with
             {

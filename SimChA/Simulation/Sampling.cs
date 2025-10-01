@@ -49,8 +49,28 @@ public static class Sampling
         return stops;
     }
     
-    public static List<double> CreateRandomMixture(Random rnd, double[] concentrations)
-        => concentrations.Any() ? new Dirichlet(concentrations, rnd).Sample().ToList() : new List<double>();
+    public static IList<double> CreateRandomMixture(Random rnd,  IList<double> concentrations)
+        => concentrations.Count != 0 ? new Dirichlet(concentrations.ToArray(), rnd).Sample() : [];
+
+    
+    public static IList<double> ConcentrationsToProbabilities(Random rnd, List<double> concentrations, MixtureType mixType)
+    {
+        return mixType switch
+        {
+            MixtureType.Single => SelectFromMixture(rnd, concentrations),
+            MixtureType.Constant => concentrations,
+            MixtureType.Dirichlet => CreateRandomMixture(rnd, concentrations),
+            _ => throw new ArgumentOutOfRangeException(nameof(mixType), mixType, null)
+        };
+    }
+    
+    public static List<double> SelectFromMixture(Random rnd, IList<double> concentrations)
+    {
+        int selected = rnd.PickRndIndex(concentrations);
+        double[] mixture = new double[concentrations.Count];
+        mixture[selected] = 1;
+        return mixture.ToList();
+    }
     
     public static double SampleContDist(Random rnd, DistType dist, double mean = 1)
     {

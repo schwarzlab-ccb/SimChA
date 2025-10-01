@@ -1,21 +1,19 @@
 {
-    "Seed": -1,
-    "Sex": "None",
-    "AutosomesOnly": true,
-    "EventCountMean": 89.28,
-    "EventDist": "Exponential",
-    "Fitness": {
-        "Stress": 1,
-        "TsgOg": 1,
-        "Essentiality": 1,
-        "NormalizeGenes": true
+    "SimParams": {
+        "Seed": 0,
+        "RateMean": 89.82,
+        "RateDist": "Geometric"
+    },
+    "FitParams": {
+        "Stress": 37.71744218640556,
+        "TsgOg": 0.8569312406481151,
+        "Essentiality": 0.22634250620228702,
+        "AutosomesOnly": true,
+        "GeneNormalization": false
     },
     "EvoParams": {
-        "WithFitness": true,
-        "MaxTries": 1,
-        "EventCost": 2,
-        "TetraploidStart": false,
-        "PWGD": 0.0039
+        "Acceptance": 0.5378325406523139,
+        "MaxTries": 1000
     },
     "Signatures": {
         "CNVs": {

@@ -15,10 +15,9 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
     protected static BaseEventData CreatePassEvent() 
         => new(new CNEventPars(CNEventType.Pass, 1));
 
-    // TODO: Simulator does not currently implement AutosomesOnly
     public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
-        var (cnEventPs, mixture) = Factory.MixSignatures(sigs);
+        var (cnEventPs, sampleMixture) = Factory.MixSignatures(Rnd, sigs, SimParams.Mixture);
         var res = new List<Sample>();
         var sex = FitParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
         var rootKar = new Karyotype(GenRef, sex);
@@ -27,7 +26,7 @@ public class Simulator(Random rnd, GenRef genRef, SimParams simParams, FitParams
             rootKar.ApplyWGD();
         }
         rootKar.UpdateFitness(GenRef, FitParams);
-        ApplyCNEventsRec(root, cloneTree, cnEventPs, mixture, res, rootKar, 0);
+        ApplyCNEventsRec(root, cloneTree, cnEventPs, sampleMixture, res, rootKar, 0);
         return res;
     }
 
