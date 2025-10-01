@@ -26,7 +26,7 @@ public class TestSimulators
     public void Setup()
     {
         _rnd = new Random(0);
-        _refGen = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
+        _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
     }
     
     private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, EvoParams? saParams = null)

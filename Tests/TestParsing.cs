@@ -13,16 +13,16 @@ namespace Tests;
 [TestFixture]
 public class TestParsing
 {
-    public const string DATA_PATH = "./../../../../data/";
-    public const string HG_19_PATH = DATA_PATH + "./hg19";
-    public const string HG_38_PATH = DATA_PATH + "./hg38";
-    public const string GENE_FOLDER = "./Davoli_select";
+    public const string DATA_PATH = "./../../../../data";
+    public const string HG_19 = "hg19";
+    public const string HG_38 ="hg38";
+    public const string GENE_SET = "Davoli_Select";
     private RefGen _refGen;
 
     [SetUp]
     public void Setup()
     {
-        _refGen = FileIO.ReadGenRef(HG_19_PATH, GENE_FOLDER);
+        _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
     }
     
     [Test]
@@ -44,7 +44,7 @@ public class TestParsing
     {
         var tsgList = _refGen.AllChrNames.ToDictionary(t => t, _ => new List<Gene>());
 
-        string genesTSG = "chr1\t1\t50\tTSG1\t0.001";
+        string genesTSG = "chrom\tstart\tend\tname\tscore\nchr1\t1\t50\tTSG1\t0.001";
 
         var gene1 = new Gene(0, 50, "chr1", GeneLT.TSG, 0,0.001);
         tsgList["chr1"].Add(gene1);

@@ -33,7 +33,7 @@ public class TestKaryotype
     [SetUp]
     public void Setup()
     {
-        _refGen = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
+        _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
         _kar = new Karyotype(_refGen, SexType.Male);
         _rnd = new Random(0);
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);

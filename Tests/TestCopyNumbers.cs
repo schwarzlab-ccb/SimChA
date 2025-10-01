@@ -17,7 +17,7 @@ public class TestCopyNumbers
     [SetUp]
     public void Setup()
     {
-        _refGen = FileIO.ReadGenRef(TestParsing.HG_19_PATH, TestParsing.GENE_FOLDER);
+        _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
         _rnd = new Random(0);
     }
 
