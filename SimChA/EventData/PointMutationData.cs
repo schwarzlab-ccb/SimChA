@@ -9,7 +9,7 @@ public record PointMutationData : ContigEventData
     public Nucleotide Base { get; }
 
     public PointMutationData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
-        : base(CNEventPars, contigId)
+        : base(CNEventPars, contigId, contigLen)
     {
         Location = Sampling.GetPos(rnd, contigLen);
         Base = Sampling.SampleBase(rnd);
@@ -21,5 +21,5 @@ public record PointMutationData : ContigEventData
     }
 
     public override string EventDesc()
-        => $"contig:{ContigId};location:{Location};base:{Base}";
+        => base.EventDesc() + $"location:{Location};base:{Base}";
 }

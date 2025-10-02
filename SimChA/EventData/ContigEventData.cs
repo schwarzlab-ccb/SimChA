@@ -2,7 +2,7 @@
 
 namespace SimChA.EventData;
 
-public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEventData(CNEventPars)
+public record ContigEventData(CNEventPars CNEventPars, int ContigId, long Length) : BaseEventData(CNEventPars)
 {
     public override void ApplyEvent(Karyotype kar)
     {
@@ -20,5 +20,5 @@ public record ContigEventData(CNEventPars CNEventPars, int ContigId) : BaseEvent
     }
     
     public override string EventDesc() 
-        => $"contig:{ContigId}";
+        => $"contig:{ContigId};length:{Length};";
 }

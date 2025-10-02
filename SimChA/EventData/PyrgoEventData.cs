@@ -8,7 +8,7 @@ public record PyrgoEventData : ContigEventData
 {
     public List<(long start, long length)> FragmentsList { get; }
     
-    public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
+    public PyrgoEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId, contigLen)
     {
         ContigId = contigId;
         long pyrgoFrag = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frac);
@@ -28,5 +28,5 @@ public record PyrgoEventData : ContigEventData
         => kar.ApplyPyrgo(ContigId, FragmentsList);
 
     public override string EventDesc()
-        => $"contig:{ContigId};frags:{string.Join(",", FragmentsList)}";
+        => base.EventDesc() + $"frags:{string.Join(",", FragmentsList)}";
 }

@@ -9,7 +9,7 @@ public record ChromothripsisEventData : ContigEventData
     public List<long> StopsList { get; }
     public List<int> SelectionList { get; }
     
-    public ChromothripsisEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
+    public ChromothripsisEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId, contigLen)
     {
         ContigId = contigId;
         double chromothripsisLen = cnEventPars.Frac;
@@ -23,7 +23,5 @@ public record ChromothripsisEventData : ContigEventData
         => kar.ApplyChromothripsis(ContigId, StopsList, SelectionList);
 
     public override string EventDesc()
-        => $"contig:{ContigId};" +
-           $"stops:{string.Join(",", StopsList)};" +
-           $"selection:{string.Join(",", SelectionList)}";
+        => base.EventDesc() + $"stops:{string.Join(",", StopsList)};selection:{string.Join(",", SelectionList)}";
 }

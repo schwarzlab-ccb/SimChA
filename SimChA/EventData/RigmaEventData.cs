@@ -9,7 +9,7 @@ public record RigmaEventData : ContigEventData
     public long Start { get; }
     public List<long> StopsList { get; }
     
-    public RigmaEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId)
+    public RigmaEventData(Random rnd, CNEventPars cnEventPars, int contigId, long contigLen) : base(cnEventPars, contigId, contigLen)
     {
         ContigId = contigId;
         long fragSize = Sampling.GetExpSeg(rnd, contigLen, cnEventPars.Frac);
@@ -22,5 +22,5 @@ public record RigmaEventData : ContigEventData
         => kar.ApplyRigma(ContigId, Start, StopsList);
 
     public override string EventDesc()
-        => $"contig:{ContigId};start{Start};stops:{string.Join(",", StopsList)}";
+        => base.EventDesc() + $"start{Start};stops:{string.Join(",", StopsList)}";
 }

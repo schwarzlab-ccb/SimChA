@@ -6,12 +6,11 @@ namespace SimChA.EventData;
 
 public record TailEventData : ContigEventData
 {
-    public long Length { get; }
     public bool Direction { get; }
     
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
-        : base(CNEventPars, contigId)
+        : base(CNEventPars, contigId, contigLen)
     {
         //Length = Sampling.GetPos(rnd, contigLen, CN);
         Length = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
@@ -19,7 +18,7 @@ public record TailEventData : ContigEventData
     }
     
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> cents)
-        : base(CNEventPars, contigId)
+        : base(CNEventPars, contigId, -1)
     {
         var cent =  cents.Shuffle(rnd).First();
         Length = rnd.CoinFlip() ? cent.start : cent.end;
@@ -47,5 +46,5 @@ public record TailEventData : ContigEventData
     }
     
     public override string EventDesc()
-        => $"contig:{ContigId};length:{Length};dir:{Direction}";
+        => base.EventDesc() + "loc:" + (Direction ? "start;" : "end;");
 }

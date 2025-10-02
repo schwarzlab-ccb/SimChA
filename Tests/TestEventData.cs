@@ -22,9 +22,9 @@ public class TestEventData
     [Test]
     public void TestContigEventData()
     {
-        var eventP = new CNEventPars(CNEventType.ChromDeletion, 1, 1_000_000);
-        var eventData = new ContigEventData(eventP, 1);
-        Assert.AreEqual("contig:1", eventData.EventDesc());
+        var eventP = new CNEventPars(CNEventType.ChromDeletion, 1);
+        var eventData = new ContigEventData(eventP, 1, 100_000_000);
+        Assert.AreEqual("contig:1;length:100000000;", eventData.EventDesc());
     }
     
     [Test]

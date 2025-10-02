@@ -10,7 +10,7 @@ public record InternalEventData : ContigEventData
     public long End { get; }
 
     // Constructor used for internal events
-    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId)
+    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId, contigLen)
     {   
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         //Start = rnd.NextInt64(segLen, contigLen-segLen);
@@ -20,7 +20,7 @@ public record InternalEventData : ContigEventData
 
     // Constructor for Centromere-bound events
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen,
-        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId)
+        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId, contigLen)
     {
         var (start, end) = centromeres.Shuffle(rnd).First();
         var pos = rnd.NextInt64(start, end);
@@ -61,5 +61,5 @@ public record InternalEventData : ContigEventData
     }
 
     public override string EventDesc()
-        => $"contig:{ContigId};start:{Start};end:{End}";
+        => base.EventDesc() + $"start:{Start};end:{End}";
 }

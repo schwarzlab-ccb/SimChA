@@ -149,7 +149,7 @@ public static class Sampling
             // Whole chromosome events
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
-                return new ContigEventData(cnEventPars, seq[0].id);
+                return new ContigEventData(cnEventPars, seq[0].id, seq[0].len);
             
             case CNEventType.Pass:
                 return new BaseEventData(cnEventPars);
