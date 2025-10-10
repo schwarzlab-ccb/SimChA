@@ -20,7 +20,7 @@ public record ChromoplexyEventData : BaseEventData
         int totalFrags = 0;
         for (int i = 0; i < contigCount; i++)
         {
-            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd, seq[i].len / (double) cnEventPars.Frac), seq[i].len - 2);
+            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd, seq[i].len * (double) cnEventPars.Frac), seq[i].len - 2);
             if (partsCount > 1)
             {
                 totalLen += seq[i].len;
