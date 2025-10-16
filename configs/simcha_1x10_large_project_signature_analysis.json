@@ -1,0 +1,64 @@
+{
+  "SimParams": {
+    "Seed": 0,
+    "RateMean": 89.82,
+    "Mixture": "Single",
+    "RateDist": "Geometric",
+    "AutosomesOnly": true
+  },
+  "FitParams": {
+    "Stress": 37.71744218640556,
+    "TsgOg": 0.8569312406481151,
+    "Essentiality": 0.22634250620228702,
+    "GeneNormalization": false,
+    "GeneSet": "Davoli_Select"
+  },
+  "EvoParams": {
+    "Acceptance": 0.5378325406523139,
+    "MaxTries": 1000
+  },
+  "Signatures": [
+    {
+      "Name": "WholeChromOnly",
+      "Prob": 1,
+      "Events": [
+        {
+          "Type": "ArmDuplication",
+          "Prob": 0.012360932688557409
+        },
+        {
+          "Type": "ArmDeletion",
+          "Prob": 0.012726414811299398
+        },
+        {
+          "Type": "CentromereBoundDuplication",
+          "Prob": 0.021590720027056587,
+          "Frac": 0.10041276659262648
+        },
+        {
+          "Type": "CentromereBoundDeletion",
+          "Prob": 0.014369720624374385,
+          "Frac": 0.13912944846030526
+        },
+        {
+          "Type": "TailDuplication",
+          "Prob": 0.10058395315282881,
+          "Frac": 0.2834737386785951
+        },
+        {
+          "Type": "TailDeletion",
+          "Prob": 0.10799042109540993,
+          "Frac": 0.3398212751571814
+        },
+        {
+          "Type": "ChromDuplication",
+          "Prob": 0.022372142625307182
+        },
+        {
+          "Type": "ChromDeletion",
+          "Prob": 0.04356055956949479
+        }
+      ]
+    }
+  ]
+}
