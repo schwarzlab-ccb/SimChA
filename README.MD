@@ -282,7 +282,7 @@ Each Event has an associated type and a probability, which is relative to all th
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Size: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
+* `Frac: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 ### Chromosome Deletion (Prob)
@@ -297,51 +297,51 @@ A single contig is selected at random and duplicated.
 
 All the existing contigs are duplicated.
 
-### Tail Deletion (Prob, Size)
+### Tail Deletion (Prob, Frac)
 
-A tail of a length given by the `Size` parameter is removed from an end of a contig. The end is selected by a coin flip.
+A tail of a length given by the `Frac` parameter is removed from an end of a contig. The end is selected by a coin flip.
 
-### Internal Deletion (Prob, Size)
+### Internal Deletion (Prob, Frac)
 
-A single contig is selected, from which a segment distributed by along the `Size` parameter is removed. The position of a segments is guaranteed to be internal and uniformly distributed.
+A single contig is selected, from which a segment distributed by along the `Frac` parameter is removed. The position of a segments is guaranteed to be internal and uniformly distributed.
 
 
-### Internal Duplication (Prob, Size)
-A single contig is selected, from which a segment distributed by along the `Size` parameter is duplicated. The position of a segments is guaranteed to be internal and uniformly distributed. This segment is pasted directly after its original position.
+### Internal Duplication (Prob, Frac)
+A single contig is selected, from which a segment distributed by along the `Frac` parameter is duplicated. The position of a segments is guaranteed to be internal and uniformly distributed. This segment is pasted directly after its original position.
 
 ![Translocation Cartoon](./doc/img/InternalDuplication.png)
 
-### Internal Inversion (Prob, Size)
-A single contig is selected, from which a segment distributed by along the `Size` parameter is inverted. The position of a segments is guaranteed to be internal and uniformly distributed.
+### Internal Inversion (Prob, Frac)
+A single contig is selected, from which a segment distributed by along the `Frac` parameter is inverted. The position of a segments is guaranteed to be internal and uniformly distributed.
 
-### Inverted Duplication (Prob, Size)
+### Inverted Duplication (Prob, Frac)
 Like a duplication, but the segment is inverted before being pasted.
 
-### Translocation  (Prob, Size)
-Two contigs are selected, from which a segment distributed along the `Size` parameter is swapped. The position is selected individualy for each contig. A coin flip decides if one of the segments is inverted before being pasted.
+### Translocation  (Prob, Frac)
+Two contigs are selected, from which a segment distributed along the `Frac` parameter is swapped. The position is selected individualy for each contig. A coin flip decides if one of the segments is inverted before being pasted.
 
 ![Translocation Cartoon](./doc/img/translocation.png)
 
-### BreakageFusionBridge (Prob, Size)
+### BreakageFusionBridge (Prob, Frac)
 
 A contig and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
 
-![Translocation Cartoon](./doc/img/BFB_cartoon.png)
+![BFB Cartoon](./doc/img/BFB_cartoon.png)
 
-### Chromothripsis (Prob, Size)
+### Chromothripsis (Prob, Frac)
 
-1. A contig is broken into a number of fragments, such that the fragment size is distributed exponentially with a mean of `Size`.
+1. A contig is broken into a number of fragments, such that the fragment size is distributed exponentially with a mean of `Frac`.
 2. Have, `f` the number of fragments from step 1). A `k` framgents are then randomly selected such that `0 < k <= f`.
 3. The `k` fragments are then reassembled in a random order.  
 
 TODO: image
 
-### Chromoplexy (Prob, Size)
+### Chromoplexy (Prob, Frac, Frag)
 
 1. A number `c` of contigs is selected, following the probability distribution listed below.
-2. Each contig is broken into a number of fragments, such that the fragment size is distributed exponentially with a mean of `Size`.
+2. Each contig is broken into a number of fragments, such that the fragment size is distributed under normal distribution with a mean of `Frac`.
 3. These contigs are then reassembled in a random order into a single contig.
-4. This contig is broken down a uniformly distributed positions back into `c` contigs.	
+4. This contig is broken down into  new contigs with mean number of contigs equal to  `Frag`. 
 
 Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important):
 
@@ -351,7 +351,6 @@ Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/
 * 5 contigs: 0.10%
 * 6 contigs: 0.05%
 
-TODO: check
 
 ### Pyrgo 
 TODO

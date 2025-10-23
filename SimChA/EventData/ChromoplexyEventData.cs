@@ -20,7 +20,7 @@ public record ChromoplexyEventData : BaseEventData
         int totalFrags = 0;
         for (int i = 0; i < contigCount; i++)
         {
-            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd, seq[i].len * (double) cnEventPars.Frac), seq[i].len - 2);
+            int partsCount = (int) Math.Min(Sampling.GetFragCount(rnd,  1 / cnEventPars.Frac), seq[i].len - 2);
             if (partsCount > 1)
             {
                 totalLen += seq[i].len;
@@ -30,7 +30,8 @@ public record ChromoplexyEventData : BaseEventData
             }
         }
         Sequence = Enumerable.Range(0, totalFrags).Shuffle(rnd).ToList();
-        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, contigCount);
+        int restShards = (int)Math.Max(Sampling.GetFragCount(rnd, cnEventPars.Frag), 1);
+        Breakpoints = Sampling.GetStopsForShards(rnd, totalLen, restShards);
     }
 
     public override void ApplyEvent(Karyotype kar)

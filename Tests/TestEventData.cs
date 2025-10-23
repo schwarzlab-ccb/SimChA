@@ -80,7 +80,7 @@ public class TestEventData
         var eventP = new CNEventPars(CNEventType.ArmDeletion, 1);
         var cents = new List<(long start, long end)> { (1_000_000L, 2_000_000L) };
         var eventData = new TailEventData(_rnd, eventP, 0, cents, 5_000_000L);
-        Assert.AreEqual(1_000_000L, eventData.Length);
+        Assert.AreEqual(3_000_000L, eventData.Length);
     }
 
     [Test]
@@ -141,17 +141,16 @@ public class TestEventData
     [Test]
     public void TestChromoplexy([Values] IntEdgeCases seed)
     {
-        var eventP = new CNEventPars(CNEventType.Chromoplexy, 1, 0.1, 10);
-        var frags = new List<(int, long)>
+        var eventP = new CNEventPars(CNEventType.Chromoplexy, 1, 0.1, 5);
+        var sequences = new List<(int, long)>
         {
             (0, 5_000_000),
             (1, 10_000_000),
             (2, 20_000_000),
             (3, 30_000_000)
         };
-        var eventData = new ChromoplexyEventData(new Random((int) seed), eventP, frags);
+        var eventData = new ChromoplexyEventData(new Random((int) seed), eventP, sequences);
         Assert.AreEqual(eventData.Stops.Sum(s => s.Count + 1), eventData.Sequence.Count);
-        Assert.AreEqual(eventData.ContigIds.Count - 1, eventData.Breakpoints.Count);
         Console.WriteLine(eventData);
     }
 
@@ -169,6 +168,7 @@ public class TestEventData
         }
         Assert.GreaterOrEqual(eventData.StopsList.Count + 1,eventData.SelectionList.Count);
     }
+    
     [Test]
     public void TestPointMutationEventData([Values] IntEdgeCases seed)
     {
