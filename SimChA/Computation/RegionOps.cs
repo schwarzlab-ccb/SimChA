@@ -175,7 +175,7 @@ public static class RegionOps
     {
         if (locs.Count == 0) 
         {
-            return new List<List<Region>> { regions };
+            return [regions];
         }
         
         // First region

@@ -22,8 +22,10 @@ public record TailEventData : ContigEventData
         : base(CNEventPars, contigId, -1)
     {
         var cent =  cents.Shuffle(rnd).First();
-        Length = Direction ? cent.start  : contigLen - cent.end;
         Direction = rnd.CoinFlip();
+        Length = Direction ? cent.start : contigLen - cent.end;
+        long breakpoint = Math.Max(1, rnd.NextInt64(cent.end - cent.start)); // Somewhere within the centromere, uniform 
+        Length += breakpoint;
         Start = Direction ? 0 : contigLen - Length;
     }
 

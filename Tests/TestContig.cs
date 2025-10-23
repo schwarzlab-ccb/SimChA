@@ -1,5 +1,6 @@
 ﻿// Created by Dr. Adam Streck, 2021, adam.streck@gmail.com
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -95,18 +96,27 @@ public class TestContig
         copyOfContig1.InsertContig(_contigX, _contig1.Length / 2);
         Assert.AreEqual(_contig1.Length + _contigX.Length, copyOfContig1.Length);
     }
-
+    
+    
     [Test]
     public void TestGetCentromeres()
     {
         var cents = _contig1.GetCentromeres(_refGen.Centromeres);
         Assert.AreEqual(1, cents.Count);
-        Assert.AreEqual(121500000, cents[0].start);;
-        Assert.AreEqual(128900000, cents[0].end);
-        
-        _contig1.Bridge(1000, true);
+        Assert.AreEqual(121535434, cents[0].start);;
+        Assert.AreEqual(124535434, cents[0].end);
+
+        var other =  _contig1.Split(100_000_000, false);
         cents = _contig1.GetCentromeres(_refGen.Centromeres);
-        Assert.AreEqual(2, cents.Count);
+        Assert.AreEqual(1, cents.Count);
+        Assert.AreEqual(121535434 - 100_000_000, cents[0].start);;
+        Assert.AreEqual(124535434 - 100_000_000, cents[0].end);
+        
+        _contig1.Revert();
+        cents = _contig1.GetCentromeres(_refGen.Centromeres);
+        Assert.AreEqual(1, cents.Count);
+        Assert.AreEqual(249250621 - 124535434, cents[0].start);;
+        Assert.AreEqual(249250621 - 121535434, cents[0].end);
     }
     
     [Test]

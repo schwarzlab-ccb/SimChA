@@ -293,6 +293,14 @@ A single contig is selected at random and removed.
 
 A single contig is selected at random and duplicated.
 
+### Arm Deletion (Prob)
+
+For a contig with at least once centromere, one of the arms is selected at random and removed - the end within the centromere is selected uniformly.
+
+### Arm Duplication (Prob)
+
+For a contig with at least once centromere, one of the arms is selected at random and duplicated - the end within the centromere is selected uniformly.
+
 ### Whole Genome Doubling (Prob)
 
 All the existing contigs are duplicated.
@@ -305,11 +313,8 @@ A tail of a length given by the `Frac` parameter is removed from an end of a con
 
 A single contig is selected, from which a segment distributed by along the `Frac` parameter is removed. The position of a segments is guaranteed to be internal and uniformly distributed.
 
-
 ### Internal Duplication (Prob, Frac)
 A single contig is selected, from which a segment distributed by along the `Frac` parameter is duplicated. The position of a segments is guaranteed to be internal and uniformly distributed. This segment is pasted directly after its original position.
-
-![Translocation Cartoon](./doc/img/InternalDuplication.png)
 
 ### Internal Inversion (Prob, Frac)
 A single contig is selected, from which a segment distributed by along the `Frac` parameter is inverted. The position of a segments is guaranteed to be internal and uniformly distributed.
@@ -318,15 +323,11 @@ A single contig is selected, from which a segment distributed by along the `Frac
 Like a duplication, but the segment is inverted before being pasted.
 
 ### Translocation  (Prob, Frac)
-Two contigs are selected, from which a segment distributed along the `Frac` parameter is swapped. The position is selected individualy for each contig. A coin flip decides if one of the segments is inverted before being pasted.
-
-![Translocation Cartoon](./doc/img/translocation.png)
+Two contigs are selected, from which a segment distributed along the `Frac` parameter is swapped. The position is selected individually for each contig. A coin flip decides if one of the segments is inverted before being pasted.
 
 ### BreakageFusionBridge (Prob, Frac)
 
-A contig and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are connected on the breakage location.
-
-![BFB Cartoon](./doc/img/BFB_cartoon.png)
+A contig and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are  connected on the breakage location.
 
 ### Chromothripsis (Prob, Frac)
 

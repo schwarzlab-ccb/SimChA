@@ -218,7 +218,9 @@ public class Contig
             var cent = centMap[reg.Chrom];
             if (cent.IsInsideOf(reg))
             {
-                centromereList.Add((currentPos + cent.Start, currentPos + cent.End));
+                centromereList.Add(reg.Forward
+                    ? (currentPos + cent.Start - reg.AbsStart, currentPos + cent.End - reg.AbsStart)
+                    : (currentPos - cent.End + reg.AbsEnd, currentPos - cent.Start + reg.AbsEnd));
             }
             currentPos += reg.Length;
         }

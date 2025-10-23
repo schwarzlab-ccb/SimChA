@@ -61,7 +61,6 @@ public class Karyotype
                 breakSets[chrom].UnionWith(breaks);
             }
         }
-
         return breakSets.ToDictionary(k => k.Key, v => v.Value.OrderBy(i => i).ToList());
     }
 
