@@ -166,7 +166,7 @@ public static class Sampling
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
                 var cents = kar.GetCentromeres(seq[0].id);
-                return cents.Count > 0 ? new TailEventData(rnd, cnEventPars, seq[0].id, cents) : null;
+                return cents.Count > 0 ? new TailEventData(rnd, cnEventPars, seq[0].id, cents, seq[0].len) : null;
 
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:

@@ -7,22 +7,24 @@ namespace SimChA.EventData;
 public record TailEventData : ContigEventData
 {
     public bool Direction { get; }
+    private long Start { get; }
     
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
         : base(CNEventPars, contigId, contigLen)
     {
-        //Length = Sampling.GetPos(rnd, contigLen, CN);
         Length = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         Direction = rnd.CoinFlip();
+        Start = Direction ? 0 : contigLen - Length;
     }
     
-    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> cents)
+    public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> cents, long contigLen)
         : base(CNEventPars, contigId, -1)
     {
         var cent =  cents.Shuffle(rnd).First();
-        Length = rnd.CoinFlip() ? cent.start : cent.end;
+        Length = Direction ? cent.start  : contigLen - cent.end;
         Direction = rnd.CoinFlip();
+        Start = Direction ? 0 : contigLen - Length;
     }
 
     public override void ApplyEvent(Karyotype kar)
@@ -46,5 +48,5 @@ public record TailEventData : ContigEventData
     }
     
     public override string EventDesc()
-        => base.EventDesc() + "loc:" + (Direction ? "start;" : "end;");
+        => base.EventDesc() +  $"start:{Start};end:{Start + Length};";
 }
