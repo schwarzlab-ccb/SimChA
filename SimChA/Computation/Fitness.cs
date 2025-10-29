@@ -35,7 +35,7 @@ public static class Fitness
     
     public static double TsgOgTerm(Gene[] genes, int[] geneCNs, bool normalizeGenes = false)
     {
-        double sum = genes.Select(gene=> Math.Log(1 + geneCNs[gene.GeneId]) * gene.Score).Sum();
+        double sum = genes.Select(gene=> Math.Log(1 + geneCNs[gene.GeneId])  / Math.Log(3) * gene.Score).Sum();
         return normalizeGenes ? sum / genes.Length : sum;
     }
 
