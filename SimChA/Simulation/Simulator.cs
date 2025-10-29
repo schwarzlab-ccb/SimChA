@@ -12,8 +12,8 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
     protected FitParams FitParams  { get; } = fitParams;
     protected SimParams SimParams { get; } = simParams;
 
-    protected static BaseEventData CreatePassEvent() 
-        => new(new CNEventPars(CNEventType.Pass, 1));
+    protected static BaseEventData CreateSkipEvent() 
+        => new(new CNEventPars(CNEventType.Skip, 1));
 
     public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
     {
@@ -53,7 +53,7 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         {
             Console.Write($"Sample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80) + "\r");
             var eventP = Rnd.PickRndElem(cnEventPs);
-            var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreatePassEvent();
+            var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreateSkipEvent();
             eventData.ApplyEvent(childKar);
             var newEv = new CNEventDesc(eventData, mutDepth + evNo);
             childEvs.Add(newEv);

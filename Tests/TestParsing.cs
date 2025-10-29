@@ -16,7 +16,7 @@ public class TestParsing
     public const string DATA_PATH = "./../../../../data";
     public const string HG_19 = "hg19";
     public const string HG_38 ="hg38";
-    public const string GENE_SET = "Davoli_Select";
+    public const string GENE_SET = "Davoli_select";
     private RefGen _refGen;
 
     [SetUp]

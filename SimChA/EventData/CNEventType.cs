@@ -28,6 +28,7 @@ public enum CNEventType
     ArmDuplication,
     CentromereBoundDuplication,
     CentromereBoundDeletion,
-    Pass
+    Pass,
+    Skip
     // Tyfonas
 }

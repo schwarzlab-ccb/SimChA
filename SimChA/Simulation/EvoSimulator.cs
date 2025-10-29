@@ -33,7 +33,7 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
                 return (proposedKar, eventData, tryNo);
             }
         }
-        return (currentKar, CreatePassEvent(), EvoParams.MaxTries);
+        return (currentKar, CreateSkipEvent(), EvoParams.MaxTries);
     }
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(

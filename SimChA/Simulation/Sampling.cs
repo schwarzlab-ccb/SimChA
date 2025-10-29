@@ -152,6 +152,7 @@ public static class Sampling
                 return new ContigEventData(cnEventPars, seq[0].id, seq[0].len);
             
             case CNEventType.Pass:
+            case CNEventType.Skip:
                 return new BaseEventData(cnEventPars);
             
             case CNEventType.WholeGenomeDoubling:
