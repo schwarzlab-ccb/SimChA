@@ -10,9 +10,8 @@
     },
     "FitParams": {
         "Stress": 4.969099153818576,
-        "TsgOg": 0.14231580366654928,
-        "Essentiality": 1.326342973205489,
-        "GeneNormalization": false,
+        "TsgOg": 142.31580366654928,
+        "Essentiality": 132.6342973205489,
         "GeneSet": "Davoli_select"
     },
     "Signatures": [
@@ -68,7 +67,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0
+                    "Prob": 0.1
                 }
             ]
         }
