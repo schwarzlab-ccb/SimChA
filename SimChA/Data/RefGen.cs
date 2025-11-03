@@ -123,8 +123,8 @@ public class RefGen
         {
             var filtered = map.Where(pair =>
                 (sexType == SexType.Any && pair.Key != XChrName && pair.Key != YChrName) ||
-                (sexType == SexType.Male && pair.Key != YChrName) ||
-                (sexType == SexType.Female)
+                (sexType == SexType.Female && pair.Key != YChrName) ||
+                (sexType == SexType.Male)
             ).ToDictionary(pair => pair.Key, pair => pair.Value);
             return filtered;
         });
