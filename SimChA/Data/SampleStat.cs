@@ -57,9 +57,9 @@ public record SampleStat(
         double ploidy = CalcPloidy(kar, refGen);
         double stress = Fitness.StressTerm(refGen.SexGenomeLen[(int) kar.Sex], kar.GenomeLen());
         var geneData = refGen.SexGeneLists[(int) kar.Sex];
-        double tsg = Fitness.TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], fParams.GeneNormalization);
-        double og = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], fParams.GeneNormalization);
-        double ess = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.GeneNormalization);
+        double tsg = Fitness.TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG]);
+        double og = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG]);
+        double ess = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess]);
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
         
         int nRejectedEvents = sample.Events.Sum(e => e.NumRejections);

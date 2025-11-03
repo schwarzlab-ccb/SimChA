@@ -12,12 +12,11 @@ public static class Fitness
 
     public static double Calculate(Karyotype kar, RefGen refGen, FitParams fParams)
     {
-        bool normGenes = fParams.GeneNormalization;
         double stressTerm = CalcTerm(fParams.Stress, () => StressTerm(refGen.SexGenomeLen[(int) kar.Sex], kar.GenomeLen()));
         var geneData = refGen.SexGeneLists[(int)kar.Sex];
-        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG], normGenes));
-        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG], normGenes));
-        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], normGenes));
+        double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG]));
+        double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG]));
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess]));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     
@@ -33,21 +32,12 @@ public static class Fitness
     public static double StressTerm(long refBaseCount, long baseCount)
         => Math.Min(0, 1 - baseCount / (double)refBaseCount);
     
-    public static double TsgOgTerm(Gene[] genes, int[] geneCNs, bool normalizeGenes = false)
-    {
-        double sum = genes.Select(gene=> Math.Log(1 + geneCNs[gene.GeneId])  / Math.Log(3) * gene.Score).Sum();
-        return normalizeGenes ? sum / genes.Length : sum;
-    }
+    public static double TsgOgTerm(Gene[] genes, int[] geneCNs) 
+        => genes.Select(gene=> Math.Log(1 + geneCNs[gene.GeneId])  / Math.Log(3) * gene.Score).Sum();
 
-    public static double Zygosity(Gene[] genes, int[] geneCNs, int count, bool normalizeGenes = false)
-    {
-        double sum = genes.Sum(gene => geneCNs[gene.GeneId] == count ? 1 : 0);
-        return normalizeGenes ? sum / genes.Length : sum;
-    }
+    public static double Zygosity(Gene[] genes, int[] geneCNs, int count)
+        => genes.Sum(gene => geneCNs[gene.GeneId] == count ? 1 : 0);
     
-    public static double EssTerm(Gene[] genes, int[] geneCNs, bool normalizeGenes = false)
-    {
-        double sum = genes.Select(gene => Math.Min(geneCNs[gene.GeneId] - 1, 0) * gene.Score).Sum();
-        return normalizeGenes ? sum / genes.Length : sum;
-    }
+    public static double EssTerm(Gene[] genes, int[] geneCNs)
+        => genes.Select(gene => Math.Min(geneCNs[gene.GeneId] - 1, 0) * gene.Score).Sum();
 }

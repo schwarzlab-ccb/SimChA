@@ -59,21 +59,21 @@ public class TestFitness
         
         Gene[] testNoEffect = [MakeGene("chr1", 0, 0)];
         Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, [2], 1), EPSILON);
-        Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, [2], 0, true), EPSILON);
+        Assert.AreEqual(0, Fitness.Zygosity(testNoEffect, [2], 0), EPSILON);
 
         Gene[] testMissing = [MakeGene("chr1", 0.1, 0)];
         Assert.AreEqual(0, Fitness.Zygosity(testMissing, [0], 1), EPSILON);
-        Assert.AreEqual(1, Fitness.Zygosity(testMissing, [0],0, true), EPSILON);
+        Assert.AreEqual(1, Fitness.Zygosity(testMissing, [0],0), EPSILON);
 
         Gene[] testHaplosufficient = [MakeGene("chr1", 0.1, 0)];
         Assert.AreEqual(1, Fitness.Zygosity(testHaplosufficient, [1],1), EPSILON);
-        Assert.AreEqual(0, Fitness.Zygosity(testHaplosufficient, [1],0, true), EPSILON);
+        Assert.AreEqual(0, Fitness.Zygosity(testHaplosufficient, [1],0), EPSILON);
         
         Gene[] testList = [
             MakeGene("chr1", 0.1, 0), 
             MakeGene("chr2", 0.2, 1)
         ];
-        Assert.AreEqual(0.5, Fitness.Zygosity(testList, [1, 0], 1, true), EPSILON);
+        Assert.AreEqual(1, Fitness.Zygosity(testList, [1, 0], 1), EPSILON);
         Assert.AreEqual(1, Fitness.Zygosity(testList, [1, 0], 0), EPSILON);
     }
 
@@ -143,7 +143,7 @@ public class TestFitness
     {
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
-        var fit = new FitParams(0.001, 0.001, 0.00_1, true);
+        var fit = new FitParams(0.001, 0.001, 0.00_1);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 
@@ -153,7 +153,7 @@ public class TestFitness
         var genRef = _refs[refId];
         var karyotype = new Karyotype(genRef, sex);
         karyotype.MergeRegions();
-        var fit = new FitParams(0.001, 0.001, 0.001, true);
+        var fit = new FitParams(0.001, 0.001, 0.001);
         Assert.AreEqual(1, Fitness.Calculate(karyotype, genRef, fit), EPSILON);
     }
 
