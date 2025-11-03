@@ -38,7 +38,6 @@ public class TestParsing
         Assert.AreEqual(config.Signatures, deserialized?.Signatures);
     }
     
-    
     [Test]
     public void TestParseGeneLists()
     {

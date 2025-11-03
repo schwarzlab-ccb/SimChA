@@ -43,13 +43,13 @@ public static class Factory
             case CNEventType.SNV:
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
+            case CNEventType.Translocation:
                 break;
                 
             case CNEventType.InternalDeletion:
             case CNEventType.InternalDuplication:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-            case CNEventType.Translocation:
             case CNEventType.Chromothripsis:
             case CNEventType.Chromoplexy:
             case CNEventType.CentromereBoundDeletion:
@@ -57,7 +57,7 @@ public static class Factory
             case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
                 if (cnEventPars.Frac <= 0) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Frac parameter. E.g. \"Frac\": 0.1");
                 break;
             
             case CNEventType.TIChain:
@@ -66,9 +66,9 @@ public static class Factory
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
                 if (cnEventPars.Frac <= 0) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Size\": 1000000");
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Frac parameter. E.g. \"Frac\": 0.1");
                 if (cnEventPars.Frag <= 0) 
-                    throw new Exception($"Event {cnEventPars.Type} does not have a Size parameter. E.g. \"Frag\": 5");
+                    throw new Exception($"Event {cnEventPars.Type} does not have a Frag parameter. E.g. \"Frag\": 5");
                 break;
             
             default:
@@ -101,7 +101,7 @@ public static class Factory
             }
             validSigs.Add(sig);
         }
-        if (signatures.Count == 0)
+        if (validSigs.Count == 0)
         {
             throw new Exception("No valid signatures found.");
         }
