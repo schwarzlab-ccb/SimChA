@@ -181,9 +181,7 @@ public static class Parsers
 
         return regions;
     }
-
-
-
+    
     public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames, GeneLT type)
     {
         // Pre-initialization

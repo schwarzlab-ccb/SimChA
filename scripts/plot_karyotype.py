@@ -7,6 +7,33 @@ import pandas as pd
 import re
 import matplotlib.patches as mpatches
 
+human_chr_colors = {
+    "chr1": "#FF0000",
+    "chr2": "#00FF00",
+    "chr3": "#0000FF",
+    "chr4": "#FFFF00",
+    "chr5": "#FF00FF",
+    "chr6": "#00FFFF",
+    "chr7": "#800000",
+    "chr8": "#008000",
+    "chr9": "#000080",
+    "chr10": "#808000",
+    "chr11": "#800080",
+    "chr12": "#008080",
+    "chr13": "#C0C0C0",
+    "chr14": "#FFA500",
+    "chr15": "#A52A2A",
+    "chr16": "#800080",
+    "chr17": "#008000",
+    "chr18": "#0000FF",
+    "chr19": "#FF1493",
+    "chr20": "#1E90FF",
+    "chr21": "#32CD32",
+    "chr22": "#FFD700",
+    "chrX": "#DA70D6",
+    "chrY": "#A9A9A9"
+}
+
 def get_test_data():
     # Four datasets with length (float) and direction (bool)
     return [[
@@ -92,7 +119,7 @@ def plot_karyotype(data, sample_name, dpi=150):
 
     fig, ax = plt.subplots()
     # set figure to full hd, tight layout
-    fig.set_size_inches(1920 / dpi, 1080 / dpi)
+    fig.set_size_inches(1920 / dpi, 32 * len(data) / dpi)
 
     # Set the y-axis labels
     ax.set_yticks([i for i in range(sample_count)])
@@ -131,7 +158,7 @@ def plot_karyotype(data, sample_name, dpi=150):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
     parser.add_argument("-I", "--input", default="karyotypes.tsv", help="The file with the karyotype data.")
-    parser.add_argument("-S", "--sample", default="sample_1", help="Sample ID")
+    parser.add_argument("-S", "--sample", default="Sample_1", help="Sample ID")
     parser.add_argument("-O", "--output", default="karyotype.png", help="Output file path")
     parser.add_argument("--dpi", default=150, help="Output file path", type=int)
     args = parser.parse_args()
