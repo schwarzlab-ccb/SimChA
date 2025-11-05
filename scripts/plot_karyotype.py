@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import re
 import matplotlib.patches as mpatches
-from cns.utils.assemblies import human_chr_colors
 
 def get_test_data():
     # Four datasets with length (float) and direction (bool)
