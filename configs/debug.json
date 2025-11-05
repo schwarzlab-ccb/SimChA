@@ -66,8 +66,48 @@
                     "Prob": 0.11810008372856963
                 },
                 {
+                    "Type": "Chromothripsis",
+                    "Prob": 0.01,
+                    "Frac": 0.1
+                },
+                {
+                    "Type": "Chromoplexy",
+                    "Prob": 0.01,
+                    "Frac": 0.1
+                },
+                {
+                    "Type": "TIChain",
+                    "Prob": 0.01,
+                    "Frac": 0.1,
+                    "Frag": 5
+                },
+                {
+                    "Type": "TICycle",
+                    "Prob": 0.01,
+                    "Frac": 0.1,
+                    "Frag": 5
+                },
+                {
+                    "Type": "TIBridge",
+                    "Prob": 0.01,
+                    "Frac": 0.1,
+                    "Frag": 5
+                },
+                {
+                    "Type": "Pyrgo",
+                    "Prob": 0.01,
+                    "Frac": 0.1,
+                    "Frag": 5
+                },
+                {
+                    "Type": "Rigma",
+                    "Prob": 0.01,
+                    "Frac": 0.1,
+                    "Frag": 5
+                },
+                {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.1
+                    "Prob": 0.01
                 }
             ]
         }

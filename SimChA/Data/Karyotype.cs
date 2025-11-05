@@ -217,17 +217,25 @@ public class Karyotype
                 .Select(i => _contigs[contigIDs[i]].Scatter(stops[i]))
                 .SelectMany(x => x)
                 .ToList();
-        foreach (var contig in subContigs)
+        foreach (int id in contigIDs)
         {
-            RemoveGenes(contig);
+            RemoveGenes(_contigs[id]);
+            _contigs[id].Clear();
         }
         var ordered = Contig.Concat(sequence.Select(i => subContigs[i]));
         var newContigs = ordered.Scatter(breakpoints).ToList();
-        for (int i = 0; i < contigIDs.Count; i++)
+        for (int i = 0; i < newContigs.Count; i++)
         {
-            int id = contigIDs[i];
-            _contigs[id] = newContigs[i];
-            RemoveGenes(_contigs[id]);
+            if (i < contigIDs.Count)
+            {
+                int id = contigIDs[i];
+                _contigs[id] = newContigs[i];
+                AddGenes( _contigs[id] );
+            }
+            else {
+                _contigs.Add(newContigs[i]);
+                AddGenes( newContigs[i] );
+            }
         }
     }
 

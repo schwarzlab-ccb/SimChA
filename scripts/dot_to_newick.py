@@ -40,7 +40,7 @@ def convert_dot_to_newick(input_file, output_file=None):
     output = recursive_tree_generation(root)
     output = output[:-1] + f", {root}-{nodes[root]}:0):0;\n"
 
-    outname = output_file if output_file is not None else input_file.replace(".dot", ".new")
+    outname = input_file.replace(".dot", ".new") if output_file is None else output_file
 
     with open(outname, 'w') as f:
         dotfile = f.write(output)
@@ -48,8 +48,8 @@ def convert_dot_to_newick(input_file, output_file=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_file", help="a path to the input file")
-    parser.add_argument("--output_file", type=str, default=None, required=False)
+    parser.add_argument("-I", "--input_file", help="a path to the input file")
+    parser.add_argument("-O", "--output_file", type=str, default=None, required=False)
     args = parser.parse_args()
 
     convert_dot_to_newick(args.input_file, args.output_file)
