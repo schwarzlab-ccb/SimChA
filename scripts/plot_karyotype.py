@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import re
+from os.path import join, abspath, dirname
 import matplotlib.patches as mpatches
 
 human_chr_colors = {
@@ -91,7 +92,7 @@ def draw_horizontal_arrow(ax, x, y, dx, dy, color, last_left):
     return dx < 0
     
 
-def get_data(input_file, sample_name):
+def get_data(input_file, sample_name = ""):
     # check if input file exists
     try:
         open(input_file, 'r')
@@ -114,22 +115,22 @@ def get_data(input_file, sample_name):
     return parse_karyotype(sample["karyotype"]), sample_name
 
 
-def plot_karyotype(data, sample_name, dpi=150):
-    sample_count = len(data)
+def plot_karyotype(contigs, dpi=150):
+    contig_count = len(contigs)
 
     fig, ax = plt.subplots()
     # set figure to full hd, tight layout
-    fig.set_size_inches(1920 / dpi, 32 * len(data) / dpi)
+    fig.set_size_inches(1920 / dpi, 32 * len(contigs) / dpi)
 
     # Set the y-axis labels
-    ax.set_yticks([i for i in range(sample_count)])
-    ylabels = ["contig" + str(i) for i in range(0, sample_count)]
+    ax.set_yticks([i for i in range(contig_count)])
+    ylabels = ["contig" + str(i) for i in range(0, contig_count)]
     ylabels.reverse()
     ax.set_yticklabels(ylabels)
-    starts = [0.0] * sample_count
+    starts = [0.0] * contig_count
 
     # Loop through the data and draw horizontal arrows
-    for i, sample in enumerate(data):
+    for i, sample in enumerate(contigs):
         last_left = False
         for j, item in enumerate(sample):
             chr_no = item["chr"]
@@ -141,28 +142,31 @@ def plot_karyotype(data, sample_name, dpi=150):
             x = starts[i] + (0 if direction else length)
             dx = length if direction else -length
             starts[i] += abs(dx)
-            last_left = draw_horizontal_arrow(ax, x, sample_count - i - 1, dx, 0, human_chr_colors[chr_no], last_left)
+            last_left = draw_horizontal_arrow(ax, x, contig_count - i - 1, dx, 0, human_chr_colors[chr_no], last_left)
 
     # Set the x-axis limits and labels
     ax.set_xlim(0, np.max(starts))
     ax.set_xlabel("MBase count")
-    ax.set_ylim(-1, sample_count)
-    ax.set_title(f"Karyotype of sample {sample_name}")
-
+    ax.set_ylim(-1, contig_count)
     # plot all chromosome colors as a legend
     for i, (chr_no, color) in enumerate(human_chr_colors.items()):
         ax.plot(0, 0, color=color, label=chr_no)
         ax.legend(loc="upper left", bbox_to_anchor=(1, 1))
+
+    return fig, ax
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot karyotype for a sample")
     parser.add_argument("-I", "--input", default="karyotypes.tsv", help="The file with the karyotype data.")
     parser.add_argument("-S", "--sample", default="Sample_1", help="Sample ID")
-    parser.add_argument("-O", "--output", default="karyotype.png", help="Output file path")
+    parser.add_argument("-O", "--output", default="", help="Output file path")
     parser.add_argument("--dpi", default=150, help="Output file path", type=int)
     args = parser.parse_args()
 
     data, sample_name = get_data(args.input, args.sample)
-    plot_karyotype(data, sample_name, dpi=args.dpi)    
-    plt.savefig(args.output, dpi=args.dpi)
+    fig, ax = plot_karyotype(data, dpi=args.dpi)    
+    ax.set_title(f"Karyotype of sample {sample_name}")
+    out_path = args.output if args.output != "" else join(abspath(dirname(args.input)), f"{sample_name}_karyotype.png")
+    print(f"Saving karyotype plot to {out_path}")
+    plt.savefig(out_path, dpi=args.dpi)

@@ -12,7 +12,7 @@
         "Stress": 4.969099153818576,
         "TsgOg": 142.31580366654928,
         "Essentiality": 132.6342973205489,
-        "GeneSet": "hist_genes_all"
+        "GeneSet": "Davoli_select"
     },
     "Signatures": [
         {
@@ -64,6 +64,25 @@
                 {
                     "Type": "ChromDeletion",
                     "Prob": 0.11810008372856963
+                },
+                {
+                    "Type": "Translocation",
+                    "Prob": 0.1,
+                    "Frac": 0.05
+                },
+                {
+                    "Type": "InternalDuplication",
+                    "Prob": 0.1,
+                    "Frac": 0.05
+                },
+                {
+                    "Type": "InternalInversion",
+                    "Prob": 0.1,
+                    "Frac": 0.05
+                },
+                {
+                    "Type": "BreakageFusionBridge",
+                    "Prob": 0.1
                 },
                 {
                     "Type": "Chromothripsis",

@@ -39,5 +39,5 @@ public class GenRange(long start, long end, string chrom)
         => Start < other.End && End > other.Start && Chrom == other.Chrom;
     
     public override string ToString() 
-        => $"{DirString}{Chrom}[{Start}:{End})";
+        => $"{DirString}{Chrom}[{AbsStart}:{AbsEnd})";
 }
