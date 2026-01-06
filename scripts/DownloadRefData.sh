@@ -15,6 +15,13 @@ for i in ${!chrs[@]}; do
   # Delete individual chromosome FASTA
   rm $chr.fa
 done
+
+# Fix chromosome headers from NCBI format to UCSC format
+# Convert ">gi|...|gb|...| Homo sapiens chromosome N,..." to ">chrN"
+sed -E 's/>gi\|[0-9]+\|gb\|[^|]+\| Homo sapiens chromosome ([0-9XY]+),.*/>\1/' genome.fa > genome.tmp
+sed 's/^>\([0-9XY]\)/>chr\1/' genome.tmp > genome.fa
+rm genome.tmp
+
 mv genome.fa ../data/hg19/
  
 # Download hg38 dataset
