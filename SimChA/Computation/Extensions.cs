@@ -44,6 +44,7 @@ public static class Extensions
         }
         return elems.Count - 1;
     }
+    
     public static int PickRndIndex<T>(this Random rnd, IList<T> elems) where T : IHasProb
     {
         double val = rnd.NextDouble();

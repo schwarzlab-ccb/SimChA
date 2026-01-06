@@ -68,7 +68,9 @@ else
 // Score and segment samples
 var sampleStats = new List<SampleStat>();
 var sampleCNs = new Dictionary<string, IEnumerable<CopyNumber>>();
-var jointSegmentation = options.WriteConsistentCNs ? CopyNumbers.GetJointSegmentation(genRef.AllChrNames, samples) : null;
+var jointSegmentation = options.WriteConsistentCNs 
+    ? CopyNumbers.GetJointSegmentation(genRef.AllChrNames, samples) 
+    : null;
 
 Console.WriteLine("Analyzing samples:");
 foreach (var sample in samples)

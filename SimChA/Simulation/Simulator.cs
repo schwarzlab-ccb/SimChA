@@ -30,16 +30,9 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         return res;
     }
 
-    protected int SampleEventCount(CTreeNode node)
-    {
-        if (node.Distance == 0)
-        {
-            return 0;
-        }
-        double events = node.Distance > 0 ? node.Distance : SimParams.RateMean;
-        return Sampling.SampleDiscDist(Rnd, SimParams.RateDist, events);
-    }
-    
+    protected int SampleEventCount(CTreeNode node) 
+        => node.Distance >= 0 ? node.Distance : Sampling.SampleDiscDist(Rnd, SimParams.RateDist, SimParams.RateMean);
+
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
         CTreeNode cnChild, 
