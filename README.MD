@@ -117,6 +117,7 @@ The parameters controlling the simulation of events.
 * `FitDist: ["Uniform", "Exponential", "Normal"] ("Uniform")`: The distribution of the fitness delta between two samples.
 * `FitMean: float (1.0)`: the mean of the fitness delta between two samples.
 * `Mixture: ["Single", "Constant", "Dirichle"]`: In case of multiple signatures, how are these mixed for each sample. `Single` means that only one signature is used (selected based on its relative probability), `Constant` means that each signature has a fixed probability of being selected, while `Dirichle` means that the probabilities are drawn from a Dirichlet distribution.
+* `AutosomesOnly: bool (false)`: If true, karyotypes will only contain autosomes (chromosomes 1-22), excluding sex chromosomes.
 
 #### `FitParams`
 
@@ -126,11 +127,22 @@ The parameters controlling the fitness of the samples.
 * `TsgOg: float (0.0)`: Affected by the number of Tumor Suppressors (TSG) and Oncogenes (OG) in the sample. TSG loss and OG gain increase fitness.
 * `Essentiality: float (0.0)`: Penalizes full loss of essential genes.
 * `GeneNormalization: bool (false)`: If true, `TsgOg` and `Essentiality` are normalized by the number of TSG, OG, and Essential genes in the sample.
-* `AutosomesOnly`: `bool` - If true, Karyotypes will only contain autosomes.
+* `GeneSet: string`: The gene set to use for fitness calculations (e.g. "spice_all"). This should be a folder name relative to the assembly directory.
 
 #### `Signatures`
 
-TODO
+Signatures define the mutational processes that generate structural variants during simulation. Each signature contains:
+
+* `Name: string`: A descriptive name for the signature.
+* `Prob: double`: The relative probability of this signature being selected (compared to other signatures).
+* `Events: array`: A list of event types with their parameters and probabilities.
+
+The `Mixture` parameter in `SimParams` controls how multiple signatures are combined:
+* `Single`: Only one signature is selected per sample based on relative probabilities.
+* `Constant`: Each signature maintains a fixed probability throughout simulation.
+* `Dirichlet`: Signature probabilities are drawn from a Dirichlet distribution for each sample.
+
+See the Signatures section below for details on configuring individual event types.
 
 #### `MHParams`
 
@@ -309,6 +321,10 @@ All the existing contigs are duplicated.
 
 A tail of a length given by the `Frac` parameter is removed from an end of a contig. The end is selected by a coin flip.
 
+### Tail Duplication (Prob, Frac)
+
+A tail of a length given by the `Frac` parameter is duplicated from an end of a contig. The duplicated segment is placed at the same end. The end is selected by a coin flip.
+
 ### Internal Deletion (Prob, Frac)
 
 A single contig is selected, from which a segment distributed by along the `Frac` parameter is removed. The position of a segments is guaranteed to be internal and uniformly distributed.
@@ -322,6 +338,14 @@ A single contig is selected, from which a segment distributed by along the `Frac
 ### Inverted Duplication (Prob, Frac)
 Like a duplication, but the segment is inverted before being pasted.
 
+### Centromere-Bound Duplication (Prob, Frac)
+
+For a contig with at least one centromere, a segment is selected that extends from within the centromere to a distance given by the `Frac` parameter. The breakpoint within the centromere is selected uniformly. This segment is then duplicated.
+
+### Centromere-Bound Deletion (Prob, Frac)
+
+For a contig with at least one centromere, a segment is selected that extends from within the centromere to a distance given by the `Frac` parameter. The breakpoint within the centromere is selected uniformly. This segment is then deleted.
+
 ### Translocation  (Prob, Frac)
 Two contigs are selected, from which a segment distributed along the `Frac` parameter is swapped. The position is selected individually for each contig. A coin flip decides if one of the segments is inverted before being pasted.
 
@@ -333,9 +357,8 @@ A contig and its tail is selected (see above). The tail is then removed, the res
 
 1. A contig is broken into a number of fragments, such that the fragment size is distributed exponentially with a mean of `Frac`.
 2. Have, `f` the number of fragments from step 1). A `k` framgents are then randomly selected such that `0 < k <= f`.
-3. The `k` fragments are then reassembled in a random order.  
-
-TODO: image
+3. The `k` fragments are then reassembled in a random order, potentially with inverted orientations.
+4. The result is a highly rearranged chromosomal region with multiple breakpoints clustered in one genomic area.
 
 ### Chromoplexy (Prob, Frac, Frag)
 
@@ -353,20 +376,47 @@ Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/
 * 6 contigs: 0.05%
 
 
-### Pyrgo 
-TODO
+### Pyrgo (Prob, Frac, Frag)
 
-### Rigma
-TODO
+1. A contig is selected and a segment of length distributed along `Frac` is chosen.
+2. This segment is fragmented into multiple pieces, with the number of fragments drawn from a geometric distribution with mean `Frag`.
+3. Each fragment has a length drawn from an exponential distribution with mean `Frac / Frag`.
+4. These fragments are then duplicated and randomly inserted throughout the genome, creating dispersed duplications.
 
-### Template Insertion Chain
-TODO
+### Rigma (Prob, Frac, Frag)
 
-### Template Insertion Cycle
-TODO
+1. A contig is selected and a starting position is chosen.
+2. From this position, a series of deletions are made, with the number of deletions drawn from a geometric distribution with mean `Frag`.
+3. Each deletion has a length drawn from an exponential distribution scaled by `Frac / Frag`.
+4. This creates a pattern of multiple local deletions originating from a single starting point.
 
-### Template Insertion Bridge
-TODO
+### SNV (Prob)
+
+A single nucleotide variant (point mutation) is introduced at a random position on a randomly selected contig. The substitution follows the Jukes-Cantor model, where all nucleotide substitutions are equally likely. The nucleotide is changed to one of the three alternative bases with equal probability.
+
+### Template Insertion Chain (Prob, Frac, Frag)
+
+1. A number of contigs is selected from a geometric distribution with mean `Frag` (minimum 1).
+2. From each contig (except the first and last), a segment is selected with length distributed along `Frac`.
+3. The first segment has zero length (just a breakpoint), and the last segment also has zero length.
+4. These segments are then chained together sequentially, with random orientations, creating a linear arrangement of templated insertions.
+5. The resulting chain is inserted back into the genome as a single new contig.
+
+### Template Insertion Cycle (Prob, Frac, Frag)
+
+1. A number of contigs is selected from a geometric distribution with mean `Frag` (minimum 1).
+2. From each contig, a segment is selected with length distributed along `Frac`.
+3. Unlike TIChain, all segments (including the first) have non-zero length.
+4. These segments are chained together and form a cycle (the last segment connects back to the first).
+5. The cycle is then integrated into the genome, creating a circular arrangement of templated insertions.
+
+### Template Insertion Bridge (Prob, Frac, Frag)
+
+1. A number of contigs is selected from a geometric distribution with mean `Frag` (minimum 2).
+2. The first segment has zero length (just a breakpoint), while the remaining segments have lengths distributed along `Frac`.
+3. These segments are chained together with random orientations.
+4. The resulting structure bridges the original breakpoint with templated insertions from other genomic locations.
+5. This mimics the mechanism of template switching during DNA repair or replication.
 
 ## Output
 
@@ -412,9 +462,11 @@ Information about the individual events in the simulation. The columns are:
 This example row tells us that 12th event sample_0 underwent was a chromosomal duplication event, affecting
 contig 23, which increased the sample's fitness by ~0.54 to ~11.54, and the event occurred at time 12.7 (units).
 
-#### 'vcf.tsv'
+#### `vcf.tsv`
 
-Generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. The columns are:
+When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires reference genome data to be downloaded (see SNV section above).
+
+The file contains standard VCF format headers and columns:
 
 `##fileformat=VCFv4.3`
 
@@ -426,15 +478,134 @@ Generates a simple VCF file of all the observable (i.e. final and nucleotide-alt
 |----|------------|-------------|----------|-----------|------------|
 |  0 | chr1 | 8114090 | . | A | C |
 
-#### 'genome.fa'
+#### `genome.fa`
 
 *Note that this only currently works with single-sample simulations* 
 
-Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include
+Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include the introduced SNVs if applicable.
+
+#### `segments.tsv`
+
+When using the `-s` or `--segments` flag, outputs copy number segments in a simplified format. Each segment represents a contiguous region with uniform copy number state.
+
+#### `consistent_segments.tsv`
+
+When using the `-S` or `--consistent-segments` flag, outputs segments under minimum consistent segmentation. This provides a more refined segmentation that is consistent across all samples in the simulation.
+
+#### `karyotypes.tsv`
+
+When using the `-k` or `--karyotypes` flag, outputs detailed karyotype information. Unlike CN segments, karyotypes retain information about:
+* The connections between segments
+* Orientations (5' to 3' or 3' to 5')
+* Structural relationships between different chromosomal regions
+* The complete architecture of derived chromosomes
+
+Each karyotype is represented as a series of regions in the format `ChromID*[start:end)` where `*` is either `+` for 5' to 3' or `-` for 3' to 5'.
+
+#### `vcf.tsv`
+
+When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires reference genome data to be downloaded (see SNV section above).
 
 ### Plots
 
-TODO
+SimChA outputs can be visualized using the provided Python scripts:
+
+#### Karyotype Plots
+
+Use `scripts/plot_karyotype.py` to visualize the structural arrangement of chromosomes:
+
+```bash
+python scripts/plot_karyotype.py --input out/karyotypes.tsv --sample sample_0
+```
+
+This generates a horizontal arrow plot showing:
+* Each contig as a row
+* Chromosomal segments colored by chromosome of origin
+* Orientation indicated by arrow direction
+* Scale in megabases
+
+#### Clone Tree Visualization
+
+The `clone_tree.new` file in Newick format can be visualized using standard phylogenetic tree viewers or converted using `scripts/dot_to_newick.py`.
+
+#### Additional Plots
+
+When using SimChA as part of optimization workflows (see project-simcha), additional plots are generated including:
+* Event frequency heatmaps
+* WGD and event count distributions
+* Fitness trajectory plots
+* Copy number frequency plots across the genome
+
+## Examples
+
+### Basic Simulation
+
+Run a simple simulation with default parameters:
+
+```bash
+dotnet run --project SimChA -- --output ./out --config ./simcha_config.json
+```
+
+### Evolution Mode
+
+Simulate tumor evolution with fitness-based selection using the spice gene set:
+
+```bash
+dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -G spice -e
+```
+
+### MCMC Mode
+
+Run Metropolis-Hastings simulation to match target fitness distributions:
+
+```bash
+dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -m
+```
+
+### With All Outputs
+
+Generate all available output formats:
+
+```bash
+dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
+```
+
+Note: The `-f` flag generates large FASTA files (~6GB per sample) and should only be used when necessary.
+
+## Gene Sets
+
+SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/hg38/` directories:
+
+### Davoli Gene Sets
+* **Davoli_full**: Complete gene set from Davoli et al. with TSG/OG scores
+* **Davoli_select**: Curated subset of high-confidence cancer genes
+
+### SPICE Gene Sets
+* **spice**: Pan-cancer fitness scores
+* **spice_[CANCER]**: Cancer-type-specific scores (BRCA, LUAD, LUSC, OV, PRAD, etc.)
+* **spice_all**: Comprehensive collection across all cancer types
+
+### CNSistent Gene Sets
+* **CNSistent_all_COSMIC**: Pan-cancer copy number-based scores using COSMIC genes
+* **CNSistent_all_ENSEMBL**: Pan-cancer scores using ENSEMBL genes
+* **CNSistent_[CANCER]_[GENESET]**: Cancer-specific scores with different gene databases
+
+### Kaufmann Gene Sets
+* **Kaufmann_all_events**: Complete event-based fitness scores
+* **Kaufmann_all_events_incl_wgd**: Includes whole-genome doubling events
+* **Kaufmann_*_norm_***: Various normalization approaches
+* **Kaufmann_max_fitness**: Maximum fitness per gene
+* **Kaufmann_max_prominence**: Maximum prominence scores
+
+### Empty
+* **Empty**: No gene-based fitness (for simulations without fitness selection)
+
+## Performance Considerations
+
+* **Memory**: Each sample requires approximately 100-500 MB depending on event count
+* **Runtime**: Typical simulations (100 events, 50 samples) complete in 1-5 minutes
+* **FASTA output**: Adds significant time and disk space (~6GB per sample)
+* **Parallelization**: SimChA is single-threaded; run multiple instances for parallel simulations
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, `a.streck@iccb-cologne.org`.
