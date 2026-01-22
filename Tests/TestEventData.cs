@@ -67,7 +67,7 @@ public class TestEventData
         const long len = 10_000_000;
         var cents = new List<(long start, long end)> { (1_000_000L, 2_000_000L) };
         var eventP = new CNEventPars(CNEventType.CentromereBoundDeletion, 1, 0.1);
-        var eventData = new InternalEventData(_rnd, eventP, 0, len, cents);
+        var eventData = new InternalEventData(_rnd, eventP, 0, cents, len);
         Assert.LessOrEqual(eventData.Start, cents[0].end);
         Assert.Less(eventData.Start, len);
         Assert.Greater(eventData.End, eventData.Start);

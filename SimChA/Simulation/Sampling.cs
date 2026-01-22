@@ -166,13 +166,17 @@ public static class Sampling
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
-                var cents = kar.GetCentromeres(seq[0].id);
-                return cents.Count > 0 ? new TailEventData(rnd, cnEventPars, seq[0].id, cents, seq[0].len) : null;
-
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:
-                cents = kar.GetCentromeres(seq[0].id);
-                return cents.Count > 0 ? new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len, cents) : null;
+                int seqIndex = seq.FindIndex(0, pair => kar.GetCentromeres(pair.id).Count != 0);
+                if (seqIndex < 0)
+                    return null;
+                int contigId = seq[seqIndex].id;
+                long contigLen = seq[seqIndex].len;
+                var cents = kar.GetCentromeres(contigId);
+                return cnEventPars.Type is CNEventType.ArmDeletion or CNEventType.ArmDuplication 
+                    ? new TailEventData(rnd, cnEventPars, contigId, cents, contigLen) 
+                    : new InternalEventData(rnd, cnEventPars, contigId, cents, contigLen);
 
             // Internal events
             case CNEventType.InternalDuplication:

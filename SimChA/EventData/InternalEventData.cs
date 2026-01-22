@@ -19,8 +19,8 @@ public record InternalEventData : ContigEventData
     }
 
     // Constructor for Centromere-bound events
-    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen,
-        IEnumerable<(long start, long end)> centromeres) : base(CNEventPars, contigId, contigLen)
+    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> centromeres, long contigLen) 
+        : base(CNEventPars, contigId, contigLen)
     {
         var (start, end) = centromeres.Shuffle(rnd).First();
         var pos = rnd.NextInt64(start, end);
