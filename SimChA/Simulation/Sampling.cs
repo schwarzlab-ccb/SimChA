@@ -130,19 +130,31 @@ public static class Sampling
     }
 
     // Selects the contigs to be affected by the event
-    private static IEnumerable<(int id, long len)> GetSeq(IEnumerable<(int id, long len)> contigs, CNEventType type) 
+    private static IEnumerable<(int id, long len)> GetSeq(IEnumerable<(int id, long len)> contigs, CNEventType type, Karyotype kar) 
         => type switch {
             CNEventType.TIChain or CNEventType.TICycle or CNEventType.TIBridge or CNEventType.Chromoplexy => contigs,
             CNEventType.Translocation => contigs.Take(2),
+            CNEventType.ArmDeletion or CNEventType.ArmDuplication or CNEventType.CentromereBoundDeletion or CNEventType.CentromereBoundDuplication =>
+                [contigs.First(pair => kar.GetCentromeres(pair.id).Count != 0)], 
             _ => contigs.Take(1)
         };
 
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
         IEnumerable<(int id, long len)> contigs = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i)));
-        var seq = GetSeq(contigs, cnEventPars.Type).ToList();
-        if (seq.Count == 0)
+        List <(int id, long len)> seq;
+        try
+        {
+            seq = GetSeq(contigs, cnEventPars.Type, kar).ToList();
+            if (seq.Count == 0)
+            {
+                throw new InvalidOperationException("No suitable contig found");
+            }
+        } 
+        catch (InvalidOperationException)
+        {
             return null;
+        }
         
         switch (cnEventPars.Type)
         {
@@ -166,17 +178,11 @@ public static class Sampling
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
+                return new TailEventData(rnd, cnEventPars, seq[0].id, kar.GetCentromeres(seq[0].id), seq[0].len);
+            
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:
-                int seqIndex = seq.FindIndex(0, pair => kar.GetCentromeres(pair.id).Count != 0);
-                if (seqIndex < 0)
-                    return null;
-                int contigId = seq[seqIndex].id;
-                long contigLen = seq[seqIndex].len;
-                var cents = kar.GetCentromeres(contigId);
-                return cnEventPars.Type is CNEventType.ArmDeletion or CNEventType.ArmDuplication 
-                    ? new TailEventData(rnd, cnEventPars, contigId, cents, contigLen) 
-                    : new InternalEventData(rnd, cnEventPars, contigId, cents, contigLen);
+                return new InternalEventData(rnd, cnEventPars, seq[0].id, kar.GetCentromeres(seq[0].id), seq[0].len);
 
             // Internal events
             case CNEventType.InternalDuplication:
