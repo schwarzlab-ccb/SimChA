@@ -28,7 +28,7 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
             var proposedKar = new Karyotype(currentKar);
             eventData.ApplyEvent(proposedKar);
             double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
-            if (Math.Exp((proposedFitness - currentKar.FitnessVal) / EvoParams.Acceptance) > Rnd.NextDouble())
+            if (Math.Exp(proposedFitness - currentKar.FitnessVal - EvoParams.Acceptance) > Rnd.NextDouble())
             {
                 return (proposedKar, eventData, tryNo);
             }
