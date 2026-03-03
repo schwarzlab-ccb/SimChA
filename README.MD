@@ -1,3 +1,5 @@
+![.NET Test](https://github.com/ICCB-Cologne/SimChA/actions/workflows/dotnet-test.yml/badge.svg)
+
 # SimChA: Simulator of Chromosomal Aberrations
 
 SimChA is a research project at SchwarzLab.
