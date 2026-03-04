@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿﻿using System.Diagnostics;
 using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
@@ -129,7 +129,8 @@ public static class Factory
             double evsProbSum = selectedEvs.Sum(ev => ev.Prob);
             events.AddRange(selectedEvs.Select(cnEventP => cnEventP with
             {
-                Prob = cnEventP.Prob / evsProbSum * sigProb
+                Prob = cnEventP.Prob / evsProbSum * sigProb,
+                Signature = sig.Name
             }));
         }
         return (events, mixture);    

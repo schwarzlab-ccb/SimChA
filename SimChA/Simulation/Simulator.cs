@@ -48,7 +48,7 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
             var eventP = Rnd.PickRndElem(cnEventPs);
             var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreateSkipEvent();
             eventData.ApplyEvent(childKar);
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, Signature: eventP.Signature);
             childEvs.Add(newEv);
         } 
         return (childKar, childEvs);

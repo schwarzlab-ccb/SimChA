@@ -1,4 +1,4 @@
-﻿using SimChA.Computation;
+﻿﻿using SimChA.Computation;
 using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
@@ -10,12 +10,12 @@ public class MHSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPara
 {
     private MHParams MHParams { get; } = mhParams;
 
-    private List<BaseEventData> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
+    private List<(BaseEventData Event, string Signature)> InitEvents(Karyotype kar, int nMutations, List<CNEventPars> cnEventPs)
     {
         var eventPs = Enumerable.Range(0, nMutations).Select(_ => Rnd.PickRndElem(cnEventPs));
         return eventPs.Select(
-            e => Sampling.GenerateCNEventData(Rnd, kar, e)
-                 ?? throw new Exception($"Failed to generate event data for {e}.")
+            e => (Sampling.GenerateCNEventData(Rnd, kar, e)
+                 ?? throw new Exception($"Failed to generate event data for {e}."), e.Signature)
         ).ToList();
     }
 
@@ -28,33 +28,34 @@ public class MHSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPara
     private double AcceptProb(double newFit, double oldFit)
         => Math.Min(1, Math.Exp((newFit - oldFit)/MHParams.ThetaFitness));
 
-    private double GetFitness(Karyotype kar, List<BaseEventData> events)
+    private double GetFitness(Karyotype kar, List<(BaseEventData Event, string Signature)> events)
     {
-        foreach (var eventData in events)
+        foreach (var (eventData, _) in events)
         {
             eventData.ApplyEvent(kar);
         }
         return kar.UpdateFitness(RefGen, FitParams);
     }
 
-    private List<BaseEventData> GetNewProposal(List<CNEventPars> cnEventPs, Karyotype kar,
-        List<BaseEventData> oldEvents)
+    private List<(BaseEventData Event, string Signature)> GetNewProposal(List<CNEventPars> cnEventPs, Karyotype kar,
+        List<(BaseEventData Event, string Signature)> oldEvents)
     {
         var proposedEvents = oldEvents.ToList();
         int index = Rnd.Next(proposedEvents.Count);
-        var newData = Sampling.GenerateCNEventData(Rnd, kar, Rnd.PickRndElem(cnEventPs));
-        proposedEvents[index] = newData ?? throw new Exception("Failed to generate new event data.");
+        var selectedP = Rnd.PickRndElem(cnEventPs);
+        var newData = Sampling.GenerateCNEventData(Rnd, kar, selectedP);
+        proposedEvents[index] = (newData ?? throw new Exception("Failed to generate new event data."), selectedP.Signature);
         return proposedEvents;
     }
 
-    private List<BaseEventData> GetEvents(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents,
+    private List<(BaseEventData Event, string Signature)> GetEvents(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents,
         double targetFitness)
     {
         var currentEvents = InitEvents(kar, nEvents, cnEventPs);
         double currentFitness = GetFitness(new Karyotype(kar), currentEvents);
         
         double bestValue = MHParams.MatchFitness ?  double.PositiveInfinity : currentFitness;
-        var bestEvents = new List<BaseEventData>(currentEvents);
+        var bestEvents = new List<(BaseEventData Event, string Signature)>(currentEvents);
 
         for (int i = 0; i < MHParams.NumIterations; i++)
         {
@@ -108,11 +109,11 @@ public class MHSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPara
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-            var eventData = bestEvents[evNo - 1];
+            var (eventData, signature) = bestEvents[evNo - 1];
             eventData.ApplyEvent(childKar);
             double newFitness = childKar.UpdateFitness(RefGen, FitParams);
             double dFit = newFitness - oldFitness;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFitness);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFitness, Signature: signature);
             childEvs.Add(newEv);
             oldFitness = newFitness;
         }

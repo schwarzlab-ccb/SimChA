@@ -1,4 +1,4 @@
-﻿using SimChA.Computation;
+﻿﻿using SimChA.Computation;
 using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
@@ -10,7 +10,7 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
 {
     private EvoParams EvoParams { get; } = evoParams;
 
-    private (Karyotype newKar, BaseEventData eventData, int numTries) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
+    private (Karyotype newKar, BaseEventData eventData, int numTries, string signature) GetNewEvent(List<CNEventPars> cnEventPars, Karyotype currentKar)
     {
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
@@ -30,10 +30,10 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
             double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
             if (Math.Exp(proposedFitness - currentKar.FitnessVal - EvoParams.Acceptance) > Rnd.NextDouble())
             {
-                return (proposedKar, eventData, tryNo);
+                return (proposedKar, eventData, tryNo, cnEventP.Signature);
             }
         }
-        return (currentKar, CreateSkipEvent(), EvoParams.MaxTries);
+        return (currentKar, CreateSkipEvent(), EvoParams.MaxTries, "");
     }
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
@@ -47,10 +47,10 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-            var (newKar, eventData, numTries) = GetNewEvent(cnEventPs, currentKar);
+            var (newKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar);
             double newFit = newKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature);
             
             childEvs.Add(newEv);
             currentKar = newKar;
