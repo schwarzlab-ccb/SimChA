@@ -71,17 +71,13 @@ Use `dotnet run -- [options]` to specify any of the following:
  
   -O, --output                 (Default: ./out) The path to the output files.
 
-  -C, --config                 (Default: ./default_params.json) A json file with configuration of the experiment.
+  -C, --config                 (Default: ./configs/main_config.json) A json file with configuration of the experiment.
 
   -T, --tree                   A clone file that describes the tree to be built.
 
   -R, --repeats                (Default: 1) Number of repeats to generate if the distance parameter is used.
 
   -P, --cnprofiles             File with CNAs, will cause the program to write a scoring file.
-
-  -A, --assembly               (Default: ./data/hg19) The path for the tsv-files with the assembly information. Files inside must be called chromosomes.tsv and centromeres.tsv.
-  
-  -G, --genes                  (Default: ./Davoli_select) The path for gene-based scores for evolution, relative to the assembly folder. Files inside must be called tsgs.tsv, ogs.tsv, and essentials.tsv.
 
   -e, --evolution-mode         (Default: false) Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.
 
@@ -97,6 +93,10 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -f, --fasta                  (Default: false) Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.
 
+  -z, --zero-index             (Default: false) Flag for zero-indexed input copy number profiles.
+
+  --root                       (Default: .) A path to the folder that will be considered root for relative paths.
+
   --help                       Display this help screen.
 
   --version                    Display version information.
@@ -111,13 +111,13 @@ Default parameters are found in the file: `simcha_config.json`. The exact parame
 The parameters controlling the simulation of events.
 
 * `Seed: int (0)`: The seed for the random number generator. If < 0, the seed will be generated randomly on runtime.
+* `Assembly: string ("hg19")`: The reference genome assembly to use (e.g. "hg19", "hg38").
 * `Sex: ["Any", "Male", "Female"] ("Any")`: One of `Any`, `Male`, `Female`. If `Any`, then samples' sex will be generated with a random.
 * `RateDist: ["Uniform", "Geometric", "Poisson"] ("Uniform")` - The distribution of the mutation rate.
 * `RateMean: float (1.0)`: the mean of the mutation rate (mutations between two nodes).
-* `FitDist: ["Uniform", "Exponential", "Normal"] ("Uniform")`: The distribution of the fitness delta between two samples.
-* `FitMean: float (1.0)`: the mean of the fitness delta between two samples.
-* `Mixture: ["Single", "Constant", "Dirichle"]`: In case of multiple signatures, how are these mixed for each sample. `Single` means that only one signature is used (selected based on its relative probability), `Constant` means that each signature has a fixed probability of being selected, while `Dirichle` means that the probabilities are drawn from a Dirichlet distribution.
+* `TetraploidStart: bool (false)`: If true, the root karyotype will undergo a whole genome doubling before simulation begins.
 * `AutosomesOnly: bool (false)`: If true, karyotypes will only contain autosomes (chromosomes 1-22), excluding sex chromosomes.
+* `Mixture: ["Single", "Constant", "Dirichlet"] ("Constant")`: In case of multiple signatures, how are these mixed for each sample. `Single` means that only one signature is used (selected based on its relative probability), `Constant` means that each signature has a fixed probability of being selected, while `Dirichlet` means that the probabilities are drawn from a Dirichlet distribution.
 
 #### `FitParams`
 
@@ -126,8 +126,7 @@ The parameters controlling the fitness of the samples.
 * `Stress: float (0.0)`: Stress penalizes abnormally high ploidy.
 * `TsgOg: float (0.0)`: Affected by the number of Tumor Suppressors (TSG) and Oncogenes (OG) in the sample. TSG loss and OG gain increase fitness.
 * `Essentiality: float (0.0)`: Penalizes full loss of essential genes.
-* `GeneNormalization: bool (false)`: If true, `TsgOg` and `Essentiality` are normalized by the number of TSG, OG, and Essential genes in the sample.
-* `GeneSet: string`: The gene set to use for fitness calculations (e.g. "spice_all"). This should be a folder name relative to the assembly directory.
+* `GeneSet: string ("Empty")`: The gene set to use for fitness calculations (e.g. "spice_all"). This should be a folder name relative to the assembly directory.
 
 #### `Signatures`
 
@@ -150,7 +149,7 @@ The parameters controlling the Metropolis-Hastings mode of event simulation.
 
 * `NumIterations: int (1)`: The total number of trials to take in the Metropolis-Hastings algorithm.
 * `ThetaFitness: float (1.0) `: Controls how the variance of the acceptance. Higher values result in more exploration, i.e. the algorithm is more likely to accept worse proposals, while lower values will result in a more greedy algorithm, i.e. mostly only accepts improvements from the current state.
-* `MatchFitness: bool (false)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
+* `MatchFitness: bool (true)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
 
 #### `EvoParams`
 
@@ -161,9 +160,9 @@ The parameters controlling the evolutionary mode of event simulation (selection 
 
 ## Input Data
 
-Data should be provided as a path to a folder using the `--data` parameter (or left empty for default). 
-The folder needs to contain description of the chromosomes and TSG, OG, and Essentiality scores for the individual genes. 
-We provide the `GRCh38.p14` and `GRCh38.p13` in the folders `./data/hg19` and `.data/hg38` respectively.
+Reference data is located in the `data/` folder, organized by assembly name (matching `SimParams.Assembly`). 
+Each assembly folder needs to contain description of the chromosomes, centromeres, and gene score files in a subfolder (matching `FitParams.GeneSet`). 
+We provide `GRCh37` and `GRCh38` in the folders `./data/hg19` and `./data/hg38` respectively.
 
 ### Chromosomes
 > `chromosomes.tsv`
@@ -294,7 +293,7 @@ Each Event has an associated type and a probability, which is relative to all th
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Frac: long` - The mean size of the event in number of bases, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
+* `Frac: double` - The mean size of the event as a fraction of contig length, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 ### Chromosome Deletion (Prob)
@@ -369,11 +368,11 @@ A contig and its tail is selected (see above). The tail is then removed, the res
 
 Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/blood/article/134/Supplement_1/3767/424006/Chromoplexy-and-Chromothripsis-Are-Important):
 
-* 2 contigs: 0.23%
-* 3 contigs: 0.46%
-* 4 contigs: 0.16%
-* 5 contigs: 0.10%
-* 6 contigs: 0.05%
+* 3 contigs: 46%
+* 4 contigs: 18%
+* 5 contigs: 10%
+* 6 contigs: 5%
+* 2 contigs: 21%
 
 
 ### Pyrgo (Prob, Frac, Frag)
@@ -431,36 +430,25 @@ CN output in the format examplifed as:
 |-----------|-------|-------|-------|------|------|--------|
 |0          |	chr1  |	24721 |	98434 |	1    |   	4 |      2 |
 
-#### `clone_tree.new`
-
-An evolutionary tree with mutation distances and population sizes between the individual subclones. The graph is written in the [newick format](https://en.wikipedia.org/wiki/Newick_format).
-
-
 #### `sim_params.json` 
 
 Stores configuration parameters used for this simulation, including the random seed. If this file is provided on input, the exact same simulation will be executed.
 
-#### `clones.tsv`  
+#### `samples.tsv`  
 
-Information about the individual subclones at the end of the simulation. This file has the chromosome ranges. A range is in the format:
-
-`ChromID*[start:end)`
-
-where `*` is either `+` for 5' to 3' or `-` for 3' to 5'.
-
-The start position is inclusive, the end exclusive.
+Information about the individual samples at the end of the simulation.
 
 
 #### `events.tsv`
 
 Information about the individual events in the simulation. The columns are:
 
-| sample_id | 	 event_type	   |  depth | EventString	| delta_fitness |	total_fitness |	time |
-|-----------|------------------|----|-------------|----------|-----------|------------|
-|  sample_0 | ChromDuplication | 12 | contig:23 | 0.53782375 | 11.53782375 | 12.7 |
+| sample_id | 	 event_type	   |  depth | description	| delta_fitness |	total_fitness |	num_rejections | signature |
+|-----------|------------------|----|-------------|----------|-----------|------------|------------|
+|  sample_0 | ChromDuplication | 12 | contig:23 | 0.5378 | 11.5378 | 0 | CNA |
 
-This example row tells us that 12th event sample_0 underwent was a chromosomal duplication event, affecting
-contig 23, which increased the sample's fitness by ~0.54 to ~11.54, and the event occurred at time 12.7 (units).
+This example row tells us that the 12th event sample_0 underwent was a chromosomal duplication event, affecting
+contig 23, which increased the sample's fitness by ~0.54 to ~11.54.
 
 #### `vcf.tsv`
 
@@ -543,7 +531,7 @@ When using SimChA as part of optimization workflows (see project-simcha), additi
 Run a simple simulation with default parameters:
 
 ```bash
-dotnet run --project SimChA -- --output ./out --config ./simcha_config.json
+dotnet run --project SimChA -- --output ./out --config ./configs/main_config.json
 ```
 
 ### Evolution Mode
