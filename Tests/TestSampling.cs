@@ -39,7 +39,7 @@ public class TestSampling
     [Test]
     public void TestDiscSampling([Values(DistType.Geometric, DistType.Poisson)] DistType dist, [Values(1, 10, 100)] double mean)
     {
-        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Mean();
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleDiscDist(_rnd, dist, mean)).Mean();
         Assert.Greater(res, mean * 0.5);
         Assert.Less(res, mean * 1.5);
     }
