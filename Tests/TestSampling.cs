@@ -31,7 +31,7 @@ public class TestSampling
     [Test]
     public void TestContSampling([Values(DistType.Exponential, DistType.Normal)] DistType dist, [Values(0.01, 0.1, 1, 10, 100)] double mean)
     {
-        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Mean();
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleContDist(_rnd, dist, mean)).Average();
         Assert.Greater(res, mean * 0.5);
         Assert.Less(res, mean * 1.5);
     }
@@ -39,9 +39,16 @@ public class TestSampling
     [Test]
     public void TestDiscSampling([Values(DistType.Geometric, DistType.Poisson)] DistType dist, [Values(1, 10, 100)] double mean)
     {
-        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleDiscDist(_rnd, dist, mean)).Mean();
+        double res = Enumerable.Range(0, 1000).Select(i => Sampling.SampleDiscDist(_rnd, dist, mean)).Average();
         Assert.Greater(res, mean * 0.5);
         Assert.Less(res, mean * 1.5);
+    }
+
+    [Test]
+    public void TestGeometric()
+    {
+        double res = Enumerable.Range(0, 1000000).Select(i => Sampling.SampleDiscDist(_rnd, DistType.Geometric, 62)).Average();
+        Assert.AreEqual(res, 62, 0.1);
     }
 
     [Test]

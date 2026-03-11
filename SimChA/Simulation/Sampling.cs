@@ -86,7 +86,7 @@ public static class Sampling
     {
         return dist switch
         {
-            DistType.Geometric => Geometric.Sample(rnd, 1 / (mean + 1)),
+            DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
             DistType.Poisson => Poisson.Sample(rnd, mean),
               _ => (int) mean
         };
