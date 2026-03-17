@@ -63,9 +63,10 @@ public record SampleStat(
         double fitnessVal = 1 + stress * fParams.Stress + (og - tsg) * fParams.TsgOg + ess * fParams.Essentiality;
         
         int nRejectedEvents = sample.Events.Sum(e => e.NumRejections);
+        double fitnessTarget = double.IsNaN(sample.FitnessTarget) ? kar.FitnessVal : sample.FitnessTarget;
 
         var res = new SampleStat(sample.SampleId, sample.ParentId, kar.Sex, ploidy, fitnessVal, 
-            kar.FitnessVal, stress, tsg, og, ess, 
+            fitnessTarget, stress, tsg, og, ess, 
             sample.Events.Count,  sample.MixtureString(), nRejectedEvents);
         return res;
     }

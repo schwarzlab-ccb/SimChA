@@ -179,12 +179,22 @@ public class FileIO
         {
             var cloneFile = new StreamReader(fileFullPath);
             var tree = Parsers.ParseClones(cloneFile, parseFitness, separator);
-            var selfParent = tree.FindAll(n => n.ParentId == n.CloneId);
-            return selfParent.Count switch
+            var allIds = new HashSet<string>(tree.Select(n => n.CloneId));
+            var roots = tree.FindAll(n => n.ParentId == n.CloneId || !allIds.Contains(n.ParentId));
+            // Normalize root to self-parented
+            if (roots.Count == 1 && roots[0].ParentId != roots[0].CloneId)
             {
-                > 1 => throw new Exception($"More than one ({selfParent.Count}) root nodes (parented to self) found in the clone tree {filePath}."),
+                var r = roots[0];
+                var normalized = new CTreeNode(r.CloneId, r.CloneId, r.Distance, r.Fitness);
+                int idx = tree.IndexOf(r);
+                tree[idx] = normalized;
+                roots[0] = normalized;
+            }
+            return roots.Count switch
+            {
+                > 1 => throw new Exception($"More than one ({roots.Count}) root nodes found in the clone tree {filePath}."),
                 0 => throw new Exception($"No root node found in the clone tree  {filePath}."),
-                _ => (selfParent[0], tree)
+                _ => (roots[0], tree)
             };
         }
         catch (Exception e)

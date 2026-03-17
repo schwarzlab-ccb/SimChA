@@ -67,7 +67,7 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         foreach (var child in children)
         {
             var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth);
-            var newClone = new Sample(child.CloneId,parent.CloneId, childKar, childEvs, mixture);
+            var newClone = new Sample(child.CloneId,parent.CloneId, childKar, childEvs, mixture, child.Fitness);
             sampleList.Add(newClone);
             
             if (child.CloneId != parent.CloneId)
