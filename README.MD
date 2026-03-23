@@ -50,6 +50,9 @@ SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, bu
 chmod +x scripts/DownloadRefData.sh && ./scripts/DownloadRefData.sh
 ```
 
+The download script places the reference FASTA files at `data/hg19/genome.fa` and `data/hg38/genome.fa`.
+These files are required when using `-v`/`--variants` and `-f`/`--fasta` (for the assembly selected in `SimParams.Assembly`).
+
 Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
 
 ## Execution
@@ -87,11 +90,9 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -S, --consistent-segments    (Default: false) Write out copy number segments under a minimum consistent segmentation.
 
-  -k, --karyotypes             (Default: false) Write out karyotypes. Unlike CN segments, Karyotypes retain information about the connections between segments.
+  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`).
 
-  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype.
-
-  -f, --fasta                  (Default: false) Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.
+  -f, --fasta                  (Default: false) Write out out a FASTA file for each sample. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). WARNING! Average file size is 6GB per sample.
 
   -z, --zero-index             (Default: false) Flag for zero-indexed input copy number profiles.
 
@@ -452,25 +453,28 @@ contig 23, which increased the sample's fitness by ~0.54 to ~11.54.
 
 #### `vcf.tsv`
 
-When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires reference genome data to be downloaded (see SNV section above).
+When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires `data/<assembly>/genome.fa` (for example `data/hg19/genome.fa`), which can be downloaded with `scripts/DownloadRefData.sh` (see SNV section above).
 
 The file contains standard VCF format headers and columns:
 
-`##fileformat=VCFv4.3`
+````
+##fileformat=VCFv4.3
 
-`##source=SimChAV1.0`
+##source=SimChAV1.0
 
-`##reference=verily_hg19_genome.fa`
+##reference=verily_hg19_genome.fa
 
 | `#SAMPLEID` | 	CHROM	| POS	| ID |	REF |	ALT |
 |----|------------|-------------|----------|-----------|------------|
 |  0 | chr1 | 8114090 | . | A | C |
+````
 
 #### `genome.fa`
 
 *Note that this only currently works with single-sample simulations* 
 
 Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include the introduced SNVs if applicable.
+Using `-f` requires a reference FASTA named `genome.fa` in the selected assembly folder, e.g. `data/hg19/genome.fa` or `data/hg38/genome.fa`. You can create these files with `scripts/DownloadRefData.sh`.
 
 #### `segments.tsv`
 
@@ -492,7 +496,7 @@ Each karyotype is represented as a series of regions in the format `ChromID*[sta
 
 #### `vcf.tsv`
 
-When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires reference genome data to be downloaded (see SNV section above).
+When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires `data/<assembly>/genome.fa` (for example `data/hg19/genome.fa`), which can be downloaded with `scripts/DownloadRefData.sh` (see SNV section above).
 
 ### Plots
 
@@ -542,7 +546,7 @@ Simulate tumor evolution with fitness-based selection using the spice gene set:
 dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -G spice -e
 ```
 
-### MCMC Mode
+### Fitness Matching Mode
 
 Run Metropolis-Hastings simulation to match target fitness distributions:
 
@@ -564,26 +568,18 @@ Note: The `-f` flag generates large FASTA files (~6GB per sample) and should onl
 
 SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/hg38/` directories:
 
-### Davoli Gene Sets
-* **Davoli_full**: Complete gene set from Davoli et al. with TSG/OG scores
-* **Davoli_select**: Curated subset of high-confidence cancer genes
-
 ### SPICE Gene Sets
-* **spice**: Pan-cancer fitness scores
 * **spice_[CANCER]**: Cancer-type-specific scores (BRCA, LUAD, LUSC, OV, PRAD, etc.)
 * **spice_all**: Comprehensive collection across all cancer types
+
+
+### Davoli Gene Sets
+* **Davoli_full**: Complete gene set from Davoli et al. with TSG/OG scores
+* **Davoli_select**: 1000 genes with highest TSG/OG scores from Davoli et al.
 
 ### CNSistent Gene Sets
 * **CNSistent_all_COSMIC**: Pan-cancer copy number-based scores using COSMIC genes
 * **CNSistent_all_ENSEMBL**: Pan-cancer scores using ENSEMBL genes
-* **CNSistent_[CANCER]_[GENESET]**: Cancer-specific scores with different gene databases
-
-### Kaufmann Gene Sets
-* **Kaufmann_all_events**: Complete event-based fitness scores
-* **Kaufmann_all_events_incl_wgd**: Includes whole-genome doubling events
-* **Kaufmann_*_norm_***: Various normalization approaches
-* **Kaufmann_max_fitness**: Maximum fitness per gene
-* **Kaufmann_max_prominence**: Maximum prominence scores
 
 ### Empty
 * **Empty**: No gene-based fitness (for simulations without fitness selection)

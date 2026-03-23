@@ -93,10 +93,7 @@ try
     {
         files.WriteCopyNumbers(sampleCNs);
     }
-    if (options.WriteKaryotypes)
-    {
-        files.WriteKaryotypes(samples);
-    }
+    files.WriteKaryotypes(samples);
     if (options.Simulate)
     {
         files.WriteEvents(samples);

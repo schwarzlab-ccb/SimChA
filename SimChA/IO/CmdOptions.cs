@@ -31,8 +31,6 @@ public class CmdOptions
     [Option('S', "consistent-segments", Required = false, Default = false, HelpText = "Write out copy number segments under a minimum consistent segmentation.")]
     public bool WriteConsistentCNs { get; set; }
     
-    [Option('k', "karyotypes", Required = false, Default = false, HelpText = "Write out karyotypes. Unlike CN segments, Karyotypes retain information about the connections between segments.")]
-    public bool WriteKaryotypes { get; set; }
 
     [Option('v', "variants", Required = false, Default = false, HelpText = "Write out VCF file with the variants of the final simulated karyotype.")]
     public bool WriteVariants { get; set; }
