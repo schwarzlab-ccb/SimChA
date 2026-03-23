@@ -1,18 +1,21 @@
 {
     "SimParams": {
         "Seed": 0,
-        "Sex": "Any",
+        "RateMean": 62.69822087948976,
         "RateDist": "Geometric",
-        "RateMean": 62,
-        "FitDist": "Uniform",
-        "FitMean": 1,
+        "Assembly": "hg19",
         "AutosomesOnly": true
     },
     "FitParams": {
-        "Stress": 4.969099153818576,
-        "TsgOg": 142.31580366654928,
-        "Essentiality": 132.6342973205489,
-        "GeneSet": "Davoli_select"
+        "Stress": 7.8894660101349885,
+        "TsgOg": 455.33576820938015,
+        "Essentiality": 2474.7072436772464,
+        "AutosomesOnly": true,
+        "GeneSet": "spice_all"
+    },
+    "EvoParams": {
+        "Acceptance": 1.5192311774767573,
+        "MaxTries": 100
     },
     "Signatures": [
         {
@@ -131,9 +134,5 @@
             ]
         }
     ],
-    "EvoParams": {
-        "Acceptance": 0.017822110040145667,
-        "MaxTries": 100
-    },
     "MHParams": null
 }

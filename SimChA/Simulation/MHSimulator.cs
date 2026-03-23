@@ -51,6 +51,7 @@ public class MHSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPara
     private List<(BaseEventData Event, string Signature)> GetEvents(List<CNEventPars> cnEventPs, Karyotype kar, int nEvents,
         double targetFitness)
     {
+        if (nEvents == 0) return [];
         var currentEvents = InitEvents(kar, nEvents, cnEventPs);
         double currentFitness = GetFitness(new Karyotype(kar), currentEvents);
         
