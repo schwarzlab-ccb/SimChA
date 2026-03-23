@@ -185,7 +185,7 @@ def plot_cn_tracks(sample_df, sample_name="", dpi=100):
             height_ratios.append(2)
         else:
             max_cn = max(chrom_df["cn_a"].max(), chrom_df["cn_b"].max(), 2)
-            height_ratios.append(max_cn + 1.5)
+            height_ratios.append(max_cn + 1.0)
 
     total_height = sum(height_ratios) * 0.2
     fig, axes = plt.subplots(nrows, 1, figsize=(7, max(total_height, 6)), dpi=dpi,
@@ -224,15 +224,20 @@ def plot_cn_tracks(sample_df, sample_name="", dpi=100):
         max_pos = chrom_df["end"].max()
         max_cn = max(chrom_df["cn_a"].max(), chrom_df["cn_b"].max(), 2)
         ax.set_xlim(0, global_max_pos)
-        ax.set_ylim(-0.5, max_cn + 1)
-        ax.set_yticks(range(0, int(max_cn) + 2))
+        ax.set_ylim(-0.5, max_cn + 0.5)
+        ax.set_yticks(range(0, int(max_cn) + 1))
         ax.axhline(0, color="black", linewidth=0.5, linestyle="--")
         ax.set_ylabel(chrom, fontsize=8, rotation=0, labelpad=40, va="center")
         ax.tick_params(labelsize=7)
-        # Only show x-axis label on the bottom subplot
+        # Hide x ticks on all but the bottom subplot
         if idx < nrows - 1:
-            ax.set_xticklabels([])
+            ax.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
 
+    # Bottom subplot: show tick marks and labels at 20 Mb intervals
+    import matplotlib.ticker as mticker
+    axes[-1].tick_params(axis="x", which="both", bottom=True, labelbottom=True)
+    axes[-1].xaxis.set_major_locator(mticker.MultipleLocator(10e6))
+    axes[-1].xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x / 1e6)}"))
     axes[-1].set_xlabel("Mb", fontsize=9)
 
     # Legend
@@ -245,6 +250,7 @@ def plot_cn_tracks(sample_df, sample_name="", dpi=100):
     title = f"CN tracks – {sample_name}" if sample_name else "CN tracks"
     fig.suptitle(title, fontsize=12)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
+    fig.subplots_adjust(hspace=0.1)
     return fig, axes
 
 

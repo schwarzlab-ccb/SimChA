@@ -518,6 +518,25 @@ This generates a horizontal arrow plot showing:
 * Orientation indicated by arrow direction
 * Scale in megabases
 
+<img src="doc/img/res_complex_karyotype.png" alt="Karyotype plot example" style="max-width:600px">
+
+#### Copy Number Plots
+
+Use `scripts/plot_cns.py` with the `--cn` flag to visualize allele-specific copy number profiles:
+
+```bash
+python scripts/plot_cns.py --input out/karyotypes.tsv --sample sample_0 --cn
+```
+
+This generates a per-chromosome CN track plot showing:
+* One row per chromosome, scaled proportionally to its CN range
+* `cn_a` (major allele) displayed as a rectangle above the CN value
+* `cn_b` (minor allele) displayed as a rectangle below the CN value
+* Chromosomes colored using consistent chromosome colors
+* Shared x-axis scaled to the longest chromosome
+
+<img src="doc/img/res_complex_cn_tracks.png" alt="CN tracks plot example" style="max-width:600px">
+
 #### Clone Tree Visualization
 
 The `clone_tree.new` file in Newick format can be visualized using standard phylogenetic tree viewers or converted using `scripts/dot_to_newick.py`.
