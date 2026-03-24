@@ -61,7 +61,7 @@ def add_cumulative_distance(sample_df):
 
 
 def plot_tree(sample_df, title="", dpi=100):
-    fig, ax = plt.subplots(figsize=(5, 5), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(5, 3.5), dpi=dpi)
 
     sample_df = add_cumulative_distance(sample_df)
 
