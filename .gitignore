@@ -9,7 +9,7 @@ work/
 # Output files (anywhere)
 out*/
 results*
-img/
+./img/
 temp*/
 test/
 scratch/
