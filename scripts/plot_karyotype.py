@@ -133,16 +133,17 @@ def plot_karyotype(contigs, dpi=150):
     for i, sample in enumerate(contigs):
         last_left = False
         for j, item in enumerate(sample):
-            chr_no = item["chr"]
-            start = item["start"]
-            end = item["end"]
-            # Calculate the length in millions and round to 2 decimal places
-            length =  round((end - start) / 1000000, 2)
-            direction = item["direction"]
-            x = starts[i] + (0 if direction else length)
-            dx = length if direction else -length
-            starts[i] += abs(dx)
-            last_left = draw_horizontal_arrow(ax, x, contig_count - i - 1, dx, 0, human_chr_colors[chr_no], last_left)
+            if item:
+                chr_no = item["chr"]
+                start = item["start"]
+                end = item["end"]
+                # Calculate the length in millions and round to 2 decimal places
+                length =  round((end - start) / 1000000, 2)
+                direction = item["direction"]
+                x = starts[i] + (0 if direction else length)
+                dx = length if direction else -length
+                starts[i] += abs(dx)
+                last_left = draw_horizontal_arrow(ax, x, contig_count - i - 1, dx, 0, human_chr_colors[chr_no], last_left)
 
     # Set the x-axis limits and labels
     ax.set_xlim(0, np.max(starts))
