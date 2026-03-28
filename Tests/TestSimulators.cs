@@ -19,9 +19,7 @@ public class TestSimulators
         => [new("TestSig", 1, eventPs)];
     
     private static List<CTreeNode> EmptyTree(CTreeNode node) => [node];
-
-    private List<Signature> _baseEvs;
-
+    
     [SetUp]
     public void Setup()
     {

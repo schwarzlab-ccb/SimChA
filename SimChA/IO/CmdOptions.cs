@@ -4,20 +4,21 @@ namespace SimChA.IO;
 
 public class CmdOptions
 {
-    [Option('O', "output", Required = false, Default = "./out", HelpText = "The path to the output files.")]
-    public string OutputPath { get; set; }
+    [Option('O', "output", Required = false, HelpText = "The path to the output files.")]
+    public string OutputPath { get; set; } = "./out";
 
-    [Option('C', "config", Required = false, Default = "./configs/main_config.json", HelpText = "A json file with configuration of the experiment.")]
-    public string ConfigFile { get; set; }
+    [Option('C', "config", Required = false, HelpText = "A json file with configuration of the experiment.")]
+    public string ConfigFile { get; set; } = "./configs/main_config.json";
 
-    [Option('T', "tree", Required = false, Default = "", HelpText = "A clone file that describes the tree to be built.")]
-    public string CloneTreeFile { get; set; }
+    [Option('T', "tree", Required = false, HelpText = "A clone file that describes the tree to be built.")]
+    public string CloneTreeFile { get; set; } = "";
+
+    [Option('R', "repeats", Required = false,
+        HelpText = "Number of repeats to generate if the distance parameter is used.")]
+    public int Repeats { get; set; } = 1;
     
-    [Option('R', "repeats", Required = false, Default = 1, HelpText = "Number of repeats to generate if the distance parameter is used.")]
-    public int Repeats { get; set; }
-    
-    [Option('P', "cnprofiles", Required = false, Default = "", HelpText = "File with CNAs, will cause the program to write a scoring file.")]
-    public string CNProfiles { get; set; }
+    [Option('P', "cnprofiles", Required = false, HelpText = "File with CNAs, will cause the program to write a scoring file.")]
+    public string CNProfiles { get; set; } = "";
     
     [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.")]
     public bool EvolutionMode { get; set; }
@@ -41,8 +42,8 @@ public class CmdOptions
     [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
     public bool ZeroIndexed { get; set; }
     
-    [Option("root", Required = false, Default = ".", HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
-    public string RootFolder { get; set; }
+    [Option("root", Required = false, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
+    public string RootFolder { get; set; } = ".";
 
     public ExecMode ExecMode
     {

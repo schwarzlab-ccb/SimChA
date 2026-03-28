@@ -11,6 +11,10 @@ public class GenRange(long start, long end, string chrom)
     public override bool Equals(object? obj) 
         => obj is GenRange other && Start == other.Start && End == other.End && Chrom == other.Chrom;
 
+    // ReSharper disable NonReadonlyMemberInGetHashCode
+    public override int GetHashCode() => HashCode.Combine(Start, End, Chrom);
+    // ReSharper restore NonReadonlyMemberInGetHashCode
+
     public void Revert()
     {
         long oldStart = Start;

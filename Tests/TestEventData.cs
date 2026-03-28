@@ -11,7 +11,6 @@ namespace Tests;
 public class TestEventData
 {
     private Random _rnd;
-    private Dictionary<string, double> _pars;
     
     [SetUp]
     public void Setup()

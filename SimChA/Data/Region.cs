@@ -28,6 +28,9 @@ public class Region : GenRange
 
     public override bool Equals(object? obj) 
         => obj is Region other && base.Equals(other) && Hap1 == other.Hap1 && SNVs.SequenceEqual(other.SNVs);
+
+    public override int GetHashCode() 
+        => HashCode.Combine(base.GetHashCode(), Hap1);
     
     public void ResizeFront(long howMuch)
     {
