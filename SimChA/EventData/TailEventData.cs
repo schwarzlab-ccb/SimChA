@@ -7,7 +7,7 @@ namespace SimChA.EventData;
 public record TailEventData : ContigEventData
 {
     public bool Direction { get; }
-    private long Start { get; }
+    public long Start { get; }
     
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
