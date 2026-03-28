@@ -75,7 +75,7 @@ public class Karyotype
         => ContigIds().ToDictionary(id => id, id => _contigs[id].GetRegionDescriptions());
 
     public override string ToString()
-        => CountContigs() > 0 ? "[" + string.Join(";", _contigs.Where(c => c.Any())) + "]" : "[]";
+        => CountContigs() > 0 ? "[" + string.Join(";", _contigs) + "]" : "[]";
 
     // @CODY this should be made private, needs to update tests
     public IEnumerable<Region> FindChrRegions(string chrNo)

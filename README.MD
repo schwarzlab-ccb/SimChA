@@ -4,11 +4,10 @@
 
 SimChA is a research project at SchwarzLab.
 
-## Requirements
 
-> Git 2.4+ with Git-LFS
+## Quick Start
 
-### TL;DR; 
+For quickstart, Git >= 2.4 and Conda >= 22 (or equivalent) are required.
 
 The program can be run on a platform of your choice in the provided *Conda* environment. 
 The following commands should make SimChA display the available commands.
@@ -24,38 +23,10 @@ dotnet run --project SimChA -- --help
 ### Tested platforms
 
 The program has been tested on:
-* Windows 10 - PowerShell
-* Windows 10 - WSL2 Ubuntu
-* Ubuntu 20
+* Windows 11 - PowerShell
+* Windows 11 - WSL2 Ubuntu
 * Ubuntu 24.04
 * MacOS X 10 
-
-### Simulation
-
-The simulation code is written in **C# 8**. **.NET 8.0** is requred. We recommend installation using *Conda*:
-```
-conda install -c conda-forge dotnet
-``` 
-
-### Data analysis
-
-The analysis code is written in **Python 3.11**. The following packages are required (either from *Conda* or *Pip*):
-```
-conda install -c conda-forge -c bioconda biopython matplotlib numpy pandas seaborn pillow lifelines
-```
-
-### Somatic Nucleotide Variants (SNVs)
-
-SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run from the root directory of the project as follows:
-
-```
-chmod +x scripts/DownloadRefData.sh && ./scripts/DownloadRefData.sh
-```
-
-The download script places the reference FASTA files at `data/hg19/genome.fa` and `data/hg38/genome.fa`.
-These files are required when using `-v`/`--variants` and `-f`/`--fasta` (for the assembly selected in `SimParams.Assembly`).
-
-Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
 
 ## Execution
 
@@ -394,10 +365,6 @@ Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/
 3. Each deletion has a length drawn from an exponential distribution scaled by `Frac / Frag`.
 4. This creates a pattern of multiple local deletions originating from a single starting point.
 
-### SNV (Prob)
-
-A single nucleotide variant (point mutation) is introduced at a random position on a randomly selected contig. The substitution follows the Jukes-Cantor model, where all nucleotide substitutions are equally likely. The nucleotide is changed to one of the three alternative bases with equal probability.
-
 ### Template Insertion Chain (Prob, Frac, Frag)
 
 1. A number of contigs is selected from a geometric distribution with mean `Frag` (minimum 1).
@@ -413,6 +380,21 @@ A single nucleotide variant (point mutation) is introduced at a random position 
 3. Unlike TIChain, all segments (including the first) have non-zero length.
 4. These segments are chained together and form a cycle (the last segment connects back to the first).
 5. The cycle is then integrated into the genome, creating a circular arrangement of templated insertions.
+
+
+### Somatic Nucleotide Variants - SNV (Prob)
+
+SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run from the root directory of the project as follows:
+
+```
+chmod +x scripts/DownloadRefData.sh && ./scripts/DownloadRefData.sh
+```
+
+The download script places the reference FASTA files at `data/hg19/genome.fa` and `data/hg38/genome.fa`.
+These files are required when using `-v`/`--variants` and `-f`/`--fasta` (for the assembly selected in `SimParams.Assembly`).
+
+Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
+
 
 ### Template Insertion Bridge (Prob, Frac, Frag)
 
