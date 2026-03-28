@@ -77,9 +77,6 @@ public class Karyotype
     public IEnumerable<Region> FindChrRegions(string chrNo)
         => _contigs.SelectMany(c => c.FindChrRegions(chrNo));
 
-    private static long GetTailSplitPos(long segLength, Contig contig, bool fiveToThree)
-        => fiveToThree ? segLength : contig.Length - segLength;
-
     public long ContigLen(int contigId)
         => contigId < _contigs.Count ? _contigs[contigId].Length : 0;
 
@@ -99,32 +96,29 @@ public class Karyotype
     public double UpdateFitness(RefGen refGen, FitParams fParams)
         => FitnessVal = Fitness.Calculate(this, refGen, fParams);
 
-    public void ApplyTailDeletion(int contigID, long tailLen, bool fiveToThree)
+    public void ApplyTailDeletion(int contigID, long start, bool direction)
     {
         var contig = _contigs[contigID];
         RemoveGenes(contig);
-        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
-        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        (long tailStart, long tailEnd) = GetIndices(contig, start, direction);
         contig.DeleteRange(tailStart, tailEnd);
         AddGenes(contig);
     }
 
-    public void ApplyTailDuplication(int contigID, long tailLen, bool fiveToThree)
+    public void ApplyTailDuplication(int contigID, long start, bool direction)
     {
         var contig = _contigs[contigID];
-        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
-        (long tailStart, long tailEnd) = GetIndices(contig, tailSplit, fiveToThree);
+        (long tailStart, long tailEnd) = GetIndices(contig, start, direction);
         var newTail = new Contig(contig.GetSubContig(tailStart, tailEnd));
         _contigs.Add(newTail);
         AddGenes(newTail);
     }
 
-    public void ApplyBFB(int contigID, long tailLen, bool fiveToThree)
+    public void ApplyBFB(int contigID, long start, bool direction)
     {
         var contig = _contigs[contigID];
         RemoveGenes(contig);
-        long tailSplit = GetTailSplitPos(tailLen, contig, fiveToThree);
-        contig.Bridge(tailSplit, fiveToThree);
+        contig.Bridge(start, direction);
         AddGenes(contig);
     }
 

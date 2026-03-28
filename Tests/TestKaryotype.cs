@@ -120,7 +120,7 @@ public class TestKaryotype
         long len = _kar.ContigLen(0);
         _kar.ApplyTailDeletion(0, TEST_FRAC, true);
         Assert.AreEqual(len - TEST_FRAC, _kar.ContigLen(0));
-        _kar.ApplyTailDeletion(0, TEST_FRAC, false);
+        _kar.ApplyTailDeletion(0, len - 2 * TEST_FRAC, false);
         Assert.AreEqual(len - 2 * TEST_FRAC, _kar.ContigLen(0));
     }
 
