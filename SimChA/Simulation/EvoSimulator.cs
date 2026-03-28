@@ -47,10 +47,14 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
+            var regionsBefore = currentKar.GetRegionDescriptions();
             var (newKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar);
+            var regionsAfter = newKar.GetRegionDescriptions();
+            var (rGained, rLost) = GetKaryotypeDiff(regionsBefore, regionsAfter);
             double newFit = newKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature,
+                RegionsGained: rGained, RegionsLost: rLost);
             
             childEvs.Add(newEv);
             currentKar = newKar;

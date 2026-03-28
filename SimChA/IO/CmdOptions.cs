@@ -32,10 +32,13 @@ public class CmdOptions
     public bool WriteConsistentCNs { get; set; }
     
 
-    [Option('v', "variants", Required = false, Default = false, HelpText = "Write out VCF file with the variants of the final simulated karyotype.")]
+    [Option('K', "karyotypes", Required = false, Default = false, HelpText = "Write out karyotypes of each sample.")]
+    public bool WriteKaryotypes { get; set; }
+
+    [Option('v', "variants", Required = false, Default = false, HelpText = "Write out VCF file with the variants of the final simulated karyotype. Requires data/<assembly>/genome.fa (see scripts/DownloadRefData.sh).")]
     public bool WriteVariants { get; set; }
 
-    [Option('f', "fasta", Required = false, Default = false, HelpText = "Write out out a FASTA file for each sample. WARNING! Average file size is 6GB per sample.")]
+    [Option('f', "fasta", Required = false, Default = false, HelpText = "Write out a FASTA file for each sample. Requires data/<assembly>/genome.fa (see scripts/DownloadRefData.sh). WARNING! Average file size is 6GB per sample.")]
     public bool WriteFasta { get; set; }
 
     [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]

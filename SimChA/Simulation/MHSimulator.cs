@@ -111,10 +111,14 @@ public class MHSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPara
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
             var (eventData, signature) = bestEvents[evNo - 1];
+            var regionsBefore = childKar.GetRegionDescriptions();
             eventData.ApplyEvent(childKar);
+            var regionsAfter = childKar.GetRegionDescriptions();
+            var (rGained, rLost) = GetKaryotypeDiff(regionsBefore, regionsAfter);
             double newFitness = childKar.UpdateFitness(RefGen, FitParams);
             double dFit = newFitness - oldFitness;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFitness, Signature: signature);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFitness, Signature: signature,
+                RegionsGained: rGained, RegionsLost: rLost);
             childEvs.Add(newEv);
             oldFitness = newFitness;
         }
