@@ -88,12 +88,13 @@ public class FileIO
         string outPath = Path.Combine(Path.GetFullPath(OutFolder), KARYOTYPES_FILENAME);
         Console.WriteLine($"Writing to file {outPath}");
         using var outputFile = new StreamWriter(outPath);
-        outputFile.WriteLine("sample_id\tkaryotype");
-        
+        outputFile.WriteLine("sample_id\tkaryotype\tcontig_ids");
+
         foreach (var sample in samples)
         {
             var kar = sample.Karyotype;
-            outputFile.WriteLine($"{sample.SampleId}\t{kar}");
+            var contigIds = string.Join(",", kar.ContigIds());
+            outputFile.WriteLine($"{sample.SampleId}\t{kar}\t{contigIds}");
         }
     }
 
