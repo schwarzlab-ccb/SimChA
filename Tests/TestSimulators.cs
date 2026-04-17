@@ -27,16 +27,15 @@ public class TestSimulators
         _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
     }
     
-    private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, MHParams? mhParams = null, EvoParams? saParams = null)
+    private Simulator GetSimulator(Type type, SimParams? simParams = null, FitParams? fitParams = null, EvoParams? saParams = null)
     {
         simParams ??= new SimParams();
         fitParams ??= new FitParams(1, 1, 1);
-        mhParams ??= new MHParams();
         saParams ??= new EvoParams(1, 10);
         return type switch
         {
             not null when type == typeof(Simulator) => new Simulator(_rnd, _refGen, simParams, fitParams),
-            not null when type == typeof(MatchSimulator) => new MatchSimulator(_rnd, _refGen, simParams, fitParams, mhParams, saParams),
+            not null when type == typeof(MatchSimulator) => new MatchSimulator(_rnd, _refGen, simParams, fitParams, saParams),
             not null when type == typeof(EvoSimulator) => new EvoSimulator(_rnd, _refGen, simParams, fitParams, saParams),
             _ => throw new ArgumentException("Unknown simulator type")
         };

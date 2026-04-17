@@ -57,7 +57,7 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -e, --evolution-mode         (Default: false) Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.
 
-  -m, --mcmc-mode              (Default: false) The model will be run in MCMC mode. In this mode the fitness of the samples will be matched using the Metropolis-Hastings algorithm.
+  -m, --match-mode             (Default: false) Flag to execute fitness matching mode. In this mode, events are selected to minimize the distance to a target fitness.
 
   -s, --segments               (Default: false) Write out copy numbers segments.
 
@@ -117,13 +117,9 @@ The `Mixture` parameter in `SimParams` controls how multiple signatures are comb
 
 See the Signatures section below for details on configuring individual event types.
 
-#### `MHParams`
+#### Fitness Matching Mode
 
-The parameters controlling the Metropolis-Hastings mode of event simulation.
-
-* `NumIterations: int (1)`: The total number of trials to take in the Metropolis-Hastings algorithm.
-* `ThetaFitness: float (1.0) `: Controls how the variance of the acceptance. Higher values result in more exploration, i.e. the algorithm is more likely to accept worse proposals, while lower values will result in a more greedy algorithm, i.e. mostly only accepts improvements from the current state.
-* `MatchFitness: bool (true)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
+When using `-m` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls how many candidate events are sampled per step, with the best candidate (closest to target) being selected.
 
 #### `EvoParams`
 
@@ -551,7 +547,7 @@ dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -G spice -
 
 ### Fitness Matching Mode
 
-Run Metropolis-Hastings simulation to match target fitness distributions:
+Run fitness matching simulation to match target fitness values:
 
 ```bash
 dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -m

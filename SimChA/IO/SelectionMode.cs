@@ -4,5 +4,5 @@ public enum SelectionMode
 {
     MonteCarlo,
     Evolution,
-    MetropolisHastings
+    FitnessMatching
 }

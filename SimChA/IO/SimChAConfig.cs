@@ -8,5 +8,4 @@ public record SimChAConfig(
     SimParams SimParams,
     FitParams FitParams,
     List<Signature>? Signatures = null,
-    EvoParams? EvoParams = null,
-    MHParams? MHParams = null);
+    EvoParams? EvoParams = null);

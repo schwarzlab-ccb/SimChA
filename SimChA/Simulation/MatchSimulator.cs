@@ -5,10 +5,9 @@ using SimChA.IO;
 
 namespace SimChA.Simulation;
 
-public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitParams fitParams, MHParams mhParams, EvoParams evoParams)
+public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitParams fitParams, EvoParams evoParams)
     : Simulator(rnd, refGen, simParams, fitParams)
 {
-    private MHParams MHParams { get; } = mhParams;
     private EvoParams EvoParams { get; } = evoParams;
 
     private (Karyotype newKar, BaseEventData eventData, int numTries, string signature) GetNewEvent(

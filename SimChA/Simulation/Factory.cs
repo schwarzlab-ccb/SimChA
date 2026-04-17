@@ -13,12 +13,10 @@ public static class Factory
         var fitParams = simChAConfig.FitParams;
         switch (selMode)
         {
-            case SelectionMode.MetropolisHastings:
-                var mcParams = simChAConfig.MHParams ?? throw new Exception(
-                    "Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
-                var mhEvoParams = simChAConfig.EvoParams ?? throw new Exception(
-                    "Error: EvoParams not set. MHSimulator requires EvoParams for MaxTries. Please set EvoParams in the config file.");
-                return new MatchSimulator(rnd, refGen, sampleParams, fitParams, mcParams, mhEvoParams);
+            case SelectionMode.FitnessMatching:
+                var matchEvoParams = simChAConfig.EvoParams ?? throw new Exception(
+                    "Error: EvoParams not set. MatchSimulator requires EvoParams. Please set EvoParams in the config file.");
+                return new MatchSimulator(rnd, refGen, sampleParams, fitParams, matchEvoParams);
 
             case SelectionMode.Evolution:
                 var evoParams = simChAConfig.EvoParams ?? throw new Exception(

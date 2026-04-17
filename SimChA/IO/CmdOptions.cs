@@ -23,8 +23,8 @@ public class CmdOptions
     [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.")]
     public bool EvolutionMode { get; set; }
 
-    [Option('m', "mcmc-mode", Required = false, Default = false, HelpText = "The model will be run in MCMC mode. In this mode the fitness of the samples will be matched using the Metropolis-Hastings algorithm.")]
-    public bool MHMode { get; set; }
+    [Option('m', "match-mode", Required = false, Default = false, HelpText = "Flag to execute fitness matching mode. In this mode, events are selected to minimize the distance to a target fitness.")]
+    public bool MatchMode { get; set; }
     
     [Option('s', "segments", Required = false, Default = false, HelpText = "Write out copy numbers segments.")]
     public bool WriteCNs { get; set; }
@@ -77,13 +77,13 @@ public class CmdOptions
     {
         get
         {
-            if (EvolutionMode && MHMode)
+            if (EvolutionMode && MatchMode)
             {
-                throw new Exception("Cannot run both evolution and MCMC mode at the same time.");
+                throw new Exception("Cannot run both evolution and fitness matching mode at the same time.");
             }
-            if (MHMode)
+            if (MatchMode)
             {
-                return SelectionMode.MetropolisHastings;
+                return SelectionMode.FitnessMatching;
             }
             if (EvolutionMode)
             {

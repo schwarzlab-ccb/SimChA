@@ -17,10 +17,6 @@
         "Acceptance": 1.5192311774767573,
         "MaxTries": 100
     },
-    "MHParams" :{
-        "NumIterations": 2000,
-        "ThetaFitness": 1.0
-    },
     "Signatures": [
         {
             "Name": "CNVs",
