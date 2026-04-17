@@ -36,13 +36,13 @@ public class TestSimulators
         return type switch
         {
             not null when type == typeof(Simulator) => new Simulator(_rnd, _refGen, simParams, fitParams),
-            not null when type == typeof(MHSimulator) => new MHSimulator(_rnd, _refGen, simParams, fitParams, mhParams),
+            not null when type == typeof(MatchSimulator) => new MatchSimulator(_rnd, _refGen, simParams, fitParams, mhParams, saParams),
             not null when type == typeof(EvoSimulator) => new EvoSimulator(_rnd, _refGen, simParams, fitParams, saParams),
             _ => throw new ArgumentException("Unknown simulator type")
         };
     }
     
-    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
+    [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestSimulatorsPass(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);
@@ -54,7 +54,7 @@ public class TestSimulators
         Assert.AreEqual(46, res[0].Karyotype.CountContigs());
     }
     
-    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
+    [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestEmptySimulator(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);
@@ -66,7 +66,7 @@ public class TestSimulators
         Assert.AreEqual(dist, res[0].Events.Count);
     }
     
-    [TestCase(typeof(Simulator)), TestCase(typeof(MHSimulator)), TestCase(typeof(EvoSimulator))]
+    [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestSimulatorsBase(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);

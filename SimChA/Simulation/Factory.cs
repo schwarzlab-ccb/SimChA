@@ -16,7 +16,9 @@ public static class Factory
             case SelectionMode.MetropolisHastings:
                 var mcParams = simChAConfig.MHParams ?? throw new Exception(
                     "Error: MCParams not set. Cannot perform MC sampling. Please set MCParams in the config file.");
-                return new MHSimulator(rnd, refGen, sampleParams, fitParams, mcParams);
+                var mhEvoParams = simChAConfig.EvoParams ?? throw new Exception(
+                    "Error: EvoParams not set. MHSimulator requires EvoParams for MaxTries. Please set EvoParams in the config file.");
+                return new MatchSimulator(rnd, refGen, sampleParams, fitParams, mcParams, mhEvoParams);
 
             case SelectionMode.Evolution:
                 var evoParams = simChAConfig.EvoParams ?? throw new Exception(
