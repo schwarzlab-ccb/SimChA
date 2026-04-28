@@ -7,14 +7,15 @@
         "AutosomesOnly": true
     },
     "FitParams": {
-        "Stress": 7.8894660101349885,
-        "TsgOg": 455.33576820938015,
-        "Essentiality": 2474.7072436772464,
+        "Stress": 7.168716173186681,
+        "TsgOg": 367.81769093395815,
+        "Essentiality": 2790.1338777017836,
         "AutosomesOnly": true,
+        "GeneNormalization": false,
         "GeneSet": "spice_all"
     },
     "EvoParams": {
-        "Acceptance": 1.5192311774767573,
+        "Acceptance": 1.7932167192367698,
         "MaxTries": 100
     },
     "Signatures": [
@@ -70,7 +71,7 @@
                 },
                 {
                     "Type": "WholeGenomeDoubling",
-                    "Prob": 0.3819865022685334
+                    "Prob": 0.3389164347349472
                 }
             ]
         }
