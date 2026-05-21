@@ -4,7 +4,6 @@
 
 SimChA is a research project at SchwarzLab.
 
-
 ## Quick Start
 
 For quickstart, Git >= 2.4 and Conda >= 22 (or equivalent) are required.
@@ -17,7 +16,7 @@ git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
 conda env create --file simcha.yml
 conda activate simcha
-dotnet run --project SimChA -- --help
+dotnet run -- --help
 ```
 
 ### Tested platforms
@@ -30,14 +29,31 @@ The program has been tested on:
 
 ## Execution
 
-The default execution is:
+The repository is a solution (`SimChA.sln`) with two projects: `SimChA`, the simulator,
+and `Tests`, the unit test suite. `SimChA` is the default project — its `.csproj` sits at
+the repository root (with sources in `src/`), so `dotnet run` runs the simulator directly:
+
 ```
 git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
-dotnet run --project SimChA
+dotnet run
 ```
 
 The results will be written to the folder `./out`
+
+### Running Tests
+
+The `Tests` project is not run by default. Run the test suite manually with:
+
+```
+dotnet test
+```
+
+To target the test project explicitly:
+
+```
+dotnet test Tests
+```
 
 ### Options
 
@@ -127,6 +143,7 @@ The parameters controlling the evolutionary mode of event simulation (selection 
 
 * `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
 * `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
+* `Decay: float (0.0)`: Used in fitness matching mode (`-m`). Controls how much stricter acceptance becomes as fewer events remain. The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
 
 ## Input Data
 
@@ -534,7 +551,7 @@ When using SimChA as part of optimization workflows (see project-simcha), additi
 Run a simple simulation with default parameters:
 
 ```bash
-dotnet run --project SimChA -- --output ./out --config ./configs/main_config.json
+dotnet run -- --output ./out --config ./configs/main_config.json
 ```
 
 ### Evolution Mode
@@ -542,7 +559,7 @@ dotnet run --project SimChA -- --output ./out --config ./configs/main_config.jso
 Simulate tumor evolution with fitness-based selection using the spice gene set:
 
 ```bash
-dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -G spice -e
+dotnet run -- -O ./out -C ./configs/main_config.json -G spice -e
 ```
 
 ### Fitness Matching Mode
@@ -550,7 +567,7 @@ dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -G spice -
 Run fitness matching simulation to match target fitness values:
 
 ```bash
-dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -m
+dotnet run -- -O ./out -C ./configs/main_config.json -m
 ```
 
 ### With All Outputs
@@ -558,7 +575,7 @@ dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -m
 Generate all available output formats:
 
 ```bash
-dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
+dotnet run -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
 ```
 
 Note: The `-f` flag generates large FASTA files (~6GB per sample) and should only be used when necessary.
