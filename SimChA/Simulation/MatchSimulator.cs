@@ -11,13 +11,9 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
     private EvoParams EvoParams { get; } = evoParams;
 
     private (Karyotype newKar, BaseEventData eventData, int numTries, string signature) GetNewEvent(
-        List<CNEventPars> cnEventPars, Karyotype currentKar, double targetFitness)
+        List<CNEventPars> cnEventPars, Karyotype currentKar, double targetFitness, double decay)
     {
-        Karyotype? bestKar = null;
-        BaseEventData? bestEvent = null;
-        string bestSignature = "";
-        double bestDist = double.PositiveInfinity;
-        int bestTry = 0;
+        double currentDist = Math.Abs(currentKar.FitnessVal - targetFitness);
 
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
@@ -34,18 +30,14 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
             double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
             double proposedDist = Math.Abs(proposedFitness - targetFitness);
 
-            if (proposedDist < bestDist)
+            // Accept if distance improves; decay makes acceptance stricter as fewer events remain
+            double distImprovement = currentDist - proposedDist;
+            if (Math.Exp(distImprovement - EvoParams.Acceptance - decay) > Rnd.NextDouble())
             {
-                bestKar = proposedKar;
-                bestEvent = eventData;
-                bestSignature = cnEventP.Signature;
-                bestDist = proposedDist;
-                bestTry = tryNo;
+                return (proposedKar, eventData, tryNo, cnEventP.Signature);
             }
         }
-        return bestKar is not null 
-            ? (bestKar, bestEvent!, bestTry, bestSignature) 
-            : (currentKar, CreateSkipEvent(), EvoParams.MaxTries, "");
+        return (currentKar, CreateSkipEvent(), EvoParams.MaxTries, "");
     }
 
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
@@ -64,7 +56,11 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
             double oldFitness = currentKar.FitnessVal;
-            var (newKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit);
+            // Decay increases as fewer events remain: 0 at start, Decay at last event
+            double decay = eventCount > 1 
+                ? EvoParams.Decay * (evNo - 1.0) / (eventCount - 1.0) 
+                : 0;
+            var (newKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
             double newFit = newKar.FitnessVal;
             double dFit = newFit - oldFitness;
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, Signature: signature);
