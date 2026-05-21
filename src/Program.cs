@@ -54,7 +54,7 @@ if (options.Simulate)
     }
     else
     {
-        var (root, tree) = FileIO.ReadCloneTree(options.CloneTreeFile, options.MatchMode);
+        var (root, tree) = FileIO.ReadCloneTree(options.CloneTreeFile, selMode == SelectionMode.FitnessMatching);
         Console.WriteLine($"Creating {tree.Count} samples from a tree:");
         samples = simulator.Simulate(root, tree, validSigs);
     }

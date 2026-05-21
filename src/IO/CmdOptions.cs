@@ -20,11 +20,11 @@ public class CmdOptions
     [Option('P', "cnprofiles", Required = false, HelpText = "File with CNAs, will cause the program to write a scoring file.")]
     public string CNProfiles { get; set; } = "";
     
-    [Option('e', "evolution-mode", Required = false, Default = false, HelpText = "Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.")]
-    public bool EvolutionMode { get; set; }
-
-    [Option('m', "match-mode", Required = false, Default = false, HelpText = "Flag to execute fitness matching mode. In this mode, events are selected to minimize the distance to a target fitness.")]
-    public bool MatchMode { get; set; }
+    [Option('m', "mode", Required = false, Default = "evolution",
+        HelpText = "The event selection mode: 'basic' (events are selected at random), " +
+                   "'evolution' (events are selected to increase fitness), or " +
+                   "'matching' (events are selected to minimize the distance to a target fitness).")]
+    public string Mode { get; set; } = "evolution";
     
     [Option('s', "segments", Required = false, Default = false, HelpText = "Write out copy numbers segments.")]
     public bool WriteCNs { get; set; }
@@ -74,24 +74,14 @@ public class CmdOptions
     }
 
     public SelectionMode SelectionMode
-    {
-        get
+        => Mode.ToLowerInvariant() switch
         {
-            if (EvolutionMode && MatchMode)
-            {
-                throw new Exception("Cannot run both evolution and fitness matching mode at the same time.");
-            }
-            if (MatchMode)
-            {
-                return SelectionMode.FitnessMatching;
-            }
-            if (EvolutionMode)
-            {
-                return SelectionMode.Evolution;
-            }
-            return SelectionMode.MonteCarlo;
-        }
-    }
+            "basic" => SelectionMode.MonteCarlo,
+            "evolution" => SelectionMode.Evolution,
+            "matching" => SelectionMode.FitnessMatching,
+            _ => throw new Exception(
+                $"Unknown mode '{Mode}'. Valid values are: basic, evolution, matching.")
+        };
     
     public bool ShouldParseGenome 
         => WriteVariants || WriteFasta;

@@ -1,8 +1,22 @@
 ![.NET Test](https://github.com/ICCB-Cologne/SimChA/actions/workflows/dotnet-test.yml/badge.svg)
 
+
 # SimChA: Simulator of Chromosomal Aberrations
 
-SimChA is a research project at SchwarzLab.
+<img src="doc/img/SimChA_logo_new.png" alt="SimChA Logo" style="max-width:256px" align="left">
+
+SimChA is a fitness-driven simulator of copy-number evolution. SimChA can simulate 22 event types and SNVs within 25 different cancer types, or use pan-cancer profiles.
+
+There are three basic modes of function:
+- `basic`: events are selected at random, without considering fitness.
+- `evolution`: events are selected based on their fitness, with a higher chance of selecting events that increase fitness.
+- `matching`: events are selected to minimize the distance to a target fitness value provided on input.
+
+The fitness is calculated based on the following principles:
+- Tumor Suppressor Genes (TSG) and Oncogenes (OG) contribute to fitness, with TSG loss and OG gain increasing fitness.
+- Essential genes contribute to fitness, with their full loss penalizing fitness.
+- Abnormally high ploidy is penalized by a stress factor.
+
 
 ## Quick Start
 
@@ -16,7 +30,7 @@ git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
 conda env create --file simcha.yml
 conda activate simcha
-dotnet run -- --help
+dotnet run
 ```
 
 ### Tested platforms
@@ -41,19 +55,6 @@ dotnet run
 
 The results will be written to the folder `./out`
 
-### Running Tests
-
-The `Tests` project is not run by default. Run the test suite manually with:
-
-```
-dotnet test
-```
-
-To target the test project explicitly:
-
-```
-dotnet test Tests
-```
 
 ### Options
 
@@ -71,9 +72,7 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -P, --cnprofiles             File with CNAs, will cause the program to write a scoring file.
 
-  -e, --evolution-mode         (Default: false) Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.
-
-  -m, --match-mode             (Default: false) Flag to execute fitness matching mode. In this mode, events are selected to minimize the distance to a target fitness.
+  -m, --mode                   (Default: evolution) The event selection mode: 'basic' (events are selected at random), 'evolution' (events are selected to increase fitness), or 'matching' (events are selected to minimize the distance to a target fitness).
 
   -s, --segments               (Default: false) Write out copy numbers segments.
 
@@ -135,7 +134,7 @@ See the Signatures section below for details on configuring individual event typ
 
 #### Fitness Matching Mode
 
-When using `-m` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls how many candidate events are sampled per step, with the best candidate (closest to target) being selected.
+When using `-m matching` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls how many candidate events are sampled per step, with the best candidate (closest to target) being selected.
 
 #### `EvoParams`
 
@@ -143,7 +142,7 @@ The parameters controlling the evolutionary mode of event simulation (selection 
 
 * `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
 * `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
-* `Decay: float (0.0)`: Used in fitness matching mode (`-m`). Controls how much stricter acceptance becomes as fewer events remain. The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
+* `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how much stricter acceptance becomes as fewer events remain. The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
 
 ## Input Data
 
@@ -205,7 +204,6 @@ chr1    125000000   128900000
 chrY    11600000    12500000
 chrY    12500000    13400000
 ```
-
 
 ## Signatures
 
@@ -548,10 +546,10 @@ When using SimChA as part of optimization workflows (see project-simcha), additi
 
 ### Basic Simulation
 
-Run a simple simulation with default parameters:
+Run a simulation with events selected at random (`-m basic`):
 
 ```bash
-dotnet run -- --output ./out --config ./configs/main_config.json
+dotnet run -- --output ./out --config ./configs/main_config.json -m basic
 ```
 
 ### Evolution Mode
@@ -559,7 +557,7 @@ dotnet run -- --output ./out --config ./configs/main_config.json
 Simulate tumor evolution with fitness-based selection using the spice gene set:
 
 ```bash
-dotnet run -- -O ./out -C ./configs/main_config.json -G spice -e
+dotnet run -- -O ./out -C ./configs/main_config.json -G spice -m evolution
 ```
 
 ### Fitness Matching Mode
@@ -567,7 +565,7 @@ dotnet run -- -O ./out -C ./configs/main_config.json -G spice -e
 Run fitness matching simulation to match target fitness values:
 
 ```bash
-dotnet run -- -O ./out -C ./configs/main_config.json -m
+dotnet run -- -O ./out -C ./configs/main_config.json -m matching
 ```
 
 ### With All Outputs
@@ -607,8 +605,23 @@ SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/
 * **FASTA output**: Adds significant time and disk space (~6GB per sample)
 * **Parallelization**: SimChA is single-threaded; run multiple instances for parallel simulations
 
+## Running Tests
+
+The `Tests` project is not run by default. Run the test suite manually with:
+
+```
+dotnet test
+```
+
+To target the test project explicitly:
+
+```
+dotnet test test
+```
+
+
 ## Contact
-Email questions, feature requests and bug reports to Adam Streck, `a.streck@iccb-cologne.org`.
+Email questions, feature requests and bug reports to Adam Streck, `adam.streck@iccb-cologne.org`.
 
 ## License
 SimChA is available under the MIT License.
