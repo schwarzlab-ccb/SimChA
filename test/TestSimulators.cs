@@ -12,8 +12,8 @@ namespace Tests;
 [TestFixture]
 public class TestSimulators
 {
-    private Random _rnd;
-    private RefGen _refGen;
+    private Random _rnd = null!;
+    private RefGen _refGen = null!;
     
     private static List<Signature> MakeSigs(List<CNEventPars> eventPs) 
         => [new("TestSig", 1, eventPs)];

@@ -11,8 +11,8 @@ namespace Tests;
 [TestFixture]
 public class TestCopyNumbers
 {
-    private RefGen _refGen;
-    private Random _rnd;
+    private RefGen _refGen = null!;
+    private Random _rnd = null!;
     
     [SetUp]
     public void Setup()

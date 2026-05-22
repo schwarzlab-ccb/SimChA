@@ -17,7 +17,7 @@ public class TestParsing
     public const string HG_19 = "hg19";
     public const string HG_38 ="hg38";
     public const string GENE_SET = "Davoli_select";
-    private RefGen _refGen;
+    private RefGen _refGen = null!;
 
     [SetUp]
     public void Setup()

@@ -12,9 +12,9 @@ namespace Tests;
 [TestFixture]
 public class TestContig
 {
-    private RefGen _refGen;
-    private Contig _contig1;
-    private Contig _contigX;
+    private RefGen _refGen = null!;
+    private Contig _contig1 = null!;
+    private Contig _contigX = null!;
     
     [SetUp]
     public void Setup()

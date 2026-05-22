@@ -14,10 +14,10 @@ namespace Tests;
 [TestFixture]
 public class TestKaryotype
 {
-    private Karyotype _kar;
-    private Random _rnd;
-    private CNEventPars _del;
-    private RefGen _refGen;
+    private Karyotype _kar = null!;
+    private Random _rnd = null!;
+    private CNEventPars _del = null!;
+    private RefGen _refGen = null!;
     private const int TEST_FRAC = 1000;
     
     public static void ApplyRandomEvent(Random rnd, Karyotype kar, CNEventPars cnEventPars)

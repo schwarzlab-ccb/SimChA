@@ -9,7 +9,7 @@ namespace Tests;
 [TestFixture]
 public class TestRegions
 {
-    private Region _cRegion;
+    private Region _cRegion = null!;
 
     [SetUp]
     public void Setup()

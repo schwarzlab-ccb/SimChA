@@ -11,7 +11,7 @@ namespace Tests;
 [TestFixture]
 public class TestSampling
 {
-    private Random _rnd;
+    private Random _rnd = null!;
     
     [SetUp]
     public void Setup()

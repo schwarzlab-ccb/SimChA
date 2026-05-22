@@ -10,7 +10,7 @@ namespace Tests;
 
 public class TestEventData
 {
-    private Random _rnd;
+    private Random _rnd = null!;
     
     [SetUp]
     public void Setup()

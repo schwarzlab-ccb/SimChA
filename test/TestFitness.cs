@@ -14,7 +14,7 @@ public class TestFitness
 {
     private const double EPSILON = 0.00001;
 
-    private List<RefGen> _refs;
+    private List<RefGen> _refs = null!;
 
     [SetUp]
     public void Setup()
