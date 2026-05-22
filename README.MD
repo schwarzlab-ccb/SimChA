@@ -3,8 +3,8 @@
 
 # SimChA: Simulator of Chromosomal Aberrations
 
-<img src="doc/img/SimChA_logo_new.png" alt="SimChA Logo" style="max-width:256px" align="left">
-
+<p align="center"><img src="doc/img/SimChA_logo_new.png" alt="SimChA Logo" style="max-width:128px"></p>
+ 
 SimChA is a fitness-driven simulator of copy-number evolution. SimChA can simulate 22 event types and SNVs within 25 different cancer types, or use pan-cancer profiles.
 
 There are three basic modes of function:
