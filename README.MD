@@ -589,14 +589,6 @@ SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/
 * **spice_all**: Comprehensive collection across all cancer types
 
 
-### Davoli Gene Sets
-* **Davoli_full**: Complete gene set from Davoli et al. with TSG/OG scores
-* **Davoli_select**: 1000 genes with highest TSG/OG scores from Davoli et al.
-
-### CNSistent Gene Sets
-* **CNSistent_all_COSMIC**: Pan-cancer copy number-based scores using COSMIC genes
-* **CNSistent_all_ENSEMBL**: Pan-cancer scores using ENSEMBL genes
-
 ### Empty
 * **Empty**: No gene-based fitness (for simulations without fitness selection)
 
