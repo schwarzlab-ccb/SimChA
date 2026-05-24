@@ -513,7 +513,7 @@ This generates a horizontal arrow plot showing:
 * Orientation indicated by arrow direction
 * Scale in megabases
 
-<img src="doc/img/res_complex_karyotype.png" alt="Karyotype plot example" style="max-width:600px">
+<img src="doc/img/res_complex_karyotype.png" alt="Karyotype plot example" width="600">
 
 #### Copy Number Plots
 
@@ -530,7 +530,7 @@ This generates a per-chromosome CN track plot showing:
 * Chromosomes colored using consistent chromosome colors
 * Shared x-axis scaled to the longest chromosome
 
-<img src="doc/img/res_complex_cn_tracks.png" alt="CN tracks plot example" style="max-width:600px">
+<img src="doc/img/res_complex_cn_tracks.png" alt="CN tracks plot example" width="600px">
 
 #### Clone Tree Visualization
 
