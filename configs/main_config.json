@@ -10,7 +10,6 @@
         "Stress": 7.8894660101349885,
         "TsgOg": 455.33576820938015,
         "Essentiality": 2474.7072436772464,
-        "AutosomesOnly": true,
         "GeneSet": "spice_all"
     },
     "EvoParams": {
