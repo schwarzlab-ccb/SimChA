@@ -593,9 +593,6 @@ This generates a per-chromosome CN track plot showing:
 
 <img src="doc/img/res_complex_cn_tracks.png" alt="CN tracks plot example" width="600px">
 
-#### Clone Tree Visualization
-
-The `clone_tree.new` file in Newick format can be visualized using standard phylogenetic tree viewers or converted using `scripts/dot_to_newick.py`.
 
 #### Additional Plots
 
