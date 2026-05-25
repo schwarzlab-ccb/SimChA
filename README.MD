@@ -88,14 +88,63 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   --root                       (Default: .) A path to the folder that will be considered root for relative paths.
 
-  --help                       Display this help screen.
+  -h, --help                       Display this help screen.
 
   --version                    Display version information.
 ```
 
-### Configuration
+### Configuration files
 
-Default parameters are found in the file: `simcha_config.json`. The exact parameters are dependent on the execution mode. The parameters are:
+Default parameters are found in the file: `./configs/main_config.json`. The exact parameters are dependent on the execution mode.
+
+The default execution corresponds to running
+
+`dotnet run -- --config ./configs/main_config.json`
+
+This contains optimized simple event and fitness parameters for pan-cancer simulation. 
+
+#### Cancer-type configs
+
+Pre-built configuration files for each cancer type (and pan-cancer) are provided in `./configs/`, organized into three subfolders:
+
+| Location | Description |
+|---|---|
+| `configs/spice_<type>.json` | Optimized event profiles (hg19) derived from TCGA/PCAWG data. |
+| `configs/hg38/spice_<type>.json` | Same as above with `SimParams.Assembly` set to `"hg38"`. |
+| `configs/basic/spice_<type>.json` | Non-optimized profiles using all events with equal weight. |
+
+`<type>` is the TCGA cancer-type abbreviation (e.g. `LUAD`, `BRCA`) or `pancancer` for the pan-cancer profile.
+
+| File Name | Full Name |
+|---|---|
+| `ACC` | Adrenocortical Carcinoma |
+| `BLCA` | Bladder Urothelial Carcinoma |
+| `BRCA` | Breast Invasive Carcinoma |
+| `CESC` | Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma |
+| `COAD` | Colon Adenocarcinoma |
+| `ESCA` | Esophageal Carcinoma |
+| `GBM` | Glioblastoma Multiforme |
+| `HNSC` | Head and Neck Squamous Cell Carcinoma |
+| `KIRC` | Kidney Renal Clear Cell Carcinoma |
+| `KIRP` | Kidney Renal Papillary Cell Carcinoma |
+| `LGG` | Brain Lower Grade Glioma |
+| `LIHC` | Liver Hepatocellular Carcinoma |
+| `LUAD` | Lung Adenocarcinoma |
+| `LUSC` | Lung Squamous Cell Carcinoma |
+| `MESO` | Mesothelioma |
+| `OV` | Ovarian Serous Cystadenocarcinoma |
+| `PAAD` | Pancreatic Adenocarcinoma |
+| `PCPG` | Pheochromocytoma and Paraganglioma |
+| `PRAD` | Prostate Adenocarcinoma |
+| `READ` | Rectum Adenocarcinoma |
+| `SARC` | Sarcoma |
+| `SKCM` | Skin Cutaneous Melanoma |
+| `STAD` | Stomach Adenocarcinoma |
+| `TGCT` | Testicular Germ Cell Tumors |
+| `UCEC` | Uterine Corpus Endometrial Carcinoma |
+| `pancancer` | Pan-cancer (all types combined) |
+
+### Customizing configuration
 
 #### `SimParams`
 
@@ -145,6 +194,18 @@ The parameters controlling the evolutionary mode of event simulation (selection 
 * `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
 * `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
 * `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how much stricter acceptance becomes as fewer events remain. The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
+
+### Working path
+
+The `--root` option sets the base directory used to resolve all relative paths. By default it is `.` (the working directory from which the command is run), so paths like `./configs/main_config.json` and `./out` resolve relative to wherever you invoke `dotnet run`.
+
+If you run SimChA from a different directory — for example via a script or a workflow manager — set `--root` to the repository folder so that default config and output paths resolve correctly without having to specify each one individually:
+
+```bash
+dotnet run -- --root /path/to/simcha
+```
+
+With this setting, `./configs/main_config.json` resolves to `/path/to/simcha/configs/main_config.json` and `./out` to `/path/to/simcha/out`, regardless of the current working directory.
 
 ## Input Data
 
@@ -612,7 +673,6 @@ To target the test project explicitly:
 ```
 dotnet test test
 ```
-
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, `adam.streck@iccb-cologne.org`.

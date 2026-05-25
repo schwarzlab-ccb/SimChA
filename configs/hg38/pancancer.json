@@ -7,13 +7,13 @@
     "AutosomesOnly": true
   },
   "FitParams": {
-    "Stress": 7.8894660101349885,
-    "TsgOg": 455.33576820938015,
-    "Essentiality": 2474.7072436772464,
+    "Stress": 6.994572637905748,
+    "TsgOg": 382.9159372819622,
+    "Essentiality": 2651.7309075497888,
     "GeneSet": "spice_all"
   },
   "EvoParams": {
-    "Acceptance": 1.5192311774767573,
+    "Acceptance": 1.449141794552249,
     "MaxTries": 100
   },
   "Signatures": [
@@ -68,67 +68,8 @@
           "Prob": 0.11810008372856963
         },
         {
-          "Type": "Translocation",
-          "Prob": 0.1,
-          "Frac": 0.05
-        },
-        {
-          "Type": "InternalDuplication",
-          "Prob": 0.1,
-          "Frac": 0.05
-        },
-        {
-          "Type": "InternalInversion",
-          "Prob": 0.1,
-          "Frac": 0.05
-        },
-        {
-          "Type": "BreakageFusionBridge",
-          "Prob": 0.1
-        },
-        {
-          "Type": "Chromothripsis",
-          "Prob": 0.01,
-          "Frac": 0.1
-        },
-        {
-          "Type": "Chromoplexy",
-          "Prob": 0.01,
-          "Frac": 0.1
-        },
-        {
-          "Type": "TIChain",
-          "Prob": 0.01,
-          "Frac": 0.1,
-          "Frag": 5
-        },
-        {
-          "Type": "TICycle",
-          "Prob": 0.01,
-          "Frac": 0.1,
-          "Frag": 5
-        },
-        {
-          "Type": "TIBridge",
-          "Prob": 0.01,
-          "Frac": 0.1,
-          "Frag": 5
-        },
-        {
-          "Type": "Pyrgo",
-          "Prob": 0.01,
-          "Frac": 0.1,
-          "Frag": 5
-        },
-        {
-          "Type": "Rigma",
-          "Prob": 0.01,
-          "Frac": 0.1,
-          "Frag": 5
-        },
-        {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.01
+          "Prob": 0.3074021234834016
         }
       ]
     }

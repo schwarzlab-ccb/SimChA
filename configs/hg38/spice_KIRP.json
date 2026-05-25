@@ -10,7 +10,6 @@
     "Stress": 6.994572637905748,
     "TsgOg": 382.9159372819622,
     "Essentiality": 2651.7309075497888,
-    "AutosomesOnly": true,
     "GeneSet": "spice_KIRP"
   },
   "EvoParams": {
