@@ -638,18 +638,6 @@ dotnet run -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
 
 Note: The `-f` flag generates large FASTA files (~6GB per sample) and should only be used when necessary.
 
-## Gene Sets
-
-SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/hg38/` directories:
-
-### SPICE Gene Sets
-* **spice_[CANCER]**: Cancer-type-specific scores (BRCA, LUAD, LUSC, OV, PRAD, etc.)
-* **spice_all**: Comprehensive collection across all cancer types
-
-
-### Empty
-* **Empty**: No gene-based fitness (for simulations without fitness selection)
-
 ## Performance Considerations
 
 * **Memory**: Each sample requires approximately 100-500 MB depending on event count
