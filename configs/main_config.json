@@ -10,16 +10,11 @@
         "Stress": 7.8894660101349885,
         "TsgOg": 455.33576820938015,
         "Essentiality": 2474.7072436772464,
-        "AutosomesOnly": true,
         "GeneSet": "spice_all"
     },
     "EvoParams": {
         "Acceptance": 1.5192311774767573,
         "MaxTries": 100
-    },
-    "MHParams" :{
-        "NumIterations": 2000,
-        "ThetaFitness": 1.0
     },
     "Signatures": [
         {

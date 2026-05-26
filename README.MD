@@ -1,8 +1,23 @@
 ![.NET Test](https://github.com/ICCB-Cologne/SimChA/actions/workflows/dotnet-test.yml/badge.svg)
 
+
 # SimChA: Simulator of Chromosomal Aberrations
 
-SimChA is a research project at SchwarzLab.
+<p align="center">
+<img src="doc/img/SimChA_logo_new.png" alt="SimChA Logo" width="128">
+</p>
+ 
+SimChA is a fitness-driven simulator of copy-number evolution. SimChA can simulate 22 event types and SNVs within 25 different cancer types, or use pan-cancer profiles.
+
+There are three basic modes of function:
+- `basic`: events are selected at random, without considering fitness.
+- `evolution`: events are selected based on their fitness, with a higher chance of selecting events that increase fitness.
+- `matching`: events are selected to minimize the distance to a target fitness value provided on input.
+
+The fitness is calculated based on the following principles:
+- Tumor Suppressor Genes (TSG) and Oncogenes (OG) contribute to fitness, with TSG loss and OG gain increasing fitness.
+- Essential genes contribute to fitness, with their full loss penalizing fitness.
+- Abnormally high ploidy is penalized by a stress factor.
 
 
 ## Quick Start
@@ -17,7 +32,7 @@ git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
 conda env create --file simcha.yml
 conda activate simcha
-dotnet run --project SimChA -- --help
+dotnet run
 ```
 
 ### Tested platforms
@@ -30,14 +45,18 @@ The program has been tested on:
 
 ## Execution
 
-The default execution is:
+The repository is a solution (`SimChA.sln`) with two projects: `SimChA`, the simulator,
+and `Tests`, the unit test suite. `SimChA` is the default project — its `.csproj` sits at
+the repository root (with sources in `src/`), so `dotnet run` runs the simulator directly:
+
 ```
 git clone git@bitbucket.org:schwarzlab/simcha.git
 cd simcha
-dotnet run --project SimChA
+dotnet run
 ```
 
 The results will be written to the folder `./out`
+
 
 ### Options
 
@@ -55,9 +74,7 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -P, --cnprofiles             File with CNAs, will cause the program to write a scoring file.
 
-  -e, --evolution-mode         (Default: false) Flag to execute evolution mode. In this mode, events are selected in order to increase fitness.
-
-  -m, --mcmc-mode              (Default: false) The model will be run in MCMC mode. In this mode the fitness of the samples will be matched using the Metropolis-Hastings algorithm.
+  -m, --mode                   (Default: evolution) The event selection mode: 'basic' (events are selected at random), 'evolution' (events are selected to increase fitness), or 'matching' (events are selected to minimize the distance to a target fitness).
 
   -s, --segments               (Default: false) Write out copy numbers segments.
 
@@ -73,14 +90,63 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   --root                       (Default: .) A path to the folder that will be considered root for relative paths.
 
-  --help                       Display this help screen.
+  -h, --help                       Display this help screen.
 
   --version                    Display version information.
 ```
 
-### Configuration
+### Configuration files
 
-Default parameters are found in the file: `simcha_config.json`. The exact parameters are dependent on the execution mode. The parameters are:
+Default parameters are found in the file: `./configs/main_config.json`. The exact parameters are dependent on the execution mode.
+
+The default execution corresponds to running
+
+`dotnet run -- --config ./configs/main_config.json`
+
+This contains optimized simple event and fitness parameters for pan-cancer simulation. 
+
+#### Cancer-type configs
+
+Pre-built configuration files for each cancer type (and pan-cancer) are provided in `./configs/`, organized into three subfolders:
+
+| Location | Description |
+|---|---|
+| `configs/spice_<type>.json` | Optimized event profiles (hg19) derived from TCGA/PCAWG data. |
+| `configs/hg38/spice_<type>.json` | Same as above with `SimParams.Assembly` set to `"hg38"`. |
+| `configs/basic/spice_<type>.json` | Non-optimized profiles using all events with equal weight. |
+
+`<type>` is the TCGA cancer-type abbreviation (e.g. `LUAD`, `BRCA`) or `pancancer` for the pan-cancer profile.
+
+| File Name | Full Name |
+|---|---|
+| `ACC` | Adrenocortical Carcinoma |
+| `BLCA` | Bladder Urothelial Carcinoma |
+| `BRCA` | Breast Invasive Carcinoma |
+| `CESC` | Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma |
+| `COAD` | Colon Adenocarcinoma |
+| `ESCA` | Esophageal Carcinoma |
+| `GBM` | Glioblastoma Multiforme |
+| `HNSC` | Head and Neck Squamous Cell Carcinoma |
+| `KIRC` | Kidney Renal Clear Cell Carcinoma |
+| `KIRP` | Kidney Renal Papillary Cell Carcinoma |
+| `LGG` | Brain Lower Grade Glioma |
+| `LIHC` | Liver Hepatocellular Carcinoma |
+| `LUAD` | Lung Adenocarcinoma |
+| `LUSC` | Lung Squamous Cell Carcinoma |
+| `MESO` | Mesothelioma |
+| `OV` | Ovarian Serous Cystadenocarcinoma |
+| `PAAD` | Pancreatic Adenocarcinoma |
+| `PCPG` | Pheochromocytoma and Paraganglioma |
+| `PRAD` | Prostate Adenocarcinoma |
+| `READ` | Rectum Adenocarcinoma |
+| `SARC` | Sarcoma |
+| `SKCM` | Skin Cutaneous Melanoma |
+| `STAD` | Stomach Adenocarcinoma |
+| `TGCT` | Testicular Germ Cell Tumors |
+| `UCEC` | Uterine Corpus Endometrial Carcinoma |
+| `pancancer` | Pan-cancer (all types combined) |
+
+### Customizing configuration
 
 #### `SimParams`
 
@@ -119,13 +185,9 @@ The `Mixture` parameter in `SimParams` controls how multiple signatures are comb
 
 See the Signatures section below for details on configuring individual event types.
 
-#### `MHParams`
+#### Fitness Matching Mode
 
-The parameters controlling the Metropolis-Hastings mode of event simulation.
-
-* `NumIterations: int (1)`: The total number of trials to take in the Metropolis-Hastings algorithm.
-* `ThetaFitness: float (1.0) `: Controls how the variance of the acceptance. Higher values result in more exploration, i.e. the algorithm is more likely to accept worse proposals, while lower values will result in a more greedy algorithm, i.e. mostly only accepts improvements from the current state.
-* `MatchFitness: bool (true)`: If true, simulated samples will aim to match a target fitness, otherwise will attempt to maximize fitness.
+When using `-m matching` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls how many candidate events are sampled per step, with the best candidate (closest to target) being selected.
 
 #### `EvoParams`
 
@@ -133,6 +195,19 @@ The parameters controlling the evolutionary mode of event simulation (selection 
 
 * `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
 * `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
+* `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how much stricter acceptance becomes as fewer events remain. The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
+
+### Working path
+
+The `--root` option sets the base directory used to resolve all relative paths. By default it is `.` (the working directory from which the command is run), so paths like `./configs/main_config.json` and `./out` resolve relative to wherever you invoke `dotnet run`.
+
+If you run SimChA from a different directory — for example via a script or a workflow manager — set `--root` to the repository folder so that default config and output paths resolve correctly without having to specify each one individually:
+
+```bash
+dotnet run -- --root /path/to/simcha
+```
+
+With this setting, `./configs/main_config.json` resolves to `/path/to/simcha/configs/main_config.json` and `./out` to `/path/to/simcha/out`, regardless of the current working directory.
 
 ## Input Data
 
@@ -194,7 +269,6 @@ chr1    125000000   128900000
 chrY    11600000    12500000
 chrY    12500000    13400000
 ```
-
 
 ## Signatures
 
@@ -505,7 +579,7 @@ This generates a horizontal arrow plot showing:
 * Orientation indicated by arrow direction
 * Scale in megabases
 
-<img src="doc/img/res_complex_karyotype.png" alt="Karyotype plot example" style="max-width:600px">
+<img src="doc/img/res_complex_karyotype.png" alt="Karyotype plot example" width="600">
 
 #### Copy Number Plots
 
@@ -522,11 +596,8 @@ This generates a per-chromosome CN track plot showing:
 * Chromosomes colored using consistent chromosome colors
 * Shared x-axis scaled to the longest chromosome
 
-<img src="doc/img/res_complex_cn_tracks.png" alt="CN tracks plot example" style="max-width:600px">
+<img src="doc/img/res_complex_cn_tracks.png" alt="CN tracks plot example" width="600px">
 
-#### Clone Tree Visualization
-
-The `clone_tree.new` file in Newick format can be visualized using standard phylogenetic tree viewers or converted using `scripts/dot_to_newick.py`.
 
 #### Additional Plots
 
@@ -540,10 +611,10 @@ When using SimChA as part of optimization workflows (see project-simcha), additi
 
 ### Basic Simulation
 
-Run a simple simulation with default parameters:
+Run a simulation with events selected at random (`-m basic`):
 
 ```bash
-dotnet run --project SimChA -- --output ./out --config ./configs/main_config.json
+dotnet run -- --output ./out --config ./configs/main_config.json -m basic
 ```
 
 ### Evolution Mode
@@ -551,15 +622,15 @@ dotnet run --project SimChA -- --output ./out --config ./configs/main_config.jso
 Simulate tumor evolution with fitness-based selection using the spice gene set:
 
 ```bash
-dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -G spice -e
+dotnet run -- -O ./out -C ./configs/main_config.json -G spice -m evolution
 ```
 
 ### Fitness Matching Mode
 
-Run Metropolis-Hastings simulation to match target fitness distributions:
+Run fitness matching simulation to match target fitness values:
 
 ```bash
-dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -m
+dotnet run -- -O ./out -C ./configs/main_config.json -m matching
 ```
 
 ### With All Outputs
@@ -567,30 +638,10 @@ dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -m
 Generate all available output formats:
 
 ```bash
-dotnet run --project SimChA -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
+dotnet run -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
 ```
 
 Note: The `-f` flag generates large FASTA files (~6GB per sample) and should only be used when necessary.
-
-## Gene Sets
-
-SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/hg38/` directories:
-
-### SPICE Gene Sets
-* **spice_[CANCER]**: Cancer-type-specific scores (BRCA, LUAD, LUSC, OV, PRAD, etc.)
-* **spice_all**: Comprehensive collection across all cancer types
-
-
-### Davoli Gene Sets
-* **Davoli_full**: Complete gene set from Davoli et al. with TSG/OG scores
-* **Davoli_select**: 1000 genes with highest TSG/OG scores from Davoli et al.
-
-### CNSistent Gene Sets
-* **CNSistent_all_COSMIC**: Pan-cancer copy number-based scores using COSMIC genes
-* **CNSistent_all_ENSEMBL**: Pan-cancer scores using ENSEMBL genes
-
-### Empty
-* **Empty**: No gene-based fitness (for simulations without fitness selection)
 
 ## Performance Considerations
 
@@ -599,8 +650,22 @@ SimChA includes multiple pre-configured gene sets in the `data/hg19/` and `data/
 * **FASTA output**: Adds significant time and disk space (~6GB per sample)
 * **Parallelization**: SimChA is single-threaded; run multiple instances for parallel simulations
 
+## Running Tests
+
+The `Tests` project is not run by default. Run the test suite manually with:
+
+```
+dotnet test
+```
+
+To target the test project explicitly:
+
+```
+dotnet test test
+```
+
 ## Contact
-Email questions, feature requests and bug reports to Adam Streck, `a.streck@iccb-cologne.org`.
+Email questions, feature requests and bug reports to Adam Streck, `adam.streck@iccb-cologne.org`.
 
 ## License
 SimChA is available under the MIT License.

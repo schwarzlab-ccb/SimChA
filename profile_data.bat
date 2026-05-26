@@ -1,1 +1,0 @@
-dotnet run --project SimChA -- -P ./in/cns.tsv -O ./out/P_combined -C ./configs/C_ISMB_fit.json --no-build
