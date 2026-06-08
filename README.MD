@@ -9,7 +9,12 @@
  
 SimChA is a fitness-driven simulator of copy-number evolution. SimChA can simulate 22 event types and SNVs within 25 different cancer types, or use pan-cancer profiles.
 
-There are three basic modes of function:
+SimChA can be used in three ways:
+- `repeats N`: generates N repeats of the simulation, 
+- `tree <phylogeny>`: generates a tree of clones based on the provided phylogeny structure,
+- `profiles <cn_profiles>`: scores the provided CN profiles.
+
+There are three basic modes of fitness:
 - `basic`: events are selected at random, without considering fitness.
 - `evolution`: events are selected based on their fitness, with a higher chance of selecting events that increase fitness.
 - `matching`: events are selected to minimize the distance to a target fitness value provided on input.
@@ -18,7 +23,6 @@ The fitness is calculated based on the following principles:
 - Tumor Suppressor Genes (TSG) and Oncogenes (OG) contribute to fitness, with TSG loss and OG gain increasing fitness.
 - Essential genes contribute to fitness, with their full loss penalizing fitness.
 - Abnormally high ploidy is penalized by a stress factor.
-
 
 ## Quick Start
 
@@ -80,7 +84,9 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -S, --consistent-segments    (Default: false) Write out copy number segments under a minimum consistent segmentation.
 
-  -K, --karyotypes             (Default: false) Write out karyotypes of each sample.
+  -k, --karyotypes             (Default: false) Write out karyotype after each event.
+  
+  -d, --delta                  (Default: false) Write out the lost and gained regions for each event.
 
   -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/DownloadRefData.sh` to download it.
 
