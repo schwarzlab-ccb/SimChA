@@ -39,7 +39,7 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
 
             // Accept if distance improves; decay makes acceptance stricter as fewer events remain
             double distImprovement = currentDist - proposedDist;
-            if (Math.Exp(distImprovement - EvoParams.Acceptance - decay) > Rnd.NextDouble())
+            if (Math.Exp(distImprovement - EvoParams.Acceptance) - decay  > Rnd.NextDouble() )
             {
                 return (proposedKar, eventData, tryNo, cnEventP.Signature);
             }
@@ -64,12 +64,9 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
 
-            var oldKar = new Karyotype(currentKar);
             double oldFitness = currentKar.FitnessVal;
 
-            double decay = eventCount > 1
-                ? EvoParams.Decay * (evNo - 1.0) / (eventCount - 1.0)
-                : 0;
+            double decay = EvoParams.Decay * evNo / eventCount;
 
             var (childKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
             var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
