@@ -14,7 +14,8 @@
     },
     "EvoParams": {
         "Acceptance": 1.5192311774767573,
-        "MaxTries": 100
+        "MaxTries": 100,
+        "Decay": 0.2
     },
     "Signatures": [
         {
