@@ -223,6 +223,13 @@ public static class RegionOps
         return newRegions;
     }
 
+    public static List<Region> SubtractRegions(List<Region> A, List<Region> B)
+    {
+        List<Region> res = [];
+        
+        return res;
+    }
+
     public static long CountLength(IEnumerable<Region> regions)
         => regions.Sum(r => r.Length);
 

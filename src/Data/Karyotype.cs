@@ -20,6 +20,7 @@ public class Karyotype
         Sex = sex;
         GeneCounts = refGen.GetInitialGeneCounts(sex, false);
     }
+    
 
     public Karyotype(Karyotype other)
     {
@@ -40,6 +41,14 @@ public class Karyotype
         {
             AddGenes(contig);
         }
+    }
+    
+    public (List<Region> regionsGained, List<Region> regionsLost) CalcKaryotypeDelta(Karyotype childKar)
+    {
+        List<Region> regionsGained = [];
+        List<Region> regionsLost = [];
+        
+        return (regionsGained, regionsLost);
     }
 
     public int CountContigs()

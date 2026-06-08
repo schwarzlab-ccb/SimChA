@@ -5,6 +5,7 @@ using SimChA.IO;
 using SimChA.Simulation;
 using SimChA.Data;
 using SimChA.Computation;
+using SimChA.EventData;
 
 // Configuration
 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -27,7 +28,10 @@ if (!string.IsNullOrEmpty(options.RootFolder))
     Environment.CurrentDirectory = options.RootFolder;
 }
 
+// Configure
 var selMode = options.SelectionMode;
+CNEventDesc.PrintDelta = options.Debug;
+CNEventDesc.PrintKaryotype = options.Karyotype;
 var config = FileIO.ReadSimChAConfig(options.ConfigFile);
 var rnd = new Random(config.SimParams.Seed);
 var files = new FileIO(options.OutputPath);
@@ -89,11 +93,12 @@ files.WriteSimParams(config);
 try
 {
     files.WriteSamples(sampleStats);
+    files.WriteKaryotypes(samples);
+    
     if (options.CalcSegments)
     {
         files.WriteCopyNumbers(sampleCNs);
     }
-    files.WriteKaryotypes(samples);
     if (options.Simulate)
     {
         files.WriteEvents(samples);

@@ -1,7 +1,19 @@
 namespace SimChA.EventData;
 
-public record CNEventDesc(BaseEventData EventData, int Depth, double DeltaFitness = 0, double TotalFitness = 0, int NumRejections = 0, string Signature = "")
+public record CNEventDesc(
+    BaseEventData EventData, 
+    int Depth, 
+    double DeltaFitness = 0, 
+    double TotalFitness = 0, 
+    int NumRejections = 0, 
+    string Signature = "", 
+    string RegionsGained = "", 
+    string RegionsLost = "", 
+    string Karyotype = "")
 {
+    public static bool PrintDelta { get; set; }
+    public static bool PrintKaryotype  { get; set; }
+    
     public static string Header()
         => "event_type" +
            "\tdepth" +
@@ -9,7 +21,9 @@ public record CNEventDesc(BaseEventData EventData, int Depth, double DeltaFitnes
            "\tdelta_fitness" +
            "\ttotal_fitness" +
            "\tnum_rejections" +
-           "\tsignature";
+           "\tsignature" + 
+            (PrintDelta ? "\tregions_gained\tregions_lost" : "") +
+            (PrintKaryotype ? "\tkaryotype" : "");
 
     public string ToTSV() =>
         $"{EventData.EventType}" +
@@ -18,5 +32,7 @@ public record CNEventDesc(BaseEventData EventData, int Depth, double DeltaFitnes
         $"\t{DeltaFitness:f4}" +
         $"\t{TotalFitness:f4}" +
         $"\t{NumRejections}" +
-        $"\t{Signature}";
+        $"\t{Signature}" +
+        (PrintDelta ? $"\t{RegionsGained}\t{RegionsLost}" : "") +
+        (PrintKaryotype ? $"\t{Karyotype}" : "");
 }
