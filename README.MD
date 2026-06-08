@@ -119,12 +119,13 @@ Pre-built configuration files for each cancer type (and pan-cancer) are provided
 |---|---|
 | `configs/spice_<type>.json` | Optimized event profiles (hg19) derived from TCGA/PCAWG data. |
 | `configs/hg38/spice_<type>.json` | Same as above with `SimParams.Assembly` set to `"hg38"`. |
-| `configs/basic/spice_<type>.json` | Non-optimized profiles using all events with equal weight. |
+| `configs/basic/spice_<type>.json` | Non-optimized profiles - these should be used with `basic` mode, since the WGD probability is not affected by stress. |
 
 `<type>` is the TCGA cancer-type abbreviation (e.g. `LUAD`, `BRCA`) or `pancancer` for the pan-cancer profile.
 
 | File Name | Full Name |
 |---|---|
+| `pancancer` | Pan-cancer (all types combined) |
 | `ACC` | Adrenocortical Carcinoma |
 | `BLCA` | Bladder Urothelial Carcinoma |
 | `BRCA` | Breast Invasive Carcinoma |
@@ -150,7 +151,6 @@ Pre-built configuration files for each cancer type (and pan-cancer) are provided
 | `STAD` | Stomach Adenocarcinoma |
 | `TGCT` | Testicular Germ Cell Tumors |
 | `UCEC` | Uterine Corpus Endometrial Carcinoma |
-| `pancancer` | Pan-cancer (all types combined) |
 
 ### Customizing configuration
 
