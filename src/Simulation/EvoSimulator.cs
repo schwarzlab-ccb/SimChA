@@ -1,4 +1,4 @@
-﻿﻿using SimChA.Computation;
+﻿using SimChA.Computation;
 using SimChA.Data;
 using SimChA.EventData;
 using SimChA.IO;
@@ -47,13 +47,17 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-            var (newKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar);
-            double newFit = newKar.FitnessVal;
+            var oldKar = new Karyotype(currentKar);
+            var (childKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar);
+            var (gainedStr, lostStr) = CalcKaryotypeDiff(oldKar, childKar);
+            string karStr =  CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
+            double newFit = childKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature,
+                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
             
             childEvs.Add(newEv);
-            currentKar = newKar;
+            currentKar = childKar;
         }
         return (currentKar, childEvs);
     }

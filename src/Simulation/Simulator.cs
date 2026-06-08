@@ -33,45 +33,86 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
     protected int SampleEventCount(CTreeNode node) 
         => node.Distance >= 0 ? node.Distance : Sampling.SampleDiscDist(Rnd, SimParams.RateDist, SimParams.RateMean);
 
+    protected static (List<string> regionsGained, List<string> regionsLost) GetKaryotypeDiff(
+        Dictionary<int, List<string>> regionsBefore, Dictionary<int, List<string>> regionsAfter)
+    {
+        var regionsGained = new List<string>();
+        var regionsLost = new List<string>();
+        
+        // Regions from whole contigs that were gained
+        foreach (var id in regionsAfter.Keys.Where(id => !regionsBefore.ContainsKey(id)))
+            regionsGained.AddRange(regionsAfter[id]);
+        
+        // Regions from whole contigs that were lost
+        foreach (var id in regionsBefore.Keys.Where(id => !regionsAfter.ContainsKey(id)))
+            regionsLost.AddRange(regionsBefore[id]);
+        
+        // Regions changed within contigs that exist both before and after
+        foreach (var id in regionsBefore.Keys.Intersect(regionsAfter.Keys))
+        {
+            var before = regionsBefore[id];
+            var after = regionsAfter[id];
+            var beforeCounts = before.GroupBy(r => r).ToDictionary(g => g.Key, g => g.Count());
+            var afterCounts = after.GroupBy(r => r).ToDictionary(g => g.Key, g => g.Count());
+            foreach (var key in afterCounts.Keys)
+            {
+                int diff = afterCounts[key] - (beforeCounts.TryGetValue(key, out int bc) ? bc : 0);
+                for (int i = 0; i < diff; i++) regionsGained.Add(key);
+            }
+            foreach (var key in beforeCounts.Keys)
+            {
+                int diff = beforeCounts[key] - (afterCounts.TryGetValue(key, out int ac) ? ac : 0);
+                for (int i = 0; i < diff; i++) regionsLost.Add(key);
+            }
+        }
+        return (regionsGained, regionsLost);
+    }
+
+    protected static (string regionsGained, string regionsLost) CalcKaryotypeDiff(
+        Karyotype beforeKar,
+        Karyotype afterKar)
+    {
+        if (!CNEventDesc.PrintDelta)
+        {
+            return ("", "");
+        }
+
+        var regionsBefore = beforeKar.GetRegionDescriptions();
+        var regionsAfter = afterKar.GetRegionDescriptions();
+        var (regionsGained, regionsLost) = GetKaryotypeDiff(regionsBefore, regionsAfter);
+        return (
+            "[" + string.Join(",", regionsGained) + "]",
+            "[" + string.Join(",", regionsLost) + "]");
+    }
+
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
         Karyotype parentKar, 
         CTreeNode cnChild, 
         List<CNEventPars> cnEventPs, 
         int mutDepth)
     {
-        var childKar = new Karyotype(parentKar);
+        var currentKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
         int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"Sample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80) + "\r");
             var eventP = Rnd.PickRndElem(cnEventPs);
-            var eventData = Sampling.GenerateCNEventData(Rnd, childKar, eventP) ?? CreateSkipEvent();
-            if (CNEventDesc.PrintDelta)
-            {
-                parentKar = new Karyotype(childKar);
-            }
-            eventData.ApplyEvent(childKar);
-            string karyotype = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
-            string gainedStr = "";
-            string lostStr = "";
-            if (CNEventDesc.PrintDelta)
-            {
-                var (regionsGained, regionsLost) = parentKar.CalcKaryotypeDelta(childKar);
-                gainedStr = $"[{string.Join(",", regionsGained)}]";
-                lostStr = $"[{string.Join(",", regionsLost)}]";
-            }
+            var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, eventP) ?? CreateSkipEvent();
 
-            var newEv = new CNEventDesc(
-                eventData, 
-                mutDepth + evNo, 
-                Signature: eventP.Signature, 
-                RegionsGained:gainedStr, 
-                RegionsLost:lostStr, 
-                Karyotype: karyotype);
+            var childKar = new Karyotype(currentKar);
+            eventData.ApplyEvent(childKar);
+            
+            var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
+            string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
+
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, Signature: eventP.Signature,
+                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
+            
             childEvs.Add(newEv);
+            currentKar = childKar;
         } 
-        return (childKar, childEvs);
+        return (currentKar, childEvs);
     }
 
     private void ApplyCNEventsRec(

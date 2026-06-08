@@ -7,7 +7,7 @@ public record CNEventDesc(
     double TotalFitness = 0, 
     int NumRejections = 0, 
     string Signature = "", 
-    string RegionsGained = "", 
+    string RegionsGained = "",
     string RegionsLost = "", 
     string Karyotype = "")
 {

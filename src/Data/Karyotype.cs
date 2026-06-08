@@ -79,6 +79,10 @@ public class Karyotype
     public IEnumerable<int> ContigIds()
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
 
+
+    public Dictionary<int, List<string>> GetRegionDescriptions()
+        => ContigIds().ToDictionary(id => id, id => _contigs[id].GetRegionDescriptions());
+
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs) + "]" : "[]";
 

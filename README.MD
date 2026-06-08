@@ -80,9 +80,11 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -S, --consistent-segments    (Default: false) Write out copy number segments under a minimum consistent segmentation.
 
-  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`).
+  -K, --karyotypes             (Default: false) Write out karyotypes of each sample.
 
-  -f, --fasta                  (Default: false) Write out out a FASTA file for each sample. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). WARNING! Average file size is 6GB per sample.
+  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/DownloadRefData.sh` to download it.
+
+  -f, --fasta                  (Default: false) Write out a FASTA file for each sample. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/DownloadRefData.sh` to download it. WARNING! Average file size is 6GB per sample.
 
   -z, --zero-index             (Default: false) Flag for zero-indexed input copy number profiles.
 
@@ -502,12 +504,15 @@ Information about the individual samples at the end of the simulation.
 
 Information about the individual events in the simulation. The columns are:
 
-| sample_id | 	 event_type	   |  depth | description	| delta_fitness |	total_fitness |	num_rejections | signature |
-|-----------|------------------|----|-------------|----------|-----------|------------|------------|
-|  sample_0 | ChromDuplication | 12 | contig:23 | 0.5378 | 11.5378 | 0 | CNA |
+| sample_id |  event_type | depth | description | delta_fitness | total_fitness | num_rejections | signature | regions_gained | regions_lost |
+|-----------|-------------|-------|-------------|---------------|---------------|----------------|-----------|----------------|--------------|
+| sample_0 | ChromDuplication | 12 | contig:23 | 0.5378 | 11.5378 | 0 | CNA | >chr11[0:135006516) | |
+| sample_0 | InternalDuplication | 13 | contig:18;length:59128983;start:49287088;end:50048544 | 0.0000 | 11.5378 | 12 | CNA | >chr19[49287088:50048544) | |
+| sample_0 | InternalDeletion | 14 | contig:12;length:115169878;start:2802803;end:7456363 | 0.0000 | 11.5378 | 2 | CNA | | >chr13[2802803:7456363) |
 
-This example row tells us that the 12th event sample_0 underwent was a chromosomal duplication event, affecting
-contig 23, which increased the sample's fitness by ~0.54 to ~11.54.
+The `regions_gained`/`regions_lost` columns list all individual regions that were added or removed by the event
+(separated by `|` if multiple). This includes regions from whole contigs that were created or deleted, as well as
+regions that were duplicated or removed within existing contigs.
 
 #### `vcf.tsv`
 

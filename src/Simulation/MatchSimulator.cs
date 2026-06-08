@@ -11,19 +11,26 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
     private EvoParams EvoParams { get; } = evoParams;
 
     private (Karyotype newKar, BaseEventData eventData, int numTries, string signature) GetNewEvent(
-        List<CNEventPars> cnEventPars, Karyotype currentKar, double targetFitness, double decay)
+        List<CNEventPars> cnEventPars,
+        Karyotype currentKar,
+        double targetFitness,
+        double decay)
     {
         double currentDist = Math.Abs(currentKar.FitnessVal - targetFitness);
 
         for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
         {
             if (SampleStat.CalcPloidy(currentKar, RefGen) > 32)
+            {
                 break;
+            }
 
             var cnEventP = Rnd.PickRndElem(cnEventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, cnEventP);
             if (eventData == null)
+            {
                 continue;
+            }
 
             var proposedKar = new Karyotype(currentKar);
             eventData.ApplyEvent(proposedKar);
@@ -37,6 +44,7 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
                 return (proposedKar, eventData, tryNo, cnEventP.Signature);
             }
         }
+
         return (currentKar, CreateSkipEvent(), EvoParams.MaxTries, "");
     }
 
@@ -55,17 +63,25 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
+
+            var oldKar = new Karyotype(currentKar);
             double oldFitness = currentKar.FitnessVal;
-            // Decay increases as fewer events remain: 0 at start, Decay at last event
-            double decay = eventCount > 1 
-                ? EvoParams.Decay * (evNo - 1.0) / (eventCount - 1.0) 
+
+            double decay = eventCount > 1
+                ? EvoParams.Decay * (evNo - 1.0) / (eventCount - 1.0)
                 : 0;
-            var (newKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
-            double newFit = newKar.FitnessVal;
+
+            var (childKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
+            var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
+            string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
+
+            double newFit = childKar.FitnessVal;
             double dFit = newFit - oldFitness;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, Signature: signature);
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature,
+                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
+
             childEvs.Add(newEv);
-            currentKar = newKar;
+            currentKar = childKar;
         }
 
         return (currentKar, childEvs);
