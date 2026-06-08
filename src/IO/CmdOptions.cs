@@ -32,7 +32,6 @@ public class CmdOptions
     [Option('S', "consistent-segments", Required = false, Default = false, HelpText = "Write out copy number segments under a minimum consistent segmentation.")]
     public bool WriteConsistentCNs { get; set; }
     
-
     [Option('v', "variants", Required = false, Default = false, HelpText = "Write out VCF file with the variants of the final simulated karyotype.")]
     public bool WriteVariants { get; set; }
 
@@ -44,6 +43,12 @@ public class CmdOptions
     
     [Option('r', "root", Required = false, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
     public string RootFolder { get; set; } = ".";
+    
+    [Option('d', "delta", Required = false, Default = false, HelpText = "Will also print the changes caused by events.")]
+    public bool Debug { get; set; }
+    
+    [Option('k', "karyotype",  Required = false, Default = false, HelpText = "Will also print the karyotype after each event.")]
+    public bool Karyotype { get; set; }
 
     public ExecMode ExecMode
     {
