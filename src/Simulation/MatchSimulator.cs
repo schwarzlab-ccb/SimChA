@@ -10,6 +10,18 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
 {
     private EvoParams EvoParams { get; } = evoParams;
 
+    private double GetExplorationWeight(int tryNo, int totalAttempts, double decay)
+    {
+        if (totalAttempts < 2 || EvoParams.Decay <= 0 || decay <= 0)
+        {
+            return 0;
+        }
+
+        double progress = (double)tryNo / (totalAttempts - 1);
+        double normalizedDecay = Math.Clamp(decay / EvoParams.Decay, 0.0, 1.0);
+        return (1.0 - progress) * (1.0 - normalizedDecay);
+    }
+
     private (Karyotype newKar, BaseEventData eventData, int numTries, string signature) GetNewEvent(
         List<CNEventPars> cnEventPars,
         Karyotype currentKar,
@@ -17,13 +29,24 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         double decay)
     {
         double currentDist = Math.Abs(currentKar.FitnessVal - targetFitness);
+        int totalAttempts = EvoParams.MaxTries + 1;
 
-        for (int tryNo = 0; tryNo <= EvoParams.MaxTries; tryNo++)
+        Karyotype? bestKar = null;
+        BaseEventData? bestEventData = null;
+        string bestSignature = "";
+        double bestScore = double.NegativeInfinity;
+        double bestDistImprovement = double.NegativeInfinity;
+        bool bestAccepted = false;
+        int attemptsPerformed = 0;
+
+        for (int tryNo = 0; tryNo < totalAttempts; tryNo++)
         {
             if (SampleStat.CalcPloidy(currentKar, RefGen) > 32)
             {
                 break;
             }
+
+            attemptsPerformed = tryNo + 1;
 
             var cnEventP = Rnd.PickRndElem(cnEventPars);
             var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, cnEventP);
@@ -37,12 +60,32 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
             double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
             double proposedDist = Math.Abs(proposedFitness - targetFitness);
 
-            // Accept if distance improves; decay makes acceptance stricter as fewer events remain
             double distImprovement = currentDist - proposedDist;
-            if (Math.Exp(distImprovement - EvoParams.Acceptance - decay) > Rnd.NextDouble())
+            double explorationWeight = GetExplorationWeight(tryNo, totalAttempts, decay);
+            double acceptanceProb = Math.Min(1.0, Math.Exp(distImprovement - decay));
+            bool accepted = acceptanceProb > Rnd.NextDouble();
+            double candidateScore = distImprovement + explorationWeight * acceptanceProb;
+
+            bool tiesBestScore = Math.Abs(candidateScore - bestScore) < double.Epsilon;
+            bool tiesBestImprovement = Math.Abs(distImprovement - bestDistImprovement) < double.Epsilon;
+            bool preferProposal = candidateScore > bestScore ||
+                                 (tiesBestScore && distImprovement > bestDistImprovement) ||
+                                 (tiesBestScore && tiesBestImprovement && accepted && !bestAccepted);
+
+            if (preferProposal)
             {
-                return (proposedKar, eventData, tryNo, cnEventP.Signature);
+                bestKar = proposedKar;
+                bestEventData = eventData;
+                bestSignature = cnEventP.Signature;
+                bestScore = candidateScore;
+                bestDistImprovement = distImprovement;
+                bestAccepted = accepted;
             }
+        }
+
+        if (bestKar != null && bestEventData != null)
+        {
+            return (bestKar, bestEventData, Math.Max(attemptsPerformed - 1, 0), bestSignature);
         }
 
         return (currentKar, CreateSkipEvent(), EvoParams.MaxTries, "");
@@ -67,10 +110,7 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
             var oldKar = new Karyotype(currentKar);
             double oldFitness = currentKar.FitnessVal;
 
-            double decay = eventCount > 1
-                ? EvoParams.Decay * (evNo - 1.0) / (eventCount - 1.0)
-                : 0;
-
+            double decay = EvoParams.Decay * evNo / eventCount;
             var (childKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
             var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
             string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";

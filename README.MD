@@ -258,15 +258,15 @@ See the Signatures section below for details on configuring individual event typ
 
 #### Fitness Matching Mode
 
-When using `-m matching` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls how many candidate events are sampled per step, with the best candidate (closest to target) being selected.
+When using `-m matching` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls the full candidate-search budget per step. Across that budget, the existing acceptance rule is still evaluated, but its influence fades smoothly from early tries to late tries, so the search transitions continuously from exploration toward strict best-match selection.
 
 #### `EvoParams`
 
 The parameters controlling the evolutionary mode of event simulation (selection of events based on fitness).
 
 * `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
-* `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
-* `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how much stricter acceptance becomes as fewer events remain by subtracting the decay from a random throw (e.g. acceptance boundary with sampled probability of 0.6 and decay of 0.1 is 0.5). The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
+* `MaxTries: int (1)`: How many candidate events are sampled before matching mode settles on the best available event or gives up and moves to the next sample.
+* `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how strongly the acceptance rule influences candidate selection during the early part of the try budget. The decay increases linearly from 0 (first event) to `Decay` (last event), so earlier events get more exploration pressure, while later events lean more quickly toward pure distance-to-target matching.
 
 ### Working path
 
