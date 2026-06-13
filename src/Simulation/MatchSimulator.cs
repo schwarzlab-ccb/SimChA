@@ -92,13 +92,11 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
     }
 
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
-        Karyotype parentKar,
+        Karyotype currentKar,
         CTreeNode cnChild,
         List<CNEventPars> cnEventPs,
         int mutDepth)
     {
-        var currentKar = new Karyotype(parentKar);
-        currentKar.UpdateFitness(RefGen, FitParams);
         var childEvs = new List<CNEventDesc>();
         double targetFit = cnChild.Fitness;
 
@@ -106,19 +104,14 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
-
-            double oldFitness = currentKar.FitnessVal;
-
             double decay = EvoParams.Decay * evNo / eventCount;
-            var (childKar, eventData, numTries, signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
-            var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
+            (var childKar, var eventData, int numTries, string signature) = GetNewEvent(cnEventPs, currentKar, targetFit, decay);
+            (string gainedStr, string lostStr) = CalcKaryotypeDiff(currentKar, childKar);
             string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
-
             double newFit = childKar.FitnessVal;
-            double dFit = newFit - oldFitness;
+            double dFit = newFit - currentKar.FitnessVal;
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature,
                 RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
-
             childEvs.Add(newEv);
             currentKar = childKar;
         }
