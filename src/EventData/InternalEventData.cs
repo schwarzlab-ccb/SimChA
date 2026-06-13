@@ -22,8 +22,8 @@ public record InternalEventData : ContigEventData
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> centromeres, long contigLen) 
         : base(CNEventPars, contigId, contigLen)
     {
-        var (start, end) = centromeres.Shuffle(rnd).First();
-        var pos = rnd.NextInt64(start, end);
+        (long start, long end) = centromeres.Shuffle(rnd).First();
+        long pos = rnd.NextInt64(start, end);
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
         if (rnd.CoinFlip())
         {

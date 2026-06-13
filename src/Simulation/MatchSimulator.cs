@@ -17,7 +17,7 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
             return 0;
         }
 
-        double progress = (double)tryNo / (totalAttempts - 1);
+        double progress = (double) tryNo / (totalAttempts - 1);
         double normalizedDecay = Math.Clamp(decay / EvoParams.Decay, 0.0, 1.0);
         return (1.0 - progress) * (1.0 - normalizedDecay);
     }
@@ -107,7 +107,6 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));
 
-            var oldKar = new Karyotype(currentKar);
             double oldFitness = currentKar.FitnessVal;
 
             double decay = EvoParams.Decay * evNo / eventCount;

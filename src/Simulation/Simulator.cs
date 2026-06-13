@@ -103,7 +103,7 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
             var childKar = new Karyotype(currentKar);
             eventData.ApplyEvent(childKar);
             
-            var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
+            (string gainedStr, string lostStr) = CalcKaryotypeDiff(parentKar, childKar);
             string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
 
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, Signature: eventP.Signature,
