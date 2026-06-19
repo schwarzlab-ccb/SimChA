@@ -405,4 +405,85 @@ public class TestKaryotype
         var idsAfter = _kar.ContigIds().ToList();
         Assert.AreEqual(4, idsAfter[0]);
     }
+
+    private double SelectionFraction(CNEventPars ev, int targetContigId, int trials)
+    {
+        int count = 0;
+        for (int i = 0; i < trials; i++)
+        {
+            var data = Sampling.GenerateCNEventData(_rnd, _kar, ev) as ContigEventData;
+            Assert.NotNull(data);
+            if (data!.ContigId == targetContigId)
+            {
+                count++;
+            }
+        }
+        return count / (double) trials;
+    }
+
+    // Keeps only the longest and shortest contigs (both single-centromere chromosomes),
+    // making length and centromere-count weighting produce visibly different distributions.
+    private (int bigId, int smallId) KeepExtremeContigs()
+    {
+        var ids = _kar.ContigIds().ToList();
+        int bigId = ids.OrderByDescending(_kar.ContigLen).First();
+        int smallId = ids.OrderBy(_kar.ContigLen).First();
+        foreach (int i in ids.Where(i => i != bigId && i != smallId))
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        return (bigId, smallId);
+    }
+
+    [Test]
+    public void TestInternalSelectionByLength()
+    {
+        var (bigId, smallId) = KeepExtremeContigs();
+        double expected = _kar.ContigLen(bigId) / (double) (_kar.ContigLen(bigId) + _kar.ContigLen(smallId));
+
+        var ev = new CNEventPars(CNEventType.InternalDeletion, 1, 0.01);
+        double frac = SelectionFraction(ev, bigId, 20000);
+
+        // Internal events should pick contigs in proportion to their length.
+        Assert.AreEqual(expected, frac, 0.03);
+    }
+
+    [Test]
+    public void TestArmSelectionIgnoresLength()
+    {
+        var (bigId, _) = KeepExtremeContigs();
+
+        var ev = new CNEventPars(CNEventType.ArmDeletion, 1, 0.1);
+        double frac = SelectionFraction(ev, bigId, 20000);
+
+        // Both contigs carry one centromere, so arm events should pick them ~50/50
+        // regardless of the large length difference.
+        Assert.AreEqual(0.5, frac, 0.03);
+    }
+
+    [Test]
+    public void TestArmSelectionByCentromereCount()
+    {
+        // Keep three contigs; fuse two of them into one so it carries two centromeres.
+        var ids = _kar.ContigIds().ToList();
+        int fusedId = ids[0];
+        int donorId = ids[1];
+        int singleId = ids[2];
+        foreach (int i in ids.Where(i => i != fusedId && i != donorId && i != singleId))
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+
+        // Fuse the donor onto fusedId; the donor is emptied and drops out of the active set.
+        _kar.ApplyTranslocation(fusedId, donorId, _kar.ContigLen(fusedId), 0, false);
+        Assert.AreEqual(2, _kar.GetCentromeres(fusedId).Count);
+        Assert.AreEqual(1, _kar.GetCentromeres(singleId).Count);
+        CollectionAssert.AreEquivalent(new[] { fusedId, singleId }, _kar.ContigIds().ToList());
+
+        var ev = new CNEventPars(CNEventType.ArmDeletion, 1, 0.1);
+        double frac = SelectionFraction(ev, fusedId, 30000);
+
+        // The fused contig has two centromeres vs one, so it should be picked ~2/3 of the time.
+        Assert.AreEqual(2.0 / 3.0, frac, 0.03);
+    }
 }

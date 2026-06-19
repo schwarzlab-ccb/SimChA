@@ -13,9 +13,12 @@ public class Contig
         => _snvs ??= _regions.SelectMany(r => r.SNVs).ToList();
 
     private List<Gene>? _genes;
-    public List<Gene> Genes 
+    public List<Gene> Genes
         => _genes ??= _regions.SelectMany(r => r.Genes).ToList();
-    
+
+    // Centromere positions depend on region order, so this is invalidated on any structural change.
+    private List<(long start, long end)>? _centromeres;
+
     private List<Region> _regions;
     private List<Region> Regions
     {
@@ -26,6 +29,7 @@ public class Contig
             _length = -1;
             _snvs = null;
             _genes = null;
+            _centromeres = null;
         }
     }
 
@@ -139,6 +143,7 @@ public class Contig
     public void Revert()
     {
         RegionOps.Revert(Regions);
+        _centromeres = null; // Revert mutates Regions in place, bypassing the Regions setter
     }
 
     public void DuplicateRange(long start, long end)
@@ -214,6 +219,10 @@ public class Contig
 
     public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
     {
+        if (_centromeres != null)
+        {
+            return _centromeres;
+        }
         List<(long start, long end)> centromereList = [];
         long currentPos = 0;
         foreach (var reg in Regions)
@@ -227,7 +236,7 @@ public class Contig
             }
             currentPos += reg.Length;
         }
-        return centromereList;
+        return _centromeres = centromereList;
     }
 
     public void MergeRegions()
