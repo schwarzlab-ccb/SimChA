@@ -72,11 +72,11 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -C, --config                 (Default: ./configs/main_config.json) A json file with configuration of the experiment.
 
-  -T, --tree                   A clone file that describes the tree to be built.
+  -T, --tree <path>            Clone-tree TSV/CSV file path. Required columns: ID, ParentID, Distance (int). Optional column: Fitness (float; only used/required with -m matching). Delimiter can be tab or comma.
 
-  -R, --repeats                (Default: 1) Number of repeats to generate if the distance parameter is used.
+  -R, --repeats <int>          (Default: 1) Positive integer number of independent repeats/samples in repeat mode. Optional when omitted (defaults to 1). Cannot be combined with -T or -P when value > 1.
 
-  -P, --cnprofiles             File with CNAs, will cause the program to write a scoring file.
+  -P, --cnprofiles <path>      CNA profile TSV file path (tab-separated, header + at least 6 columns): SampleID, Chr, Start, End, CN_hap1, CN_hap2. Extra columns are optional/ignored. Start is interpreted as 1-based by default, or 0-based with -z.
 
   -m, --mode                   (Default: evolution) The event selection mode: 'basic' (events are selected at random), 'evolution' (events are selected to increase fitness), or 'matching' (events are selected to minimize the distance to a target fitness).
 
@@ -101,7 +101,73 @@ Use `dotnet run -- [options]` to specify any of the following:
   --version                    Display version information.
 ```
 
-### Configuration files
+## Input files
+
+Input files are only required for specific execution modes:
+
+| Option | Used for | Required? |
+|---|---|---|
+| `-R, --repeats <int>` | Repeat-mode simulation (default mode when no `-T`/`-P` is given) | No input file required |
+| `-T, --tree <path>` | Tree-mode simulation | Required in tree mode |
+| `-P, --cnprofiles <path>` | Profile scoring mode | Required in profiles mode |
+
+### Clone tree file (`-T`, `--tree`)
+
+A `.tsv` or `.csv` file with a header row. The extension determines the separator: tab for `.tsv`, comma for `.csv`.
+
+Columns:
+
+* `ID` (string): clone/sample identifier
+* `ParentID` (string): parent clone identifier
+* `Distance` (int): number of events from parent to child
+* `Fitness` (float): target fitness value — only read when using `-m matching`, otherwise ignored
+
+The root is the row where `ParentID == ID`, or where `ParentID` does not match any `ID` in the file. Exactly one root is expected.
+
+Minimal tree example (`.tsv`):
+
+| ID | ParentID | Distance |
+|---|---|---|
+| A | A | 0 |
+| B | A | 12 |
+| C | B | 7 |
+
+Matching-mode example (`.tsv`):
+
+| ID | ParentID | Distance | Fitness |
+|---|---|---|---|
+| A | A | 0 | 0.0 |
+| B | A | 12 | 3.5 |
+
+### CNA profile file (`-P`, `--cnprofiles`)
+
+A tab-separated file with a header row and at least 6 columns per data row. Additional columns are ignored.
+
+First 6 columns (in order):
+
+* `SampleID` (string)
+* `Chr` (string, e.g. `chr1`)
+* `Start` (int): 1-based by default; use `-z` for 0-based input
+* `End` (int)
+* `CN_hap1` (numeric, rounded to nearest int)
+* `CN_hap2` (numeric, rounded to nearest int)
+
+`chrX` and `chrY` rows are skipped when `SimParams.AutosomesOnly = true`.
+
+Minimal CNA example (`.tsv`):
+
+| SampleID | Chr | Start | End | CN_hap1 | CN_hap2 |
+|---|---|---|---|---|---|
+| S1 | chr1 | 1 | 248956422 | 1 | 1 |
+| S1 | chr8 | 1 | 145138636 | 2 | 1 |
+
+### Path resolution (`--root`)
+
+Relative paths for `-T`, `-P`, `-C`, and output are resolved from the current working directory, or from `--root` if provided.
+
+
+
+## Configuration files
 
 Default parameters are found in the file: `./configs/main_config.json`. The exact parameters are dependent on the execution mode.
 
@@ -111,7 +177,7 @@ The default execution corresponds to running
 
 This contains optimized simple event and fitness parameters for pan-cancer simulation. 
 
-#### Cancer-type configs
+### Cancer-type configs
 
 Pre-built configuration files for each cancer type (and pan-cancer) are provided in `./configs/`, organized into three subfolders:
 
@@ -119,7 +185,7 @@ Pre-built configuration files for each cancer type (and pan-cancer) are provided
 |---|---|
 | `configs/spice_<type>.json` | Optimized event profiles (hg19) derived from TCGA/PCAWG data. |
 | `configs/hg38/spice_<type>.json` | Same as above with `SimParams.Assembly` set to `"hg38"`. |
-| `configs/basic/spice_<type>.json` | Non-optimized profiles using all events with equal weight. |
+| `configs/basic/spice_<type>.json` | Non-optimized profiles - these should be used with `basic` mode, since the WGD probability is not affected by stress. |
 
 `<type>` is the TCGA cancer-type abbreviation (e.g. `LUAD`, `BRCA`) or `pancancer` for the pan-cancer profile.
 
@@ -150,7 +216,6 @@ Pre-built configuration files for each cancer type (and pan-cancer) are provided
 | `STAD` | Stomach Adenocarcinoma |
 | `TGCT` | Testicular Germ Cell Tumors |
 | `UCEC` | Uterine Corpus Endometrial Carcinoma |
-| `pancancer` | Pan-cancer (all types combined) |
 
 ### Customizing configuration
 
@@ -193,15 +258,15 @@ See the Signatures section below for details on configuring individual event typ
 
 #### Fitness Matching Mode
 
-When using `-m matching` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls how many candidate events are sampled per step, with the best candidate (closest to target) being selected.
+When using `-m matching` (fitness matching mode), events are selected using the same mechanism as evolution mode, but instead of maximizing fitness, each event is chosen to minimize the distance to a target fitness value. The `EvoParams.MaxTries` parameter controls the full candidate-search budget per step. Across that budget, the existing acceptance rule is still evaluated, but its influence fades smoothly from early tries to late tries, so the search transitions continuously from exploration toward strict best-match selection.
 
 #### `EvoParams`
 
 The parameters controlling the evolutionary mode of event simulation (selection of events based on fitness).
 
 * `Acceptance: float (0.0)`: See publication for details. The higher the value, the less likely an event is to be accepted. Usually between 0 and 1.
-* `MaxTries: int (1)`: How many times an event is tried before giving up and moving to the next sample.
-* `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how much stricter acceptance becomes as fewer events remain. The decay increases linearly from 0 (first event) to `Decay` (last event), making it harder to accept events that don't improve the distance to the target fitness.
+* `MaxTries: int (1)`: How many candidate events are sampled before matching mode settles on the best available event or gives up and moves to the next sample.
+* `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how strongly the acceptance rule influences candidate selection during the early part of the try budget. The decay increases linearly from 0 (first event) to `Decay` (last event), so earlier events get more exploration pressure, while later events lean more quickly toward pure distance-to-target matching.
 
 ### Working path
 

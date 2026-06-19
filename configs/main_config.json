@@ -13,7 +13,9 @@
         "GeneSet": "spice_all"
     },
     "EvoParams": {
-        "Acceptance": 1.5192311774767573
+        "Acceptance": 1.5192311774767573,
+        "MaxTries": 100,
+        "Decay": 0.2
     },
     "Signatures": [
         {

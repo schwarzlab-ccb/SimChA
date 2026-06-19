@@ -99,16 +99,12 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
             Console.Write($"Sample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80) + "\r");
             var eventP = Rnd.PickRndElem(cnEventPs);
             var eventData = Sampling.GenerateCNEventData(Rnd, currentKar, eventP) ?? CreateSkipEvent();
-
             var childKar = new Karyotype(currentKar);
             eventData.ApplyEvent(childKar);
-            
-            var (gainedStr, lostStr) = CalcKaryotypeDiff(parentKar, childKar);
+            (string gainedStr, string lostStr) = CalcKaryotypeDiff(parentKar, childKar);
             string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
-
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, Signature: eventP.Signature,
                 RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
-            
             childEvs.Add(newEv);
             currentKar = childKar;
         } 
