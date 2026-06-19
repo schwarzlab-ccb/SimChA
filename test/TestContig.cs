@@ -101,34 +101,54 @@ public class TestContig
     [Test]
     public void TestGetCentromeres()
     {
-        var cents = _contig1.GetCentromeres(_refGen.Centromeres);
+        var cents = _contig1.GetCentromerePositions();
         Assert.AreEqual(1, cents.Count);
         Assert.AreEqual(121535434, cents[0].start);;
         Assert.AreEqual(124535434, cents[0].end);
 
         var other =  _contig1.Split(100_000_000, false);
-        cents = _contig1.GetCentromeres(_refGen.Centromeres);
+        cents = _contig1.GetCentromerePositions();
         Assert.AreEqual(1, cents.Count);
         Assert.AreEqual(121535434 - 100_000_000, cents[0].start);;
         Assert.AreEqual(124535434 - 100_000_000, cents[0].end);
         
         _contig1.Revert();
-        cents = _contig1.GetCentromeres(_refGen.Centromeres);
+        cents = _contig1.GetCentromerePositions();
         Assert.AreEqual(1, cents.Count);
         Assert.AreEqual(249250621 - 124535434, cents[0].start);;
         Assert.AreEqual(249250621 - 121535434, cents[0].end);
     }
     
     [Test]
-    public void TestPresentGenes([Values] GeneLT geneType) 
+    public void TestPresentGenes([Values] GeneLT geneType)
     {
         int geneCount = _contig1.CountGeneType(geneType);
         var contigCopy = new Contig(_contig1);
-        
+
         _contig1.DeleteRange(0, 200_000_000);
         // Original should be different
         Assert.AreNotEqual(geneCount, _contig1.CountGeneType(geneType));
         // Copy should remain unchanged
         Assert.AreEqual(geneCount, contigCopy.CountGeneType(geneType));
+    }
+
+    [Test]
+    public void TestPresentCentromeres()
+    {
+        // chr1 carries a single centromere, attached to the region at creation.
+        Assert.AreEqual(1, _contig1.Centromeres.Count);
+        var contigCopy = new Contig(_contig1);
+
+        // Duplicating the region duplicates the carried centromere.
+        _contig1.DuplicateRange(100_000_000, 200_000_000);
+        Assert.AreEqual(2, _contig1.Centromeres.Count);
+        // The copy is independent.
+        Assert.AreEqual(1, contigCopy.Centromeres.Count);
+
+        // Deleting the centromeric locus drops the centromere entirely (it is no longer
+        // fully inside any region), exactly as genes behave.
+        contigCopy.DeleteRange(121_000_000, 125_000_000);
+        Assert.AreEqual(0, contigCopy.Centromeres.Count);
+        Assert.IsEmpty(contigCopy.GetCentromerePositions());
     }
 }

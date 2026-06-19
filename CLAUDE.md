@@ -27,7 +27,7 @@ The `.csproj` is at the repo root; sources live in `src/`. `dotnet run` runs the
 
 ### Data model (bottom-up)
 
-**`Region`** (`src/Data/Region.cs`) — an oriented genomic segment: zero-indexed, start-inclusive, end-exclusive (`[start, end)`). Tracks chromosome name, haplotype (`Hap1`), SNVs, and gene annotations. `AbsStart`/`AbsEnd` are absolute genome coordinates.
+**`Region`** (`src/Data/Region.cs`) — an oriented genomic segment: zero-indexed, start-inclusive, end-exclusive (`[start, end)`). Tracks chromosome name, haplotype (`Hap1`), SNVs, gene annotations, and centromeres. `AbsStart`/`AbsEnd` are absolute genome coordinates. Genes and centromeres are attached at creation (`RefGen.GetRegion`) and ride along through structural operations — copied with the region and dropped by `UpdateRegion` when no longer fully `IsInsideOf` the (only-ever-shrinking) region. They surface as `Contig.Genes` / `Contig.Centromeres` (cached, invalidated by the `Regions` setter).
 
 **`Contig`** (`src/Data/Contig.cs`) — an ordered list of `Region`s representing a derived chromosome. Contigs may span regions from multiple original chromosomes (e.g. after a translocation). All structural operations (`DeleteRange`, `DuplicateRange`, `InvertRange`, `Split`, `Join`, `Scatter`, `Bridge`, etc.) are delegated to `RegionOps` (`src/Computation/RegionOps.cs`).
 
