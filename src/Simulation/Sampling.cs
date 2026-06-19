@@ -158,7 +158,7 @@ public static class Sampling
             case CNEventType.ArmDuplication:
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:
-                return AsList(SampleContigWeighted(rnd, kar, id => kar.GetCentromeres(id).Count));
+                return AsList(SampleContigWeighted(rnd, kar, id => kar.CountCentromeres(id)));
 
             // Within-contig events: weighted by contig length
             case CNEventType.InternalDuplication:

@@ -94,7 +94,10 @@ public class Karyotype
         => contigId < _contigs.Count ? _contigs[contigId].Length : 0;
 
     public List<(long start, long end)> GetCentromeres(int contigId)
-        => _contigs[contigId].GetCentromeres(RefGen.Centromeres);
+        => _contigs[contigId].GetCentromerePositions();
+
+    public int CountCentromeres(int contigId)
+        => _contigs[contigId].Centromeres.Count;
 
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length);

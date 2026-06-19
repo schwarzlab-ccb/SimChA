@@ -10,13 +10,18 @@ public class Region : GenRange
     
     private List<Gene>? _genes;
     public List<Gene> Genes => _genes ??= [];
-    
-    public Region(long start, long end, string chrom, bool hap1, List<SNV>? snvs, List<Gene>? genes) 
+
+    private List<Centromere>? _centromeres;
+    public List<Centromere> Centromeres => _centromeres ??= [];
+
+    public Region(long start, long end, string chrom, bool hap1, List<SNV>? snvs, List<Gene>? genes,
+        List<Centromere>? centromeres = null)
         : base(start, end, chrom)
     {
         Hap1 = hap1;
         _snvs = snvs;
         _genes = genes;
+        _centromeres = centromeres;
     }
 
     public Region(Region other) : base(other)
@@ -24,6 +29,7 @@ public class Region : GenRange
         Hap1 = other.Hap1;
         _snvs = other._snvs == null ? null : [..other._snvs];
         _genes = other._genes == null ? null : [..other._genes];
+        _centromeres = other._centromeres == null ? null : [..other._centromeres];
     }
 
     public override bool Equals(object? obj) 
@@ -55,6 +61,7 @@ public class Region : GenRange
     {
         SNVs.RemoveAll(snv => snv.Pos <= AbsStart || AbsEnd <= snv.Pos);
         Genes.RemoveAll(g => !g.IsInsideOf(this));
+        Centromeres.RemoveAll(c => !c.IsInsideOf(this));
     }
     
     public void AddSNV(long offset, Nucleotide oldNucleotide, Nucleotide newNucleotide)
@@ -113,6 +120,7 @@ public class Region : GenRange
         End = next.End;
         SNVs.AddRange(next.SNVs);
         Genes.AddRange(next.Genes);
+        Centromeres.AddRange(next.Centromeres);
     }
     
     public int CountGeneType(GeneLT geneType)

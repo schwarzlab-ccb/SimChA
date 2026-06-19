@@ -154,8 +154,14 @@ public class RefGen
     private IEnumerable<Gene> GetChromGenes(string chrNo)
         => GeneChromMap.SelectMany(chrGenes => chrGenes[chrNo]);
 
+    private List<Centromere> GetChromCentromeres(string chrNo)
+        => Centromeres.TryGetValue(chrNo, out var cent)
+            ? [new Centromere(cent.Start, cent.End, chrNo)]
+            : [];
+
     private Region GetRegion(string chrNo, bool isFirstHaplotype)
-        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetChromGenes(chrNo).ToList());
+        => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetChromGenes(chrNo).ToList(),
+            GetChromCentromeres(chrNo));
 
     private IEnumerable<Region> CreateHaplotype(SexType sex, bool firstHap)
         => ChrNamesForHap(sex, firstHap).Select(chr => GetRegion(chr, firstHap));

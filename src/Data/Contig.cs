@@ -16,8 +16,9 @@ public class Contig
     public List<Gene> Genes
         => _genes ??= _regions.SelectMany(r => r.Genes).ToList();
 
-    // Centromere positions depend on region order, so this is invalidated on any structural change.
-    private List<(long start, long end)>? _centromeres;
+    private List<Centromere>? _centromeres;
+    public List<Centromere> Centromeres
+        => _centromeres ??= _regions.SelectMany(r => r.Centromeres).ToList();
 
     private List<Region> _regions;
     private List<Region> Regions
@@ -47,6 +48,7 @@ public class Contig
         _length = other._length;
         _snvs = other._snvs == null ? null : [..other._snvs];
         _genes =  other._genes == null ? null : [..other._genes];
+        _centromeres = other._centromeres == null ? null : [..other._centromeres];
     }
 
     public static Contig Concat(IEnumerable<Contig> contigs)
@@ -143,7 +145,6 @@ public class Contig
     public void Revert()
     {
         RegionOps.Revert(Regions);
-        _centromeres = null; // Revert mutates Regions in place, bypassing the Regions setter
     }
 
     public void DuplicateRange(long start, long end)
@@ -217,18 +218,15 @@ public class Contig
         _snvs = null;
     }
 
-    public List<(long start, long end)> GetCentromeres(Dictionary<string, GenRange> centMap)
+    // Positions of the contig's centromeres expressed in contig coordinates (respecting orientation),
+    // derived from the centromeres carried by each region.
+    public List<(long start, long end)> GetCentromerePositions()
     {
-        if (_centromeres != null)
-        {
-            return _centromeres;
-        }
         List<(long start, long end)> centromereList = [];
         long currentPos = 0;
         foreach (var reg in Regions)
         {
-            var cent = centMap[reg.Chrom];
-            if (cent.IsInsideOf(reg))
+            foreach (var cent in reg.Centromeres)
             {
                 centromereList.Add(reg.Forward
                     ? (currentPos + cent.Start - reg.AbsStart, currentPos + cent.End - reg.AbsStart)
@@ -236,7 +234,7 @@ public class Contig
             }
             currentPos += reg.Length;
         }
-        return _centromeres = centromereList;
+        return centromereList;
     }
 
     public void MergeRegions()
