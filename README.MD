@@ -417,6 +417,14 @@ Events have parameters from the following:
 * `Frac: double` - The mean size of the event as a fraction of contig length, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
+#### Contig selection
+
+Once an event type is chosen, the contig(s) it acts on are selected with a probability that depends on the event category:
+
+* **Within-contig events** (internal deletion/duplication/inversion, inverted duplication, tail deletion/duplication, breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
+* **Arm and centromere-bound events** (arm deletion/duplication, centromere-bound deletion/duplication) select a contig with probability **proportional to its number of centromeres**. Contigs without a centromere are never selected; a fused contig carrying several centromeres is proportionally more likely.
+* **Multi-contig events** (translocation, templated insertions, chromoplexy) and **whole-chromosome events** (chromosome deletion/duplication, whole-genome doubling) select contigs **uniformly at random**.
+
 ### Chromosome Deletion (Prob)
 
 A single contig is selected at random and removed.

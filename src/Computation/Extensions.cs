@@ -45,6 +45,21 @@ public static class Extensions
         return elems.Count - 1;
     }
     
+    // Weighted pick over raw (un-normalized) weights; `total` must equal the sum of `weights`.
+    public static int PickRndIndex(this Random rnd, IList<double> weights, double total)
+    {
+        double val = rnd.NextDouble() * total;
+        for (int i = 0; i < weights.Count; i++)
+        {
+            if (val < weights[i])
+            {
+                return i;
+            }
+            val -= weights[i];
+        }
+        return weights.Count - 1;
+    }
+
     public static int PickRndIndex<T>(this Random rnd, IList<T> elems) where T : IHasProb
     {
         double val = rnd.NextDouble();

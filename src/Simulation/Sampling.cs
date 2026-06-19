@@ -119,43 +119,75 @@ public static class Sampling
     public static Nucleotide SampleBase(Random rnd) 
         => (Nucleotide) rnd.Next(4);
 
-    private static (int id, long len) SampleContigsByLength(Random rnd, Karyotype kar)
+    // Selects a single contig with probability proportional to a per-contig weight.
+    // Returns null when no contig has positive weight (e.g. no contig carries a centromere).
+    private static (int id, long len)? SampleContigWeighted(Random rnd, Karyotype kar, Func<int, double> weight)
     {
-        // Karyotype stores 0-length contigs for contig-ID-preservation, so we need to filter them out
-        var contigIds = kar.ContigIds().Where(i => kar.ContigLen(i) > 0).ToList();
-        long totalLength = contigIds.Sum(kar.ContigLen);
-        var pArray = contigIds.Select(i => kar.ContigLen(i)/(1.0*totalLength)).ToList();
-        int idSelected = contigIds.ToList()[rnd.PickRndIndex(pArray)];
-        return (idSelected, kar.ContigLen(idSelected));
-    }
-
-    // Selects the contigs to be affected by the event
-    private static IEnumerable<(int id, long len)> GetSeq(IEnumerable<(int id, long len)> contigs, CNEventType type, Karyotype kar) 
-        => type switch {
-            CNEventType.TIChain or CNEventType.TICycle or CNEventType.TIBridge or CNEventType.Chromoplexy => contigs,
-            CNEventType.Translocation => contigs.Take(2),
-            CNEventType.ArmDeletion or CNEventType.ArmDuplication or CNEventType.CentromereBoundDeletion or CNEventType.CentromereBoundDuplication =>
-                [contigs.First(pair => kar.GetCentromeres(pair.id).Count != 0)], 
-            _ => contigs.Take(1)
-        };
-
-    public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
-    {
-        IEnumerable<(int id, long len)> contigs = kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i)));
-        List <(int id, long len)> seq;
-        try
-        {
-            seq = GetSeq(contigs, cnEventPars.Type, kar).ToList();
-            if (seq.Count == 0)
-            {
-                throw new InvalidOperationException("No suitable contig found");
-            }
-        } 
-        catch (InvalidOperationException)
+        var contigIds = kar.ContigIds().ToList();
+        var weights = contigIds.Select(weight).ToList();
+        double total = weights.Sum();
+        if (total <= 0)
         {
             return null;
         }
-        
+        int idSelected = contigIds[rnd.PickRndIndex(weights, total)];
+        return (idSelected, kar.ContigLen(idSelected));
+    }
+
+    private static List<(int id, long len)> AsList((int id, long len)? picked)
+        => picked is { } p ? [p] : [];
+
+    // Selects the contigs to be affected by the event. Within-contig events are chosen with
+    // probability proportional to contig length; arm/centromere-bound events proportional to the
+    // number of centromeres; multi-contig events use a uniform random permutation.
+    private static List<(int id, long len)> SelectContigs(Random rnd, Karyotype kar, CNEventType type)
+    {
+        switch (type)
+        {
+            // Multi-contig events: uniform random permutation
+            case CNEventType.TIChain:
+            case CNEventType.TICycle:
+            case CNEventType.TIBridge:
+            case CNEventType.Chromoplexy:
+                return kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
+            case CNEventType.Translocation:
+                return kar.ContigIds().Shuffle(rnd).Take(2).Select(i => (i, kar.ContigLen(i))).ToList();
+
+            // Arm / centromere-bound events: weighted by the number of centromeres in the contig
+            case CNEventType.ArmDeletion:
+            case CNEventType.ArmDuplication:
+            case CNEventType.CentromereBoundDeletion:
+            case CNEventType.CentromereBoundDuplication:
+                return AsList(SampleContigWeighted(rnd, kar, id => kar.GetCentromeres(id).Count));
+
+            // Within-contig events: weighted by contig length
+            case CNEventType.InternalDuplication:
+            case CNEventType.InternalDeletion:
+            case CNEventType.InternalInversion:
+            case CNEventType.InvertedDuplication:
+            case CNEventType.TailDeletion:
+            case CNEventType.TailDuplication:
+            case CNEventType.BreakageFusionBridge:
+            case CNEventType.Chromothripsis:
+            case CNEventType.Pyrgo:
+            case CNEventType.Rigma:
+            case CNEventType.SNV:
+                return AsList(SampleContigWeighted(rnd, kar, id => kar.ContigLen(id)));
+
+            // Whole-chromosome and contig-agnostic events (Chrom*, WGD, Pass, Skip): uniform pick
+            default:
+                return AsList(SampleContigWeighted(rnd, kar, _ => 1.0));
+        }
+    }
+
+    public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
+    {
+        var seq = SelectContigs(rnd, kar, cnEventPars.Type);
+        if (seq.Count == 0)
+        {
+            return null;
+        }
+
         switch (cnEventPars.Type)
         {
             // Whole chromosome events
@@ -214,8 +246,7 @@ public static class Sampling
                 return new TemplatedEventData(rnd, cnEventPars, seq);
             
             case CNEventType.SNV:
-                var pointSeq = SampleContigsByLength(rnd, kar);
-                return new PointMutationData(rnd, cnEventPars, pointSeq.id, pointSeq.len);
+                return new PointMutationData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(cnEventPars.Type), cnEventPars.Type, null);
