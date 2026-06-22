@@ -410,6 +410,7 @@ Each Event has an associated type and a probability, which is relative to all th
 * `Pyrgo`
 * `Rigma`
 * `SNV`
+* `Pass`
 
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
@@ -424,6 +425,8 @@ Once an event type is chosen, the contig(s) it acts on are selected with a proba
 * **Within-contig events** (internal deletion/duplication/inversion, inverted duplication, tail deletion/duplication, breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
 * **Arm and centromere-bound events** (arm deletion/duplication, centromere-bound deletion/duplication) select a contig with probability **proportional to its number of centromeres**. Contigs without a centromere are never selected; a fused contig carrying several centromeres is proportionally more likely.
 * **Multi-contig events** (translocation, templated insertions, chromoplexy) and **whole-chromosome events** (chromosome deletion/duplication, whole-genome doubling) select contigs **uniformly at random**.
+
+If no contig is eligible for the chosen event — for example an arm or centromere-bound event when no remaining contig carries a centromere — the event cannot be generated and is **skipped**: it is recorded in the output as a `Skip` event (see below) and leaves the karyotype unchanged.
 
 ### Chromosome Deletion (Prob)
 
@@ -556,6 +559,19 @@ Note that if you don't want to download both reference genomes (hg19 and hg38), 
 3. These segments are chained together with random orientations.
 4. The resulting structure bridges the original breakpoint with templated insertions from other genomic locations.
 5. This mimics the mechanism of template switching during DNA repair or replication.
+
+### Pass (Prob)
+
+A no-op event that leaves the karyotype unchanged. `Pass` can be added to a signature like any other event to reserve part of the probability mass for "nothing happens" — i.e. a mutation step that draws this event consumes a step but makes no structural change. It is the only no-op event that is intended to be configured.
+
+### Skip
+
+`Skip` is an internal event that is **not** configured in signatures. It is substituted automatically when a drawn event cannot be applied, in two situations:
+
+* No contig is eligible for the chosen event (e.g. an arm or centromere-bound event when no remaining contig carries a centromere).
+* In `evolution`/`matching` modes, the candidate search exhausts `EvoParams.MaxTries` without accepting an event.
+
+Like `Pass`, a `Skip` leaves the karyotype unchanged, but it is still recorded as a row in `events.tsv` so that skipped steps remain visible in the output.
 
 ## Output
 
