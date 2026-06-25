@@ -15,15 +15,24 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
     protected static BaseEventData CreateSkipEvent() 
         => new(new CNEventPars(CNEventType.Skip, 1));
 
-    public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs)
+    public List<Sample> Simulate(CTreeNode root, List<CTreeNode> cloneTree, List<Signature> sigs, Karyotype? seedKar = null)
     {
         var (cnEventPs, sampleMixture) = Factory.MixSignatures(Rnd, sigs, SimParams.Mixture);
         var res = new List<Sample>();
-        var sex = SimParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
-        var rootKar = new Karyotype(RefGen, sex);
-        if (SimParams.TetraploidStart)
+        Karyotype rootKar;
+        if (seedKar != null)
         {
-            rootKar.ApplyWGD();
+            // Seeded run: start from the supplied profile karyotype instead of resetting to diploid.
+            rootKar = new Karyotype(seedKar);
+        }
+        else
+        {
+            var sex = SimParams.AutosomesOnly ? SexType.Any : Sampling.GetSex(Rnd, SimParams.Sex);
+            rootKar = new Karyotype(RefGen, sex);
+            if (SimParams.TetraploidStart)
+            {
+                rootKar.ApplyWGD();
+            }
         }
         rootKar.UpdateFitness(RefGen, FitParams);
         ApplyCNEventsRec(root, cloneTree, cnEventPs, sampleMixture, res, rootKar, 0);

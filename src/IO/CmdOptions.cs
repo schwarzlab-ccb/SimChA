@@ -28,6 +28,9 @@ public class CmdOptions
     
     [Option('s', "segments", Required = false, Default = false, HelpText = "Write out copy numbers segments.")]
     public bool WriteCNs { get; set; }
+
+    [Option('p', "profile", Required = false, Default = false, HelpText = "Start with given copy number profile.")]
+    public bool StartWithProfile { get; set; }
     
     [Option('S', "consistent-segments", Required = false, Default = false, HelpText = "Write out copy number segments under a minimum consistent segmentation.")]
     public bool WriteConsistentCNs { get; set; }
@@ -53,11 +56,15 @@ public class CmdOptions
     [Option('k', "karyotype",  Required = false, Default = false, HelpText = "Will also print the karyotype after each event.")]
     public bool Karyotype { get; set; }
 
+    // True when a CN profile should seed the simulation (-P together with -p)
+    // rather than being scored only.
+    public bool Seeded => StartWithProfile && CNProfiles != "";
+
     public ExecMode ExecMode
     {
         get
         {
-            if (CloneTreeFile != "" && CNProfiles != "")
+            if (CloneTreeFile != "" && CNProfiles != "" && !Seeded)
             {
                 throw new Exception("Cannot run both tree and profiles at the same time.");
             }
@@ -69,7 +76,7 @@ public class CmdOptions
                 }
                 return ExecMode.Tree;
             }
-            if (CNProfiles != "")
+            if (CNProfiles != "" && !Seeded)
             {
                 if (Repeats > 1)
                 {

@@ -54,6 +54,34 @@ public class TestSimulators
     }
     
     [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
+    public void TestSeededSimulator(Type simulatorType)
+    {
+        var sim = GetSimulator(simulatorType);
+        // Seed karyotype distinct from a diploid genome (46 contigs -> 92 after WGD).
+        var seedKar = new Karyotype(_refGen, SexType.Male);
+        seedKar.ApplyWGD();
+        var eventPs = new List<CNEventPars> { new(CNEventType.Pass, 1) };
+        var node = new CTreeNode("root", "root", 1, 1);
+        var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs), seedKar);
+        Assert.AreEqual(1, res.Count);
+        // Pass events keep the karyotype unchanged, so it must reflect the seed, not a reset diploid.
+        Assert.AreEqual(92, res[0].Karyotype.CountContigs());
+    }
+
+    [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
+    public void TestSeededSimulatorIsCopied(Type simulatorType)
+    {
+        var sim = GetSimulator(simulatorType);
+        var seedKar = new Karyotype(_refGen, SexType.Male);
+        var eventPs = new List<CNEventPars> { new(CNEventType.ChromDeletion, 1) };
+        var node = new CTreeNode("root", "root", 5, 1);
+        var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs), seedKar);
+        // The original seed must not be mutated by the simulation.
+        Assert.AreEqual(46, seedKar.CountContigs());
+        Assert.AreEqual(1, res.Count);
+    }
+
+    [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestEmptySimulator(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);

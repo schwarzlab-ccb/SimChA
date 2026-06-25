@@ -44,6 +44,17 @@ var samples = new List<Sample>();
 if (options.Simulate)
 {
     var validSigs = Factory.ValidateSignatures(config.Signatures);
+    Karyotype? seedKar = null;
+    if (options.Seeded)
+    {
+        var seedSamples = FileIO.ReadProfiles(genRef, options.CNProfiles, config.SimParams.AutosomesOnly, options.ZeroIndexed);
+        if (seedSamples.Count == 0)
+        {
+            throw new Exception($"No profile found in {options.CNProfiles} to seed the simulation.");
+        }
+        seedKar = seedSamples[0].Karyotype;
+        Console.WriteLine($"Seeding simulation from profile '{seedSamples[0].SampleId}'.");
+    }
     if (options.ExecMode == ExecMode.Repeats)
     {
         Console.WriteLine($"Creating {options.Repeats} samples:");
@@ -52,7 +63,7 @@ if (options.Simulate)
             string sampleId = $"Sample_{i+1}";
             var node = new CTreeNode(sampleId, sampleId, -1, -1);
             var tree = new List<CTreeNode> {node};
-            var newSample = simulator.Simulate(node, tree, validSigs);
+            var newSample = simulator.Simulate(node, tree, validSigs, seedKar);
             samples.Add(newSample[0]);
         }
     }
@@ -60,7 +71,7 @@ if (options.Simulate)
     {
         var (root, tree) = FileIO.ReadCloneTree(options.CloneTreeFile, selMode == SelectionMode.FitnessMatching);
         Console.WriteLine($"Creating {tree.Count} samples from a tree:");
-        samples = simulator.Simulate(root, tree, validSigs);
+        samples = simulator.Simulate(root, tree, validSigs, seedKar);
     }
 }
 else
