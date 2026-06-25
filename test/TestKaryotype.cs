@@ -241,6 +241,23 @@ public class TestKaryotype
     }
     
     [Test]
+    public void TestTranslocationArmsSwappingConservesLength()
+    {
+        long genomeLen = _kar.GenomeLen();
+        long lenA = _kar.ContigLen(0);
+        long lenB = _kar.ContigLen(1);
+        long posA = TEST_FRAC;
+        long posB = 2 * TEST_FRAC;
+
+        _kar.ApplyTranslocation(0, 1, posA, posB, false);
+
+        Assert.AreEqual(genomeLen, _kar.GenomeLen());
+        Assert.AreEqual(posA + (lenB - posB), _kar.ContigLen(0));
+        Assert.AreEqual(posB + (lenA - posA), _kar.ContigLen(1));
+        AssertGeneCountInvariant(_kar);
+    }
+    
+    [Test]
     public void TestApplyCNEvent([Values] CNEventType eventType)
     {
         var eventP = new CNEventPars(eventType, 1, 1_000_000, 10);
