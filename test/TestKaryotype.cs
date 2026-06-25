@@ -197,6 +197,23 @@ public class TestKaryotype
     }
     
     [Test]
+    public void TestBFBInvertedPalindromicStructure()
+    {
+        long len = _kar.ContigLen(0);
+
+        _kar.ApplyBFB(0, TEST_FRAC, true);
+
+        var chr1Regions = _kar.GetContig(0).FindChrRegions("chr1").ToList();
+
+        Assert.AreEqual((len - TEST_FRAC) * 2, _kar.ContigLen(0));
+        Assert.AreEqual(2, chr1Regions.Count);
+        Assert.AreEqual(1, chr1Regions.Count(region => region.Forward));
+        Assert.AreEqual(1, chr1Regions.Count(region => !region.Forward));
+        Assert.AreEqual(chr1Regions[0].Length, chr1Regions[1].Length);
+        AssertGeneCountInvariant(_kar);
+    }
+
+    [Test]
     public void TestBFBChain()
     {
         for (int i = 0; i < 4; i++)
