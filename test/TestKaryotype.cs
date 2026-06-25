@@ -290,10 +290,15 @@ public class TestKaryotype
     public void TestChromothripsis()
     {
         long contigLen = _kar.ContigLen(0);
+        int initialContigs = _kar.CountContigs();
         var stops = new List<long> { TEST_FRAC, TEST_FRAC * 2, TEST_FRAC * 3 };
         var selection = new List<int> { 3, 1}; // Keep only a TEST_FRAC chunk and the tail
         _kar.ApplyChromothripsis(0, stops, selection);
         Assert.AreEqual(contigLen - TEST_FRAC * 2, _kar.ContigLen(0));
+        Assert.LessOrEqual(_kar.CountContigs(), initialContigs);
+        Assert.LessOrEqual(_kar.ContigLen(0), contigLen);
+        Assert.That(_kar.ContigIds().Select(_kar.ContigLen), Is.All.LessThanOrEqualTo(contigLen));
+        AssertGeneCountInvariant(_kar);
     }
     
     [Test]
