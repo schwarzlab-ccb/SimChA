@@ -39,12 +39,59 @@ public class TestKaryotype
         _del = new CNEventPars(CNEventType.ChromDeletion, 1);
     }
 
+    private static List<int[]> CloneGeneCounts(Karyotype kar)
+        => kar.GeneCounts.Select(counts => (int[])counts.Clone()).ToList();
+
+
+    private static List<int[]> CountGenesFromContigs(Karyotype kar)
+    {
+        var counts = kar.GeneCounts.Select(geneCounts => new int[geneCounts.Length]).ToList();
+        foreach (int contigId in kar.ContigIds())
+        {
+            foreach (Gene gene in kar.GetContig(contigId).Genes)
+            {
+                counts[(int)gene.ListType][gene.GeneId] += 1;
+            }
+        }
+        return counts;
+    }
+
+    private static void AssertGeneCountInvariant(Karyotype kar)
+    {
+        var observed = CountGenesFromContigs(kar);
+        Assert.AreEqual(observed.Count, kar.GeneCounts.Count);
+        for (int geneType = 0; geneType < observed.Count; geneType++)
+        {
+            Assert.AreEqual(observed[geneType].Length, kar.GeneCounts[geneType].Length);
+            for (int geneId = 0; geneId < observed[geneType].Length; geneId++)
+            {
+                Assert.AreEqual(observed[geneType][geneId], kar.GeneCounts[geneType][geneId]);
+            }
+        }
+    }
+
+    private static IEnumerable<CNEventType> GeneratedEventTypes()
+        => Enum.GetValues<CNEventType>()
+            .Where(eventType => eventType is not CNEventType.Pass and not CNEventType.Skip);
+
     // Test for each AberrationEnum value
     [Test]
     public void TestWGD()
     {
+        long initialGenomeLen = _kar.GenomeLen();
+        var initialGeneCounts = CloneGeneCounts(_kar);
+
         _kar.ApplyWGD();
         Assert.AreEqual(92, _kar.CountContigs());
+        Assert.AreEqual(initialGenomeLen * 2, _kar.GenomeLen());
+        for (int geneType = 0; geneType < initialGeneCounts.Count; geneType++)
+        {
+            for (int geneId = 0; geneId < initialGeneCounts[geneType].Length; geneId++)
+            {
+                Assert.AreEqual(initialGeneCounts[geneType][geneId] * 2, _kar.GeneCounts[geneType][geneId]);
+            }
+        }
+        AssertGeneCountInvariant(_kar);
     }
 
     [Test]
@@ -75,6 +122,8 @@ public class TestKaryotype
         Assert.AreEqual(len - TEST_FRAC, _kar.ContigLen(0));
         _kar.ApplyInternalDeletion(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len - 2 * TEST_FRAC, _kar.ContigLen(0));
+        Assert.That(_kar.ContigIds().Select(_kar.ContigLen), Is.All.GreaterThanOrEqualTo(0));
+        AssertGeneCountInvariant(_kar);
     }
     
     [Test]
@@ -83,8 +132,10 @@ public class TestKaryotype
         long len = _kar.ContigLen(0);
         _kar.ApplyInternalDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
+        AssertGeneCountInvariant(_kar);
         _kar.ApplyInternalDuplication(0, TEST_FRAC, 2 * TEST_FRAC);
         Assert.AreEqual(len + 2 * TEST_FRAC, _kar.ContigLen(0));
+        AssertGeneCountInvariant(_kar);
     }
 
     [Test]
