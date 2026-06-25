@@ -274,6 +274,19 @@ public class TestKaryotype
     }
     
     [Test]
+    public void TestGeneAfterEveryEvent([ValueSource(nameof(GeneratedEventTypes))] CNEventType eventType)
+    {
+        var eventP = new CNEventPars(eventType, 1, 1_000_000, 10);
+        var eventData = Sampling.GenerateCNEventData(new Random(0), _kar, eventP);
+
+        Assert.NotNull(eventData);
+
+        eventData!.ApplyEvent(_kar);
+
+        AssertGeneCountInvariant(_kar);
+    }
+
+    [Test]
     public void TestChromothripsis()
     {
         long contigLen = _kar.ContigLen(0);
