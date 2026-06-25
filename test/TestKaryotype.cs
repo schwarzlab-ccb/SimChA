@@ -346,6 +346,20 @@ public class TestKaryotype
     }
 
     [Test]
+     public void TestRigmaAlternatesSegments()
+    {
+        long contigLen = _kar.ContigLen(0);
+        var rigmaLens = new List<long> { TEST_FRAC, 2 * TEST_FRAC, 3 * TEST_FRAC, 4 * TEST_FRAC };
+
+        _kar.ApplyRigma(0, TEST_FRAC, rigmaLens);
+
+        // Rigma deletes the first and third segments, while skipping over the second and fourth.
+        Assert.AreEqual(contigLen - TEST_FRAC - 3 * TEST_FRAC, _kar.ContigLen(0));
+        Assert.That(_kar.ContigIds().Select(_kar.ContigLen), Is.All.GreaterThanOrEqualTo(0));
+        AssertGeneCountInvariant(_kar);
+    }
+
+    [Test]
     public void TestTIBridge()
     {
         long contigLen = _kar.ContigLen(0);
