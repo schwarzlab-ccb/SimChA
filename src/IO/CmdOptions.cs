@@ -19,6 +19,10 @@ public class CmdOptions
     
     [Option('P', "cnprofiles", Required = false, HelpText = "File with CNAs, will cause the program to write a scoring file.")]
     public string CNProfiles { get; set; } = "";
+
+    [Option("seed-karyotypes", Required = false,
+        HelpText = "File with sample_id and karyotype columns used to seed the simulation from exact karyotype structure.")]
+    public string SeedKaryotypes { get; set; } = "";
     
     [Option('m', "mode", Required = false, Default = "evolution",
         HelpText = "The event selection mode: 'basic' (events are selected at random), " +
@@ -60,10 +64,16 @@ public class CmdOptions
     // rather than being scored only.
     public bool Seeded => StartWithProfile && CNProfiles != "";
 
+    public bool SeededFromKaryotype => SeedKaryotypes != "";
+
     public ExecMode ExecMode
     {
         get
         {
+            if (Seeded && SeededFromKaryotype)
+            {
+                throw new Exception("Cannot seed from both a CN profile and a karyotype file at the same time.");
+            }
             if (CloneTreeFile != "" && CNProfiles != "" && !Seeded)
             {
                 throw new Exception("Cannot run both tree and profiles at the same time.");

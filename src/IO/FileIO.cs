@@ -302,6 +302,30 @@ public class FileIO
             throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
         }
     }
+
+    public static List<Sample> ReadKaryotypes(RefGen refGen, string karyotypeFile)
+    {
+        string fileFullPath = Path.GetFullPath(karyotypeFile);
+        if (!File.Exists(fileFullPath))
+        {
+            throw new Exception($"File {fileFullPath} does not exist");
+        }
+        try
+        {
+            var inputFile = new StreamReader(fileFullPath);
+            var profiles = Parsers.ParseKaryotypeFile(refGen, inputFile);
+            var samples = new List<Sample>();
+            foreach ((string sampleId, var karyotype) in profiles)
+            {
+                samples.Add(new Sample(sampleId, sampleId, karyotype));
+            }
+            return samples;
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
+        }
+    }
     
     private static (Dictionary<string, int> chrLengths, Dictionary<string, SexType> chrSex) ReadChromosomes(string folder)
     {

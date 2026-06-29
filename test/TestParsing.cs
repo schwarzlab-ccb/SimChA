@@ -93,6 +93,54 @@ public class TestParsing
     }
 
     [Test]
+    public void TestParseCNAProfilesReconstructsCentromeresForSeededRegions()
+    {
+        const string seededProfile = "sample_id\tchrom\tstart\tend\tcn_a\tcn_b\n" +
+                                     "seed\tchr1\t1\t249250621\t1\t1\n";
+
+        var profiles = Parsers.ParseCNAProfile(_refGen, new StringReader(seededProfile), false, false);
+
+        Assert.That(profiles, Contains.Key("seed"));
+        var karyotype = profiles["seed"];
+        Assert.AreEqual(2, karyotype.CountContigs());
+        CollectionAssert.AreEqual(new[] { 1, 1 }, karyotype.ContigIds().Select(karyotype.CountCentromeres));
+
+        var hap1Chr1 = karyotype.FindChrRegions("chr1").Single(region => region.Hap1);
+        var hap2Chr1 = karyotype.FindChrRegions("chr1").Single(region => !region.Hap1);
+
+        Assert.AreEqual(1, hap1Chr1.Centromeres.Count);
+        Assert.AreEqual(1, hap2Chr1.Centromeres.Count);
+
+        var refCentromere = _refGen.Centromeres["chr1"];
+        Assert.AreEqual(refCentromere.Start, hap1Chr1.Centromeres[0].Start);
+        Assert.AreEqual(refCentromere.End, hap1Chr1.Centromeres[0].End);
+        Assert.AreEqual(refCentromere.Start, hap2Chr1.Centromeres[0].Start);
+        Assert.AreEqual(refCentromere.End, hap2Chr1.Centromeres[0].End);
+    }
+
+    [Test]
+    public void TestParseSeedKaryotypesRoundTripsExactStructure()
+    {
+        const string serializedKaryotype = "[[];[H1>chr1[0:249250621)~H2<chr2[10:20)];[H2>chr3[0:30)]]";
+        const string karyotypeFile = "sample_id\tkaryotype\nseed\t" + serializedKaryotype + "\n";
+
+        var profiles = Parsers.ParseKaryotypeFile(_refGen, new StringReader(karyotypeFile));
+
+        Assert.That(profiles, Contains.Key("seed"));
+        var karyotype = profiles["seed"];
+        Assert.AreEqual(serializedKaryotype, karyotype.ToString());
+        Assert.AreEqual(0, karyotype.ContigLen(0));
+        Assert.AreEqual(249250631, karyotype.ContigLen(1));
+        Assert.AreEqual(30, karyotype.ContigLen(2));
+        Assert.AreEqual(2, karyotype.CountContigs());
+
+        var chr2Region = karyotype.FindChrRegions("chr2").Single();
+        Assert.False(chr2Region.Forward);
+        Assert.AreEqual(10, chr2Region.AbsStart);
+        Assert.AreEqual(20, chr2Region.AbsEnd);
+    }
+
+    [Test]
     public void TestParseChromFile()
     {
         Assert.AreEqual("hg19", _refGen.Name);

@@ -55,6 +55,16 @@ if (options.Simulate)
         seedKar = seedSamples[0].Karyotype;
         Console.WriteLine($"Seeding simulation from profile '{seedSamples[0].SampleId}'.");
     }
+    else if (options.SeededFromKaryotype)
+    {
+        var seedSamples = FileIO.ReadKaryotypes(genRef, options.SeedKaryotypes);
+        if (seedSamples.Count == 0)
+        {
+            throw new Exception($"No karyotype found in {options.SeedKaryotypes} to seed the simulation.");
+        }
+        seedKar = seedSamples[0].Karyotype;
+        Console.WriteLine($"Seeding simulation from karyotype '{seedSamples[0].SampleId}'.");
+    }
     if (options.ExecMode == ExecMode.Repeats)
     {
         Console.WriteLine($"Creating {options.Repeats} samples:");

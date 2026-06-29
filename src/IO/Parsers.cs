@@ -104,6 +104,70 @@ public static class Parsers
         return result;
     }
 
+    public static Dictionary<string, Karyotype> ParseKaryotypeFile(RefGen refGen, TextReader karyotypeFile)
+    {
+        Dictionary<string, Karyotype> result = new();
+
+        string? firstLine = karyotypeFile.ReadLine();
+        if (firstLine == null)
+        {
+            throw new Exception("Karyotype file is empty.");
+        }
+        string[] header = firstLine.Split('\t');
+        if (header.Length < 2 || header[0] != "sample_id" || header[1] != "karyotype")
+        {
+            throw new Exception("Karyotype file must start with the header: sample_id\tkaryotype.");
+        }
+
+        while (karyotypeFile.ReadLine() is { } line)
+        {
+            if (line == "")
+            {
+                continue;
+            }
+
+            string[] lineSplit = line.Split('\t', 2);
+            if (lineSplit.Length < 2)
+            {
+                throw new Exception($"Karyotype row does not contain at least 2 columns: {line}");
+            }
+
+            string sampleId = lineSplit[0];
+            string serializedKaryotype = lineSplit[1];
+            Console.Write($"Creating karyotype for sample {sampleId}.".PadRight(80) + "\r");
+            result[sampleId] = ParseKaryotype(refGen, serializedKaryotype);
+        }
+
+        return result;
+    }
+
+    public static Karyotype ParseKaryotype(RefGen refGen, string serializedKaryotype)
+    {
+        if (serializedKaryotype == "[]")
+        {
+            return new Karyotype(refGen, [], SexType.Any);
+        }
+
+        if (!serializedKaryotype.StartsWith('[') || !serializedKaryotype.EndsWith(']'))
+        {
+            throw new Exception($"Invalid karyotype string: {serializedKaryotype}");
+        }
+
+        var contigMatches = Regex.Matches(serializedKaryotype[1..^1], @"\[[^\]]*\]")
+            .Select(match => match.Value)
+            .ToList();
+        if (contigMatches.Count == 0 || string.Join(";", contigMatches) != serializedKaryotype[1..^1])
+        {
+            throw new Exception($"Invalid karyotype string: {serializedKaryotype}");
+        }
+
+        var contigs = contigMatches
+            .Select(contig => ParseContig(refGen, contig))
+            .ToList();
+        var sexType = InferSexType(contigs.SelectMany(contig => contig.FindChrRegions("chrX").Concat(contig.FindChrRegions("chrY"))).ToList());
+        return new Karyotype(refGen, contigs, sexType);
+    }
+
     static List<Region> BuildHaplotypeRegions(List<(string chr, int start, int end, int cn)> segments, bool isHapA, RefGen refGen)
     {
         var regions = new List<Region>();
@@ -164,7 +228,18 @@ public static class Parsers
                 {
                     // Form region
                     var genes = refGen.GetGenesBetween(chr, currentStart, currentEnd).ToList();
-                    regions.Add(new Region(currentStart, currentEnd, chr, isHapA, null, genes));
+                    var centromeres = refGen.Centromeres.TryGetValue(chr, out var centromereRange)
+                        && centromereRange.Start < currentEnd
+                        && centromereRange.End > currentStart
+                        ? new List<Centromere>
+                        {
+                            new Centromere(
+                                Math.Max(centromereRange.Start, currentStart),
+                                Math.Min(centromereRange.End, currentEnd),
+                                chr)
+                        }
+                        : [];
+                    regions.Add(new Region(currentStart, currentEnd, chr, isHapA, null, genes, centromeres));
 
                     // Decrement one copy from each contributing interval
                     foreach (int i in usedIndexes)
@@ -180,6 +255,90 @@ public static class Parsers
         }
 
         return regions;
+    }
+
+    private static SexType InferSexType(List<Region> regions)
+    {
+        bool chrYfound = regions.Any(region => region.Chrom == "chrY");
+        bool chrXfound = regions.Any(region => region.Chrom == "chrX");
+        return chrYfound ? SexType.Male : chrXfound ? SexType.Female : SexType.Any;
+    }
+
+    private static List<string> SplitTopLevel(string input, char separator)
+    {
+        List<string> parts = [];
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < input.Length; i++)
+        {
+            switch (input[i])
+            {
+                case '[':
+                    depth += 1;
+                    break;
+                case ']':
+                    depth -= 1;
+                    break;
+                default:
+                    if (input[i] == separator && depth == 0)
+                    {
+                        parts.Add(input[start..i]);
+                        start = i + 1;
+                    }
+                    break;
+            }
+        }
+        parts.Add(input[start..]);
+        return parts;
+    }
+
+    private static Contig ParseContig(RefGen refGen, string serializedContig)
+    {
+        if (serializedContig == "[]")
+        {
+            return new Contig();
+        }
+        if (!serializedContig.StartsWith('[') || !serializedContig.EndsWith(']'))
+        {
+            throw new Exception($"Invalid contig string: {serializedContig}");
+        }
+
+        var regions = serializedContig[1..^1]
+            .Split('~', StringSplitOptions.RemoveEmptyEntries)
+            .Select(region => ParseRegion(refGen, region))
+            .ToList();
+        return new Contig(regions);
+    }
+
+    private static Region ParseRegion(RefGen refGen, string serializedRegion)
+    {
+        var match = Regex.Match(serializedRegion,
+            @"^H(?<hap>[12])(?<dir>[><])(?<chr>[^\[]+)\[(?<start>\d+):(?<end>\d+)\)$");
+        if (!match.Success)
+        {
+            throw new Exception($"Invalid region string: {serializedRegion}");
+        }
+
+        bool hap1 = match.Groups["hap"].Value == "1";
+        bool forward = match.Groups["dir"].Value == ">";
+        string chr = match.Groups["chr"].Value;
+        int start = int.Parse(match.Groups["start"].Value);
+        int end = int.Parse(match.Groups["end"].Value);
+        long regionStart = forward ? start : -end;
+        long regionEnd = forward ? end : -start;
+        var genes = refGen.GetGenesBetween(chr, start, end).ToList();
+        var centromeres = refGen.Centromeres.TryGetValue(chr, out var centromereRange)
+            && centromereRange.Start < end
+            && centromereRange.End > start
+            ? new List<Centromere>
+            {
+                new Centromere(
+                    Math.Max(centromereRange.Start, start),
+                    Math.Min(centromereRange.End, end),
+                    chr)
+            }
+            : [];
+        return new Region(regionStart, regionEnd, chr, hap1, null, genes, centromeres);
     }
     
     public static Dictionary<string, List<Gene>> ParseGeneList(TextReader geneFile, List<string> chrNames, GeneLT type)
