@@ -44,13 +44,13 @@ public class CmdOptions
     [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
     public bool ZeroIndexed { get; set; }
     
-    [Option('r', "root", Required = false, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the C# default will be used.")]
+    [Option('r', "root", Required = false, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the SimChA will be used.")]
     public string RootFolder { get; set; } = ".";
 
-    [Option('a', "assembly", Required = false, Default = "", HelpText = "Override to the path of the assembly folder. If not provided, the root path is used.")]
+    [Option('a', "assembly", Required = false, Default = "hg19", HelpText = "Override to the path of the assembly folder. If not provided, the root path is used.")]
     public string AssemblyFolder { get; set; } = "";
 
-    [Option('l', "loci", Required = false, Default = "", HelpText = "Override to the path of the loci folder. If not provided, the assembly folder based on the config path is used.")]
+    [Option('l', "loci", Required = false, Default = "spice_all", HelpText = "Override to the path of the loci folder. If not provided, the assembly folder based on the config path is used.")]
     public string LociFolder { get; set; } = "";
 
     [Option('d', "delta", Required = false, Default = false, HelpText = "Will also print the changes caused by events.")]

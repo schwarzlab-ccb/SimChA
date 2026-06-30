@@ -66,6 +66,53 @@ public class TestSimulators
     }
     
     [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
+    public void TestMaxWgdLimit(Type simulatorType)
+    {
+        const int maxWgd = 2;
+        var simParams = new SimParams(MaxWGD: maxWgd);
+        var sim = GetSimulator(simulatorType, simParams);
+        // A mix where WGD is possible but not guaranteed, so most samples already satisfy the
+        // limit and the few that exceed it are restarted until they do.
+        List<CNEventPars> eventPs =
+        [
+            new(CNEventType.WholeGenomeDoubling, 1),
+            new(CNEventType.Pass, 4)
+        ];
+        var node = new CTreeNode("root", "root", 10, 1);
+        var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs));
+        int wgdCount = res[0].Events.Count(e => e.EventData.EventType == CNEventType.WholeGenomeDoubling);
+        Assert.AreEqual(1, res.Count);
+        Assert.AreEqual(10, res[0].Events.Count);
+        Assert.LessOrEqual(wgdCount, maxWgd);
+    }
+
+    [Test]
+    public void TestMaxWgdDisabledByDefault()
+    {
+        // Default SimParams.MaxWGD is -1 (no limit), so a WGD-only signature is never restarted.
+        // The basic Simulator applies every drawn event, producing exactly `dist` WGDs.
+        var sim = GetSimulator(typeof(Simulator));
+        var eventPs = new List<CNEventPars> { new(CNEventType.WholeGenomeDoubling, 1) };
+        var node = new CTreeNode("root", "root", 3, 1);
+        var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs));
+        int wgdCount = res[0].Events.Count(e => e.EventData.EventType == CNEventType.WholeGenomeDoubling);
+        Assert.AreEqual(3, wgdCount);
+    }
+
+    [Test]
+    public void TestMaxWgdUnsatisfiableThrows()
+    {
+        // The basic Simulator applies every drawn event, so a WGD-only signature always produces
+        // `dist` WGDs. A limit of 0 is then impossible to satisfy and the run aborts rather than
+        // looping forever.
+        var simParams = new SimParams(MaxWGD: 0);
+        var sim = GetSimulator(typeof(Simulator), simParams);
+        var eventPs = new List<CNEventPars> { new(CNEventType.WholeGenomeDoubling, 1) };
+        var node = new CTreeNode("root", "root", 1, 1);
+        Assert.Throws<Exception>(() => sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs)));
+    }
+
+    [TestCase(typeof(Simulator)), TestCase(typeof(MatchSimulator)), TestCase(typeof(EvoSimulator))]
     public void TestSimulatorsBase(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);

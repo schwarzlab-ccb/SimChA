@@ -111,9 +111,44 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         return (currentKar, childEvs);
     }
 
+    // Maximum number of times a single sample's event selection is restarted when it exceeds
+    // SimParams.MaxWGD before the run is aborted to avoid an unbounded loop.
+    private const int MaxWgdRestarts = 10000;
+
+    // Wraps SampleEvents with the SimParams.MaxWGD limit: if the generated sample contains more
+    // whole-genome doublings than allowed, the entire event selection for the sample is restarted.
+    private (Karyotype childKar, List<CNEventDesc> childEvs) SampleEventsLimited(
+        Karyotype parentKar,
+        CTreeNode child,
+        List<CNEventPars> cnEventPs,
+        int mutDepth)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth);
+            if (SimParams.MaxWGD < 0)
+            {
+                return (childKar, childEvs);
+            }
+            int wgdCount = childEvs.Count(e => e.EventData.EventType == CNEventType.WholeGenomeDoubling);
+            if (wgdCount <= SimParams.MaxWGD)
+            {
+                return (childKar, childEvs);
+            }
+            if (attempt >= MaxWgdRestarts)
+            {
+                throw new Exception(
+                    $"Sample {child.CloneId} exceeded MaxWGD ({SimParams.MaxWGD}) on every one of " +
+                    $"{MaxWgdRestarts} restarts. Increase SimParams.MaxWGD or lower the WGD probability.");
+            }
+            Console.Write(
+                $"\rSample {child.CloneId} produced {wgdCount} WGDs (> MaxWGD {SimParams.MaxWGD}), restarting (attempt {attempt}).".PadRight(80));
+        }
+    }
+
     private void ApplyCNEventsRec(
-        CTreeNode parent, 
-        List<CTreeNode> cloneTree, 
+        CTreeNode parent,
+        List<CTreeNode> cloneTree,
         List<CNEventPars> cnEventPs,
         Dictionary<string, double> mixture,
         List<Sample> sampleList,
@@ -123,7 +158,7 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         var children = cloneTree.Where(c => c.ParentId == parent.CloneId).ToList();
         foreach (var child in children)
         {
-            var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth);
+            var (childKar, childEvs) = SampleEventsLimited(parentKar, child, cnEventPs, mutDepth);
             var newClone = new Sample(child.CloneId,parent.CloneId, childKar, childEvs, mixture, child.Fitness);
             sampleList.Add(newClone);
             

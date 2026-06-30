@@ -12,5 +12,6 @@ public record SimParams(
     double RateMean = 1,
     bool TetraploidStart = false,
     bool AutosomesOnly = false,
-    MixtureType Mixture = MixtureType.Constant
+    MixtureType Mixture = MixtureType.Constant,
+    int MaxWGD = -1
 );

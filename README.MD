@@ -233,6 +233,7 @@ The parameters controlling the simulation of events.
 * `RateDist: ["Uniform", "Geometric", "Poisson"] ("Uniform")` - The distribution of the mutation rate.
 * `RateMean: float (1.0)`: the mean of the mutation rate (mutations between two nodes).
 * `TetraploidStart: bool (false)`: If true, the root karyotype will undergo a whole genome doubling before simulation begins.
+* `MaxWGD: int (-1)`: The maximum number of whole-genome doublings (WGD) allowed to occur during a single sample's event selection. If a sample's simulation produces more WGDs than this, its event selection is restarted from the parent karyotype and run again until the limit is satisfied. A value of `-1` (the default) disables the limit. This applies to all selection modes (`basic`, `evolution`, `matching`).
 * `AutosomesOnly: bool (false)`: If true, karyotypes will only contain autosomes (chromosomes 1-22), excluding sex chromosomes.
 * `Mixture: ["Single", "Constant", "Dirichlet"] ("Constant")`: In case of multiple signatures, how are these mixed for each sample. `Single` means that only one signature is used (selected based on its relative probability), `Constant` means that each signature has a fixed probability of being selected, while `Dirichlet` means that the probabilities are drawn from a Dirichlet distribution.
 
