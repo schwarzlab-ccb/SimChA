@@ -37,7 +37,7 @@ The `.csproj` is at the repo root; sources live in `src/`. `dotnet run` runs the
 
 ### Simulation flow
 
-`Program.cs` parses CLI options → reads config → calls `Factory.GetSimulator()` → calls `simulator.Simulate()` → scores samples → writes output.
+`Program.cs` parses CLI options → `SimChAConfig.Load()` (reads + resolves config) → calls `Factory.GetSimulator()` → calls `simulator.Simulate()` → scores samples → writes output. `Program.cs` itself is kept thin; configuration setup lives in `SimChAConfig.Load()` (see *Config structure*).
 
 **Simulator hierarchy** (`src/Simulation/`):
 - `Simulator` — base class; MonteCarlo/basic mode: picks events uniformly at random, applies them without checking fitness.
@@ -45,6 +45,8 @@ The `.csproj` is at the repo root; sources live in `src/`. `dotnet run` runs the
 - `MatchSimulator` — overrides `SampleEvents`; minimizes distance to a per-node target fitness, with a `Decay` parameter that tightens acceptance as events progress.
 
 `Factory.GetSimulator()` returns the right subclass based on `SelectionMode` (`MonteCarlo` / `Evolution` / `FitnessMatching`).
+
+The base `Simulator` wraps each sample's `SampleEvents` in `SampleEventsLimited`, which enforces `SimParams.MaxWGD`: if a generated sample contains more whole-genome doublings than allowed, its event selection is restarted from the parent karyotype (default `-1` = no limit). This applies uniformly to all three modes.
 
 ### Event system
 
@@ -73,10 +75,22 @@ Gene counts are maintained incrementally in `Karyotype.GeneCounts` rather than r
 
 ### Config structure
 
-`SimChAConfig` (JSON) has four sections:
-- `SimParams` — seed, assembly, sex, mutation rate distribution, mixture type.
+`SimChAConfig` (JSON) has four sections plus two optional top-level fields:
+- `SimParams` — seed, assembly, sex, mutation rate distribution, mixture type, `MaxWGD`.
 - `FitParams` — weights for stress/TsgOg/essentiality, gene set folder name.
 - `EvoParams` — acceptance threshold, max tries, decay (required for evolution/matching modes).
 - `Signatures` — array of named signature objects, each with a `Prob` and `Events` array.
+- `Root` (top level, optional) — base directory for resolving relative paths.
+- `Version` (top level) — ignored on input; stamped with the running version on output.
+
+`SimChAConfig.Load(CmdOptions)` reads the config file and resolves `root`, `assembly`, and `gene_set`
+with precedence **command line > config > default** (`-r`/`--root`, `-a`/`--assembly`, `-g`/`--gene_set`).
+It applies the effective root as the working directory and stamps the effective `SimParams.Assembly`,
+`FitParams.GeneSet`, `Root`, and `Version` back into the returned config, so the output `sim_params.json`
+records exactly what was used (and can be fed back in as input).
+
+Path resolution in `FileIO.ReadGenRef`: an **absolute** assembly/gene-set value is used directly as the
+folder; a **relative** value is resolved under the data folder (`data/<assembly>`) and assembly folder
+(`<assembly>/<gene_set>`) respectively.
 
 Pre-built configs are in `configs/` (hg19 optimized), `configs/hg38/`, and `configs/basic/`. Cancer type abbreviations follow TCGA conventions.
