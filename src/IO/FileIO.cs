@@ -339,19 +339,30 @@ public class FileIO
         }
     }
 
-    public static RefGen ReadGenRef(string dataFolder, string refName, string genesName, bool useVariants = false)
+    public static RefGen ReadGenRef(string dataFolder, string refName, string genesName, bool useVariants = false,
+        string assemblyFolderOverride = "", string lociFolderOverride = "")
     {
-        string dataFullPath = Path.GetFullPath(dataFolder);
-        if (!Path.Exists(dataFullPath))
+        string assemblyFolder;
+        if (!string.IsNullOrEmpty(assemblyFolderOverride))
         {
-            throw new ArgumentException($"Data folder does not exist: {dataFullPath}");
+            assemblyFolder = Path.GetFullPath(assemblyFolderOverride);
         }
-        string assemblyFolder = Path.Combine(dataFullPath, refName); 
+        else
+        {
+            string dataFullPath = Path.GetFullPath(dataFolder);
+            if (!Path.Exists(dataFullPath))
+            {
+                throw new ArgumentException($"Data folder does not exist: {dataFullPath}");
+            }
+            assemblyFolder = Path.Combine(dataFullPath, refName);
+        }
         if (!Path.Exists(assemblyFolder))
         {
             throw new ArgumentException($"Assembly folder does not exist: {assemblyFolder}");
         }
-        string genesFolder = Path.Combine(Path.GetFullPath(assemblyFolder), genesName);
+        string genesFolder = !string.IsNullOrEmpty(lociFolderOverride)
+            ? Path.GetFullPath(lociFolderOverride)
+            : Path.Combine(Path.GetFullPath(assemblyFolder), genesName);
         if (!Path.Exists(genesFolder))
         {
             throw new ArgumentException($"Genes folder does not exist: {genesFolder}");

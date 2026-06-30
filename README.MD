@@ -96,6 +96,10 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   --root                       (Default: .) A path to the folder that will be considered root for relative paths.
 
+  -a, --assembly               (Default: none) Override the assembly folder path. When set, this folder is used directly instead of `data/<SimParams.Assembly>`.
+
+  -l, --loci                   (Default: none) Override the loci (gene-set) folder path. When set, this folder is used directly instead of `<assembly>/<FitParams.GeneSet>`.
+
   -h, --help                       Display this help screen.
 
   --version                    Display version information.
@@ -285,6 +289,26 @@ With this setting, `./configs/main_config.json` resolves to `/path/to/simcha/con
 Reference data is located in the `data/` folder, organized by assembly name (matching `SimParams.Assembly`). 
 Each assembly folder needs to contain description of the chromosomes, centromeres, and gene score files in a subfolder (matching `FitParams.GeneSet`). 
 We provide `GRCh37` and `GRCh38` in the folders `./data/hg19` and `./data/hg38` respectively.
+
+### Overriding data locations (`-a`, `-l`)
+
+By default the assembly folder is resolved as `data/<SimParams.Assembly>` and the loci (gene-set) folder
+as `<assembly>/<FitParams.GeneSet>`. Two options let you point SimChA at data stored elsewhere without
+editing the config:
+
+* `-a, --assembly <path>`: use `<path>` directly as the assembly folder (the one containing `chromosomes.tsv`,
+  `centromeres.tsv`, and optionally `genome.fa`), bypassing the `data/<SimParams.Assembly>` convention.
+* `-l, --loci <path>`: use `<path>` directly as the loci folder (the one containing the TSG/OG/essentiality
+  score files), bypassing the `<assembly>/<FitParams.GeneSet>` convention.
+
+The two are independent: if only `-a` is given, the loci folder is still resolved relative to the overridden
+assembly folder (`<path>/<FitParams.GeneSet>`); if only `-l` is given, the assembly folder is resolved as
+usual. A non-existent override path produces an error. For example, to read the assembly from a shared
+location while keeping the configured gene set:
+
+```bash
+dotnet run -- -a /shared/refdata/hg38 -l /shared/refdata/hg38/spice_all
+```
 
 ### Chromosomes
 > `chromosomes.tsv`

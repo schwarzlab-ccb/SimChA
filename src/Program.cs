@@ -36,7 +36,8 @@ var config = FileIO.ReadSimChAConfig(options.ConfigFile);
 var rnd = new Random(config.SimParams.Seed);
 var files = new FileIO(options.OutputPath);
 files.CreateOutFolder();
-var genRef = FileIO.ReadGenRef(FileIO.DATA_FOLDER, config.SimParams.Assembly, config.FitParams.GeneSet, options.ShouldParseGenome);
+var genRef = FileIO.ReadGenRef(FileIO.DATA_FOLDER, config.SimParams.Assembly, config.FitParams.GeneSet,
+    options.ShouldParseGenome, options.AssemblyFolder, options.LociFolder);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
 // Construct samples
