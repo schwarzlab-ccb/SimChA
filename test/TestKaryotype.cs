@@ -70,6 +70,36 @@ public class TestKaryotype
         }
     }
 
+    
+    private double SelectionFraction(CNEventPars ev, int targetContigId, int trials)
+    {
+        int count = 0;
+        for (int i = 0; i < trials; i++)
+        {
+            var data = Sampling.GenerateCNEventData(_rnd, _kar, ev) as ContigEventData;
+            Assert.NotNull(data);
+            if (data!.ContigId == targetContigId)
+            {
+                count++;
+            }
+        }
+        return count / (double) trials;
+    }
+
+    // Keeps only the longest and shortest contigs (both single-centromere chromosomes),
+    // making length and centromere-count weighting produce visibly different distributions.
+    private (int bigId, int smallId) KeepExtremeContigs()
+    {
+        var ids = _kar.ContigIds().ToList();
+        int bigId = ids.OrderByDescending(_kar.ContigLen).First();
+        int smallId = ids.OrderBy(_kar.ContigLen).First();
+        foreach (int i in ids.Where(i => i != bigId && i != smallId))
+        {
+            _kar.ApplyContigDeletion(i);
+        }
+        return (bigId, smallId);
+    }
+
     private static IEnumerable<CNEventType> GeneratedEventTypes()
         => Enum.GetValues<CNEventType>()
             .Where(eventType => eventType is not CNEventType.Pass and not CNEventType.Skip);
@@ -78,11 +108,13 @@ public class TestKaryotype
     [Test]
     public void TestWGD()
     {
+        int initialContigs = _kar.CountContigs();
         long initialGenomeLen = _kar.GenomeLen();
         var initialGeneCounts = CloneGeneCounts(_kar);
 
         _kar.ApplyWGD();
-        Assert.AreEqual(92, _kar.CountContigs());
+
+        Assert.AreEqual(initialContigs * 2, _kar.CountContigs());
         Assert.AreEqual(initialGenomeLen * 2, _kar.GenomeLen());
         for (int geneType = 0; geneType < initialGeneCounts.Count; geneType++)
         {
@@ -523,34 +555,6 @@ public class TestKaryotype
         Assert.AreEqual(4, idsAfter[0]);
     }
 
-    private double SelectionFraction(CNEventPars ev, int targetContigId, int trials)
-    {
-        int count = 0;
-        for (int i = 0; i < trials; i++)
-        {
-            var data = Sampling.GenerateCNEventData(_rnd, _kar, ev) as ContigEventData;
-            Assert.NotNull(data);
-            if (data!.ContigId == targetContigId)
-            {
-                count++;
-            }
-        }
-        return count / (double) trials;
-    }
-
-    // Keeps only the longest and shortest contigs (both single-centromere chromosomes),
-    // making length and centromere-count weighting produce visibly different distributions.
-    private (int bigId, int smallId) KeepExtremeContigs()
-    {
-        var ids = _kar.ContigIds().ToList();
-        int bigId = ids.OrderByDescending(_kar.ContigLen).First();
-        int smallId = ids.OrderBy(_kar.ContigLen).First();
-        foreach (int i in ids.Where(i => i != bigId && i != smallId))
-        {
-            _kar.ApplyContigDeletion(i);
-        }
-        return (bigId, smallId);
-    }
 
     [Test]
     public void TestInternalSelectionByLength()
