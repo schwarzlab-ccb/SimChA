@@ -22,22 +22,16 @@ watch.Start();
 // Input
 var options = cmdOptions.Value;
 
-// Set working directory if RootFolder is specified
-if (!string.IsNullOrEmpty(options.RootFolder))
-{
-    Environment.CurrentDirectory = options.RootFolder;
-}
-
 // Configure
 var selMode = options.SelectionMode;
 CNEventDesc.PrintDelta = options.Debug;
 CNEventDesc.PrintKaryotype = options.Karyotype;
-var config = FileIO.ReadSimChAConfig(options.ConfigFile);
+var config = SimChAConfig.Load(options);
 var rnd = new Random(config.SimParams.Seed);
 var files = new FileIO(options.OutputPath);
 files.CreateOutFolder();
 var genRef = FileIO.ReadGenRef(FileIO.DATA_FOLDER, config.SimParams.Assembly, config.FitParams.GeneSet,
-    options.ShouldParseGenome, options.AssemblyFolder, options.LociFolder);
+    options.ShouldParseGenome);
 var simulator = Factory.GetSimulator(rnd, genRef, config, selMode);
 
 // Construct samples

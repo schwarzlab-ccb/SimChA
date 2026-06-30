@@ -94,11 +94,11 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -z, --zero-index             (Default: false) Flag for zero-indexed input copy number profiles.
 
-  --root                       (Default: .) A path to the folder that will be considered root for relative paths.
+  -r, --root                   (Default: none) Override the root folder for resolving relative paths. Takes precedence over the config `Root`; if neither is set, the current working directory is used.
 
-  -a, --assembly               (Default: none) Override the assembly folder path. When set, this folder is used directly instead of `data/<SimParams.Assembly>`.
+  -a, --assembly               (Default: none) Override the assembly. Takes precedence over `SimParams.Assembly`. An absolute path is used directly; a relative value is resolved under the data folder (`data/<assembly>`).
 
-  -l, --loci                   (Default: none) Override the loci (gene-set) folder path. When set, this folder is used directly instead of `<assembly>/<FitParams.GeneSet>`.
+  -g, --gene_set               (Default: none) Override the gene set. Takes precedence over `FitParams.GeneSet`. An absolute path is used directly; a relative value is resolved under the assembly folder (`<assembly>/<gene_set>`).
 
   -h, --help                       Display this help screen.
 
@@ -273,9 +273,18 @@ The parameters controlling the evolutionary mode of event simulation (selection 
 * `MaxTries: int (1)`: How many candidate events are sampled before matching mode settles on the best available event or gives up and moves to the next sample.
 * `Decay: float (0.0)`: Used in fitness matching mode (`-m matching`). Controls how strongly the acceptance rule influences candidate selection during the early part of the try budget. The decay increases linearly from 0 (first event) to `Decay` (last event), so earlier events get more exploration pressure, while later events lean more quickly toward pure distance-to-target matching.
 
+#### Top-level config fields
+
+Besides the four sections above, the config has two optional top-level fields:
+
+* `Root: string`: the base directory used to resolve all relative paths (see *Working path* below). Read from the config if present, overridable with `-r`/`--root`, and defaults to the current working directory.
+* `Version: string`: the SimChA version. Ignored on input; it is stamped with the running version in the output config (`out/sim_params.json`).
+
+The output config also records the **effective** `SimParams.Assembly`, `FitParams.GeneSet`, and `Root` actually used for the run (after applying any command-line overrides), so a run is fully reproducible from its `sim_params.json`.
+
 ### Working path
 
-The `--root` option sets the base directory used to resolve all relative paths. By default it is `.` (the working directory from which the command is run), so paths like `./configs/main_config.json` and `./out` resolve relative to wherever you invoke `dotnet run`.
+The root folder sets the base directory used to resolve all relative paths. It is taken from the config `Root` if present, can be overridden with `-r`/`--root`, and defaults to `.` (the working directory from which the command is run) — so paths like `./configs/main_config.json` and `./out` resolve relative to it.
 
 If you run SimChA from a different directory — for example via a script or a workflow manager — set `--root` to the repository folder so that default config and output paths resolve correctly without having to specify each one individually:
 
@@ -291,25 +300,30 @@ Reference data is located in the `data/` folder, organized by assembly name (mat
 Each assembly folder needs to contain description of the chromosomes, centromeres, and gene score files in a subfolder (matching `FitParams.GeneSet`). 
 We provide `GRCh37` and `GRCh38` in the folders `./data/hg19` and `./data/hg38` respectively.
 
-### Overriding data locations (`-a`, `-l`)
+### Overriding data locations (`-r`, `-a`, `-g`)
 
-By default the assembly folder is resolved as `data/<SimParams.Assembly>` and the loci (gene-set) folder
-as `<assembly>/<FitParams.GeneSet>`. Two options let you point SimChA at data stored elsewhere without
-editing the config:
+The assembly and gene set are read from the config (`SimParams.Assembly` and `FitParams.GeneSet`) and the
+root from the config `Root`. Each can be overridden on the command line, with precedence
+**command line > config > default**:
 
-* `-a, --assembly <path>`: use `<path>` directly as the assembly folder (the one containing `chromosomes.tsv`,
-  `centromeres.tsv`, and optionally `genome.fa`), bypassing the `data/<SimParams.Assembly>` convention.
-* `-l, --loci <path>`: use `<path>` directly as the loci folder (the one containing the TSG/OG/essentiality
-  score files), bypassing the `<assembly>/<FitParams.GeneSet>` convention.
+* `-r, --root <path>`: the base directory used to resolve all relative paths (config, data, output).
+  Defaults to the current working directory.
+* `-a, --assembly <value>`: the assembly. An **absolute** path is used directly as the assembly folder
+  (the one containing `chromosomes.tsv`, `centromeres.tsv`, and optionally `genome.fa`); a **relative**
+  value is resolved under the data folder as `data/<value>` (e.g. `hg19` → `data/hg19`).
+* `-g, --gene_set <value>`: the gene set. An **absolute** path is used directly as the gene set folder
+  (the one containing the TSG/OG/essentiality score files); a **relative** value is resolved under the
+  assembly folder as `<assembly>/<value>`.
 
-The two are independent: if only `-a` is given, the loci folder is still resolved relative to the overridden
-assembly folder (`<path>/<FitParams.GeneSet>`); if only `-l` is given, the assembly folder is resolved as
-usual. A non-existent override path produces an error. For example, to read the assembly from a shared
-location while keeping the configured gene set:
+A non-existent path produces an error. For example, to read the assembly from a shared absolute location
+while keeping the configured gene set:
 
 ```bash
-dotnet run -- -a /shared/refdata/hg38 -l /shared/refdata/hg38/spice_all
+dotnet run -- -a /shared/refdata/hg38 -g spice_all
 ```
+
+The effective root, assembly, gene set, and the SimChA version are written into the output config
+(`out/sim_params.json`), so each run records exactly what was used.
 
 ### Chromosomes
 > `chromosomes.tsv`
@@ -742,7 +756,7 @@ dotnet run -- --output ./out --config ./configs/main_config.json -m basic
 Simulate tumor evolution with fitness-based selection using the spice gene set:
 
 ```bash
-dotnet run -- -O ./out -C ./configs/main_config.json -G spice -m evolution
+dotnet run -- -O ./out -C ./configs/main_config.json -g spice_all -m evolution
 ```
 
 ### Fitness Matching Mode

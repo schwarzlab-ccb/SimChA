@@ -39,6 +39,51 @@ public class TestParsing
     }
     
     [Test]
+    public void TestReadGenRefAbsoluteAssembly()
+    {
+        // An absolute assembly path is used directly; the data folder argument is ignored.
+        string absoluteAssembly = Path.GetFullPath(Path.Combine(DATA_PATH, HG_19));
+        var refGen = FileIO.ReadGenRef("nonexistent_data_folder", absoluteAssembly, GENE_SET);
+        Assert.AreEqual(HG_19, refGen.Name);
+        Assert.AreEqual(_refGen.AllChrNames, refGen.AllChrNames);
+    }
+
+    [Test]
+    public void TestReadGenRefAbsoluteGeneSet()
+    {
+        // An absolute gene set path is used directly instead of being resolved under the assembly.
+        string absoluteGeneSet = Path.GetFullPath(Path.Combine(DATA_PATH, HG_19, GENE_SET));
+        var refGen = FileIO.ReadGenRef(DATA_PATH, HG_19, absoluteGeneSet);
+        Assert.AreEqual(_refGen.AllChrNames, refGen.AllChrNames);
+    }
+
+    [Test]
+    public void TestReadGenRefMissingAssemblyThrows()
+        => Assert.Throws<System.ArgumentException>(
+            () => FileIO.ReadGenRef(DATA_PATH, "does_not_exist", GENE_SET));
+
+    [Test]
+    public void TestConfigRootVersionRoundTrip()
+    {
+        var config = new SimChAConfig(new SimParams(), new FitParams(), Root: "/some/root", Version: "1.2.3");
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        string serialized = JsonSerializer.Serialize(config, options);
+        var deserialized = JsonSerializer.Deserialize<SimChAConfig>(serialized);
+        Assert.AreEqual("/some/root", deserialized?.Root);
+        Assert.AreEqual("1.2.3", deserialized?.Version);
+    }
+
+    [Test]
+    public void TestConfigRootVersionDefaultNull()
+    {
+        // A config without the top-level fields parses with them null (they are optional).
+        const string json = "{\"SimParams\":{},\"FitParams\":{}}";
+        var config = JsonSerializer.Deserialize<SimChAConfig>(json);
+        Assert.IsNull(config?.Root);
+        Assert.IsNull(config?.Version);
+    }
+
+    [Test]
     public void TestParseGeneLists()
     {
         var tsgList = _refGen.AllChrNames.ToDictionary(t => t, _ => new List<Gene>());

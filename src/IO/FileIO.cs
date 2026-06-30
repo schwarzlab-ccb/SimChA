@@ -339,30 +339,33 @@ public class FileIO
         }
     }
 
-    public static RefGen ReadGenRef(string dataFolder, string refName, string genesName, bool useVariants = false,
-        string assemblyFolderOverride = "", string lociFolderOverride = "")
+    // Resolves the assembly folder: an absolute/rooted path is used directly, a relative value is a
+    // subfolder of the data folder (e.g. "hg19" -> data/hg19).
+    private static string ResolveAssemblyFolder(string dataFolder, string assembly)
     {
-        string assemblyFolder;
-        if (!string.IsNullOrEmpty(assemblyFolderOverride))
+        if (Path.IsPathRooted(assembly))
         {
-            assemblyFolder = Path.GetFullPath(assemblyFolderOverride);
+            return Path.GetFullPath(assembly);
         }
-        else
+        string dataFullPath = Path.GetFullPath(dataFolder);
+        if (!Path.Exists(dataFullPath))
         {
-            string dataFullPath = Path.GetFullPath(dataFolder);
-            if (!Path.Exists(dataFullPath))
-            {
-                throw new ArgumentException($"Data folder does not exist: {dataFullPath}");
-            }
-            assemblyFolder = Path.Combine(dataFullPath, refName);
+            throw new ArgumentException($"Data folder does not exist: {dataFullPath}");
         }
+        return Path.Combine(dataFullPath, assembly);
+    }
+
+    public static RefGen ReadGenRef(string dataFolder, string assembly, string geneSet, bool useVariants = false)
+    {
+        string assemblyFolder = ResolveAssemblyFolder(dataFolder, assembly);
         if (!Path.Exists(assemblyFolder))
         {
             throw new ArgumentException($"Assembly folder does not exist: {assemblyFolder}");
         }
-        string genesFolder = !string.IsNullOrEmpty(lociFolderOverride)
-            ? Path.GetFullPath(lociFolderOverride)
-            : Path.Combine(Path.GetFullPath(assemblyFolder), genesName);
+        // An absolute gene set path is used directly; a relative value is a subfolder of the assembly.
+        string genesFolder = Path.IsPathRooted(geneSet)
+            ? Path.GetFullPath(geneSet)
+            : Path.Combine(Path.GetFullPath(assemblyFolder), geneSet);
         if (!Path.Exists(genesFolder))
         {
             throw new ArgumentException($"Genes folder does not exist: {genesFolder}");
@@ -373,6 +376,7 @@ public class FileIO
         var allChrs = chrSex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, assemblyFolder) : null;
         var geneChromMap = MapGenesToChroms(genesFolder, chrSex);
+        string refName = Path.GetFileName(assemblyFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         return new RefGen(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
     }
 }

@@ -44,14 +44,14 @@ public class CmdOptions
     [Option('z', "zero-index", Required = false, Default = false, HelpText = "Flag for zero-indexed input copy number profiles")]
     public bool ZeroIndexed { get; set; }
     
-    [Option('r', "root", Required = false, HelpText = "A path to the folder that will be considered root for relative paths. If not provided, the SimChA will be used.")]
-    public string RootFolder { get; set; } = ".";
+    [Option('r', "root", Required = false, Default = "", HelpText = "Override the root folder used to resolve relative paths. Takes precedence over the config 'Root'. If not provided in either, the current working directory is used.")]
+    public string RootFolder { get; set; } = "";
 
-    [Option('a', "assembly", Required = false, Default = "hg19", HelpText = "Override to the path of the assembly folder. If not provided, the root path is used.")]
+    [Option('a', "assembly", Required = false, Default = "", HelpText = "Override the assembly. Takes precedence over the config 'SimParams.Assembly'. An absolute path is used directly; a relative value is resolved under the data folder.")]
     public string AssemblyFolder { get; set; } = "";
 
-    [Option('l', "loci", Required = false, Default = "spice_all", HelpText = "Override to the path of the loci folder. If not provided, the assembly folder based on the config path is used.")]
-    public string LociFolder { get; set; } = "";
+    [Option('g', "gene_set", Required = false, Default = "", HelpText = "Override the gene set. Takes precedence over the config 'FitParams.GeneSet'. An absolute path is used directly; a relative value is resolved under the assembly folder.")]
+    public string GeneSetFolder { get; set; } = "";
 
     [Option('d', "delta", Required = false, Default = false, HelpText = "Will also print the changes caused by events.")]
     public bool Debug { get; set; }
