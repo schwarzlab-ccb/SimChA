@@ -13,9 +13,12 @@ public static class Sampling
     public static long GetExpSeg(Random rnd, long contigLen, long meanLen) 
         => (long) Math.Clamp(Math.Round(meanLen * Exponential.Sample(rnd, 1)), 1, contigLen);
     
-    public static long GetExpSeg(Random rnd, long contigLen, double meanFrac) 
+    public static long GetExpSeg(Random rnd, long contigLen, double meanFrac)
         => (long) Math.Clamp(Math.Round(contigLen * meanFrac * Exponential.Sample(rnd, 1)), 1, contigLen);
-    
+
+    public static long GetParetoSeg(Random rnd, long contigLen, double meanFrac)
+        => (long) Math.Clamp(Math.Round(contigLen * SampleParetoLim(rnd, meanFrac)), 1, contigLen);
+
     public static long GetPos(Random rnd, long contigLen)
         => rnd.NextInt64(0, contigLen);
     
@@ -100,12 +103,15 @@ public static class Sampling
         double shape = 0.5;
         double scale = GetParetoScale(mean);
         for (int i = 0; i < 1000; i++) {
-            double sample = Pareto.Sample(rnd, scale, shape);
+            // MathNet's Pareto has support [scale, inf); shift by -scale so the
+            // proportion support starts at 0, matching the shifted Pareto fit
+            // (scipy loc=-xm, scale=xm) used to derive the config in lib_create_config.py.
+            double sample = Pareto.Sample(rnd, scale, shape) - scale;
             if (sample <= 1)
             {
                 return sample;
             }
-        } 
+        }
         return 1;
     }
     

@@ -11,8 +11,10 @@ public record InternalEventData : ContigEventData
 
     // Constructor used for internal events
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) : base(CNEventPars, contigId, contigLen)
-    {   
-        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
+    {
+        // Interior event lengths follow a Pareto (shape 0.5) fit to the empirical
+        // proportion distribution; centromere-bound events (other constructor) stay exponential.
+        long segLen = Sampling.GetParetoSeg(rnd, contigLen, CNEventPars.Frac);
         //Start = rnd.NextInt64(segLen, contigLen-segLen);
         Start = Sampling.GetPos(rnd, contigLen - segLen); 
         End = Start + segLen;
