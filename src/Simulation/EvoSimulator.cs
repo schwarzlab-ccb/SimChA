@@ -37,14 +37,14 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
     }
     
     protected override (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
-        Karyotype currentKar, 
-        CTreeNode cnChild, 
-        List<CNEventPars> cnEventPs, 
-        int mutDepth)
+        Karyotype currentKar,
+        CTreeNode cnChild,
+        List<CNEventPars> cnEventPs,
+        int mutDepth,
+        int eventCount)
     {
         var childEvs = new List<CNEventDesc>();
-        int eventCount = SampleEventCount(cnChild);
-        
+
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));

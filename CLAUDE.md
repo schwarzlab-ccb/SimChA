@@ -46,7 +46,7 @@ The `.csproj` is at the repo root; sources live in `src/`. `dotnet run` runs the
 
 `Factory.GetSimulator()` returns the right subclass based on `SelectionMode` (`MonteCarlo` / `Evolution` / `FitnessMatching`).
 
-The base `Simulator` wraps each sample's `SampleEvents` in `SampleEventsLimited`, which enforces `SimParams.MaxWGD`: if a generated sample contains more whole-genome doublings than allowed, its event selection is restarted from the parent karyotype (default `-1` = no limit). This applies uniformly to all three modes.
+The base `Simulator` wraps each sample's `SampleEvents` in `SampleEventsLimited`, which enforces `SimParams.MaxWGD` (default `-1` = no limit): the target event count is drawn once, and if a generated sample contains more whole-genome doublings than allowed it is re-simulated from the parent karyotype **with the same event count** (so the cap does not bias the event-count distribution). The count is only redrawn — and the per-count try budget reset — after `SimParams.MaxWgdTries` consecutive failures; a fixed tree distance (`Distance >= 0`) cannot be redrawn, so it aborts instead. This applies uniformly to all three modes.
 
 ### Event system
 
@@ -76,7 +76,7 @@ Gene counts are maintained incrementally in `Karyotype.GeneCounts` rather than r
 ### Config structure
 
 `SimChAConfig` (JSON) has four sections plus two optional top-level fields:
-- `SimParams` — seed, assembly, sex, mutation rate distribution, mixture type, `MaxWGD`.
+- `SimParams` — seed, assembly, sex, mutation rate distribution, mixture type, `MaxWGD`, `MaxWgdTries` (re-simulations at a fixed event count before the count is redrawn; default 100).
 - `FitParams` — weights for stress/TsgOg/essentiality, gene set folder name.
 - `EvoParams` — acceptance threshold, max tries, decay (required for evolution/matching modes).
 - `Signatures` — array of named signature objects, each with a `Prob` and `Events` array.

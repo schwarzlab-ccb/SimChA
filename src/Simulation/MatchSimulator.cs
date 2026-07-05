@@ -95,12 +95,12 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
         Karyotype currentKar,
         CTreeNode cnChild,
         List<CNEventPars> cnEventPs,
-        int mutDepth)
+        int mutDepth,
+        int eventCount)
     {
         var childEvs = new List<CNEventDesc>();
         double targetFit = cnChild.Fitness;
 
-        int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"\rSample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80));

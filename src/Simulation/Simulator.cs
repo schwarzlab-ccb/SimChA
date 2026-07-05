@@ -86,14 +86,14 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
     }
 
     protected virtual (Karyotype childKar, List<CNEventDesc> childEvs) SampleEvents(
-        Karyotype parentKar, 
-        CTreeNode cnChild, 
-        List<CNEventPars> cnEventPs, 
-        int mutDepth)
+        Karyotype parentKar,
+        CTreeNode cnChild,
+        List<CNEventPars> cnEventPs,
+        int mutDepth,
+        int eventCount)
     {
         var currentKar = new Karyotype(parentKar);
         var childEvs = new List<CNEventDesc>();
-        int eventCount = SampleEventCount(cnChild);
         for (int evNo = 1; evNo <= eventCount; evNo++)
         {
             Console.Write($"Sample {cnChild.CloneId}. Event {evNo}/{eventCount}.".PadRight(80) + "\r");
@@ -111,21 +111,27 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         return (currentKar, childEvs);
     }
 
-    // Maximum number of times a single sample's event selection is restarted when it exceeds
-    // SimParams.MaxWGD before the run is aborted to avoid an unbounded loop.
-    private const int MaxWgdRestarts = 10000;
+    // Absolute cap on the total number of re-simulations for a single sample under the
+    // SimParams.MaxWGD limit, guarding against configurations that can never satisfy the cap.
+    private const int MaxWgdTotalAttempts = 10000;
 
-    // Wraps SampleEvents with the SimParams.MaxWGD limit: if the generated sample contains more
-    // whole-genome doublings than allowed, the entire event selection for the sample is restarted.
+    // Wraps SampleEvents with the SimParams.MaxWGD limit. The target event count is drawn once;
+    // if the generated sample contains more whole-genome doublings than allowed it is re-simulated
+    // with the SAME event count, so the cap does not bias the event-count distribution. The count is
+    // only redrawn (and the per-count try budget reset) after SimParams.MaxWgdTries consecutive
+    // failures. A fixed tree distance (cnChild.Distance >= 0) cannot be redrawn, so it aborts instead.
     private (Karyotype childKar, List<CNEventDesc> childEvs) SampleEventsLimited(
         Karyotype parentKar,
         CTreeNode child,
         List<CNEventPars> cnEventPs,
         int mutDepth)
     {
+        int maxTries = Math.Max(1, SimParams.MaxWgdTries);
+        int eventCount = SampleEventCount(child);
+        int triesAtCount = 0;
         for (int attempt = 1; ; attempt++)
         {
-            var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth);
+            var (childKar, childEvs) = SampleEvents(parentKar, child, cnEventPs, mutDepth, eventCount);
             if (SimParams.MaxWGD < 0)
             {
                 return (childKar, childEvs);
@@ -135,14 +141,26 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
             {
                 return (childKar, childEvs);
             }
-            if (attempt >= MaxWgdRestarts)
+            if (attempt >= MaxWgdTotalAttempts)
             {
                 throw new Exception(
                     $"Sample {child.CloneId} exceeded MaxWGD ({SimParams.MaxWGD}) on every one of " +
-                    $"{MaxWgdRestarts} restarts. Increase SimParams.MaxWGD or lower the WGD probability.");
+                    $"{MaxWgdTotalAttempts} re-simulations. Increase SimParams.MaxWGD or lower the WGD probability.");
+            }
+            if (++triesAtCount >= maxTries)
+            {
+                if (child.Distance >= 0)
+                {
+                    throw new Exception(
+                        $"Sample {child.CloneId} (fixed event count {eventCount}) exceeded MaxWGD " +
+                        $"({SimParams.MaxWGD}) on all {maxTries} re-simulations. A fixed tree distance " +
+                        "cannot be redrawn; increase SimParams.MaxWGD or lower the WGD probability.");
+                }
+                eventCount = SampleEventCount(child);
+                triesAtCount = 0;
             }
             Console.Write(
-                $"\rSample {child.CloneId} produced {wgdCount} WGDs (> MaxWGD {SimParams.MaxWGD}), restarting (attempt {attempt}).".PadRight(80));
+                $"\rSample {child.CloneId} produced {wgdCount} WGDs (> MaxWGD {SimParams.MaxWGD}), re-simulating at count {eventCount} (attempt {attempt}).".PadRight(80));
         }
     }
 
