@@ -105,9 +105,6 @@ public class Contig
     public override string ToString()
         => ToString(Regions);
 
-    public List<string> GetRegionDescriptions()
-        => Regions.Select(r => r.ToString()).ToList();
-
     public IEnumerable<Region> FindChrRegions(string chrNo)
         => Regions.Where(r => r.Chrom == chrNo);
 

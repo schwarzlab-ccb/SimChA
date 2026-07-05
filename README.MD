@@ -640,13 +640,17 @@ Information about the individual events in the simulation. The columns are:
 
 | sample_id |  event_type | depth | description | delta_fitness | total_fitness | num_rejections | signature | regions_gained | regions_lost |
 |-----------|-------------|-------|-------------|---------------|---------------|----------------|-----------|----------------|--------------|
-| sample_0 | ChromDuplication | 12 | contig:23 | 0.5378 | 11.5378 | 0 | CNA | >chr11[0:135006516) | |
-| sample_0 | InternalDuplication | 13 | contig:18;length:59128983;start:49287088;end:50048544 | 0.0000 | 11.5378 | 12 | CNA | >chr19[49287088:50048544) | |
-| sample_0 | InternalDeletion | 14 | contig:12;length:115169878;start:2802803;end:7456363 | 0.0000 | 11.5378 | 2 | CNA | | >chr13[2802803:7456363) |
+| sample_0 | ChromDuplication | 12 | contig:23 | 0.5378 | 11.5378 | 0 | CNA | [H1:chr11[0:135006516)] | [] |
+| sample_0 | InternalDuplication | 13 | contig:18;length:59128983;start:49287088;end:50048544 | 0.0000 | 11.5378 | 12 | CNA | [H1:chr19[49287088:50048544)] | [] |
+| sample_0 | InternalDeletion | 14 | contig:12;length:115169878;start:2802803;end:7456363 | 0.0000 | 11.5378 | 2 | CNA | [] | [H1:chr13[2802803:7456363)] |
 
-The `regions_gained`/`regions_lost` columns list all individual regions that were added or removed by the event
-(separated by `|` if multiple). This includes regions from whole contigs that were created or deleted, as well as
-regions that were duplicated or removed within existing contigs.
+The `regions_gained`/`regions_lost` columns report the exact copy-number change caused by the event, obtained by
+comparing the copy number at each reference position before and after the event. Each entry is
+`H<hap>:<chrom>[<start>:<end>)` and appears once per copy gained or lost on that haplotype, with multiple entries
+comma-separated inside a `[...]` wrapper. Because the comparison is per reference base rather than per region, an event
+that merely splits a region — for example an internal deletion that cuts one region into two — reports only the
+interval whose copy number actually changed, instead of a spurious loss plus two gains. Copy-number-neutral events
+such as inversions and balanced translocations therefore produce no entries.
 
 #### `vcf.tsv`
 

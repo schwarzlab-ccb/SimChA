@@ -84,4 +84,62 @@ public class TestCopyNumbers
         double ploidy = CopyNumbers.CalcPloidy(_refGen, cns, sex);
         Assert.AreEqual(2, ploidy);
     }
+
+    // An internal deletion splits the host region into two, but the copy-number diff must report
+    // only the deleted interval as lost, not the split as a loss plus two gains.
+    [Test]
+    public void TestDiffInternalDeletionReportsOnlyDeletedInterval()
+    {
+        // Contig 0 is the first autosome on haplotype H1.
+        string chrom = _refGen.SexChromNames[(int) SexType.Any][0];
+        const long delStart = 1_000_000;
+        const long delEnd = 2_000_000;
+
+        var before = new Karyotype(_refGen, SexType.Any);
+        var after = new Karyotype(before);
+        after.ApplyInternalDeletion(0, delStart, delEnd);
+
+        var deltas = CopyNumbers.DiffKaryotypes(before, after);
+
+        Assert.AreEqual(1, deltas.Count, "exactly one segment should change");
+        var delta = deltas[0];
+        Assert.AreEqual(chrom, delta.Chrom);
+        Assert.AreEqual(delStart, delta.Start);
+        Assert.AreEqual(delEnd, delta.End);
+        Assert.AreEqual(-1, delta.CNH1, "one copy lost on H1");
+        Assert.AreEqual(0, delta.CNH2, "H2 unchanged");
+    }
+
+    // A whole-genome doubling gains exactly one copy of every chromosome on both haplotypes,
+    // merged into one segment per chromosome.
+    [Test]
+    public void TestDiffWgdGainsOneCopyGenomeWide()
+    {
+        var before = new Karyotype(_refGen, SexType.Any);
+        var after = new Karyotype(before);
+        after.ApplyWGD();
+
+        var deltas = CopyNumbers.DiffKaryotypes(before, after);
+
+        Assert.AreEqual(_refGen.SexChromNames[(int) SexType.Any].Count, deltas.Count);
+        Assert.IsTrue(deltas.All(d => d is { CNH1: 1, CNH2: 1 }), "every chromosome gains one copy on both haplotypes");
+    }
+
+    [Test]
+    public void TestDiffNoChangeIsEmpty()
+    {
+        var before = new Karyotype(_refGen, SexType.Any);
+        var after = new Karyotype(before);
+        Assert.IsEmpty(CopyNumbers.DiffKaryotypes(before, after));
+    }
+
+    // Inversions preserve copy number, so the copy-number diff reports nothing for them.
+    [Test]
+    public void TestDiffInversionReportsNothing()
+    {
+        var before = new Karyotype(_refGen, SexType.Any);
+        var after = new Karyotype(before);
+        after.ApplyInternalInversion(0, 1_000_000, 2_000_000);
+        Assert.IsEmpty(CopyNumbers.DiffKaryotypes(before, after));
+    }
 }

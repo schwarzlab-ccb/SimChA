@@ -43,14 +43,6 @@ public class Karyotype
         }
     }
     
-    public (List<Region> regionsGained, List<Region> regionsLost) CalcKaryotypeDelta(Karyotype childKar)
-    {
-        List<Region> regionsGained = [];
-        List<Region> regionsLost = [];
-        
-        return (regionsGained, regionsLost);
-    }
-
     public int CountContigs()
         => _contigs.Count(c => c.Any());
 
@@ -78,10 +70,6 @@ public class Karyotype
 
     public IEnumerable<int> ContigIds()
         => _contigs.Select((c, i) => (c, i)).Where(t => t.c.Any()).Select(t => t.i);
-
-
-    public Dictionary<int, List<string>> GetRegionDescriptions()
-        => ContigIds().ToDictionary(id => id, id => _contigs[id].GetRegionDescriptions());
 
     public override string ToString()
         => CountContigs() > 0 ? "[" + string.Join(";", _contigs) + "]" : "[]";
