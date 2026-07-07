@@ -42,11 +42,18 @@ public record SimChAConfig(
         string effectiveGeneSet = string.IsNullOrEmpty(options.GeneSetFolder)
             ? config.FitParams.GeneSet
             : options.GeneSetFolder;
+        // Effective RNG seed: command line > config (the config's own negative-means-random was
+        // already applied on read); a negative override likewise draws a random seed.
+        int effectiveSeed = options.Seed ?? config.SimParams.Seed;
+        if (effectiveSeed < 0)
+        {
+            effectiveSeed = new Random().Next();
+        }
         string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
 
         return config with
         {
-            SimParams = config.SimParams with { Assembly = effectiveAssembly },
+            SimParams = config.SimParams with { Assembly = effectiveAssembly, Seed = effectiveSeed },
             FitParams = config.FitParams with { GeneSet = effectiveGeneSet },
             Root = effectiveRoot,
             Version = version

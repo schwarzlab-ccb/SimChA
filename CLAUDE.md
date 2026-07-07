@@ -83,11 +83,12 @@ Gene counts are maintained incrementally in `Karyotype.GeneCounts` rather than r
 - `Root` (top level, optional) — base directory for resolving relative paths.
 - `Version` (top level) — ignored on input; stamped with the running version on output.
 
-`SimChAConfig.Load(CmdOptions)` reads the config file and resolves `root`, `assembly`, and `gene_set`
-with precedence **command line > config > default** (`-r`/`--root`, `-a`/`--assembly`, `-g`/`--gene_set`).
+`SimChAConfig.Load(CmdOptions)` reads the config file and resolves `root`, `assembly`, `gene_set`, and
+the RNG `seed` with precedence **command line > config > default** (`-r`/`--root`, `-a`/`--assembly`,
+`-g`/`--gene_set`, `--seed`; a negative seed — from either source — draws a random one).
 It applies the effective root as the working directory and stamps the effective `SimParams.Assembly`,
-`FitParams.GeneSet`, `Root`, and `Version` back into the returned config, so the output `sim_params.json`
-records exactly what was used (and can be fed back in as input).
+`SimParams.Seed`, `FitParams.GeneSet`, `Root`, and `Version` back into the returned config, so the
+output `sim_params.json` records exactly what was used (and can be fed back in as input).
 
 Path resolution in `FileIO.ReadGenRef`: an **absolute** assembly/gene-set value is used directly as the
 folder; a **relative** value is resolved under the data folder (`data/<assembly>`) and assembly folder

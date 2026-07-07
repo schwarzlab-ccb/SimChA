@@ -53,6 +53,9 @@ public class CmdOptions
     [Option('g', "gene_set", Required = false, Default = "", HelpText = "Override the gene set. Takes precedence over the config 'FitParams.GeneSet'. An absolute path is used directly; a relative value is resolved under the assembly folder.")]
     public string GeneSetFolder { get; set; } = "";
 
+    [Option("seed", Required = false, HelpText = "Override the RNG seed 'SimParams.Seed'. Takes precedence over the config; the config value is used if not given. A negative value draws a random seed.")]
+    public int? Seed { get; set; }
+
     [Option('d', "delta", Required = false, Default = false, HelpText = "Will also print the changes caused by events.")]
     public bool Debug { get; set; }
     
