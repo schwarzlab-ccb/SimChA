@@ -149,8 +149,6 @@ class CommandLineTests(unittest.TestCase):
                     "filter",
                     "-I",
                     str(input_path),
-                    "-D",
-                    str(ducking_path),
                     "-O",
                     str(filtered_path),
                 ]
@@ -162,55 +160,6 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(len(detected), 1)
         self.assertEqual(len(filtered), 1)
         self.assertEqual(filtered.loc[0, "depth"], 2)
-
-    def test_process_command_writes_detected_and_filtered_events(self):
-        events = make_events(
-            [
-                (
-                    "S1",
-                    "InternalDuplication",
-                    1,
-                    "contig:7;gain",
-                    "[H1:chr1[20:30)]",
-                    "[]",
-                ),
-                (
-                    "S1",
-                    "InternalDeletion",
-                    2,
-                    "contig:7;loss",
-                    "[]",
-                    "[H1:chr1[10:40)]",
-                ),
-            ]
-        )
-
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            input_path = directory / "events.tsv"
-            ducking_path = directory / "ducking.tsv"
-            filtered_path = directory / "filtered.tsv"
-            events.to_csv(input_path, sep="\t", index=False)
-
-            main(
-                [
-                    "process",
-                    "-I",
-                    str(input_path),
-                    "-D",
-                    str(ducking_path),
-                    "-O",
-                    str(filtered_path),
-                ]
-            )
-
-            detected = pd.read_csv(ducking_path, sep="\t")
-            filtered = pd.read_csv(filtered_path, sep="\t")
-
-        self.assertEqual(len(detected), 1)
-        self.assertEqual(len(filtered), 1)
-        self.assertEqual(filtered.loc[0, "depth"], 2)
-
 
 if __name__ == "__main__":
     unittest.main()

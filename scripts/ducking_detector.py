@@ -116,12 +116,6 @@ def build_parser() -> argparse.ArgumentParser:
         default_output=DEFAULT_DATA_DIR / "ducking_events.tsv",
         output_help="Detailed ducking-event TSV (default: ./ducking_events.tsv)",
     )
-    detect_parser.add_argument(
-        "--include-wgd-crossing",
-        action="store_true",
-        help="allow ducking matches across an intervening whole-genome doubling",
-    )
-
     filter_parser = subparsers.add_parser(
         "filter",
         help="remove unrescued ducking events",
@@ -134,13 +128,15 @@ def build_parser() -> argparse.ArgumentParser:
             "Filtered event TSV (default: ./events_filtered.tsv)"
         ),
     )
-    filter_parser.add_argument(
-        "-D",
-        "--ducking-events",
-        type=Path,
-        default=DEFAULT_DATA_DIR / "ducking_events.tsv",
-        help="Detected ducking-event TSV (default: ./ducking_events.tsv)",
-    )
+    for command_parser in (detect_parser, filter_parser):
+        command_parser.add_argument(
+            "--include-wgd-crossing",
+            action="store_true",
+            help=(
+                "allow ducking matches across an intervening whole-genome "
+                "doubling"
+            ),
+        )
     return parser
 
 
@@ -154,12 +150,12 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     args = build_parser().parse_args(argv)
     events = pd.read_csv(args.input, sep="\t")
+    ducking_events = find_ducking_events(
+        events,
+        include_wgd_crossing=args.include_wgd_crossing,
+    )
 
     if args.command == "detect":
-        ducking_events = find_ducking_events(
-            events,
-            include_wgd_crossing=args.include_wgd_crossing,
-        )
         _write_tsv(ducking_events, args.output)
         print(
             f"Detected {len(ducking_events):,} ducking events "
@@ -168,7 +164,6 @@ def main(argv: Sequence[str] | None = None) -> None:
         )
         return
 
-    ducking_events = pd.read_csv(args.ducking_events, sep="\t")
     filtered_events = filter_ducking_events(events, ducking_events)
     _write_tsv(filtered_events, args.output)
     removed_count = len(events) - len(filtered_events)

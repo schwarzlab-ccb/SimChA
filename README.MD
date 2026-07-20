@@ -812,24 +812,17 @@ SimChA's --delta option.
 Run the tool from the SimChA repository root:
 
     python scripts/ducking_detector.py detect \
-        --input events.tsv --output ducking_events.tsv
+        -I events.tsv -O ducking_events.tsv
 
     python scripts/ducking_detector.py filter \
-        --input events.tsv \
-        --ducking-events ducking_events.tsv \
-        --output events_filtered.tsv
+        -I events.tsv \
+        -O events_filtered.tsv
 
-Run both operations with one input read:
-
-    python scripts/ducking_detector.py process \
-        --input events.tsv \
-        --ducking-events ducking_events.tsv \
-        --output events_filtered.tsv
-
-Use --include-wgd-crossing on the detect command for a coordinate-only
-analysis that permits hiding matches across an intervening whole-genome
-doubling. The option is also available on the process command. The simulation
-and plotting workflow lives in project-simcha under src_ducking_events.
+The filter command detects ducking events internally and writes only the
+filtered event table. Use --include-wgd-crossing on either command for a
+coordinate-only analysis that permits hiding matches across an intervening
+whole-genome doubling. The simulation and plotting workflow lives in
+project-simcha under src_ducking_events.
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, `adam.streck@iccb-cologne.org`.
