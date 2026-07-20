@@ -9,6 +9,8 @@ public enum CNEventType
     ChromDuplication,
     TailDuplication,
     TailDeletion,
+    TelomereDuplication,
+    TelomereDeletion,
     InternalDeletion,
     InternalDuplication,
     InternalInversion,

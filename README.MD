@@ -430,6 +430,8 @@ Each Event has an associated type and a probability, which is relative to all th
 * `ChromDeletion`
 * `TailDuplication`
 * `TailDeletion`
+* `TelomereDuplication`
+* `TelomereDeletion`
 * `CentromereBoundDuplication`
 * `CentromereBoundDeletion`
 * `ArmDuplication`
@@ -450,6 +452,11 @@ Each Event has an associated type and a probability, which is relative to all th
 * `Rigma`
 * `SNV`
 * `Pass`
+
+`TelomereDuplication` and `TelomereDeletion` use 50 kb reference-terminal annotations.
+An event is generated only from a physical contig end that still carries the complete
+annotation; rearranged internal telomeres and partially deleted telomeres are ineligible.
+Eligible ends are sampled uniformly, and event length follows the usual `Frac` parameter.
 
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.

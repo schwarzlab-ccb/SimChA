@@ -135,6 +135,71 @@ public class TestKaryotype
         Assert.AreEqual(len, _kar.ContigLen(0));
         Assert.AreEqual(2*TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
     }
+
+    [Test]
+    public void TestTelomereEventRequiresAnIntactTerminalTelomere()
+    {
+        const int contigId = 0;
+        Assert.AreEqual(2, _kar.CountIntactTelomereEnds(contigId));
+
+        // Editing immediately inside the 50 kb boundary leaves the front telomere intact.
+        _kar.ApplyInternalDeletion(
+            contigId,
+            RefGen.TelomereLength,
+            RefGen.TelomereLength + 1);
+        Assert.AreEqual(2, _kar.CountIntactTelomereEnds(contigId));
+
+        // Removing its final base destroys the whole annotation; only the back end remains.
+        _kar.ApplyInternalDeletion(
+            contigId,
+            RefGen.TelomereLength - 1,
+            RefGen.TelomereLength);
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(contigId));
+
+        foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+
+        var eventParameters = new CNEventPars(CNEventType.TelomereDeletion, 1, 0.01);
+        var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters) as TailEventData;
+        Assert.NotNull(eventData);
+        Assert.IsFalse(eventData!.Direction);
+
+        long contigLength = _kar.ContigLen(contigId);
+        _kar.ApplyInternalInversion(contigId, 0, contigLength);
+        eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters) as TailEventData;
+        Assert.NotNull(eventData);
+        Assert.IsTrue(eventData!.Direction);
+
+        _kar.ApplyTailDeletion(contigId, 1, true);
+        Assert.AreEqual(0, _kar.CountIntactTelomereEnds(contigId));
+        Assert.IsNull(Sampling.GenerateCNEventData(_rnd, _kar, eventParameters));
+    }
+
+    [Test]
+    public void TestTelomereDuplicationUsesTheEligibleContigEnd()
+    {
+        const int contigId = 0;
+        foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+        _kar.ApplyTailDeletion(contigId, 1, true);
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(contigId));
+
+        var eventParameters = new CNEventPars(CNEventType.TelomereDuplication, 1, 0.01);
+        var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters) as TailEventData;
+        Assert.NotNull(eventData);
+        Assert.IsFalse(eventData!.Direction);
+
+        int contigCount = _kar.CountContigs();
+        eventData.ApplyEvent(_kar);
+        Assert.AreEqual(contigCount + 1, _kar.CountContigs());
+        Assert.AreEqual(
+            eventData.Length - eventData.Start,
+            _kar.ContigLen(_kar.ContigIds().Last()));
+    }
     
     [Test]
     public void TestBFB()
@@ -485,5 +550,20 @@ public class TestKaryotype
 
         // The fused contig has two centromeres vs one, so it should be picked ~2/3 of the time.
         Assert.AreEqual(2.0 / 3.0, frac, 0.03);
+    }
+
+    [Test]
+    public void TestTelomereSelectionByEligibleEndCount()
+    {
+        var (twoEndedId, oneEndedId) = KeepExtremeContigs();
+        _kar.ApplyTailDeletion(oneEndedId, 1, true);
+        Assert.AreEqual(2, _kar.CountIntactTelomereEnds(twoEndedId));
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(oneEndedId));
+
+        var ev = new CNEventPars(CNEventType.TelomereDeletion, 1, 0.01);
+        double fraction = SelectionFraction(ev, twoEndedId, 20000);
+
+        // Sampling an eligible end uniformly gives the two-ended contig twice the weight.
+        Assert.AreEqual(2.0 / 3.0, fraction, 0.03);
     }
 }

@@ -11,10 +11,20 @@ public record TailEventData : ContigEventData
     
     // Constructor used for Tail CNEventPars
     public TailEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen) 
+        : this(CNEventPars, contigId, ComputeTailParams(rnd, CNEventPars, contigLen), contigLen)
+    { }
+
+    // Constructor used for events constrained to a preselected physical contig end.
+    public TailEventData(
+        Random rnd,
+        CNEventPars CNEventPars,
+        int contigId,
+        long contigLen,
+        bool direction)
         : base(CNEventPars, contigId, contigLen)
     {
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
-        Direction = rnd.CoinFlip();
+        Direction = direction;
         Start = Direction ? segLen : contigLen - segLen;
     }
     
@@ -22,11 +32,22 @@ public record TailEventData : ContigEventData
         : this(CNEventPars, contigId, ComputeArmParams(rnd, cents, contigLen), contigLen)
     { }
     
-    private TailEventData(CNEventPars CNEventPars, int contigId, (long segLen, bool direction) arm, long contigLen)
+    private TailEventData(CNEventPars CNEventPars, int contigId, (long segLen, bool direction) segment, long contigLen)
         : base(CNEventPars, contigId, contigLen)
     {
-        Direction = arm.direction;
-        Start = Direction ? arm.segLen : contigLen - arm.segLen;
+        Direction = segment.direction;
+        Start = Direction ? segment.segLen : contigLen - segment.segLen;
+    }
+
+    private static (long segLen, bool direction) ComputeTailParams(
+        Random rnd,
+        CNEventPars CNEventPars,
+        long contigLen)
+    {
+        // Preserve the historical seeded-simulation order: length is sampled before direction.
+        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
+        bool direction = rnd.CoinFlip();
+        return (segLen, direction);
     }
     
     private static (long segLen, bool direction) ComputeArmParams(
@@ -45,10 +66,12 @@ public record TailEventData : ContigEventData
         switch (EventType)
         {
             case CNEventType.TailDeletion:
+            case CNEventType.TelomereDeletion:
             case CNEventType.ArmDeletion:
                 kar.ApplyTailDeletion(ContigId, Start, Direction);
                 break;
             case CNEventType.TailDuplication:
+            case CNEventType.TelomereDuplication:
             case CNEventType.ArmDuplication:
                 kar.ApplyTailDuplication(ContigId, Start, Direction);
                 break;

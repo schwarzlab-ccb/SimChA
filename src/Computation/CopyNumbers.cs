@@ -36,46 +36,108 @@ public static class CopyNumbers
     public static List<CopyNumber> CalcCNs(Karyotype karyotype, IDictionary<string, List<int>>? breaks = null)
         => karyotype.CalcCNs(breaks ?? karyotype.CalcBreaks());
 
-    // Reports the per-base copy-number change between two karyotypes as signed deltas over
-    // reference coordinates: each returned segment carries the H1/H2 change (after - before),
-    // adjacent segments with the same change are merged, and unchanged segments are dropped.
-    // Because it compares copy number per reference position rather than region identities, an
-    // event that splits a region (e.g. an internal deletion) reports only the bases actually
-    // lost or gained instead of a spurious loss plus two gains.
+    private static void AddEndpoint(
+        Dictionary<string, Dictionary<long, (int H1, int H2)>> endpoints,
+        string chrom,
+        long position,
+        int deltaH1,
+        int deltaH2)
+    {
+        if (!endpoints.TryGetValue(chrom, out var chromEndpoints))
+        {
+            chromEndpoints = [];
+            endpoints.Add(chrom, chromEndpoints);
+        }
+
+        var current = chromEndpoints.GetValueOrDefault(position);
+        var updated = (H1: current.H1 + deltaH1, H2: current.H2 + deltaH2);
+        if (updated == (0, 0))
+        {
+            chromEndpoints.Remove(position);
+        }
+        else
+        {
+            chromEndpoints[position] = updated;
+        }
+    }
+
+    private static void AddDeltaInterval(
+        List<CopyNumber> deltas,
+        ref CopyNumber? run,
+        string chrom,
+        long start,
+        long end,
+        int deltaH1,
+        int deltaH2)
+    {
+        if (deltaH1 == 0 && deltaH2 == 0)
+        {
+            return;
+        }
+        if (run is not null && run.End == start && run.CNH1 == deltaH1 && run.CNH2 == deltaH2)
+        {
+            run = new CopyNumber(run.Start, end, chrom, deltaH1, deltaH2, 0);
+            return;
+        }
+        if (run is not null)
+        {
+            deltas.Add(run);
+        }
+        run = new CopyNumber(start, end, chrom, deltaH1, deltaH2, 0);
+    }
+
+    // Each region represents one H1 or H2 copy over [start, end), so its coverage can be
+    // encoded as +coverage at start and -coverage at end. Karyotype and Contig traverse
+    // their private children and pass only those scalar endpoints here. Contributions from
+    // before use -1 and contributions from after use +1; therefore, the running sum between
+    // sorted endpoints is exactly the after-minus-before copy-number delta. Equal adjacent
+    // intervals are merged and zero intervals are omitted. This avoids rebuilding two complete
+    // copy-number tables (and their unused SNV counts) after every simulated event.
     public static List<CopyNumber> DiffKaryotypes(Karyotype before, Karyotype after)
     {
-        var beforeBreaks = before.CalcBreaks();
-        var afterBreaks = after.CalcBreaks();
-        // Union both karyotypes' breakpoints so no segment straddles a change on either side.
-        var jointBreaks = beforeBreaks.Keys.Union(afterBreaks.Keys).ToDictionary(
-            chrom => chrom,
-            chrom => beforeBreaks.GetValueOrDefault(chrom, [])
-                .Concat(afterBreaks.GetValueOrDefault(chrom, []))
-                .ToHashSet().OrderBy(b => b).ToList());
-
-        // Both use the same jointBreaks instance, so the segment lists align index-for-index.
-        var beforeCNs = CalcCNs(before, jointBreaks);
-        var afterCNs = CalcCNs(after, jointBreaks);
+        var endpoints =
+            new Dictionary<string, Dictionary<long, (int H1, int H2)>>();
+        void AddEndpointToDelta(string chrom, long position, int deltaH1, int deltaH2)
+            => AddEndpoint(endpoints, chrom, position, deltaH1, deltaH2);
+        before.AccumulateCopyNumberEndpoints(AddEndpointToDelta, -1);
+        after.AccumulateCopyNumberEndpoints(AddEndpointToDelta, 1);
 
         var deltas = new List<CopyNumber>();
-        CopyNumber? run = null;
-        for (int i = 0; i < beforeCNs.Count; i++)
+        foreach (string chrom in before.ChromNames
+                     .Concat(after.ChromNames)
+                     .Distinct())
         {
-            var seg = beforeCNs[i];
-            int dH1 = afterCNs[i].CNH1 - seg.CNH1;
-            int dH2 = afterCNs[i].CNH2 - seg.CNH2;
-            if (run is not null && run.Chrom == seg.Chrom && run.End == seg.Start
-                && run.CNH1 == dH1 && run.CNH2 == dH2)
+            if (!endpoints.TryGetValue(chrom, out var chromEndpoints) || chromEndpoints.Count == 0)
             {
-                run = new CopyNumber(run.Start, seg.End, run.Chrom, dH1, dH2, 0);
+                continue;
             }
-            else
+
+            long? previous = null;
+            int deltaH1 = 0;
+            int deltaH2 = 0;
+            CopyNumber? run = null;
+            foreach (var endpoint in chromEndpoints.OrderBy(pair => pair.Key))
             {
-                if (run is { } r && (r.CNH1 != 0 || r.CNH2 != 0)) deltas.Add(r);
-                run = new CopyNumber(seg.Start, seg.End, seg.Chrom, dH1, dH2, 0);
+                if (previous is long start && start < endpoint.Key)
+                {
+                    AddDeltaInterval(
+                        deltas,
+                        ref run,
+                        chrom,
+                        start,
+                        endpoint.Key,
+                        deltaH1,
+                        deltaH2);
+                }
+                deltaH1 += endpoint.Value.H1;
+                deltaH2 += endpoint.Value.H2;
+                previous = endpoint.Key;
+            }
+            if (run is not null)
+            {
+                deltas.Add(run);
             }
         }
-        if (run is { } last && (last.CNH1 != 0 || last.CNH2 != 0)) deltas.Add(last);
         return deltas;
     }
 

@@ -14,14 +14,18 @@ public class Region : GenRange
     private List<Centromere>? _centromeres;
     public List<Centromere> Centromeres => _centromeres ??= [];
 
+    private List<Telomere>? _telomeres;
+    internal List<Telomere> Telomeres => _telomeres ??= [];
+
     public Region(long start, long end, string chrom, bool hap1, List<SNV>? snvs, List<Gene>? genes,
-        List<Centromere>? centromeres = null)
+        List<Centromere>? centromeres = null, List<Telomere>? telomeres = null)
         : base(start, end, chrom)
     {
         Hap1 = hap1;
         _snvs = snvs;
         _genes = genes;
         _centromeres = centromeres;
+        _telomeres = telomeres;
     }
 
     public Region(Region other) : base(other)
@@ -30,6 +34,7 @@ public class Region : GenRange
         _snvs = other._snvs == null ? null : [..other._snvs];
         _genes = other._genes == null ? null : [..other._genes];
         _centromeres = other._centromeres == null ? null : [..other._centromeres];
+        _telomeres = other._telomeres == null ? null : [..other._telomeres];
     }
 
     public override bool Equals(object? obj) 
@@ -62,6 +67,7 @@ public class Region : GenRange
         SNVs.RemoveAll(snv => snv.Pos <= AbsStart || AbsEnd <= snv.Pos);
         Genes.RemoveAll(g => !g.IsInsideOf(this));
         Centromeres.RemoveAll(c => !c.IsInsideOf(this));
+        Telomeres.RemoveAll(t => !t.IsInsideOf(this));
     }
     
     public void AddSNV(long offset, Nucleotide oldNucleotide, Nucleotide newNucleotide)
@@ -121,6 +127,7 @@ public class Region : GenRange
         SNVs.AddRange(next.SNVs);
         Genes.AddRange(next.Genes);
         Centromeres.AddRange(next.Centromeres);
+        Telomeres.AddRange(next.Telomeres);
     }
     
     public int CountGeneType(GeneLT geneType)

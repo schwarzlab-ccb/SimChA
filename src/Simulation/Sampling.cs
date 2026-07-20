@@ -145,7 +145,8 @@ public static class Sampling
 
     // Selects the contigs to be affected by the event. Within-contig events are chosen with
     // probability proportional to contig length; arm/centromere-bound events proportional to the
-    // number of centromeres; multi-contig events use a uniform random permutation.
+    // number of centromeres; telomere events proportional to eligible terminal telomeres; and
+    // multi-contig events use a uniform random permutation.
     private static List<(int id, long len)> SelectContigs(Random rnd, Karyotype kar, CNEventType type)
     {
         switch (type)
@@ -165,6 +166,11 @@ public static class Sampling
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:
                 return AsList(SampleContigWeighted(rnd, kar, id => kar.CountCentromeres(id)));
+
+            // Telomere events: weighted by the number of intact telomeres at physical contig ends
+            case CNEventType.TelomereDeletion:
+            case CNEventType.TelomereDuplication:
+                return AsList(SampleContigWeighted(rnd, kar, id => kar.CountIntactTelomereEnds(id)));
 
             // Within-contig events: weighted by contig length
             case CNEventType.InternalDuplication:
@@ -213,6 +219,18 @@ public static class Sampling
             case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
                 return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
+
+            case CNEventType.TelomereDeletion:
+            case CNEventType.TelomereDuplication:
+                var directions = kar.GetIntactTelomereDirections(seq[0].id);
+                return directions.Count == 0
+                    ? null
+                    : new TailEventData(
+                        rnd,
+                        cnEventPars,
+                        seq[0].id,
+                        seq[0].len,
+                        directions[rnd.Next(directions.Count)]);
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:

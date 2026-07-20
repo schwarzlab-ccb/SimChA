@@ -63,6 +63,17 @@ public class Contig
     public int CountRegions()
         => Regions.Count;
 
+    internal void AccumulateCopyNumberEndpoints(Action<string, long, int, int> addEndpoint, int coverage)
+    {
+        foreach (var region in Regions)
+        {
+            int deltaH1 = region.Hap1 ? coverage : 0;
+            int deltaH2 = region.Hap1 ? 0 : coverage;
+            addEndpoint(region.Chrom, region.AbsStart, deltaH1, deltaH2);
+            addEndpoint(region.Chrom, region.AbsEnd, -deltaH1, -deltaH2);
+        }
+    }
+
     public (int CNA, int CNB, int SNV) GetCNs(GenRange segRegion)
     {
         int cna = 0;
@@ -215,6 +226,16 @@ public class Contig
         _snvs = null;
     }
 
+    private static (long start, long end) GetFeaturePosition(
+        long currentPosition,
+        Region region,
+        GenRange feature)
+        => region.Forward
+            ? (currentPosition + feature.Start - region.AbsStart,
+                currentPosition + feature.End - region.AbsStart)
+            : (currentPosition - feature.End + region.AbsEnd,
+                currentPosition - feature.Start + region.AbsEnd);
+
     // Positions of the contig's centromeres expressed in contig coordinates (respecting orientation),
     // derived from the centromeres carried by each region.
     public List<(long start, long end)> GetCentromerePositions()
@@ -225,13 +246,38 @@ public class Contig
         {
             foreach (var cent in reg.Centromeres)
             {
-                centromereList.Add(reg.Forward
-                    ? (currentPos + cent.Start - reg.AbsStart, currentPos + cent.End - reg.AbsStart)
-                    : (currentPos - cent.End + reg.AbsEnd, currentPos - cent.Start + reg.AbsEnd));
+                centromereList.Add(GetFeaturePosition(currentPos, reg, cent));
             }
             currentPos += reg.Length;
         }
         return centromereList;
+    }
+
+    // A direction is eligible only when a complete telomere carried by a region touches
+    // that physical contig end. Internal telomeres therefore do not qualify, even after
+    // rearrangements. true is the front/5' end and false is the back/3' end.
+    internal IReadOnlyList<bool> GetIntactTelomereDirections()
+    {
+        var directions = new HashSet<bool>();
+        long contigLength = Length;
+        long currentPosition = 0;
+        foreach (var region in Regions)
+        {
+            foreach (var telomere in region.Telomeres)
+            {
+                var position = GetFeaturePosition(currentPosition, region, telomere);
+                if (position.start == 0)
+                {
+                    directions.Add(true);
+                }
+                if (position.end == contigLength)
+                {
+                    directions.Add(false);
+                }
+            }
+            currentPosition += region.Length;
+        }
+        return directions.OrderByDescending(direction => direction).ToList();
     }
 
     public void MergeRegions()

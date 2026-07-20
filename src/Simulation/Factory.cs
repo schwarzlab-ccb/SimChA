@@ -56,6 +56,8 @@ public static class Factory
             case CNEventType.CentromereBoundDuplication:
             case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
+            case CNEventType.TelomereDeletion:
+            case CNEventType.TelomereDuplication:
                 if (cnEventPars.Frac <= 0) 
                     throw new Exception($"Event {cnEventPars.Type} does not have a Frac parameter. E.g. \"Frac\": 0.1");
                 break;

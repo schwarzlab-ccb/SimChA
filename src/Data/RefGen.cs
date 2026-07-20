@@ -5,6 +5,8 @@ namespace SimChA.Data;
 // Lists prefixed with Sex hold values for all SexTypes
 public class RefGen
 {
+    public const long TelomereLength = 50_000;
+
     public string Name { get; }
     public Dictionary<string, int> ChrLengths { get; }
     private Dictionary<string, SexType> ChrSex { get; }
@@ -159,9 +161,20 @@ public class RefGen
             ? [new Centromere(cent.Start, cent.End, chrNo)]
             : [];
 
+    private List<Telomere> GetChromTelomeres(string chrNo)
+    {
+        long chromLength = ChrLengths[chrNo];
+        long telomereLength = Math.Min(TelomereLength, chromLength);
+        return
+        [
+            new Telomere(0, telomereLength, chrNo),
+            new Telomere(chromLength - telomereLength, chromLength, chrNo)
+        ];
+    }
+
     private Region GetRegion(string chrNo, bool isFirstHaplotype)
         => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetChromGenes(chrNo).ToList(),
-            GetChromCentromeres(chrNo));
+            GetChromCentromeres(chrNo), GetChromTelomeres(chrNo));
 
     private IEnumerable<Region> CreateHaplotype(SexType sex, bool firstHap)
         => ChrNamesForHap(sex, firstHap).Select(chr => GetRegion(chr, firstHap));

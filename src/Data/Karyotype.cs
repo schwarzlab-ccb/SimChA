@@ -52,6 +52,17 @@ public class Karyotype
     public IEnumerable<SNV> GetSNVs()
         => _contigs.SelectMany(c => c.SNVs);
 
+    internal IReadOnlyList<string> ChromNames
+        => RefGen.SexChromNames[(int) Sex];
+
+    internal void AccumulateCopyNumberEndpoints(Action<string, long, int, int> addEndpoint, int coverage)
+    {
+        foreach (var contig in _contigs)
+        {
+            contig.AccumulateCopyNumberEndpoints(addEndpoint, coverage);
+        }
+    }
+
     public Dictionary<string, List<int>> CalcBreaks()
     {
         var breakSets = RefGen.SexChromNames[(int) Sex].ToDictionary(c => c, c => new HashSet<int> {0, RefGen.ChrLengths[c]});
@@ -86,6 +97,12 @@ public class Karyotype
 
     public int CountCentromeres(int contigId)
         => _contigs[contigId].Centromeres.Count;
+
+    internal IReadOnlyList<bool> GetIntactTelomereDirections(int contigId)
+        => _contigs[contigId].GetIntactTelomereDirections();
+
+    public int CountIntactTelomereEnds(int contigId)
+        => GetIntactTelomereDirections(contigId).Count;
 
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length);

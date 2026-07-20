@@ -93,6 +93,20 @@ public class TestEventData
         Assert.LessOrEqual(eventData.Length, len);
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TestTelomereEventUsesPreselectedDirection(bool direction)
+    {
+        const long len = 10_000_000L;
+        var eventP = new CNEventPars(CNEventType.TelomereDeletion, 1, 0.01);
+        var eventData = new TailEventData(_rnd, eventP, 0, len, direction);
+
+        Assert.AreEqual(direction, eventData.Direction);
+        StringAssert.Contains(
+            $"start:{(direction ? 0 : eventData.Start)};",
+            eventData.EventDesc());
+    }
+
     [Test]
     public void TestPyrgo()
     {
