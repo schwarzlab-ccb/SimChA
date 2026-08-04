@@ -84,8 +84,10 @@ Use `dotnet run -- [options]` to specify any of the following:
 
   -S, --consistent-segments    (Default: false) Write out copy number segments under a minimum consistent segmentation.
 
-  -k, --karyotypes             (Default: false) Write out karyotype after each event.
-  
+  -K, --karyotypes             (Default: false) Write out the per-sample karyotypes file (karyotypes.tsv).
+
+  -k, --karyotype              (Default: false) Also print the karyotype after each event (adds a 'karyotype' column to events.tsv).
+
   -d, --delta                  (Default: false) Write out the lost and gained regions for each event.
 
   -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/download_ref_data.py` to download it.
@@ -99,6 +101,8 @@ Use `dotnet run -- [options]` to specify any of the following:
   -a, --assembly               (Default: none) Override the assembly. Takes precedence over `SimParams.Assembly`. An absolute path is used directly; a relative value is resolved under the data folder (`data/<assembly>`).
 
   -g, --gene_set               (Default: none) Override the gene set. Takes precedence over `FitParams.GeneSet`. An absolute path is used directly; a relative value is resolved under the assembly folder (`<assembly>/<gene_set>`).
+
+  --seed                       (Default: none) Override the RNG seed `SimParams.Seed`. Takes precedence over the config; the config value is used if not given. A negative value draws a random seed.
 
   -h, --help                       Display this help screen.
 
@@ -698,7 +702,7 @@ When using the `-S` or `--consistent-segments` flag, outputs segments under mini
 
 #### `karyotypes.tsv`
 
-When using the `-k` or `--karyotypes` flag, outputs detailed karyotype information. Unlike CN segments, karyotypes retain information about:
+When using the `-K` or `--karyotypes` flag, outputs detailed karyotype information. Unlike CN segments, karyotypes retain information about:
 * The connections between segments
 * Orientations (5' to 3' or 3' to 5')
 * Structural relationships between different chromosomal regions
@@ -787,7 +791,7 @@ dotnet run -- -O ./out -C ./configs/main_config.json -m matching
 Generate all available output formats:
 
 ```bash
-dotnet run -- -O ./out -C ./configs/main_config.json -s -S -k -v -f
+dotnet run -- -O ./out -C ./configs/main_config.json -s -S -K -v -f
 ```
 
 Note: The `-f` flag generates large FASTA files (~6GB per sample) and should only be used when necessary.
