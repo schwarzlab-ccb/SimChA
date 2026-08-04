@@ -88,9 +88,9 @@ Use `dotnet run -- [options]` to specify any of the following:
   
   -d, --delta                  (Default: false) Write out the lost and gained regions for each event.
 
-  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/DownloadRefData.sh` to download it.
+  -v, --variants               (Default: false) Write out VCF file with the variants of the final simulated karyotype. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/download_ref_data.py` to download it.
 
-  -f, --fasta                  (Default: false) Write out a FASTA file for each sample. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/DownloadRefData.sh` to download it. WARNING! Average file size is 6GB per sample.
+  -f, --fasta                  (Default: false) Write out a FASTA file for each sample. Requires `data/<assembly>/genome.fa` (e.g. `data/hg19/genome.fa`). Use `scripts/download_ref_data.py` to download it. WARNING! Average file size is 6GB per sample.
 
   -z, --zero-index             (Default: false) Flag for zero-indexed input copy number profiles.
 
@@ -586,16 +586,20 @@ Probabilities are sourced from [Ashby et al., 2019](https://ashpublications.org/
 
 ### Somatic Nucleotide Variants - SNV (Prob)
 
-SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `DownloadRefData.sh` script, which can be run from the root directory of the project as follows:
+SimChA is capable of handling the Jukes-Cantor nucleotide substitution model, but to attach proposed SNV events from SimChA to the reference genome, the reference genomes have to be downloaded. To do this, we have provided the `download_ref_data.py` script, which can be run from the root directory of the project as follows:
 
 ```
-chmod +x scripts/DownloadRefData.sh && ./scripts/DownloadRefData.sh
+python scripts/download_ref_data.py
 ```
 
 The download script places the reference FASTA files at `data/hg19/genome.fa` and `data/hg38/genome.fa`.
 These files are required when using `-v`/`--variants` and `-f`/`--fasta` (for the assembly selected in `SimParams.Assembly`).
 
-Note that if you don't want to download both reference genomes (hg19 and hg38), simply comment out or remove the relevant section of the script.
+If you only need one reference genome, restrict the download with `--assembly`:
+
+```
+python scripts/download_ref_data.py --assembly hg19
+```
 
 
 ### Template Insertion Bridge (Prob, Frac, Frag)
@@ -661,7 +665,7 @@ such as inversions and balanced translocations therefore produce no entries.
 
 #### `vcf.tsv`
 
-When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires `data/<assembly>/genome.fa` (for example `data/hg19/genome.fa`), which can be downloaded with `scripts/DownloadRefData.sh` (see SNV section above).
+When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires `data/<assembly>/genome.fa` (for example `data/hg19/genome.fa`), which can be downloaded with `scripts/download_ref_data.py` (see SNV section above).
 
 The file contains standard VCF format headers and columns:
 
@@ -682,7 +686,7 @@ The file contains standard VCF format headers and columns:
 *Note that this only currently works with single-sample simulations* 
 
 Generates the final simulated karyotype sequence from the relevant human genome reference. It will also include the introduced SNVs if applicable.
-Using `-f` requires a reference FASTA named `genome.fa` in the selected assembly folder, e.g. `data/hg19/genome.fa` or `data/hg38/genome.fa`. You can create these files with `scripts/DownloadRefData.sh`.
+Using `-f` requires a reference FASTA named `genome.fa` in the selected assembly folder, e.g. `data/hg19/genome.fa` or `data/hg38/genome.fa`. You can create these files with `scripts/download_ref_data.py`.
 
 #### `segments.tsv`
 
@@ -704,7 +708,7 @@ Each karyotype is represented as a series of regions in the format `ChromID*[sta
 
 #### `vcf.tsv`
 
-When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires `data/<assembly>/genome.fa` (for example `data/hg19/genome.fa`), which can be downloaded with `scripts/DownloadRefData.sh` (see SNV section above).
+When using the `-v` or `--variants` flag, generates a simple VCF file of all the observable (i.e. final and nucleotide-altering) SNVs that occurred to the samples during simulation. This requires `data/<assembly>/genome.fa` (for example `data/hg19/genome.fa`), which can be downloaded with `scripts/download_ref_data.py` (see SNV section above).
 
 ### Plots
 
