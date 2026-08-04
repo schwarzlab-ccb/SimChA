@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -136,10 +137,9 @@ def _write_tsv(table: pd.DataFrame, path: Path) -> None:
     table.to_csv(path, sep="\t", index=False)
 
 
-def main(argv: Sequence[str] | None = None) -> None:
-    """Run the selected command."""
+def _run(args: argparse.Namespace) -> None:
+    """Execute the parsed command."""
 
-    args = build_parser().parse_args(argv)
     events = pd.read_csv(args.input, sep="\t")
     ducking_events = find_ducking_events(events)
 
@@ -165,5 +165,19 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
 
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run the selected command, returning a process exit code."""
+
+    args = build_parser().parse_args(argv)
+    try:
+        _run(args)
+    except (ValueError, OSError) as err:
+        # Missing/malformed input columns and region strings raise ValueError;
+        # a missing or unreadable input/output file raises OSError.
+        print(f"error: {err}", file=sys.stderr)
+        return 1
+    return 0
+
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

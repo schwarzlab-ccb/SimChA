@@ -820,13 +820,13 @@ dotnet test test
 ## Ducking-event detector
 
 The reusable command-line detector and filter for historical events hidden by
-later copy-number events live in `scripts/ducking_detector.py`. The input events table must be generated with SimChA's `--delta` option.
+later copy-number events live in `scripts/ducking_detector.py`. The input events table must be generated with SimChA's `-d` or `--delta` option.
 
 Run the tool from the SimChA repository root:
 
-    python scripts/ducking_detector.py detect -I events.tsv -O ducking_events.tsv
+    python ./scripts/ducking_detector.py detect -I events.tsv -O ducking_events.tsv
 
-    python scripts/ducking_detector.py filter -I events.tsv -O events_filtered.tsv
+    python ./scripts/ducking_detector.py filter -I events.tsv -O events_filtered.tsv
 
 The filter command detects ducking events internally and writes only the
 filtered event table.
