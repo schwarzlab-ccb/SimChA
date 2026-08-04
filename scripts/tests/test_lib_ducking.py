@@ -120,7 +120,7 @@ class FindDuckingEventsTests(unittest.TestCase):
 
         self.assertTrue(result.empty)
 
-    def test_wgd_blocks_loss_by_one_later_deletion_by_default(self):
+    def test_wgd_blocks_loss_by_one_later_deletion(self):
         events = make_events(
             [
                 ("S1", "InternalDuplication", 1, "contig:7;gain", "[H1:chr1[20:30)]", "[]"),
@@ -130,13 +130,8 @@ class FindDuckingEventsTests(unittest.TestCase):
         )
 
         result = find_ducking_events(events)
-        coordinate_only_result = find_ducking_events(
-            events,
-            include_wgd_crossing=True,
-        )
 
         self.assertTrue(result.empty)
-        self.assertEqual(len(coordinate_only_result), 1)
 
     def test_does_not_match_a_deletion_on_a_different_contig(self):
         events = make_events(

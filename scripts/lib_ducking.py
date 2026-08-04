@@ -176,11 +176,7 @@ def build_event_footprints(
     )
 
 
-def find_ducking_events(
-    events: pd.DataFrame,
-    *,
-    include_wgd_crossing: bool = False,
-) -> pd.DataFrame:
+def find_ducking_events(events: pd.DataFrame) -> pd.DataFrame:
     """Find events hidden by containment or adjoining same-contig CN changes.
 
     Results contain one row per hidden event. If several later deletions
@@ -190,10 +186,9 @@ def find_ducking_events(
     is inclusive at both outer boundaries, overlap must have positive width,
     and event order is taken from ``depth`` within each sample.
 
-    By default, a deletion is not allowed to hide an event from before a
-    whole-genome doubling.  The doubling copied that event, so loss of one
-    descendant copy does not establish loss of the event as a whole.  Set
-    ``include_wgd_crossing=True`` for a coordinate-only containment screen.
+    A deletion is not allowed to hide an event from before a whole-genome
+    doubling.  The doubling copied that event, so loss of one descendant copy
+    does not establish loss of the event as a whole.
     """
 
     footprints = build_event_footprints(events)
@@ -231,7 +226,7 @@ def find_ducking_events(
                 event.depth < wgd_depth < later_event.depth
                 for wgd_depth in wgd_depths_by_sample.get(event.sample_id, ())
             )
-            if crosses_wgd and not include_wgd_crossing:
+            if crosses_wgd:
                 continue
 
             later_is_deletion = "Deletion" in later_event.event_type

@@ -128,15 +128,6 @@ def build_parser() -> argparse.ArgumentParser:
             "Filtered event TSV (default: ./events_filtered.tsv)"
         ),
     )
-    for command_parser in (detect_parser, filter_parser):
-        command_parser.add_argument(
-            "--include-wgd-crossing",
-            action="store_true",
-            help=(
-                "allow ducking matches across an intervening whole-genome "
-                "doubling"
-            ),
-        )
     return parser
 
 
@@ -150,10 +141,7 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     args = build_parser().parse_args(argv)
     events = pd.read_csv(args.input, sep="\t")
-    ducking_events = find_ducking_events(
-        events,
-        include_wgd_crossing=args.include_wgd_crossing,
-    )
+    ducking_events = find_ducking_events(events)
 
     if args.command == "detect":
         _write_tsv(ducking_events, args.output)
