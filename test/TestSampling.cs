@@ -52,6 +52,46 @@ public class TestSampling
     }
 
     [Test]
+    public void TestGammaRecoversMeanAndShape([Values(1.5, 4.0, 13.6)] double shape)
+    {
+        var samples = Enumerable.Range(0, 1000000)
+            .Select(i => (double) Sampling.SampleDiscDist(_rnd, DistType.Gamma, 62, shape)).ToList();
+        // Shape sets the dispersion only: mean must come out at RateMean regardless of it, and
+        // the CV at 1/sqrt(shape) -- the property that lets one shape serve many cancer types.
+        Assert.AreEqual(62, samples.Mean(), 0.1);
+        Assert.AreEqual(1 / Math.Sqrt(shape), samples.StandardDeviation() / samples.Mean(), 0.01);
+    }
+
+    [Test]
+    public void TestGammaAtShapeOneMatchesGeometric()
+    {
+        // shape 1 is the exponential, so it should reproduce the geometric SimChA sampled before.
+        var gamma = Enumerable.Range(0, 200000)
+            .Select(i => (double) Sampling.SampleDiscDist(_rnd, DistType.Gamma, 62, 1)).ToList();
+        Assert.AreEqual(62, gamma.Mean(), 0.5);
+        Assert.AreEqual(1.0, gamma.StandardDeviation() / gamma.Mean(), 0.02);
+    }
+
+    [Test]
+    public void TestGammaCountsAreUsable()
+    {
+        // A tiny mean must still yield at least one event rather than a zero-event sample.
+        var counts = Enumerable.Range(0, 10000)
+            .Select(i => Sampling.SampleDiscDist(_rnd, DistType.Gamma, 0.5, 1.5)).ToList();
+        Assert.GreaterOrEqual(counts.Min(), 1);
+    }
+
+    [Test]
+    public void TestGammaIsSeedDeterministic()
+    {
+        var first = Enumerable.Range(0, 100)
+            .Select(i => Sampling.SampleDiscDist(new Random(7), DistType.Gamma, 62, 1.5)).ToList();
+        var second = Enumerable.Range(0, 100)
+            .Select(i => Sampling.SampleDiscDist(new Random(7), DistType.Gamma, 62, 1.5)).ToList();
+        Assert.AreEqual(first, second);
+    }
+
+    [Test]
     public void TestStops()
     {
         var stops = Sampling.GetStopsForShards(_rnd, 1_000_000, 10);

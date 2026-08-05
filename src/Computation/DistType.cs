@@ -5,4 +5,4 @@ using System.Text.Json.Serialization;
 namespace SimChA.Computation;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum DistType { Uniform, Exponential, Normal, Unit, Poisson, Geometric, Pareto }
+public enum DistType { Uniform, Exponential, Normal, Unit, Poisson, Geometric, Pareto, Gamma }

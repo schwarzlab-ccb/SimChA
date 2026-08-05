@@ -10,6 +10,7 @@ public record SimParams(
     SexType Sex = SexType.Any,
     DistType RateDist = DistType.Uniform,
     double RateMean = 1,
+    double RateShape = 1,
     bool TetraploidStart = false,
     bool AutosomesOnly = false,
     MixtureType Mixture = MixtureType.Constant,

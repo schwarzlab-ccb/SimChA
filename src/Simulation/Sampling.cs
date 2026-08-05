@@ -85,15 +85,25 @@ public static class Sampling
         };
     }
 
-    public static int SampleDiscDist(Random rnd, DistType dist, double mean)
+    // Gamma is parameterised by (shape, mean) rather than (shape, scale): the shape is a pure
+    // dispersion term (CV = 1/sqrt(shape)) so it can be held constant while the mean varies per
+    // cancer type, and the scale follows as mean/shape. MathNet takes a rate, i.e. shape/mean.
+    // The continuous draw is rounded and clamped to >= 1 so the result is a usable event count,
+    // matching Geometric's {1,2,...} support; at the means used here (tens of events) the
+    // discretisation shifts the mean by well under a percent.
+    public static int SampleDiscDist(Random rnd, DistType dist, double mean, double shape = 1)
     {
         return dist switch
         {
             DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
             DistType.Poisson => Poisson.Sample(rnd, mean),
+            DistType.Gamma => ToCount(Gamma.Sample(rnd, shape, shape / mean)),
               _ => (int) mean
         };
     }
+
+    private static int ToCount(double sample)
+        => (int) Math.Max(1, Math.Round(sample));
 
     private static double GetParetoScale(double mean) 
         => 1.0/2.0*(-1.0 + Math.Sqrt(1.0 + 4.0*mean*mean));

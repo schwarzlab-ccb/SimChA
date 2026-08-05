@@ -30,8 +30,8 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
         return res;
     }
 
-    protected int SampleEventCount(CTreeNode node) 
-        => node.Distance >= 0 ? node.Distance : Sampling.SampleDiscDist(Rnd, SimParams.RateDist, SimParams.RateMean);
+    protected int SampleEventCount(CTreeNode node)
+        => node.Distance >= 0 ? node.Distance : Sampling.SampleDiscDist(Rnd, SimParams.RateDist, SimParams.RateMean, SimParams.RateShape);
 
     protected static (string regionsGained, string regionsLost) CalcKaryotypeDiff(
         Karyotype beforeKar,

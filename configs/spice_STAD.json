@@ -2,7 +2,8 @@
   "SimParams": {
     "Seed": 0,
     "RateMean": 91.46596858638743,
-    "RateDist": "Geometric",
+    "RateShape": 2.201434090602737,
+    "RateDist": "Gamma",
     "Assembly": "hg19",
     "AutosomesOnly": true
   },
