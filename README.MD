@@ -313,7 +313,7 @@ root from the config `Root`. Each can be overridden on the command line, with pr
 * `-r, --root <path>`: the base directory used to resolve all relative paths (config, data, output).
   Defaults to the current working directory.
 * `-a, --assembly <value>`: the assembly. An **absolute** path is used directly as the assembly folder
-  (the one containing `chromosomes.tsv`, `centromeres.tsv`, and optionally `genome.fa`); a **relative**
+  (the one containing `chromosomes.tsv` and optionally `genome.fa`); a **relative**
   value is resolved under the data folder as `data/<value>` (e.g. `hg19` → `data/hg19`).
 * `-g, --gene_set <value>`: the gene set. An **absolute** path is used directly as the gene set folder
   (the one containing the TSG/OG/essentiality score files); a **relative** value is resolved under the
@@ -332,15 +332,40 @@ The effective root, assembly, gene set, and the SimChA version are written into 
 ### Chromosomes
 > `chromosomes.tsv`
 
-The chromosome file contains two columns, one with the name of a chromosome, one with its number of bases.
+One row per chromosome, describing its length together with the reference positions of its
+centromere and telomeres. Seven tab-separated columns:
+
+| column | meaning |
+| --- | --- |
+| `chrom` | chromosome name |
+| `length` | number of bases |
+| `sex` | `Any`, `Female` or `Male` — which genomes carry the chromosome |
+| `tel_p_end` | end of the p-arm telomere, which spans `[0, tel_p_end)` |
+| `cen_start` | start of the centromere |
+| `cen_end` | end of the centromere, which spans `[cen_start, cen_end)` |
+| `tel_q_start` | start of the q-arm telomere, which spans `[tel_q_start, length)` |
+
+All coordinates are 0-based, start-inclusive and end-exclusive, as everywhere else in SimChA. Both
+telomeres are anchored to a chromosome end by definition, so each is given by the single coordinate
+where it meets the rest of the chromosome. A `.` marks a feature the assembly does not annotate — for
+example the p telomere of an acrocentric chromosome whose short arm is unassembled — and that feature
+is then simply absent, so no telomere-bound event can occur at that end.
+
+Lines beginning with `#` are comments, and the header is one of them.
 
 Example file:
 
 ```
-chr1	248956422
+#chrom	length	sex	tel_p_end	cen_start	cen_end	tel_q_start
+chr1	248956422	Any	10000	122026459	124932724	248946422
 ...
-chrY	59373566
+chrX	156040895	Female	10000	58605579	62412542	156030895
+chrY	57227415	Male	10000	10316944	10544039	57217415
 ```
+
+The bundled assemblies take chromosome lengths and telomeres from the UCSC gap table; hg19
+centromeres come from the same gap table, hg38 centromeres from the UCSC modelled centromeres track
+(hg38 has no gap-table centromere records).
 
 ### TSG/OG/Eseentiality Score
 > `tsgs_select.tsv`, `ogs_select.tsv`, `essentials_select.tsv`
@@ -367,22 +392,11 @@ For each gene, the:
 * OG score is the probability that the gene is an Oncogene (OG) 
 * Essentiality score is the log2 fold change in the reproducibility of a cell after a knock-out of the gene (both alleles).
 
-### Centromeres
-> `centromeres.tsv`
+### Centromeres and telomeres
 
-Each chromosome has a centromere for each arm, defined by a start and an end. The centromere information is given by three columns: chromosome name, start point, end point. Each chromosome has two rows, corresponding to the portions of the centromere belonging to the p- and q-arms of the chromosome.
-
-It is also possible to provide a single row for each chromosome, corresponding to the whole centromeric region.
-
-Example file:
-
-```
-chr1    121500000   125000000
-chr1    125000000   128900000
-...
-chrY    11600000    12500000
-chrY    12500000    13400000
-```
+These are columns of `chromosomes.tsv` (see above), not separate files. `centromeres.tsv` has been
+merged into it, and telomere extents — previously a hard-coded 50 kb — are now read from the same
+table.
 
 ## Signatures
 

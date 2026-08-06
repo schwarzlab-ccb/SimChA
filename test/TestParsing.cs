@@ -25,6 +25,71 @@ public class TestParsing
         _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
     }
     
+    // Pins the shipped chromosomes.tsv values against their UCSC sources. Centromeres and telomeres
+    // are data now, so a silent edit or a stale file changes simulation results with nothing else to
+    // catch it -- hg38's centromeres were wrong (chr1 carried the hg19 start) until they were taken
+    // from the modelled centromeres track.
+    [TestCase(HG_19, 249250621, 121535434, 124535434, 10000, 249240621)]
+    [TestCase(HG_38, 248956422, 122026459, 124932724, 10000, 248946422)]
+    public void TestChromosomeTableMatchesReference(
+        string assembly, int length, long cenStart, long cenEnd, long telPEnd, long telQStart)
+    {
+        var refGen = FileIO.ReadGenRef(DATA_PATH, assembly, GENE_SET);
+        Assert.AreEqual(length, refGen.ChrLengths["chr1"]);
+
+        var centromere = refGen.Centromeres["chr1"];
+        Assert.AreEqual(cenStart, centromere.Start);
+        Assert.AreEqual(cenEnd, centromere.End);
+
+        var telomeres = refGen.Telomeres["chr1"];
+        Assert.AreEqual(2, telomeres.Count);
+        Assert.AreEqual(0, telomeres[0].Start);
+        Assert.AreEqual(telPEnd, telomeres[0].End);
+        Assert.AreEqual(telQStart, telomeres[1].Start);
+        Assert.AreEqual(length, telomeres[1].End);
+    }
+
+    [Test]
+    public void TestChromosomeTableCoversEveryChromosome()
+    {
+        foreach (string chrom in _refGen.AllChrNames)
+        {
+            Assert.IsTrue(_refGen.Centromeres.ContainsKey(chrom), $"no centromere for {chrom}");
+            Assert.IsTrue(_refGen.Telomeres.ContainsKey(chrom), $"no telomeres for {chrom}");
+            // Telomeres are anchored to the chromosome ends by construction.
+            foreach (var telomere in _refGen.Telomeres[chrom])
+            {
+                Assert.IsTrue(telomere.Start == 0 || telomere.End == _refGen.ChrLengths[chrom],
+                    $"telomere {telomere.Start}-{telomere.End} on {chrom} touches neither end");
+            }
+        }
+    }
+
+    [Test]
+    public void TestChromosomesAbsentFeatureParsesAsMissing()
+    {
+        // '.' marks a feature the assembly does not annotate, e.g. the p telomere of an acrocentric
+        // chromosome; the feature is then absent rather than defaulted.
+        var table = Parsers.ParseChromosomes(
+            "#chrom\tlength\tsex\ttel_p_end\tcen_start\tcen_end\ttel_q_start\n"
+            + "chr1\t1000\tAny\t.\t400\t600\t900\n"
+            + "chr2\t2000\tAny\t10\t800\t900\t.\n");
+
+        Assert.AreEqual(1, table.Telomeres["chr1"].Count);
+        Assert.AreEqual(900, table.Telomeres["chr1"][0].Start);
+        Assert.AreEqual(1, table.Telomeres["chr2"].Count);
+        Assert.AreEqual(10, table.Telomeres["chr2"][0].End);
+    }
+
+    [Test]
+    public void TestChromosomesTooFewColumnsThrows()
+    {
+        // The two-column form that predates the merged table must fail loudly rather than silently
+        // producing a genome with no centromeres or telomeres.
+        var ex = Assert.Throws<System.Exception>(() => Parsers.ParseChromosomes("chr1\t1000\n"));
+        Assert.IsTrue(ex!.Message.Contains("tel_q_start"), $"unhelpful message: {ex.Message}");
+    }
+
     [Test]
     public void TestConfigSerialization()
     {

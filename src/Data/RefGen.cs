@@ -5,12 +5,11 @@ namespace SimChA.Data;
 // Lists prefixed with Sex hold values for all SexTypes
 public class RefGen
 {
-    public const long TelomereLength = 50_000;
-
     public string Name { get; }
     public Dictionary<string, int> ChrLengths { get; }
     private Dictionary<string, SexType> ChrSex { get; }
     public Dictionary<string, GenRange> Centromeres { get; }
+    public Dictionary<string, List<GenRange>> Telomeres { get; }
     public string YChrName { get; }
     public string XChrName { get; }
     public List<List<Region>> SexGenome { get; }
@@ -28,6 +27,7 @@ public class RefGen
         Dictionary<string, int> chrLengths,
         Dictionary<string, SexType> chrSex,
         Dictionary<string, GenRange> centromeres,
+        Dictionary<string, List<GenRange>> telomeres,
         List<Dictionary<string, List<Gene>>> geneChromMap,
         Dictionary<string, StringBuilder>? genContentsDict = null)
     {
@@ -35,6 +35,7 @@ public class RefGen
         ChrLengths = chrLengths;
         ChrSex = chrSex;
         Centromeres = centromeres;
+        Telomeres = telomeres;
         GeneChromMap = geneChromMap;
         GenContentsDict = genContentsDict;
 
@@ -161,16 +162,12 @@ public class RefGen
             ? [new Centromere(cent.Start, cent.End, chrNo)]
             : [];
 
+    // Telomeres come from the assembly's chromosomes.tsv rather than from a fixed length, so a
+    // chromosome whose short arm is unassembled can legitimately have only the q telomere.
     private List<Telomere> GetChromTelomeres(string chrNo)
-    {
-        long chromLength = ChrLengths[chrNo];
-        long telomereLength = Math.Min(TelomereLength, chromLength);
-        return
-        [
-            new Telomere(0, telomereLength, chrNo),
-            new Telomere(chromLength - telomereLength, chromLength, chrNo)
-        ];
-    }
+        => Telomeres.TryGetValue(chrNo, out var tels)
+            ? tels.Select(tel => new Telomere(tel.Start, tel.End, chrNo)).ToList()
+            : [];
 
     private Region GetRegion(string chrNo, bool isFirstHaplotype)
         => new(0, ChrLengths[chrNo], chrNo, isFirstHaplotype, null, GetChromGenes(chrNo).ToList(),

@@ -313,65 +313,83 @@ public static class Parsers
         return output;
     }
 
-    public static (Dictionary<string, int> chrLengths, Dictionary<string, SexType> chrSex) ParseChromosomes(string text)
+    // Column order of chromosomes.tsv. Coordinates are 0-based, start-inclusive, end-exclusive, as
+    // everywhere else (see Region): the p telomere is [0, tel_p_end), the q telomere is
+    // [tel_q_start, length) and the centromere is [cen_start, cen_end).
+    private const int CHROM_COL = 0;
+    private const int LENGTH_COL = 1;
+    private const int SEX_COL = 2;
+    private const int TEL_P_END_COL = 3;
+    private const int CEN_START_COL = 4;
+    private const int CEN_END_COL = 5;
+    private const int TEL_Q_START_COL = 6;
+    private const int CHROM_COLUMNS = 7;
+
+    // A feature that the assembly does not annotate, e.g. the p telomere of an acrocentric
+    // chromosome whose short arm is unassembled.
+    private const string ABSENT = ".";
+
+    public static ChromosomeTable ParseChromosomes(string text)
     {
-        IList<string> lines = text.Split("\n");
         Dictionary<string, int> chrLengths = new();
         Dictionary<string, SexType> chrSex = new();
-        for (int index = 0; index < lines.Count; index++)
+        Dictionary<string, GenRange> centromeres = new();
+        Dictionary<string, List<GenRange>> telomeres = new();
+
+        foreach (string rawLine in text.Split("\n"))
         {
-            string line = lines[index];
-            var lineSplit = line.Split("\t").Select(s => s.Trim()).ToList();
-            string chrNo = lineSplit[0];
-            int length = int.Parse(lineSplit[1]);
-            chrLengths.Add(chrNo, length);
-            var sexEnum = GetSexEnum(lines, lineSplit, index);
-            chrSex.Add(chrNo, sexEnum);
-        }
-        return (chrLengths, chrSex);
-    }
-
-    // Set the centromeres to the boundaries of the centromere regions (given that p and q parts are separated)
-    public static Dictionary<string, GenRange> ParseCentromeres(TextReader centromereFile)
-    {   
-        Dictionary<string, GenRange> cents = new();
-
-        while (centromereFile.ReadLine() is { } line)
-        {
-            string[] lineSplit = line.Split('\t');
-            string chrom = lineSplit[0];
-            int start = int.Parse(lineSplit[1]);
-            int end = int.Parse(lineSplit[2]);
-
-            if (cents.ContainsKey(chrom))
+            // Skip blanks and comments so the file can carry a header and a trailing newline; the
+            // previous parser indexed every split line and broke on either.
+            string line = rawLine.Trim();
+            if (line.Length == 0 || line.StartsWith('#'))
             {
-                var existing = cents[chrom];
-                cents[chrom] = new GenRange(Math.Min(existing.Start, start), Math.Max(existing.End, end), chrom);
+                continue;
             }
-            else
+
+            var cols = line.Split("\t").Select(s => s.Trim()).ToList();
+            if (cols.Count < CHROM_COLUMNS)
             {
-                cents[chrom] = new GenRange(start, end, chrom);
+                throw new Exception(
+                    $"Expected {CHROM_COLUMNS} tab-separated columns "
+                    + "(chrom, length, sex, tel_p_end, cen_start, cen_end, tel_q_start) "
+                    + $"but found {cols.Count} in line: {line}");
             }
+
+            string chrom = cols[CHROM_COL];
+            int length = int.Parse(cols[LENGTH_COL]);
+            chrLengths.Add(chrom, length);
+            chrSex.Add(chrom, Enum.Parse<SexType>(cols[SEX_COL]));
+
+            if (ParseRange(cols[CEN_START_COL], cols[CEN_END_COL], chrom) is { } centromere)
+            {
+                centromeres.Add(chrom, centromere);
+            }
+            telomeres.Add(chrom, ParseTelomeres(cols, chrom, length));
         }
 
-        return cents;
+        return new ChromosomeTable(chrLengths, chrSex, centromeres, telomeres);
     }
 
-    private static SexType GetSexEnum(ICollection<string> lines, IReadOnlyList<string> lineSplit, int index)
+    // Telomeres are stored as the single coordinate where they meet the rest of the chromosome,
+    // because both are anchored to a chromosome end by definition; expand them back to ranges here.
+    private static List<GenRange> ParseTelomeres(IReadOnlyList<string> cols, string chrom, int length)
     {
-        if (lineSplit.Count <= 2)
+        var result = new List<GenRange>();
+        if (ParseRange("0", cols[TEL_P_END_COL], chrom) is { } pArm)
         {
-            return index switch
-            {
-                _ when index == lines.Count - 1 => SexType.Male,
-                _ when index == lines.Count - 2 => SexType.Female,
-                _ => SexType.Any
-            };
+            result.Add(pArm);
         }
-
-        string sexString = lineSplit[2];
-        return Enum.Parse<SexType>(sexString);
+        if (ParseRange(cols[TEL_Q_START_COL], length.ToString(), chrom) is { } qArm)
+        {
+            result.Add(qArm);
+        }
+        return result;
     }
+
+    private static GenRange? ParseRange(string start, string end, string chrom)
+        => start == ABSENT || end == ABSENT
+            ? null
+            : new GenRange(long.Parse(start), long.Parse(end), chrom);
     
     public static IEnumerable<StringBuilder> ParseFasta(StreamReader fastaStream)
     {

@@ -17,7 +17,6 @@ public class FileIO
     private const string OGS_TSV = "ogs.tsv";
     private const string TSGS_TSV = "tsgs.tsv";
     private const string GENOME_FASTA = "genome.fa";
-    private const string CENTROMERES_TSV = "centromeres.tsv";
     
     // input
     private const string SIM_PARAMS_FILENAME = "sim_params.json";
@@ -303,7 +302,9 @@ public class FileIO
         }
     }
     
-    private static (Dictionary<string, int> chrLengths, Dictionary<string, SexType> chrSex) ReadChromosomes(string folder)
+    // chromosomes.tsv carries lengths, sex, centromeres and telomeres in one table; centromeres.tsv
+    // and the hard-coded telomere length it used to complement are gone.
+    private static ChromosomeTable ReadChromosomes(string folder)
     {
         string fileFullPath = Path.GetFullPath(Path.Combine(folder, CHROMOSOMES_TSV));
         if (!File.Exists(fileFullPath))
@@ -314,24 +315,6 @@ public class FileIO
         {
             string fileContent = File.ReadAllText(fileFullPath);
             return Parsers.ParseChromosomes(fileContent);
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to parse the file {fileFullPath}. Error {e.Message}");
-        }
-    }
-
-    private static Dictionary<string, GenRange> ReadCentromeres(string folder)
-    {
-        string fileFullPath = Path.GetFullPath(Path.Combine(folder, CENTROMERES_TSV));
-        if (!File.Exists(fileFullPath))
-        {
-            throw new Exception($"File {fileFullPath} does not exist");
-        }
-        try
-        {
-            var fileContent = new StreamReader(fileFullPath);
-            return Parsers.ParseCentromeres(fileContent);
         }
         catch (Exception e)
         {
@@ -371,12 +354,12 @@ public class FileIO
             throw new ArgumentException($"Genes folder does not exist: {genesFolder}");
         }
         
-        var (chrLengths, chrSex) = ReadChromosomes(assemblyFolder);
-        var centromeres = ReadCentromeres(assemblyFolder);
-        var allChrs = chrSex.Select(pair => pair.Key).ToList();
+        var chroms = ReadChromosomes(assemblyFolder);
+        var allChrs = chroms.Sex.Select(pair => pair.Key).ToList();
         var genContentsDict = useVariants ? ReadFasta(allChrs, assemblyFolder) : null;
-        var geneChromMap = MapGenesToChroms(genesFolder, chrSex);
+        var geneChromMap = MapGenesToChroms(genesFolder, chroms.Sex);
         string refName = Path.GetFileName(assemblyFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        return new RefGen(refName, chrLengths, chrSex, centromeres, geneChromMap, genContentsDict);
+        return new RefGen(refName, chroms.Lengths, chroms.Sex, chroms.Centromeres, chroms.Telomeres,
+            geneChromMap, genContentsDict);
     }
 }

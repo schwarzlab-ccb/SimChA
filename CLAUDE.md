@@ -33,7 +33,7 @@ The `.csproj` is at the repo root; sources live in `src/`. `dotnet run` runs the
 
 **`Karyotype`** (`src/Data/Karyotype.cs`) — the full genome state: a list of `Contig`s plus a `GeneCounts[geneType][geneId]` matrix maintained incrementally. Every `Apply*` method follows the pattern: `RemoveGenes(contig)` → mutate → `AddGenes(contig)`. Empty contigs are kept in the list to preserve stable integer indices.
 
-**`RefGen`** (`src/Data/RefGen.cs`) — immutable reference data loaded at startup: chromosome lengths, centromere positions, and gene lists (TSG, OG, Essentials) per sex.
+**`RefGen`** (`src/Data/RefGen.cs`) — immutable reference data loaded at startup: chromosome lengths, centromere and telomere positions, and gene lists (TSG, OG, Essentials) per sex. Lengths, sex, centromeres and telomeres all come from a single `chromosomes.tsv` per assembly (7 columns: `chrom`, `length`, `sex`, `tel_p_end`, `cen_start`, `cen_end`, `tel_q_start`; `#` comments allowed, `.` marks an absent feature) parsed into a `ChromosomeTable`. The separate `centromeres.tsv` is gone, and telomere extents are data rather than the former hard-coded `RefGen.TelomereLength = 50_000`.
 
 ### Simulation flow
 

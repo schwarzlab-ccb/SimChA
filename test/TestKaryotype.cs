@@ -142,18 +142,23 @@ public class TestKaryotype
         const int contigId = 0;
         Assert.AreEqual(2, _kar.CountIntactTelomereEnds(contigId));
 
-        // Editing immediately inside the 50 kb boundary leaves the front telomere intact.
+        // Telomere extents come from the assembly's chromosomes.tsv, so take the boundary from the
+        // reference rather than a constant: contig 0 is the first chromosome of the male genome.
+        string firstChrom = _refGen.AllChrNames.First();
+        long telomereEnd = _refGen.Telomeres[firstChrom].First().End;
+
+        // Editing immediately inside the boundary leaves the front telomere intact.
         _kar.ApplyInternalDeletion(
             contigId,
-            RefGen.TelomereLength,
-            RefGen.TelomereLength + 1);
+            telomereEnd,
+            telomereEnd + 1);
         Assert.AreEqual(2, _kar.CountIntactTelomereEnds(contigId));
 
         // Removing its final base destroys the whole annotation; only the back end remains.
         _kar.ApplyInternalDeletion(
             contigId,
-            RefGen.TelomereLength - 1,
-            RefGen.TelomereLength);
+            telomereEnd - 1,
+            telomereEnd);
         Assert.AreEqual(1, _kar.CountIntactTelomereEnds(contigId));
 
         foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
