@@ -3,18 +3,18 @@
     "Seed": 0,
     "RateMean": 52.58766635470605,
     "RateShape": 1.0709496402877698,
+    "AutosomesOnly": true,
     "RateDist": "Gamma",
-    "Assembly": "hg19",
-    "AutosomesOnly": true
+    "Assembly": "hg19"
   },
   "FitParams": {
-    "Stress": 6.994572637905748,
-    "TsgOg": 382.9159372819622,
-    "Essentiality": 2651.7309075497888,
+    "Stress": 6.634590865444245,
+    "TsgOg": 383.67603959093776,
+    "Essentiality": 2632.785678368823,
     "GeneSet": "spice_PAAD"
   },
   "EvoParams": {
-    "Acceptance": 1.449141794552249,
+    "Acceptance": 1.2885915155220995,
     "MaxTries": 100
   },
   "Signatures": [
@@ -70,7 +70,7 @@
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.037988209284234076
+          "Prob": 0.05956209424206155
         }
       ]
     }

@@ -3,18 +3,18 @@
     "Seed": 0,
     "RateMean": 52.299999759877025,
     "RateShape": 13.627876369572888,
+    "AutosomesOnly": true,
     "RateDist": "Gamma",
-    "Assembly": "hg38",
-    "AutosomesOnly": true
+    "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 6.994572637905748,
-    "TsgOg": 382.9159372819622,
-    "Essentiality": 2651.7309075497888,
+    "Stress": 6.634590865444245,
+    "TsgOg": 383.67603959093776,
+    "Essentiality": 2632.785678368823,
     "GeneSet": "spice_TGCT"
   },
   "EvoParams": {
-    "Acceptance": 1.449141794552249,
+    "Acceptance": 1.2885915155220995,
     "MaxTries": 100
   },
   "Signatures": [
@@ -70,7 +70,7 @@
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.8611126523246208
+          "Prob": 0.5561214064930758
         }
       ]
     }

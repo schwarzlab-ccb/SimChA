@@ -3,18 +3,18 @@
     "Seed": 0,
     "RateMean": 48.673892424560904,
     "RateShape": 2.5177384983540985,
+    "AutosomesOnly": true,
     "RateDist": "Gamma",
-    "Assembly": "hg38",
-    "AutosomesOnly": true
+    "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 6.994572637905748,
-    "TsgOg": 382.9159372819622,
-    "Essentiality": 2651.7309075497888,
+    "Stress": 6.634590865444245,
+    "TsgOg": 383.67603959093776,
+    "Essentiality": 2632.785678368823,
     "GeneSet": "spice_CESC"
   },
   "EvoParams": {
-    "Acceptance": 1.449141794552249,
+    "Acceptance": 1.2885915155220995,
     "MaxTries": 100
   },
   "Signatures": [
@@ -70,7 +70,7 @@
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.25057795627849433
+          "Prob": 0.09824329701535384
         }
       ]
     }
