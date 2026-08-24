@@ -5,13 +5,13 @@
     "RateShape": 1.3848781684317262,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
-    "Assembly": "hg19"
+    "Assembly": "hg38"
   },
   "FitParams": {
     "Stress": 7.243063756299485,
     "TsgOg": 743.4527388891865,
     "Essentiality": 2378.1183418177166,
-    "GeneSet": "/projects/ag-schwarzr/project-simcha/project-simcha/res/gene_sets/hg19/tcga_all"
+    "GeneSet": "/projects/ag-schwarzr/project-simcha/project-simcha/res/gene_sets/hg38/tcga_all"
   },
   "EvoParams": {
     "Acceptance": 0.21400306123146784,

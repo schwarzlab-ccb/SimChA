@@ -4,17 +4,16 @@
     "RateMean": 88.29962414364563,
     "RateShape": 1.3848781684317262,
     "AutosomesOnly": true,
-    "RateDist": "Gamma",
-    "Assembly": "hg19"
+    "RateDist": "Gamma"
   },
   "FitParams": {
-    "Stress": 7.243063756299485,
-    "TsgOg": 743.4527388891865,
-    "Essentiality": 2378.1183418177166,
-    "GeneSet": "/projects/ag-schwarzr/project-simcha/project-simcha/res/gene_sets/hg19/tcga_all"
+    "Stress": 1,
+    "TsgOg": 1,
+    "Essentiality": 1,
+    "GeneSet": "simcha_all"
   },
   "EvoParams": {
-    "Acceptance": 0.21400306123146784,
+    "Acceptance": 1,
     "MaxTries": 100
   },
   "Signatures": [
@@ -60,7 +59,7 @@
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.21435966739511714
+          "Prob": 0.006211358616669267
         }
       ]
     }
