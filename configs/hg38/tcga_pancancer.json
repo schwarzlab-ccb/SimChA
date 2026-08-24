@@ -5,7 +5,7 @@
     "RateShape": 1.3848781684317262,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
-    "Assembly": "hg19"
+    "Assembly": "hg38"
   },
   "FitParams": {
     "Stress": 7.243063756299485,
