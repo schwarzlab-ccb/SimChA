@@ -676,7 +676,8 @@ Information about the individual events in the simulation. The columns are:
 The `regions_gained`/`regions_lost` columns report the exact copy-number change caused by the event, obtained by
 comparing the copy number at each reference position before and after the event. Each entry is
 `H<hap>:<chrom>[<start>:<end>)` and appears once per copy gained or lost on that haplotype, with multiple entries
-comma-separated inside a `[...]` wrapper. Because the comparison is per reference base rather than per region, an event
+comma-separated inside a `[...]` wrapper. Consecutive intervals are merged independently for each haplotype and
+copy-number change layer. Because the comparison is per reference base rather than per region, an event
 that merely splits a region — for example an internal deletion that cuts one region into two — reports only the
 interval whose copy number actually changed, instead of a spurious loss plus two gains. Copy-number-neutral events
 such as inversions and balanced translocations therefore produce no entries.

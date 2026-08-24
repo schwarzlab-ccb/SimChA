@@ -13,6 +13,17 @@ namespace Tests;
 [TestFixture]
 public class TestCopyNumbers
 {
+    private sealed class SimulatorAccessor : Simulator
+    {
+        public SimulatorAccessor(Random rnd, RefGen refGen)
+            : base(rnd, refGen, new SimParams(), new FitParams(1, 1, 1)) { }
+
+        public static (string Gained, string Lost) CalculateDelta(
+            Karyotype before,
+            Karyotype after)
+            => CalcKaryotypeDiff(before, after);
+    }
+
     private static readonly CNEventType[] DeltaOracleEventTypes =
         Enum.GetValues<CNEventType>()
             .Where(type => type != CNEventType.SNV)
@@ -210,6 +221,36 @@ public class TestCopyNumbers
 
         Assert.AreEqual(_refGen.SexChromNames[(int) SexType.Any].Count, deltas.Count);
         Assert.IsTrue(deltas.All(d => d is { CNH1: 1, CNH2: 1 }), "every chromosome gains one copy on both haplotypes");
+    }
+
+    [Test]
+    public void TestDeltaOutputMergesAdjacentRegionsPerHaplotype()
+    {
+        string chrom = _refGen.SexChromNames[(int) SexType.Any][0];
+        const long start = 1_000_000;
+        const long boundary = 2_000_000;
+        const long end = 3_000_000;
+
+        var before = new Karyotype(_refGen, SexType.Any);
+        var after = new Karyotype(before);
+        after.ApplyInternalDuplication(0, start, end);
+        after.ApplyInternalDuplication(_refGen.AutosomesCount, boundary, end);
+
+        bool previousPrintDelta = CNEventDesc.PrintDelta;
+        try
+        {
+            CNEventDesc.PrintDelta = true;
+            var (gained, lost) = SimulatorAccessor.CalculateDelta(before, after);
+
+            Assert.AreEqual(
+                $"[H1:{chrom}[{start}:{end}),H2:{chrom}[{boundary}:{end})]",
+                gained);
+            Assert.AreEqual("[]", lost);
+        }
+        finally
+        {
+            CNEventDesc.PrintDelta = previousPrintDelta;
+        }
     }
 
     [Test]

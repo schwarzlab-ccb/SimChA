@@ -42,34 +42,96 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
             return ("", "");
         }
 
-        var gained = new List<string>();
-        var lost = new List<string>();
+        var gained = new List<DeltaRegion>();
+        var lost = new List<DeltaRegion>();
         foreach (var delta in CopyNumbers.DiffKaryotypes(beforeKar, afterKar))
         {
             AppendCopies(gained, lost, "H1", delta.Chrom, delta.Start, delta.End, delta.CNH1);
             AppendCopies(gained, lost, "H2", delta.Chrom, delta.Start, delta.End, delta.CNH2);
         }
         return (
-            "[" + string.Join(",", gained) + "]",
-            "[" + string.Join(",", lost) + "]");
+            FormatRegions(gained),
+            FormatRegions(lost));
+    }
+
+    private readonly record struct DeltaRegion(
+        string Hap,
+        string Chrom,
+        long Start,
+        long End)
+    {
+        public override string ToString() => $"{Hap}:{Chrom}[{Start}:{End})";
+    }
+
+    // Merge each copy layer independently so adjacent changes on one haplotype remain joined even
+    // when the other haplotype changes at the boundary. Separate layers preserve multiplicity: a
+    // two-copy gain is still printed twice rather than being collapsed into one interval.
+    private static string FormatRegions(List<DeltaRegion> regions)
+    {
+        var merged = new List<DeltaRegion>();
+        foreach (var hapChromGroup in regions.GroupBy(region => (region.Hap, region.Chrom)))
+        {
+            var intervals = hapChromGroup
+                .GroupBy(region => (region.Start, region.End))
+                .Select(group => (Region: group.First(), Copies: group.Count()))
+                .OrderBy(interval => interval.Region.Start)
+                .ThenBy(interval => interval.Region.End)
+                .ToList();
+            int maxCopies = intervals.Count == 0 ? 0 : intervals.Max(interval => interval.Copies);
+
+            for (int copy = 0; copy < maxCopies; copy++)
+            {
+                DeltaRegion? run = null;
+                foreach (var interval in intervals)
+                {
+                    if (interval.Copies <= copy)
+                    {
+                        if (run is not null)
+                        {
+                            merged.Add(run.Value);
+                            run = null;
+                        }
+                        continue;
+                    }
+
+                    if (run is { } current && current.End == interval.Region.Start)
+                    {
+                        run = current with { End = interval.Region.End };
+                    }
+                    else
+                    {
+                        if (run is not null)
+                        {
+                            merged.Add(run.Value);
+                        }
+                        run = interval.Region;
+                    }
+                }
+                if (run is not null)
+                {
+                    merged.Add(run.Value);
+                }
+            }
+        }
+        return "[" + string.Join(",", merged) + "]";
     }
 
     // Emits one entry per copy changed on a haplotype: |delta| copies of the interval go to
     // `gained` when the copy number rose and to `lost` when it fell, so the entry count equals
     // the number of copies gained or lost there.
     private static void AppendCopies(
-        List<string> gained, List<string> lost,
+        List<DeltaRegion> gained, List<DeltaRegion> lost,
         string hap, string chrom, long start, long end, int delta)
     {
         if (delta == 0)
         {
             return;
         }
-        string desc = $"{hap}:{chrom}[{start}:{end})";
+        var region = new DeltaRegion(hap, chrom, start, end);
         var target = delta > 0 ? gained : lost;
         for (int i = 0; i < Math.Abs(delta); i++)
         {
-            target.Add(desc);
+            target.Add(region);
         }
     }
 
