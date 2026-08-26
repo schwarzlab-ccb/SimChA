@@ -30,32 +30,22 @@
           "Prob": 0.020753038837829824
         },
         {
-          "Type": "CentromereBoundDuplication",
-          "Prob": 0.010080047435517344,
-          "Frac": 0.19731486583796123
-        },
-        {
-          "Type": "CentromereBoundDeletion",
-          "Prob": 0.008894159501927068,
-          "Frac": 0.2743900165778755
-        },
-        {
           "Type": "InternalDuplication",
-          "Prob": 0.3290839015713015,
-          "Frac": 0.03857263510719557
+          "Prob": 0.33916394900681884,
+          "Frac": 0.043290498607935116
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.2555588496887044,
-          "Frac": 0.04035097501858213
+          "Prob": 0.26445300919063147,
+          "Frac": 0.04822224323245971
         },
         {
-          "Type": "TailDuplication",
+          "Type": "TelomereDuplication",
           "Prob": 0.03765194189149126,
           "Frac": 0.2552437921500252
         },
         {
-          "Type": "TailDeletion",
+          "Type": "TelomereDeletion",
           "Prob": 0.058108508745923514,
           "Frac": 0.2806672624812258
         },

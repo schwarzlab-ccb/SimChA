@@ -8,13 +8,13 @@
     "Assembly": "hg19"
   },
   "FitParams": {
-    "Stress": 6.634590865444245,
-    "TsgOg": 383.67603959093776,
-    "Essentiality": 2632.785678368823,
+    "Stress": 6.008560836141221,
+    "TsgOg": 344.8303844534448,
+    "Essentiality": 2930.1956250894777,
     "GeneSet": "spice_HNSC"
   },
   "EvoParams": {
-    "Acceptance": 1.2885915155220995,
+    "Acceptance": 1.2399990076540246,
     "MaxTries": 100
   },
   "Signatures": [
@@ -31,32 +31,22 @@
           "Prob": 0.0702133062468258
         },
         {
-          "Type": "CentromereBoundDuplication",
-          "Prob": 0.019743524631792787,
-          "Frac": 0.18399257908972153
-        },
-        {
-          "Type": "CentromereBoundDeletion",
-          "Prob": 0.019426104621635347,
-          "Frac": 0.24070250866822673
-        },
-        {
           "Type": "InternalDuplication",
-          "Prob": 0.2848527171152869,
-          "Frac": 0.06129653483938502
+          "Prob": 0.3045962417470797,
+          "Frac": 0.06924952978766652
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.2133062468257999,
-          "Frac": 0.06096869850877225
+          "Prob": 0.23273235144743526,
+          "Frac": 0.0759710296350115
         },
         {
-          "Type": "TailDuplication",
+          "Type": "TelomereDuplication",
           "Prob": 0.08468765871000508,
           "Frac": 0.27276865203122397
         },
         {
-          "Type": "TailDeletion",
+          "Type": "TelomereDeletion",
           "Prob": 0.09471813103098019,
           "Frac": 0.32320749765842655
         },
@@ -70,7 +60,7 @@
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.0358844692061962
+          "Prob": 0.007686751599542463
         }
       ]
     }
