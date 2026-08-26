@@ -7,6 +7,8 @@ namespace SimChA.Simulation;
 
 public static class Sampling
 {
+    public const double FixedBetaAlpha = 0.6;
+
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
         => (long) Math.Clamp(Math.Round(contigLen * Normal.Sample(rnd, meanFrac, meanFrac / 3)), 1, contigLen);
     
@@ -18,6 +20,22 @@ public static class Sampling
 
     public static long GetParetoSeg(Random rnd, long contigLen, double meanFrac)
         => (long) Math.Clamp(Math.Round(contigLen * SampleParetoLim(rnd, meanFrac)), 1, contigLen);
+
+    public static long GetBetaSeg(Random rnd, long armLength, double meanFrac)
+    {
+        if (meanFrac >= 1)
+        {
+            return armLength;
+        }
+        if (meanFrac <= 0)
+        {
+            return 1;
+        }
+        return (long) Math.Clamp(
+            Math.Round(armLength * SampleBeta(rnd, meanFrac)),
+            1,
+            armLength);
+    }
 
     public static long GetPos(Random rnd, long contigLen)
         => rnd.NextInt64(0, contigLen);
@@ -124,6 +142,21 @@ public static class Sampling
         }
         return 1;
     }
+
+    // For Beta(alpha, beta), mean = alpha / (alpha + beta). The configuration stores only that
+    // mean; alpha stays fixed at the notebook value and beta is recovered here at runtime.
+    public static double GetBetaShape(double mean, double alpha = FixedBetaAlpha)
+    {
+        if (mean is <= 0 or >= 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(mean), mean, "Beta mean must be strictly between zero and one.");
+        }
+        return alpha * (1 - mean) / mean;
+    }
+
+    public static double SampleBeta(Random rnd, double mean)
+        => Beta.Sample(rnd, FixedBetaAlpha, GetBetaShape(mean));
     
     public static SexType GetSex(Random rnd, SexType sexType)
         => sexType switch
@@ -150,11 +183,85 @@ public static class Sampling
         return (idSelected, kar.ContigLen(idSelected));
     }
 
-    // Selects the contigs to be affected by the event. Within-contig events are chosen with
-    // probability proportional to contig length; arm/centromere-bound events proportional to the
-    // number of centromeres; telomere events proportional to eligible terminal telomeres;
-    // chromosome events uniformly among chromosome-like contigs; unrestricted contig events
-    // uniformly among active contigs; and multi-contig events use a uniform random permutation.
+    private readonly record struct TerminalArm(
+        int ContigId,
+        long ContigLength,
+        bool Direction,
+        long Length);
+
+    // Select one physical terminal arm across the whole karyotype. Sampling the candidate arms
+    // directly makes both the contig and end choice proportional to usable arm length.
+    private static TerminalArm? SampleTerminalArmWeighted(
+        Random rnd,
+        Karyotype kar,
+        bool requireIntactTelomere)
+    {
+        var arms = kar.ContigIds()
+            .SelectMany(contigId => kar.GetTerminalArms(contigId, requireIntactTelomere)
+                .Select(arm => new TerminalArm(
+                    contigId,
+                    kar.ContigLen(contigId),
+                    arm.direction,
+                    arm.length)))
+            .ToList();
+        if (arms.Count == 0)
+        {
+            return null;
+        }
+        var weights = arms.Select(arm => (double) arm.Length).ToList();
+        return arms[rnd.PickRndIndex(weights, weights.Sum())];
+    }
+
+    private static bool UsesTerminalArm(CNEventType type)
+        => type is CNEventType.TailDeletion
+            or CNEventType.TailDuplication
+            or CNEventType.TelomereDeletion
+            or CNEventType.TelomereDuplication
+            or CNEventType.InternalDeletion
+            or CNEventType.InternalDuplication
+            or CNEventType.InternalInversion
+            or CNEventType.InvertedDuplication;
+
+    private static BaseEventData? GenerateTerminalArmEventData(
+        Random rnd,
+        Karyotype kar,
+        CNEventPars cnEventPars)
+    {
+        bool requireIntactTelomere = cnEventPars.Type is
+            CNEventType.TelomereDeletion or CNEventType.TelomereDuplication;
+        var arm = SampleTerminalArmWeighted(rnd, kar, requireIntactTelomere);
+        if (arm is not { } selected)
+        {
+            return null;
+        }
+
+        return cnEventPars.Type switch
+        {
+            CNEventType.InternalDeletion
+                or CNEventType.InternalDuplication
+                or CNEventType.InternalInversion
+                or CNEventType.InvertedDuplication
+                => new InternalEventData(
+                    rnd,
+                    cnEventPars,
+                    selected.ContigId,
+                    selected.ContigLength,
+                    selected.Direction,
+                    selected.Length),
+            _ => new TailEventData(
+                rnd,
+                cnEventPars,
+                selected.ContigId,
+                selected.ContigLength,
+                selected.Direction,
+                selected.Length)
+        };
+    }
+
+    // Selects contigs for events that do not use the terminal-arm path above. Other local events
+    // are chosen proportional to contig length, legacy arm/centromere-bound events proportional to
+    // centromere count, chromosome events uniformly among chromosome-like contigs, unrestricted
+    // contig events uniformly among active contigs, and multi-contig events by random permutation.
     private static List<(int id, long len)> SelectContigs(Random rnd, Karyotype kar, CNEventType type)
     {
         switch (type)
@@ -182,26 +289,7 @@ public static class Sampling
             case CNEventType.CentromereBoundDuplication:
                 return SampleContigWeighted(rnd, kar, id => kar.CountCentromeres(id)).ToList();
 
-            // Tail loss retains length weighting but excludes contigs without an inward centromere.
-            case CNEventType.TailDeletion:
-                return SampleContigWeighted(rnd, kar,
-                    id => kar.CountTailLossEnds(id) > 0 ? kar.ContigLen(id) : 0).ToList();
-
-            // Telomere loss: weighted by intact terminal telomeres that have a centromere on their
-            // inward side. The distance to the nearest such centromere bounds the deletion.
-            case CNEventType.TelomereDeletion:
-                return SampleContigWeighted(rnd, kar, id => kar.CountTelomereBoundLossEnds(id)).ToList();
-
-            // Telomere gain: weighted by the number of intact telomeres at physical contig ends.
-            case CNEventType.TelomereDuplication:
-                return SampleContigWeighted(rnd, kar, id => kar.CountIntactTelomereEnds(id)).ToList();
-
             // Within-contig events: weighted by contig length
-            case CNEventType.InternalDuplication:
-            case CNEventType.InternalDeletion:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-            case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
             case CNEventType.Chromothripsis:
             case CNEventType.Pyrgo:
@@ -217,6 +305,11 @@ public static class Sampling
 
     public static BaseEventData? GenerateCNEventData(Random rnd, Karyotype kar, CNEventPars cnEventPars)
     {
+        if (UsesTerminalArm(cnEventPars.Type))
+        {
+            return GenerateTerminalArmEventData(rnd, kar, cnEventPars);
+        }
+
         var seq = SelectContigs(rnd, kar, cnEventPars.Type);
         if (seq.Count == 0)
         {
@@ -239,51 +332,9 @@ public static class Sampling
             case CNEventType.WholeGenomeDoubling:
                 return new WGDEventData(cnEventPars);
             
-            // Tail events
-            case CNEventType.TailDuplication:
+            // Tail-like events that are not sampled from a terminal chromosome arm.
             case CNEventType.BreakageFusionBridge:
                 return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
-
-            case CNEventType.TailDeletion:
-                var tailLossDirections = kar.GetTailLossDirections(seq[0].id);
-                if (tailLossDirections.Count == 0)
-                {
-                    return null;
-                }
-                var tailLossDirection = tailLossDirections[rnd.Next(tailLossDirections.Count)];
-                return new TailEventData(
-                    rnd,
-                    cnEventPars,
-                    seq[0].id,
-                    seq[0].len,
-                    tailLossDirection.direction,
-                    tailLossDirection.maxLength);
-
-            case CNEventType.TelomereDuplication:
-                var directions = kar.GetIntactTelomereDirections(seq[0].id);
-                return directions.Count == 0
-                    ? null
-                    : new TailEventData(
-                        rnd,
-                        cnEventPars,
-                        seq[0].id,
-                        seq[0].len,
-                        directions[rnd.Next(directions.Count)]);
-
-            case CNEventType.TelomereDeletion:
-                var lossDirections = kar.GetTelomereBoundLossDirections(seq[0].id);
-                if (lossDirections.Count == 0)
-                {
-                    return null;
-                }
-                var lossDirection = lossDirections[rnd.Next(lossDirections.Count)];
-                return new TailEventData(
-                    rnd,
-                    cnEventPars,
-                    seq[0].id,
-                    seq[0].len,
-                    lossDirection.direction,
-                    lossDirection.maxLength);
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
@@ -293,13 +344,6 @@ public static class Sampling
             case CNEventType.CentromereBoundDuplication:
                 return new InternalEventData(rnd, cnEventPars, seq[0].id, kar.GetCentromeres(seq[0].id), seq[0].len);
 
-            // Internal events
-            case CNEventType.InternalDuplication:
-            case CNEventType.InternalDeletion:
-            case CNEventType.InternalInversion:
-            case CNEventType.InvertedDuplication:
-                return new InternalEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
-            
             case CNEventType.Translocation:
                 return seq.Count > 1
                     ? new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[1].len)

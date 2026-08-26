@@ -237,8 +237,12 @@ public class TestKaryotype
     }
 
     [TestCase(CNEventType.TailDeletion)]
+    [TestCase(CNEventType.TailDuplication)]
     [TestCase(CNEventType.TelomereDeletion)]
-    public void TestBoundedDeletionRequiresAnInwardCentromere(CNEventType eventType)
+    [TestCase(CNEventType.TelomereDuplication)]
+    [TestCase(CNEventType.InternalDeletion)]
+    [TestCase(CNEventType.InternalDuplication)]
+    public void TestArmBasedEventRequiresAnInwardCentromere(CNEventType eventType)
     {
         const int contigId = 0;
         foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
@@ -654,17 +658,84 @@ public class TestKaryotype
         return (bigId, smallId);
     }
 
+    private double TerminalArmWeight(int contigId, bool front = true, bool back = true)
+    {
+        var centromeres = _kar.GetCentromeres(contigId);
+        long contigLength = _kar.ContigLen(contigId);
+        long frontLength = front
+            ? centromeres.Select(centromere => centromere.start)
+                .Where(length => length > 0)
+                .DefaultIfEmpty(0)
+                .Min()
+            : 0;
+        long backLength = back
+            ? centromeres.Select(centromere => contigLength - centromere.end)
+                .Where(length => length > 0)
+                .DefaultIfEmpty(0)
+                .Min()
+            : 0;
+        return frontLength + backLength;
+    }
+
     [Test]
-    public void TestInternalSelectionByLength()
+    public void TestInternalSelectionByTerminalArmLength()
     {
         var (bigId, smallId) = KeepExtremeContigs();
-        double expected = _kar.ContigLen(bigId) / (double) (_kar.ContigLen(bigId) + _kar.ContigLen(smallId));
+        double bigWeight = TerminalArmWeight(bigId);
+        double expected = bigWeight / (bigWeight + TerminalArmWeight(smallId));
 
         var ev = new CNEventPars(CNEventType.InternalDeletion, 1, 0.01);
         double frac = SelectionFraction(ev, bigId, 20000);
 
-        // Internal events should pick contigs in proportion to their length.
+        // Picking a terminal arm first weights each contig by the total usable length of its arms.
         Assert.AreEqual(expected, frac, 0.03);
+    }
+
+    [TestCase(CNEventType.TailDeletion)]
+    [TestCase(CNEventType.TailDuplication)]
+    public void TestTailSelectionByTerminalArmLength(CNEventType eventType)
+    {
+        var (bigId, smallId) = KeepExtremeContigs();
+        double bigWeight = TerminalArmWeight(bigId);
+        double expected = bigWeight / (bigWeight + TerminalArmWeight(smallId));
+
+        var ev = new CNEventPars(eventType, 1, 0.01);
+        Assert.AreEqual(expected, SelectionFraction(ev, bigId, 20000), 0.03);
+    }
+
+    [Test]
+    public void TestInternalEventsSelectArmsByLengthAndDoNotCrossCentromere()
+    {
+        const int contigId = 0;
+        foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+
+        var centromere = _kar.GetCentromeres(contigId).Single();
+        long contigLength = _kar.ContigLen(contigId);
+        double expectedFront = centromere.start /
+            (double) (centromere.start + contigLength - centromere.end);
+        int frontCount = 0;
+        const int trials = 20000;
+        var ev = new CNEventPars(CNEventType.InternalDeletion, 1, 0.1);
+
+        for (int i = 0; i < trials; i++)
+        {
+            var data = Sampling.GenerateCNEventData(_rnd, _kar, ev) as InternalEventData;
+            Assert.NotNull(data);
+            if (data!.Direction)
+            {
+                frontCount++;
+                Assert.LessOrEqual(data.End, centromere.start);
+            }
+            else
+            {
+                Assert.GreaterOrEqual(data.Start, centromere.end);
+            }
+        }
+
+        Assert.AreEqual(expectedFront, frontCount / (double) trials, 0.03);
     }
 
     [Test]
@@ -707,17 +778,22 @@ public class TestKaryotype
     }
 
     [Test]
-    public void TestTelomereSelectionByEligibleEndCount()
+    [TestCase(CNEventType.TelomereDeletion)]
+    [TestCase(CNEventType.TelomereDuplication)]
+    public void TestTelomereSelectionByEligibleArmLength(CNEventType eventType)
     {
         var (twoEndedId, oneEndedId) = KeepExtremeContigs();
         _kar.ApplyTailDeletion(oneEndedId, 1, true);
         Assert.AreEqual(2, _kar.CountIntactTelomereEnds(twoEndedId));
         Assert.AreEqual(1, _kar.CountIntactTelomereEnds(oneEndedId));
 
-        var ev = new CNEventPars(CNEventType.TelomereDeletion, 1, 0.01);
+        var ev = new CNEventPars(eventType, 1, 0.01);
         double fraction = SelectionFraction(ev, twoEndedId, 20000);
+        double twoEndedWeight = TerminalArmWeight(twoEndedId);
+        // The front telomere of oneEndedId was removed, leaving only its back arm eligible.
+        double expected = twoEndedWeight /
+            (twoEndedWeight + TerminalArmWeight(oneEndedId, front: false));
 
-        // Sampling an eligible end uniformly gives the two-ended contig twice the weight.
-        Assert.AreEqual(2.0 / 3.0, fraction, 0.03);
+        Assert.AreEqual(expected, fraction, 0.03);
     }
 }

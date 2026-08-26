@@ -24,11 +24,10 @@ public record TailEventData : ContigEventData
         long? maxLength = null)
         : base(CNEventPars, contigId, contigLen)
     {
-        long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
-        if (maxLength is { } limit)
-        {
-            segLen = Math.Min(segLen, limit);
-        }
+        long availableLength = maxLength ?? contigLen;
+        long segLen = CNEventPars.Type is CNEventType.TelomereDeletion or CNEventType.TelomereDuplication
+            ? Sampling.GetBetaSeg(rnd, availableLength, CNEventPars.Frac)
+            : Sampling.GetExpSeg(rnd, availableLength, CNEventPars.Frac);
         Direction = direction;
         Start = Direction ? segLen : contigLen - segLen;
     }

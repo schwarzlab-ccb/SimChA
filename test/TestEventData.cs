@@ -46,6 +46,53 @@ public class TestEventData
         Assert.LessOrEqual(eventData.Start, len);
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TestInternalEventDrawsLengthThenPlacesUniformlyWithinSelectedArm(bool direction)
+    {
+        const long contigLen = 3_000_000;
+        const long armLen = 1_000_000;
+        var eventP = new CNEventPars(CNEventType.InternalDuplication, 1, 0.1);
+        var normalizedStarts = new List<double>();
+
+        for (int i = 0; i < 20000; i++)
+        {
+            var eventData = new InternalEventData(
+                _rnd, eventP, 0, contigLen, direction, armLen);
+            long armStart = direction ? 0 : contigLen - armLen;
+            long lastStart = armStart + armLen - (eventData.End - eventData.Start);
+
+            Assert.GreaterOrEqual(eventData.Start, armStart);
+            Assert.LessOrEqual(eventData.End, armStart + armLen);
+            if (lastStart > armStart)
+            {
+                normalizedStarts.Add(
+                    (eventData.Start - armStart) / (double) (lastStart - armStart));
+            }
+        }
+
+        Assert.AreEqual(0.5, normalizedStarts.Average(), 0.02);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TestTelomereEventUsesFixedAlphaBetaLength(bool direction)
+    {
+        const long contigLen = 3_000_000;
+        const long armLen = 1_000_000;
+        const double mean = 0.4;
+        var eventP = new CNEventPars(CNEventType.TelomereDuplication, 1, mean);
+        var proportions = Enumerable.Range(0, 100000).Select(_ =>
+        {
+            var eventData = new TailEventData(
+                _rnd, eventP, 0, contigLen, direction, armLen);
+            long length = direction ? eventData.Start : contigLen - eventData.Start;
+            return length / (double) armLen;
+        });
+
+        Assert.AreEqual(mean, proportions.Average(), 0.01);
+    }
+
     [Test]
     public void TestPairEventData()
     {

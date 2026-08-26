@@ -104,17 +104,10 @@ public class Karyotype
     public int CountIntactTelomereEnds(int contigId)
         => GetIntactTelomereDirections(contigId).Count;
 
-    internal IReadOnlyList<(bool direction, long maxLength)> GetTailLossDirections(int contigId)
-        => _contigs[contigId].GetTailLossDirections();
-
-    internal int CountTailLossEnds(int contigId)
-        => GetTailLossDirections(contigId).Count;
-
-    internal IReadOnlyList<(bool direction, long maxLength)> GetTelomereBoundLossDirections(int contigId)
-        => _contigs[contigId].GetTelomereBoundLossDirections();
-
-    internal int CountTelomereBoundLossEnds(int contigId)
-        => GetTelomereBoundLossDirections(contigId).Count;
+    internal IReadOnlyList<(bool direction, long length)> GetTerminalArms(
+        int contigId,
+        bool requireIntactTelomere)
+        => _contigs[contigId].GetTerminalArms(requireIntactTelomere);
 
     internal bool IsChromosomeLikeContig(int contigId)
         => CountIntactTelomereEnds(contigId) == 2 && CountCentromeres(contigId) > 0;

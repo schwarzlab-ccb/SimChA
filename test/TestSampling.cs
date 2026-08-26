@@ -28,6 +28,24 @@ public class TestSampling
         Console.Write(res);
     }
 
+    [TestCase(0.25), TestCase(0.5), TestCase(0.75)]
+    public void TestFixedAlphaBetaSamplingRecoversMean(double mean)
+    {
+        double sampledMean = Enumerable.Range(0, 100000)
+            .Select(_ => Sampling.SampleBeta(_rnd, mean))
+            .Average();
+        Assert.AreEqual(mean, sampledMean, 0.01);
+    }
+
+    [Test]
+    public void TestBetaShapeIsDerivedFromMean()
+    {
+        Assert.AreEqual(0.6, Sampling.FixedBetaAlpha);
+        Assert.AreEqual(0.6, Sampling.GetBetaShape(0.5), 1e-12);
+        Assert.AreEqual(1.8, Sampling.GetBetaShape(0.25), 1e-12);
+        Assert.Throws<ArgumentOutOfRangeException>(() => Sampling.GetBetaShape(1));
+    }
+
     [Test]
     public void TestContSampling([Values(DistType.Exponential, DistType.Normal)] DistType dist, [Values(0.01, 0.1, 1, 10, 100)] double mean)
     {
