@@ -36,7 +36,7 @@ public class TestKaryotype
         _refGen = FileIO.ReadGenRef(TestParsing.DATA_PATH, TestParsing.HG_19, TestParsing.GENE_SET);
         _kar = new Karyotype(_refGen, SexType.Male);
         _rnd = new Random(0);
-        _del = new CNEventPars(CNEventType.ChromDeletion, 1);
+        _del = new CNEventPars(CNEventType.ContigDeletion, 1);
     }
 
     // Test for each AberrationEnum value
@@ -65,6 +65,59 @@ public class TestKaryotype
         
         _kar.ApplyContigDuplication(46);
         Assert.AreEqual(48, _kar.CountContigs());
+    }
+
+    [TestCase(CNEventType.ContigDeletion)]
+    [TestCase(CNEventType.ContigDuplication)]
+    public void TestContigEventsCanApplyToNonChromosomeContigs(CNEventType eventType)
+    {
+        const int contigId = 0;
+        foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+        _kar.ApplyTailDeletion(contigId, 1, true);
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(contigId));
+        Assert.Greater(_kar.CountCentromeres(contigId), 0);
+
+        var eventParameters = new CNEventPars(eventType, 1);
+        var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters);
+        Assert.NotNull(eventData);
+
+        eventData!.ApplyEvent(_kar);
+        Assert.AreEqual(
+            eventType == CNEventType.ContigDeletion ? 0 : 2,
+            _kar.CountContigs());
+    }
+
+    [TestCase(CNEventType.ChromDeletion)]
+    [TestCase(CNEventType.ChromDuplication)]
+    public void TestChromEventsRequireTwoTerminalTelomeresAndACentromere(CNEventType eventType)
+    {
+        const int validId = 0;
+        const int oneEndedId = 1;
+        foreach (int id in _kar.ContigIds().Where(id => id != validId && id != oneEndedId).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+        _kar.ApplyTailDeletion(oneEndedId, 1, true);
+        Assert.AreEqual(2, _kar.CountIntactTelomereEnds(validId));
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(oneEndedId));
+
+        var eventParameters = new CNEventPars(eventType, 1);
+        for (int i = 0; i < 100; i++)
+        {
+            var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters) as ContigEventData;
+            Assert.NotNull(eventData);
+            Assert.AreEqual(validId, eventData!.ContigId);
+        }
+
+        _kar.ApplyContigDeletion(oneEndedId);
+        var centromere = _kar.GetCentromeres(validId).Single();
+        _kar.ApplyInternalDeletion(validId, centromere.start, centromere.end);
+        Assert.AreEqual(2, _kar.CountIntactTelomereEnds(validId));
+        Assert.AreEqual(0, _kar.CountCentromeres(validId));
+        Assert.IsNull(Sampling.GenerateCNEventData(_rnd, _kar, eventParameters));
     }
 
     [Test]
@@ -128,12 +181,13 @@ public class TestKaryotype
     public void TestTailDuplication()
     {
         long len = _kar.ContigLen(0);
+        int contigCount = _kar.CountContigs();
         _kar.ApplyTailDuplication(0, TEST_FRAC, true);
-        Assert.AreEqual(len, _kar.ContigLen(0));
-        Assert.AreEqual(TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
+        Assert.AreEqual(contigCount, _kar.CountContigs());
+        Assert.AreEqual(len + TEST_FRAC, _kar.ContigLen(0));
         _kar.ApplyTailDuplication(0, 2*TEST_FRAC, true);
-        Assert.AreEqual(len, _kar.ContigLen(0));
-        Assert.AreEqual(2*TEST_FRAC, _kar.ContigLen(_kar.ContigIds().Last()));
+        Assert.AreEqual(contigCount, _kar.CountContigs());
+        Assert.AreEqual(len + 3 * TEST_FRAC, _kar.ContigLen(0));
     }
 
     [Test]
@@ -182,6 +236,99 @@ public class TestKaryotype
         Assert.IsNull(Sampling.GenerateCNEventData(_rnd, _kar, eventParameters));
     }
 
+    [TestCase(CNEventType.TailDeletion)]
+    [TestCase(CNEventType.TelomereDeletion)]
+    public void TestBoundedDeletionRequiresAnInwardCentromere(CNEventType eventType)
+    {
+        const int contigId = 0;
+        foreach (int id in _kar.ContigIds().Where(id => id != contigId).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+        var centromere = _kar.GetCentromeres(contigId).Single();
+        _kar.ApplyInternalDeletion(contigId, centromere.start, centromere.end);
+        Assert.AreEqual(2, _kar.CountIntactTelomereEnds(contigId));
+        Assert.AreEqual(0, _kar.CountCentromeres(contigId));
+
+        var eventParameters = new CNEventPars(eventType, 1, 0.01);
+        Assert.IsNull(Sampling.GenerateCNEventData(_rnd, _kar, eventParameters));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TestTelomereDeletionStopsAtNearestCentromere(bool direction)
+    {
+        var ids = _kar.ContigIds().ToList();
+        int fusedId = ids[0];
+        int donorId = ids[1];
+        foreach (int id in ids.Where(id => id != fusedId && id != donorId))
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+
+        _kar.ApplyTranslocation(fusedId, donorId, _kar.ContigLen(fusedId), 0, false);
+        Assert.AreEqual(1, _kar.CountContigs());
+        Assert.AreEqual(2, _kar.CountCentromeres(fusedId));
+
+        if (direction)
+        {
+            _kar.ApplyTailDeletion(fusedId, _kar.ContigLen(fusedId) - 1, false);
+        }
+        else
+        {
+            _kar.ApplyTailDeletion(fusedId, 1, true);
+        }
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(fusedId));
+
+        var centromeres = _kar.GetCentromeres(fusedId);
+        long nearestBoundary = direction
+            ? centromeres.Min(centromere => centromere.start)
+            : centromeres.Max(centromere => centromere.end);
+        var eventParameters = new CNEventPars(CNEventType.TelomereDeletion, 1, 1_000_000);
+        var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters) as TailEventData;
+        Assert.NotNull(eventData);
+        Assert.AreEqual(direction, eventData!.Direction);
+        Assert.AreEqual(nearestBoundary, eventData.Start);
+
+        eventData.ApplyEvent(_kar);
+        Assert.AreEqual(2, _kar.CountCentromeres(fusedId));
+        Assert.AreEqual(
+            direction ? eventData.Length - nearestBoundary : nearestBoundary,
+            _kar.ContigLen(fusedId));
+    }
+
+    [Test]
+    public void TestTailDeletionStopsAtNearestCentromere()
+    {
+        var ids = _kar.ContigIds().ToList();
+        int fusedId = ids[0];
+        int donorId = ids[1];
+        foreach (int id in ids.Where(id => id != fusedId && id != donorId))
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+
+        _kar.ApplyTranslocation(fusedId, donorId, _kar.ContigLen(fusedId), 0, false);
+        Assert.AreEqual(1, _kar.CountContigs());
+        var centromeres = _kar.GetCentromeres(fusedId);
+        Assert.AreEqual(2, centromeres.Count);
+
+        var observedDirections = new HashSet<bool>();
+        var eventParameters = new CNEventPars(CNEventType.TailDeletion, 1, 1_000_000);
+        for (int i = 0; i < 100; i++)
+        {
+            var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventParameters) as TailEventData;
+            Assert.NotNull(eventData);
+            observedDirections.Add(eventData!.Direction);
+            Assert.AreEqual(
+                eventData.Direction
+                    ? centromeres.Min(centromere => centromere.start)
+                    : centromeres.Max(centromere => centromere.end),
+                eventData.Start);
+        }
+        CollectionAssert.AreEquivalent(new[] { true, false }, observedDirections);
+    }
+
     [Test]
     public void TestTelomereDuplicationUsesTheEligibleContigEnd()
     {
@@ -198,12 +345,14 @@ public class TestKaryotype
         Assert.NotNull(eventData);
         Assert.IsFalse(eventData!.Direction);
 
+        long contigLength = _kar.ContigLen(contigId);
         int contigCount = _kar.CountContigs();
         eventData.ApplyEvent(_kar);
-        Assert.AreEqual(contigCount + 1, _kar.CountContigs());
+        Assert.AreEqual(contigCount, _kar.CountContigs());
         Assert.AreEqual(
-            eventData.Length - eventData.Start,
-            _kar.ContigLen(_kar.ContigIds().Last()));
+            contigLength + eventData.Length - eventData.Start,
+            _kar.ContigLen(contigId));
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(contigId));
     }
     
     [Test]

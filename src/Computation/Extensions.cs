@@ -5,6 +5,10 @@ public static class Extensions
     public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rnd)
         => source.OrderBy(_ => rnd.Next());
 
+    // Wraps an optional value into a list: a single-element list when set, empty otherwise.
+    public static List<T> ToList<T>(this T? value) where T : struct
+        => value is { } item ? [item] : [];
+
     public static bool CoinFlip(this Random rnd)
         => rnd.Next(0, 2) == 0;
     

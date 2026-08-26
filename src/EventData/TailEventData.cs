@@ -20,10 +20,15 @@ public record TailEventData : ContigEventData
         CNEventPars CNEventPars,
         int contigId,
         long contigLen,
-        bool direction)
+        bool direction,
+        long? maxLength = null)
         : base(CNEventPars, contigId, contigLen)
     {
         long segLen = Sampling.GetExpSeg(rnd, contigLen, CNEventPars.Frac);
+        if (maxLength is { } limit)
+        {
+            segLen = Math.Min(segLen, limit);
+        }
         Direction = direction;
         Start = Direction ? segLen : contigLen - segLen;
     }
@@ -72,8 +77,10 @@ public record TailEventData : ContigEventData
                 break;
             case CNEventType.TailDuplication:
             case CNEventType.TelomereDuplication:
-            case CNEventType.ArmDuplication:
                 kar.ApplyTailDuplication(ContigId, Start, Direction);
+                break;
+            case CNEventType.ArmDuplication:
+                kar.ApplyDetachedTailDuplication(ContigId, Start, Direction);
                 break;
             case CNEventType.BreakageFusionBridge:
                 kar.ApplyBFB(ContigId, Start, Direction);

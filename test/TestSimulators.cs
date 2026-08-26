@@ -57,7 +57,7 @@ public class TestSimulators
     public void TestEmptySimulator(Type simulatorType)
     {
         var sim = GetSimulator(simulatorType);
-        var eventPs = new List<CNEventPars> { new(CNEventType.ChromDeletion, 1) };
+        var eventPs = new List<CNEventPars> { new(CNEventType.ContigDeletion, 1) };
         const int dist = 50;
         var node = new CTreeNode("root", "root", dist, 1);
         var res = sim.Simulate(node, EmptyTree(node), MakeSigs(eventPs)); 
@@ -118,6 +118,8 @@ public class TestSimulators
         var sim = GetSimulator(simulatorType);
         List<CNEventPars> eventPs =
         [
+            new(CNEventType.ContigDuplication, 1),
+            new(CNEventType.ContigDeletion, 1),
             new(CNEventType.ChromDuplication, 1),
             new(CNEventType.ChromDeletion, 1),
             new(CNEventType.ArmDeletion, 1),

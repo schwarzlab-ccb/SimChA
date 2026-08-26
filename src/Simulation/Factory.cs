@@ -35,6 +35,8 @@ public static class Factory
     {
         switch (cnEventPars.Type)
         {
+            case CNEventType.ContigDeletion:
+            case CNEventType.ContigDuplication:
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
             case CNEventType.Pass:

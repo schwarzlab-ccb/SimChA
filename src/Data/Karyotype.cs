@@ -104,6 +104,21 @@ public class Karyotype
     public int CountIntactTelomereEnds(int contigId)
         => GetIntactTelomereDirections(contigId).Count;
 
+    internal IReadOnlyList<(bool direction, long maxLength)> GetTailLossDirections(int contigId)
+        => _contigs[contigId].GetTailLossDirections();
+
+    internal int CountTailLossEnds(int contigId)
+        => GetTailLossDirections(contigId).Count;
+
+    internal IReadOnlyList<(bool direction, long maxLength)> GetTelomereBoundLossDirections(int contigId)
+        => _contigs[contigId].GetTelomereBoundLossDirections();
+
+    internal int CountTelomereBoundLossEnds(int contigId)
+        => GetTelomereBoundLossDirections(contigId).Count;
+
+    internal bool IsChromosomeLikeContig(int contigId)
+        => CountIntactTelomereEnds(contigId) == 2 && CountCentromeres(contigId) > 0;
+
     private static (long start, long end) GetIndices(Contig contig, long position, bool fiveToThree)
         => fiveToThree ? (0, position) : (position, contig.Length);
 
@@ -126,13 +141,22 @@ public class Karyotype
         AddGenes(contig);
     }
 
-    public void ApplyTailDuplication(int contigID, long start, bool direction)
+    public void ApplyDetachedTailDuplication(int contigID, long start, bool direction)
     {
         var contig = _contigs[contigID];
         (long tailStart, long tailEnd) = GetIndices(contig, start, direction);
         var newTail = new Contig(contig.GetSubContig(tailStart, tailEnd));
         _contigs.Add(newTail);
         AddGenes(newTail);
+    }
+
+    public void ApplyTailDuplication(int contigID, long start, bool direction)
+    {
+        var contig = _contigs[contigID];
+        RemoveGenes(contig);
+        (long tailStart, long tailEnd) = GetIndices(contig, start, direction);
+        contig.DuplicateRange(tailStart, tailEnd);
+        AddGenes(contig);
     }
 
     public void ApplyBFB(int contigID, long start, bool direction)

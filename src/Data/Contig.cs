@@ -280,6 +280,33 @@ public class Contig
         return directions.OrderByDescending(direction => direction).ToList();
     }
 
+    private IReadOnlyList<(bool direction, long maxLength)> GetCentromereBoundLossDirections(
+        IEnumerable<bool> candidateDirections)
+    {
+        var centromeres = GetCentromerePositions();
+        var directions = new List<(bool direction, long maxLength)>();
+        foreach (bool direction in candidateDirections)
+        {
+            var distances = direction
+                ? centromeres.Select(centromere => centromere.start)
+                : centromeres.Select(centromere => Length - centromere.end);
+            var positiveDistances = distances.Where(distance => distance > 0).ToList();
+            if (positiveDistances.Count > 0)
+            {
+                directions.Add((direction, positiveDistances.Min()));
+            }
+        }
+        return directions;
+    }
+
+    internal IReadOnlyList<(bool direction, long maxLength)> GetTailLossDirections()
+        => GetCentromereBoundLossDirections([true, false]);
+
+    // Telomere-bound loss additionally requires a complete telomere at the physical contig end.
+    // Both tail and telomere loss stop before the nearest inward centromere.
+    internal IReadOnlyList<(bool direction, long maxLength)> GetTelomereBoundLossDirections()
+        => GetCentromereBoundLossDirections(GetIntactTelomereDirections());
+
     public void MergeRegions()
     {
         Regions = RegionOps.MergeRegions(Regions);

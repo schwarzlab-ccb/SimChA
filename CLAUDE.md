@@ -23,6 +23,18 @@ dotnet test test
 
 The `.csproj` is at the repo root; sources live in `src/`. `dotnet run` runs the simulator directly without specifying a project.
 
+## Code style
+
+**Post-fix notation.** Prefer post-fix (fluent, extension-method) calls over prefix calls that wrap a
+value in parentheses: write `value.ToCount()`, not `ToCount(value)`, and
+`SampleContigWeighted(...).ToList()`, not `AsList(SampleContigWeighted(...))`. Chains read
+left-to-right in the order they execute, and a new step appends to the end rather than nesting the
+whole expression one level deeper. Helper conversions therefore go in `Extensions`
+(`src/Computation/Extensions.cs`) — or as `private static ... (this T value)` members of the static
+class that uses them — and are named for what they return (`ToList`, `ToCount`). Static factory and
+sampling entry points that do not act *on* a receiver (`Sampling.GetExpSeg`, `Factory.GetSimulator`,
+MathNet's `Gamma.Sample`) stay prefix.
+
 ## Architecture
 
 ### Data model (bottom-up)

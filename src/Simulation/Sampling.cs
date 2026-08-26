@@ -97,12 +97,12 @@ public static class Sampling
         {
             DistType.Geometric => Geometric.Sample(rnd, 1 / mean),
             DistType.Poisson => Poisson.Sample(rnd, mean),
-            DistType.Gamma => ToCount(Gamma.Sample(rnd, shape, shape / mean)),
+            DistType.Gamma => Gamma.Sample(rnd, shape, shape / mean).ToCount(),
               _ => (int) mean
         };
     }
 
-    private static int ToCount(double sample)
+    private static int ToCount(this double sample)
         => (int) Math.Max(1, Math.Round(sample));
 
     private static double GetParetoScale(double mean) 
@@ -150,13 +150,11 @@ public static class Sampling
         return (idSelected, kar.ContigLen(idSelected));
     }
 
-    private static List<(int id, long len)> AsList((int id, long len)? picked)
-        => picked is { } p ? [p] : [];
-
     // Selects the contigs to be affected by the event. Within-contig events are chosen with
     // probability proportional to contig length; arm/centromere-bound events proportional to the
-    // number of centromeres; telomere events proportional to eligible terminal telomeres; and
-    // multi-contig events use a uniform random permutation.
+    // number of centromeres; telomere events proportional to eligible terminal telomeres;
+    // chromosome events uniformly among chromosome-like contigs; unrestricted contig events
+    // uniformly among active contigs; and multi-contig events use a uniform random permutation.
     private static List<(int id, long len)> SelectContigs(Random rnd, Karyotype kar, CNEventType type)
     {
         switch (type)
@@ -170,35 +168,50 @@ public static class Sampling
             case CNEventType.Translocation:
                 return kar.ContigIds().Shuffle(rnd).Take(2).Select(i => (i, kar.ContigLen(i))).ToList();
 
+            // Chromosome events: uniform among contigs with two intact terminal telomeres and at
+            // least one centromere.
+            case CNEventType.ChromDeletion:
+            case CNEventType.ChromDuplication:
+                return SampleContigWeighted(rnd, kar,
+                    id => kar.IsChromosomeLikeContig(id) ? 1.0 : 0.0).ToList();
+
             // Arm / centromere-bound events: weighted by the number of centromeres in the contig
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
             case CNEventType.CentromereBoundDeletion:
             case CNEventType.CentromereBoundDuplication:
-                return AsList(SampleContigWeighted(rnd, kar, id => kar.CountCentromeres(id)));
+                return SampleContigWeighted(rnd, kar, id => kar.CountCentromeres(id)).ToList();
 
-            // Telomere events: weighted by the number of intact telomeres at physical contig ends
+            // Tail loss retains length weighting but excludes contigs without an inward centromere.
+            case CNEventType.TailDeletion:
+                return SampleContigWeighted(rnd, kar,
+                    id => kar.CountTailLossEnds(id) > 0 ? kar.ContigLen(id) : 0).ToList();
+
+            // Telomere loss: weighted by intact terminal telomeres that have a centromere on their
+            // inward side. The distance to the nearest such centromere bounds the deletion.
             case CNEventType.TelomereDeletion:
+                return SampleContigWeighted(rnd, kar, id => kar.CountTelomereBoundLossEnds(id)).ToList();
+
+            // Telomere gain: weighted by the number of intact telomeres at physical contig ends.
             case CNEventType.TelomereDuplication:
-                return AsList(SampleContigWeighted(rnd, kar, id => kar.CountIntactTelomereEnds(id)));
+                return SampleContigWeighted(rnd, kar, id => kar.CountIntactTelomereEnds(id)).ToList();
 
             // Within-contig events: weighted by contig length
             case CNEventType.InternalDuplication:
             case CNEventType.InternalDeletion:
             case CNEventType.InternalInversion:
             case CNEventType.InvertedDuplication:
-            case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
             case CNEventType.Chromothripsis:
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
             case CNEventType.SNV:
-                return AsList(SampleContigWeighted(rnd, kar, id => kar.ContigLen(id)));
+                return SampleContigWeighted(rnd, kar, id => kar.ContigLen(id)).ToList();
 
-            // Whole-chromosome and contig-agnostic events (Chrom*, WGD, Pass, Skip): uniform pick
+            // Unrestricted contig and contig-agnostic events (Contig*, WGD, Pass, Skip): uniform pick
             default:
-                return AsList(SampleContigWeighted(rnd, kar, _ => 1.0));
+                return SampleContigWeighted(rnd, kar, _ => 1.0).ToList();
         }
     }
 
@@ -212,7 +225,9 @@ public static class Sampling
 
         switch (cnEventPars.Type)
         {
-            // Whole chromosome events
+            // Whole contig events
+            case CNEventType.ContigDeletion:
+            case CNEventType.ContigDuplication:
             case CNEventType.ChromDeletion:
             case CNEventType.ChromDuplication:
                 return new ContigEventData(cnEventPars, seq[0].id, seq[0].len);
@@ -225,12 +240,25 @@ public static class Sampling
                 return new WGDEventData(cnEventPars);
             
             // Tail events
-            case CNEventType.TailDeletion:
             case CNEventType.TailDuplication:
             case CNEventType.BreakageFusionBridge:
                 return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
 
-            case CNEventType.TelomereDeletion:
+            case CNEventType.TailDeletion:
+                var tailLossDirections = kar.GetTailLossDirections(seq[0].id);
+                if (tailLossDirections.Count == 0)
+                {
+                    return null;
+                }
+                var tailLossDirection = tailLossDirections[rnd.Next(tailLossDirections.Count)];
+                return new TailEventData(
+                    rnd,
+                    cnEventPars,
+                    seq[0].id,
+                    seq[0].len,
+                    tailLossDirection.direction,
+                    tailLossDirection.maxLength);
+
             case CNEventType.TelomereDuplication:
                 var directions = kar.GetIntactTelomereDirections(seq[0].id);
                 return directions.Count == 0
@@ -241,6 +269,21 @@ public static class Sampling
                         seq[0].id,
                         seq[0].len,
                         directions[rnd.Next(directions.Count)]);
+
+            case CNEventType.TelomereDeletion:
+                var lossDirections = kar.GetTelomereBoundLossDirections(seq[0].id);
+                if (lossDirections.Count == 0)
+                {
+                    return null;
+                }
+                var lossDirection = lossDirections[rnd.Next(lossDirections.Count)];
+                return new TailEventData(
+                    rnd,
+                    cnEventPars,
+                    seq[0].id,
+                    seq[0].len,
+                    lossDirection.direction,
+                    lossDirection.maxLength);
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:

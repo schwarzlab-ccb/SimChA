@@ -5,6 +5,8 @@ namespace SimChA.EventData;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CNEventType
 {
+    ContigDeletion,
+    ContigDuplication,
     ChromDeletion,
     ChromDuplication,
     TailDuplication,

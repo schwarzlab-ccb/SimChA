@@ -440,10 +440,16 @@ These are two signatures, one for Whole Chromosome Events and one for Internal e
 
 If the WholeChromEvent is selected, the probability of a deletion compared to duplication is 1 : 2. SimChA works with *contigs*, i.e. contiguous sequences of bases. A deletion or duplication will be a deletion or duplication of a contig. A contig may be comprised of parts of different chromosomes, e.g. after a translocation, however at the start of simulation, the set of contigs is the same as the set of chromosomes.
 
+Chromosome events act only on chromosome-like contigs: contigs with complete telomeres at both
+physical ends and at least one centromere. The corresponding `ContigDeletion` and
+`ContigDuplication` events are unrestricted and can act on any non-empty contig.
+
 If the Internal Deletion is selected, the mean size of a deleted segment will be 1MB, distributed exponentially, while Internal Duplication events will have a mean segment size of 500kB.
 
 Each Event has an associated type and a probability, which is relative to all the other events in the signature. The following events are available:
 
+* `ContigDuplication`
+* `ContigDeletion`
 * `ChromDuplication`
 * `ChromDeletion`
 * `TailDuplication`
@@ -471,34 +477,57 @@ Each Event has an associated type and a probability, which is relative to all th
 * `SNV`
 * `Pass`
 
-`TelomereDuplication` and `TelomereDeletion` use 50 kb reference-terminal annotations.
+`TelomereDuplication` and `TelomereDeletion` use the reference-terminal annotations from
+`chromosomes.tsv`.
 An event is generated only from a physical contig end that still carries the complete
 annotation; rearranged internal telomeres and partially deleted telomeres are ineligible.
 Eligible ends are sampled uniformly, and event length follows the usual `Frac` parameter.
+`TailDeletion` and `TelomereDeletion` require a centromere inward from the selected end and
+cannot extend beyond the nearest centromere. `TailDuplication` and `TelomereDuplication` copy
+the selected terminal segment in tandem at that same end of the current contig; unlike telomere
+events, tail events do not require an intact terminal telomere.
 
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Frac: double` - The mean size of the event as a fraction of contig length, exponentially distributed. Only applicable to internal, tail, and centromere-bound events.
+* `Frac: double` - The mean size of the event as a fraction of contig length, exponentially distributed. Only applicable to internal, tail, telomere, and centromere-bound events.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 #### Contig selection
 
 Once an event type is chosen, the contig(s) it acts on are selected with a probability that depends on the event category:
 
-* **Within-contig events** (internal deletion/duplication/inversion, inverted duplication, tail deletion/duplication, breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
+* **Within-contig events** (internal deletion/duplication/inversion, inverted duplication, tail duplication, breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
 * **Arm and centromere-bound events** (arm deletion/duplication, centromere-bound deletion/duplication) select a contig with probability **proportional to its number of centromeres**. Contigs without a centromere are never selected; a fused contig carrying several centromeres is proportionally more likely.
-* **Multi-contig events** (translocation, templated insertions, chromoplexy) and **whole-chromosome events** (chromosome deletion/duplication, whole-genome doubling) select contigs **uniformly at random**.
+* **Tail deletion** retains length-proportional selection after excluding contigs without an inward centromere.
+* **Telomere duplication** selects a contig with probability **proportional to its number of intact terminal telomeres**.
+* **Telomere deletion** uses the same end-based weighting after excluding terminal ends without an inward centromere.
+* **Contig events** (contig deletion/duplication) select any active contig **uniformly at random**.
+* **Chromosome events** (chromosome deletion/duplication) select **uniformly** among active contigs with exactly two intact terminal telomeres and at least one centromere.
+* **Multi-contig events** (translocation, templated insertions, chromoplexy) select contigs **uniformly at random**.
 
-If no contig is eligible for the chosen event — for example an arm or centromere-bound event when no remaining contig carries a centromere — the event cannot be generated and is **skipped**: it is recorded in the output as a `Skip` event (see below) and leaves the karyotype unchanged.
+If no contig is eligible for the chosen event — for example a chromosome event when no remaining
+contig has two intact terminal telomeres and a centromere — the event cannot be generated and is
+**skipped**: it is recorded in the output as a `Skip` event (see below) and leaves the karyotype
+unchanged.
+
+### Contig Deletion (Prob)
+
+Any non-empty contig is selected at random and removed.
+
+### Contig Duplication (Prob)
+
+Any non-empty contig is selected at random and duplicated as a separate contig.
 
 ### Chromosome Deletion (Prob)
 
-A single contig is selected at random and removed.
+A contig with complete telomeres at both ends and at least one centromere is selected at random
+and removed.
 
 ### Chromosome Duplication (Prob)
 
-A single contig is selected at random and duplicated.
+A contig with complete telomeres at both ends and at least one centromere is selected at random
+and duplicated as a separate contig.
 
 ### Arm Deletion (Prob)
 
@@ -514,11 +543,23 @@ All the existing contigs are duplicated.
 
 ### Tail Deletion (Prob, Frac)
 
-A tail of a length given by the `Frac` parameter is removed from an end of a contig. The end is selected by a coin flip.
+A contig with an inward centromere is selected, then one of its eligible ends. A terminal segment
+sampled using `Frac` is removed, capped at the nearest centromere so it cannot enter or cross it.
 
 ### Tail Duplication (Prob, Frac)
 
-A tail of a length given by the `Frac` parameter is duplicated from an end of a contig. The duplicated segment is placed at the same end. The end is selected by a coin flip.
+An end is selected by a coin flip. A terminal segment sampled using `Frac` is duplicated in tandem
+at the same physical end of the current contig.
+
+### Telomere Deletion (Prob, Frac)
+
+An intact terminal telomere and an inward centromere are selected. A terminal segment is sampled
+using `Frac` and removed, capped at the nearest centromere so the deletion cannot enter or cross it.
+
+### Telomere Duplication (Prob, Frac)
+
+An intact terminal telomere is selected. A terminal segment is sampled using `Frac` and duplicated
+in tandem at the same physical end of the current contig.
 
 ### Internal Deletion (Prob, Frac)
 

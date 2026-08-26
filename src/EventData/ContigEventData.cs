@@ -8,9 +8,11 @@ public record ContigEventData(CNEventPars CNEventPars, int ContigId, long Length
     {
         switch (EventType)
         {
+            case CNEventType.ContigDeletion:
             case CNEventType.ChromDeletion:
                 kar.ApplyContigDeletion(ContigId);
                 break;
+            case CNEventType.ContigDuplication:
             case CNEventType.ChromDuplication:
                 kar.ApplyContigDuplication(ContigId);
                 break;
