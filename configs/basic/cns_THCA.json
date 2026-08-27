@@ -1,8 +1,8 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 15.331681152975525,
-    "RateShape": 0.13333663369992474,
+    "RateMean": 12.637685750381253,
+    "RateShape": 0.1081472897102203,
     "AutosomesOnly": true,
     "RateDist": "Gamma"
   },
@@ -22,44 +22,36 @@
       "Prob": 1,
       "Events": [
         {
-          "Type": "ArmDuplication",
-          "Prob": 0.01892857142857143
-        },
-        {
-          "Type": "ArmDeletion",
-          "Prob": 0.009285714285714286
-        },
-        {
           "Type": "InternalDuplication",
-          "Prob": 0.36392857142857143,
-          "Frac": 0.025579918978447073
+          "Prob": 0.39869281045751637,
+          "Frac": 0.030358042489157792
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.30107142857142855,
-          "Frac": 0.03440284837144953
+          "Prob": 0.3281045751633987,
+          "Frac": 0.04914725288019454
         },
         {
           "Type": "TelomereDuplication",
-          "Prob": 0.05928571428571429,
-          "Frac": 0.14038677747580602
+          "Prob": 0.06710239651416122,
+          "Frac": 0.3521136719256485
         },
         {
           "Type": "TelomereDeletion",
-          "Prob": 0.06285714285714286,
-          "Frac": 0.15775491497272215
+          "Prob": 0.06971677559912855,
+          "Frac": 0.3136764552334394
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 0.04392857142857143
+          "Prob": 0.0514161220043573
         },
         {
           "Type": "ChromDeletion",
-          "Prob": 0.13607142857142857
+          "Prob": 0.08496732026143791
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.004664513814137065
+          "Prob": 0.005664488017429194
         }
       ]
     }

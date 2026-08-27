@@ -1,8 +1,8 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 20.799651050630278,
-    "RateShape": 0.6718174747493614,
+    "RateMean": 17.34458251725328,
+    "RateShape": 0.6516885010836424,
     "AutosomesOnly": true,
     "RateDist": "Gamma"
   },
@@ -10,7 +10,7 @@
     "Stress": 1,
     "TsgOg": 1,
     "Essentiality": 1,
-    "GeneSet": "simcha_PBCA"
+    "GeneSet": "cns_PBCA"
   },
   "EvoParams": {
     "Acceptance": 1,
@@ -22,44 +22,36 @@
       "Prob": 1,
       "Events": [
         {
-          "Type": "ArmDuplication",
-          "Prob": 0.02996005326231691
-        },
-        {
-          "Type": "ArmDeletion",
-          "Prob": 0.02829560585885486
-        },
-        {
           "Type": "InternalDuplication",
-          "Prob": 0.28395472703062585,
-          "Frac": 0.026016966513370536
+          "Prob": 0.3129554655870445,
+          "Frac": 0.023492191605348055
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.1617842876165113,
-          "Frac": 0.03738550068856072
+          "Prob": 0.16113360323886639,
+          "Frac": 0.046624053715369485
         },
         {
           "Type": "TelomereDuplication",
-          "Prob": 0.08788282290279627,
-          "Frac": 0.4205667115161402
+          "Prob": 0.09230769230769231,
+          "Frac": 0.575978297526658
         },
         {
           "Type": "TelomereDeletion",
-          "Prob": 0.09786950732356857,
-          "Frac": 0.3063879321216492
+          "Prob": 0.12267206477732794,
+          "Frac": 0.5997675533644943
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 0.10352862849533954
+          "Prob": 0.12348178137651822
         },
         {
           "Type": "ChromDeletion",
-          "Prob": 0.19507323568575233
+          "Prob": 0.1874493927125506
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.011788480970023578
+          "Prob": 0.01417004048582996
         }
       ]
     }
