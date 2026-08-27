@@ -724,10 +724,9 @@ public class TestKaryotype
         {
             var data = Sampling.GenerateCNEventData(_rnd, _kar, ev) as InternalEventData;
             Assert.NotNull(data);
-            if (data!.Direction)
+            if (data!.End <= centromere.start)
             {
                 frontCount++;
-                Assert.LessOrEqual(data.End, centromere.start);
             }
             else
             {
@@ -777,7 +776,6 @@ public class TestKaryotype
         Assert.AreEqual(2.0 / 3.0, frac, 0.03);
     }
 
-    [Test]
     [TestCase(CNEventType.TelomereDeletion)]
     [TestCase(CNEventType.TelomereDuplication)]
     public void TestTelomereSelectionByEligibleArmLength(CNEventType eventType)

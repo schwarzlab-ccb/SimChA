@@ -104,9 +104,7 @@ public class Karyotype
     public int CountIntactTelomereEnds(int contigId)
         => GetIntactTelomereDirections(contigId).Count;
 
-    internal IReadOnlyList<(bool direction, long length)> GetTerminalArms(
-        int contigId,
-        bool requireIntactTelomere)
+    internal IReadOnlyList<TerminalArm> GetTerminalArms(int contigId, bool requireIntactTelomere)
         => _contigs[contigId].GetTerminalArms(requireIntactTelomere);
 
     internal bool IsChromosomeLikeContig(int contigId)

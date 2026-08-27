@@ -183,32 +183,24 @@ public static class Sampling
         return (idSelected, kar.ContigLen(idSelected));
     }
 
-    private readonly record struct TerminalArm(
-        int ContigId,
-        long ContigLength,
-        bool Direction,
-        long Length);
+    private readonly record struct ContigArm(int ContigId, long ContigLength, TerminalArm Arm);
 
     // Select one physical terminal arm across the whole karyotype. Sampling the candidate arms
     // directly makes both the contig and end choice proportional to usable arm length.
-    private static TerminalArm? SampleTerminalArmWeighted(
+    private static ContigArm? SampleTerminalArmWeighted(
         Random rnd,
         Karyotype kar,
         bool requireIntactTelomere)
     {
         var arms = kar.ContigIds()
             .SelectMany(contigId => kar.GetTerminalArms(contigId, requireIntactTelomere)
-                .Select(arm => new TerminalArm(
-                    contigId,
-                    kar.ContigLen(contigId),
-                    arm.direction,
-                    arm.length)))
+                .Select(arm => new ContigArm(contigId, kar.ContigLen(contigId), arm)))
             .ToList();
         if (arms.Count == 0)
         {
             return null;
         }
-        var weights = arms.Select(arm => (double) arm.Length).ToList();
+        var weights = arms.Select(arm => (double) arm.Arm.UsableLength).ToList();
         return arms[rnd.PickRndIndex(weights, weights.Sum())];
     }
 
@@ -242,19 +234,9 @@ public static class Sampling
                 or CNEventType.InternalInversion
                 or CNEventType.InvertedDuplication
                 => new InternalEventData(
-                    rnd,
-                    cnEventPars,
-                    selected.ContigId,
-                    selected.ContigLength,
-                    selected.Direction,
-                    selected.Length),
+                    rnd, cnEventPars, selected.ContigId, selected.ContigLength, selected.Arm),
             _ => new TailEventData(
-                rnd,
-                cnEventPars,
-                selected.ContigId,
-                selected.ContigLength,
-                selected.Direction,
-                selected.Length)
+                rnd, cnEventPars, selected.ContigId, selected.ContigLength, selected.Arm)
         };
     }
 

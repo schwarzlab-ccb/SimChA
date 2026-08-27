@@ -481,33 +481,38 @@ Each Event has an associated type and a probability, which is relative to all th
 `chromosomes.tsv`.
 An event is generated only from a physical contig end that still carries the complete
 annotation; rearranged internal telomeres and partially deleted telomeres are ineligible.
-Eligible ends are sampled uniformly, and event length follows the usual `Frac` parameter.
-`TailDeletion` and `TelomereDeletion` require a centromere inward from the selected end and
-cannot extend beyond the nearest centromere. `TailDuplication` and `TelomereDuplication` copy
-the selected terminal segment in tandem at that same end of the current contig; unlike telomere
-events, tail events do not require an intact terminal telomere.
+`TailDuplication` and `TailDeletion` behave the same way but do not require an intact telomere.
+
+Internal, tail and telomere events are all placed on a **terminal arm**: the stretch running inward
+from a physical contig end to the centromere nearest that end. The contig and the end are picked in
+a single draw proportional to arm length (see *Contig selection*), and an end with no centromere
+inward of it is never eligible — so a contig carrying no centromere receives none of these events,
+and the interior arms of a fused contig are out of reach. Event length is drawn against the arm
+measured to the **middle** of that centromere, which is the scale the empirical event proportions
+are fitted against, and is then bounded by the arm proper: a draw longer than the arm becomes a
+whole-arm event instead of one reaching into the centromere. No internal, tail or telomere event
+can therefore enter or cross a centromere.
 
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Frac: double` - The mean size of the event as a fraction of contig length, exponentially distributed. Only applicable to internal, tail, telomere, and centromere-bound events.
+* `Frac: double` - The mean size of the event as a fraction of the region enclosing it: the terminal arm for internal, tail and telomere events, and the contig for centromere-bound events and breakage-fusion-bridge. Lengths follow a Pareto (shape 0.5) for internal events, a Beta with alpha fixed at 0.6 for telomere events, and an exponential everywhere else.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 #### Contig selection
 
 Once an event type is chosen, the contig(s) it acts on are selected with a probability that depends on the event category:
 
-* **Within-contig events** (internal deletion/duplication/inversion, inverted duplication, tail duplication, breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
+* **Terminal-arm events** (internal deletion/duplication/inversion, inverted duplication, tail deletion/duplication, telomere deletion/duplication) select one terminal arm across the whole karyotype with probability **proportional to arm length**, which makes both the contig and the end proportional to the sequence the event can actually occupy. Telomere events consider only ends carrying a complete telomere annotation.
+* **Other within-contig events** (breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
 * **Arm and centromere-bound events** (arm deletion/duplication, centromere-bound deletion/duplication) select a contig with probability **proportional to its number of centromeres**. Contigs without a centromere are never selected; a fused contig carrying several centromeres is proportionally more likely.
-* **Tail deletion** retains length-proportional selection after excluding contigs without an inward centromere.
-* **Telomere duplication** selects a contig with probability **proportional to its number of intact terminal telomeres**.
-* **Telomere deletion** uses the same end-based weighting after excluding terminal ends without an inward centromere.
 * **Contig events** (contig deletion/duplication) select any active contig **uniformly at random**.
 * **Chromosome events** (chromosome deletion/duplication) select **uniformly** among active contigs with exactly two intact terminal telomeres and at least one centromere.
 * **Multi-contig events** (translocation, templated insertions, chromoplexy) select contigs **uniformly at random**.
 
 If no contig is eligible for the chosen event — for example a chromosome event when no remaining
-contig has two intact terminal telomeres and a centromere — the event cannot be generated and is
+contig has two intact terminal telomeres and a centromere, or a terminal-arm event when no
+remaining contig carries a centromere — the event cannot be generated and is
 **skipped**: it is recorded in the output as a `Skip` event (see below) and leaves the karyotype
 unchanged.
 
@@ -543,33 +548,34 @@ All the existing contigs are duplicated.
 
 ### Tail Deletion (Prob, Frac)
 
-A contig with an inward centromere is selected, then one of its eligible ends. A terminal segment
-sampled using `Frac` is removed, capped at the nearest centromere so it cannot enter or cross it.
+A terminal arm is selected and the segment reaching inward from that physical end is removed. Its
+length is drawn exponentially using `Frac` and bounded by the arm, so the deletion stops at the
+centromere.
 
 ### Tail Duplication (Prob, Frac)
 
-An end is selected by a coin flip. A terminal segment sampled using `Frac` is duplicated in tandem
-at the same physical end of the current contig.
+A terminal arm is selected and the segment reaching inward from that physical end is duplicated in
+tandem at that same end of the same contig. The length is drawn as for `TailDeletion`.
 
 ### Telomere Deletion (Prob, Frac)
 
-An intact terminal telomere and an inward centromere are selected. A terminal segment is sampled
-using `Frac` and removed, capped at the nearest centromere so the deletion cannot enter or cross it.
+As `TailDeletion`, except that only an end carrying a complete telomere annotation is eligible and
+the length is drawn from the fitted Beta rather than an exponential.
 
 ### Telomere Duplication (Prob, Frac)
 
-An intact terminal telomere is selected. A terminal segment is sampled using `Frac` and duplicated
-in tandem at the same physical end of the current contig.
+As `TailDuplication`, except that only an end carrying a complete telomere annotation is eligible
+and the length is drawn from the fitted Beta rather than an exponential.
 
 ### Internal Deletion (Prob, Frac)
 
-A single contig is selected, from which a segment distributed by along the `Frac` parameter is removed. The position of a segments is guaranteed to be internal and uniformly distributed.
+A terminal arm is selected, from which a segment distributed along the `Frac` parameter is removed. The segment lies entirely within that arm and its position there is uniformly distributed.
 
 ### Internal Duplication (Prob, Frac)
-A single contig is selected, from which a segment distributed by along the `Frac` parameter is duplicated. The position of a segments is guaranteed to be internal and uniformly distributed. This segment is pasted directly after its original position.
+A terminal arm is selected, from which a segment distributed along the `Frac` parameter is duplicated. The segment lies entirely within that arm and its position there is uniformly distributed. This segment is pasted directly after its original position.
 
 ### Internal Inversion (Prob, Frac)
-A single contig is selected, from which a segment distributed by along the `Frac` parameter is inverted. The position of a segments is guaranteed to be internal and uniformly distributed.
+A terminal arm is selected, from which a segment distributed along the `Frac` parameter is inverted. The segment lies entirely within that arm and its position there is uniformly distributed.
 
 ### Inverted Duplication (Prob, Frac)
 Like a duplication, but the segment is inverted before being pasted.

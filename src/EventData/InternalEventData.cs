@@ -6,37 +6,28 @@ namespace SimChA.EventData;
 
 public record InternalEventData : ContigEventData
 {
-    public bool Direction { get; }
     public long Start { get; }
     public long End { get; }
 
-    // Constructor used for internal events
-    public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, long contigLen)
-        : this(rnd, CNEventPars, contigId, contigLen, true, contigLen)
-    { }
-
-    // Constructor used after a terminal chromosome arm has been selected. Event length is drawn
-    // first relative to that arm, then the start is uniform over every placement that stays within
-    // the arm and therefore cannot cross its inward centromere boundary.
+    // Constructor used after a terminal chromosome arm has been selected. Interior event lengths
+    // follow a Pareto (shape 0.5) fit to the empirical proportion distribution, drawn against the
+    // fitted arm scale and then bounded by the arm proper. The start is uniform over every
+    // placement that keeps the event inside that arm, so it never reaches the centromere.
     public InternalEventData(
         Random rnd,
         CNEventPars CNEventPars,
         int contigId,
         long contigLen,
-        bool direction,
-        long armLength) : base(CNEventPars, contigId, contigLen)
+        TerminalArm arm) : base(CNEventPars, contigId, contigLen)
     {
-        Direction = direction;
-        long segLen = Sampling.GetParetoSeg(rnd, armLength, CNEventPars.Frac);
-        long armStart = direction ? 0 : contigLen - armLength;
-        long lastStart = armStart + armLength - segLen;
-        Start = lastStart == armStart
-            ? armStart
-            : rnd.NextInt64(armStart, lastStart + 1);
+        long segLen = Math.Min(
+            Sampling.GetParetoSeg(rnd, arm.ArmLength, CNEventPars.Frac), arm.UsableLength);
+        long armStart = arm.Direction ? 0 : contigLen - arm.UsableLength;
+        Start = rnd.NextInt64(armStart, armStart + arm.UsableLength - segLen + 1);
         End = Start + segLen;
     }
 
-    // Constructor for Centromere-bound events
+    // Constructor for Centromere-bound events, whose lengths stay exponential
     public InternalEventData(Random rnd, CNEventPars CNEventPars, int contigId, IEnumerable<(long start, long end)> centromeres, long contigLen) 
         : base(CNEventPars, contigId, contigLen)
     {

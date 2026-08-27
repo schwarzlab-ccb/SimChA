@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using SimChA.Data;
 using SimChA.EventData;
 
 namespace Tests;
@@ -39,7 +40,7 @@ public class TestEventData
     {
         const long len = 1_000_000;
         var eventP = new CNEventPars(CNEventType.InternalDuplication, 1, 0.1);
-        var eventData = new InternalEventData(_rnd, eventP, 0, len);
+        var eventData = new InternalEventData(_rnd, eventP, 0, len, new TerminalArm(true, len, len));
         Assert.GreaterOrEqual(eventData.Start, 0);
         Assert.LessOrEqual(eventData.Start, len);
         Assert.Greater(eventData.End,eventData.Start);
@@ -51,19 +52,20 @@ public class TestEventData
     public void TestInternalEventDrawsLengthThenPlacesUniformlyWithinSelectedArm(bool direction)
     {
         const long contigLen = 3_000_000;
-        const long armLen = 1_000_000;
+        const long usableLen = 1_000_000;
+        // The fitted scale reaches past the arm proper, into the middle of the centromere.
+        var arm = new TerminalArm(direction, usableLen + 50_000, usableLen);
         var eventP = new CNEventPars(CNEventType.InternalDuplication, 1, 0.1);
         var normalizedStarts = new List<double>();
 
         for (int i = 0; i < 20000; i++)
         {
-            var eventData = new InternalEventData(
-                _rnd, eventP, 0, contigLen, direction, armLen);
-            long armStart = direction ? 0 : contigLen - armLen;
-            long lastStart = armStart + armLen - (eventData.End - eventData.Start);
+            var eventData = new InternalEventData(_rnd, eventP, 0, contigLen, arm);
+            long armStart = direction ? 0 : contigLen - usableLen;
+            long lastStart = armStart + usableLen - (eventData.End - eventData.Start);
 
             Assert.GreaterOrEqual(eventData.Start, armStart);
-            Assert.LessOrEqual(eventData.End, armStart + armLen);
+            Assert.LessOrEqual(eventData.End, armStart + usableLen);
             if (lastStart > armStart)
             {
                 normalizedStarts.Add(
@@ -81,16 +83,44 @@ public class TestEventData
         const long contigLen = 3_000_000;
         const long armLen = 1_000_000;
         const double mean = 0.4;
+        var arm = new TerminalArm(direction, armLen, armLen);
         var eventP = new CNEventPars(CNEventType.TelomereDuplication, 1, mean);
         var proportions = Enumerable.Range(0, 100000).Select(_ =>
         {
-            var eventData = new TailEventData(
-                _rnd, eventP, 0, contigLen, direction, armLen);
+            var eventData = new TailEventData(_rnd, eventP, 0, contigLen, arm);
             long length = direction ? eventData.Start : contigLen - eventData.Start;
             return length / (double) armLen;
         });
 
         Assert.AreEqual(mean, proportions.Average(), 0.01);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TestTerminalEventLengthIsBoundedByTheArmProper(bool direction)
+    {
+        const long contigLen = 3_000_000;
+        const long usableLen = 1_000_000;
+        const long armLen = 1_100_000;
+        // The Beta draw is taken against the fitted arm, which runs half a centromere further
+        // than the arm proper, so every draw above the arm collapses onto a whole-arm event.
+        var arm = new TerminalArm(direction, armLen, usableLen);
+        var eventP = new CNEventPars(CNEventType.TelomereDeletion, 1, 0.6);
+        int wholeArm = 0;
+
+        for (int i = 0; i < 20000; i++)
+        {
+            var eventData = new TailEventData(_rnd, eventP, 0, contigLen, arm);
+            long length = direction ? eventData.Start : contigLen - eventData.Start;
+            Assert.LessOrEqual(length, usableLen);
+            if (length == usableLen)
+            {
+                wholeArm++;
+            }
+        }
+
+        // P(Beta(0.6, 0.4) > 1000000/1100000) is around a fifth of the draws.
+        Assert.Greater(wholeArm, 0);
     }
 
     [Test]
@@ -146,7 +176,7 @@ public class TestEventData
     {
         const long len = 10_000_000L;
         var eventP = new CNEventPars(CNEventType.TelomereDeletion, 1, 0.01);
-        var eventData = new TailEventData(_rnd, eventP, 0, len, direction);
+        var eventData = new TailEventData(_rnd, eventP, 0, len, new TerminalArm(direction, len, len));
 
         Assert.AreEqual(direction, eventData.Direction);
         StringAssert.Contains(

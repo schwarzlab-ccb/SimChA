@@ -280,27 +280,34 @@ public class Contig
         return directions.OrderByDescending(direction => direction).ToList();
     }
 
-    private IReadOnlyList<(bool direction, long length)> GetTerminalArms(
-        IEnumerable<bool> candidateDirections)
+    // The arm running inward from one physical end, measured against the centromere nearest to
+    // that end. A contig end flush with its nearest centromere has no arm, so that direction is
+    // not a candidate at all.
+    private TerminalArm? GetTerminalArm(List<(long start, long end)> centromeres, bool direction)
     {
-        var centromeres = GetCentromerePositions();
-        var directions = new List<(bool direction, long length)>();
-        foreach (bool direction in candidateDirections)
-        {
-            var distances = direction
-                ? centromeres.Select(centromere => centromere.start)
-                : centromeres.Select(centromere => Length - centromere.end);
-            var positiveDistances = distances.Where(distance => distance > 0).ToList();
-            if (positiveDistances.Count > 0)
-            {
-                directions.Add((direction, positiveDistances.Min()));
-            }
-        }
-        return directions;
+        var nearest = direction
+            ? centromeres.MinBy(centromere => centromere.start)
+            : centromeres.MaxBy(centromere => centromere.end);
+        long usableLength = direction ? nearest.start : Length - nearest.end;
+        return usableLength > 0
+            ? new TerminalArm(
+                direction, usableLength + (nearest.end - nearest.start) / 2, usableLength)
+            : null;
     }
 
-    internal IReadOnlyList<(bool direction, long length)> GetTerminalArms(bool requireIntactTelomere)
-        => GetTerminalArms(requireIntactTelomere ? GetIntactTelomereDirections() : [true, false]);
+    internal IReadOnlyList<TerminalArm> GetTerminalArms(bool requireIntactTelomere)
+    {
+        var centromeres = GetCentromerePositions();
+        if (centromeres.Count == 0)
+        {
+            return [];
+        }
+        IReadOnlyList<bool> candidates =
+            requireIntactTelomere ? GetIntactTelomereDirections() : [true, false];
+        return candidates
+            .SelectMany(direction => GetTerminalArm(centromeres, direction).ToList())
+            .ToList();
+    }
 
     public void MergeRegions()
     {

@@ -14,21 +14,23 @@ public record TailEventData : ContigEventData
         : this(CNEventPars, contigId, ComputeTailParams(rnd, CNEventPars, contigLen), contigLen)
     { }
 
-    // Constructor used for events constrained to a preselected physical contig end.
+    // Constructor used after a terminal chromosome arm has been selected. Telomere-bound lengths
+    // follow the fitted Beta, the remaining terminal events stay exponential; both are drawn
+    // against the fitted arm scale and then bounded by the arm proper, so a draw longer than the
+    // arm becomes a whole-arm event rather than one reaching into the centromere.
     public TailEventData(
         Random rnd,
         CNEventPars CNEventPars,
         int contigId,
         long contigLen,
-        bool direction,
-        long? maxLength = null)
+        TerminalArm arm)
         : base(CNEventPars, contigId, contigLen)
     {
-        long availableLength = maxLength ?? contigLen;
-        long segLen = CNEventPars.Type is CNEventType.TelomereDeletion or CNEventType.TelomereDuplication
-            ? Sampling.GetBetaSeg(rnd, availableLength, CNEventPars.Frac)
-            : Sampling.GetExpSeg(rnd, availableLength, CNEventPars.Frac);
-        Direction = direction;
+        long drawnLen = CNEventPars.Type is CNEventType.TelomereDeletion or CNEventType.TelomereDuplication
+            ? Sampling.GetBetaSeg(rnd, arm.ArmLength, CNEventPars.Frac)
+            : Sampling.GetExpSeg(rnd, arm.ArmLength, CNEventPars.Frac);
+        long segLen = Math.Min(drawnLen, arm.UsableLength);
+        Direction = arm.Direction;
         Start = Direction ? segLen : contigLen - segLen;
     }
     

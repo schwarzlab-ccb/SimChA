@@ -66,6 +66,16 @@ The base `Simulator` wraps each sample's `SampleEvents` in `SampleEventsLimited`
 
 `Sampling.GenerateCNEventData()` dispatches to the right `EventData` constructor based on event type.
 
+Internal, tail and telomere events take a separate path: `SampleTerminalArmWeighted` first picks one
+`TerminalArm` (`src/Data/TerminalArm.cs`) across the whole karyotype, weighted by arm length, and the
+constructor then draws the event against that arm. `TerminalArm.ArmLength` runs to the **middle** of
+the nearest centromere, because that is the arm definition the empirical proportions are fitted
+against upstream (`project-simcha/src_empirical_dist/lib_create_config.py`, `FIXED_BETA_ALPHA` and
+`beta_shape_for_mean` mirror `Sampling.FixedBetaAlpha` / `Sampling.GetBetaShape`); `UsableLength`
+stops at the near edge of the centromere and bounds the event, so an over-long draw collapses onto a
+whole-arm event instead of entering the centromere. Keep the two sides in step: changing the arm
+denominator here invalidates every `Frac` in `configs/`.
+
 ### Signatures and mixing
 
 A config's `Signatures` list is flattened into a single `List<CNEventPars>` by `Factory.MixSignatures()`, scaling each event's probability by its parent signature's probability. The `MixtureType` (`Single` / `Constant` / `Dirichlet`) controls per-sample variation in signature weights.
