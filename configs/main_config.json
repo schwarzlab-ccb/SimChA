@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 76.0806499655379,
-    "RateShape": 1.2598438996198837,
+    "RateMean": 59.46927100417156,
+    "RateShape": 1.4578131821925198,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg19"
   },
   "FitParams": {
-    "Stress": 7.243063756299485,
-    "TsgOg": 743.4527388891865,
-    "Essentiality": 2378.1183418177166,
-    "GeneSet": "tcga_pancancer"
+    "Stress": 5.10382225532495,
+    "TsgOg": 365.0930475679861,
+    "Essentiality": 2426.661104423577,
+    "GeneSet": "spice_pancancer"
   },
   "EvoParams": {
-    "Acceptance": 0.21400306123146784,
+    "Acceptance": 0.7821798164835334,
     "MaxTries": 100
   },
   "Signatures": [
@@ -24,35 +24,35 @@
       "Events": [
         {
           "Type": "InternalDuplication",
-          "Prob": 0.45597823235671464,
-          "Frac": 0.04799983749458708
+          "Prob": 0.3819671581462977,
+          "Frac": 0.062313467951080885
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.26843739417844314,
-          "Frac": 0.06127348163726695
+          "Prob": 0.27665923909564494,
+          "Frac": 0.07883008503225854
         },
         {
           "Type": "TelomereDuplication",
-          "Prob": 0.06397941517344004,
-          "Frac": 0.5025520938228168
+          "Prob": 0.07541372383457753,
+          "Frac": 0.49126199177100316
         },
         {
           "Type": "TelomereDeletion",
-          "Prob": 0.08461193595619762,
-          "Frac": 0.5872044660046009
+          "Prob": 0.10971568965149349,
+          "Frac": 0.5749061992831445
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 0.024755686343713185
+          "Prob": 0.031046434003846893
         },
         {
           "Type": "ChromDeletion",
-          "Prob": 0.10223733599149135
+          "Prob": 0.12519775526813937
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.0072161359094572875
+          "Prob": 0.009254489311308706
         }
       ]
     }

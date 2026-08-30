@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 47.085296340915946,
+    "RateMean": 47.01358334707057,
     "RateShape": 0.9827009819554373,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 6.008560836141221,
-    "TsgOg": 344.8303844534448,
-    "Essentiality": 2930.1956250894777,
+    "Stress": 5.10382225532495,
+    "TsgOg": 365.0930475679861,
+    "Essentiality": 2426.661104423577,
     "GeneSet": "spice_PAAD"
   },
   "EvoParams": {
-    "Acceptance": 1.2399990076540246,
+    "Acceptance": 0.7821798164835334,
     "MaxTries": 100
   },
   "Signatures": [

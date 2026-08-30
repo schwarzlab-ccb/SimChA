@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 91.46011778193534,
+    "RateMean": 91.32081996768555,
     "RateShape": 3.935114198633427,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 6.008560836141221,
-    "TsgOg": 344.8303844534448,
-    "Essentiality": 2930.1956250894777,
+    "Stress": 5.10382225532495,
+    "TsgOg": 365.0930475679861,
+    "Essentiality": 2426.661104423577,
     "GeneSet": "spice_ESCA"
   },
   "EvoParams": {
-    "Acceptance": 1.2399990076540246,
+    "Acceptance": 0.7821798164835334,
     "MaxTries": 100
   },
   "Signatures": [
