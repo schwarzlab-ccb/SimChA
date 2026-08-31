@@ -29,6 +29,15 @@ public class TestKaryotype
         }
         eventData.ApplyEvent(kar);
     }
+
+    // Some terminal-arm tests intentionally need a synthetic dicentric contig. Build that fixture
+    // directly instead of abusing translocation, whose contract now forbids dicentric derivatives.
+    private void FuseContigsForTest(int targetId, int donorId)
+    {
+        _kar.GetContig(targetId).Join(_kar.GetContig(donorId));
+        _kar.GetContig(donorId).Clear();
+    }
+
     
     [SetUp]
     public void Setup()
@@ -270,7 +279,7 @@ public class TestKaryotype
             _kar.ApplyContigDeletion(id);
         }
 
-        _kar.ApplyTranslocation(fusedId, donorId, _kar.ContigLen(fusedId), 0, false);
+        FuseContigsForTest(fusedId, donorId);
         Assert.AreEqual(1, _kar.CountContigs());
         Assert.AreEqual(2, _kar.CountCentromeres(fusedId));
 
@@ -312,7 +321,7 @@ public class TestKaryotype
             _kar.ApplyContigDeletion(id);
         }
 
-        _kar.ApplyTranslocation(fusedId, donorId, _kar.ContigLen(fusedId), 0, false);
+        FuseContigsForTest(fusedId, donorId);
         Assert.AreEqual(1, _kar.CountContigs());
         var centromeres = _kar.GetCentromeres(fusedId);
         Assert.AreEqual(2, centromeres.Count);
@@ -359,23 +368,38 @@ public class TestKaryotype
         Assert.AreEqual(1, _kar.CountIntactTelomereEnds(contigId));
     }
     
-    [Test]
-    public void TestBFB()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TestBFBEndsWithFinalBreakAndOneCentromere(bool direction)
     {
         long len = _kar.ContigLen(0);
-        _kar.ApplyBFB(0, TEST_FRAC, true);
-        long newLen = _kar.ContigLen(0);
-        Assert.AreEqual((len - TEST_FRAC) * 2, newLen);
+        long removedLength = TEST_FRAC;
+        long start = direction ? removedLength : len - removedLength;
+        long fusion = len - removedLength;
+        long finalBreak = direction ? fusion - TEST_FRAC / 2 : fusion + TEST_FRAC / 2;
+
+        _kar.ApplyBFB(0, start, direction, finalBreak);
+
+        Assert.AreEqual(fusion + TEST_FRAC / 2, _kar.ContigLen(0));
+        Assert.AreEqual(1, _kar.CountCentromeres(0));
+        Assert.AreEqual(1, _kar.CountIntactTelomereEnds(0));
     }
-    
+
     [Test]
     public void TestBFBChain()
     {
+        foreach (int id in _kar.ContigIds().Where(id => id != 0).ToList())
+        {
+            _kar.ApplyContigDeletion(id);
+        }
+        var eventP = new CNEventPars(CNEventType.BreakageFusionBridge, 1, 0.01);
         for (int i = 0; i < 4; i++)
         {
-            long len = _kar.ContigLen(0);
-            _kar.ApplyBFB(0, TEST_FRAC, true);
-            Assert.AreEqual((len - TEST_FRAC) * 2, _kar.ContigLen(0));
+            var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventP) as BFBEventData;
+            Assert.NotNull(eventData);
+            Assert.AreEqual(0, eventData!.ContigId);
+            eventData.ApplyEvent(_kar);
+            Assert.AreEqual(1, _kar.CountCentromeres(0));
         }
     }
     
@@ -388,13 +412,45 @@ public class TestKaryotype
         _kar.ApplyTranslocation(0, 1, TEST_FRAC, 2 * TEST_FRAC, true);
         Assert.AreEqual(contigLen + TEST_FRAC, _kar.ContigLen(1));
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList()));
+        Assert.AreEqual(1, _kar.CountCentromeres(0));
+        Assert.AreEqual(1, _kar.CountCentromeres(1));
 
         _kar.ApplyTranslocation(0, 1, 4 * TEST_FRAC,  3 * TEST_FRAC, true);
         Assert.AreEqual(chrLen, RegionOps.GetLength(_kar.FindChrRegions("chr1").ToList()));
         Assert.AreEqual(contigLen + TEST_FRAC * 2, _kar.ContigLen(0));
+        Assert.AreEqual(1, _kar.CountCentromeres(0));
+        Assert.AreEqual(1, _kar.CountCentromeres(1));
         Console.WriteLine(_kar);
     }
-    
+
+    [Test]
+    public void TestGeneratedTranslocationsKeepBothDerivativesMonocentric()
+    {
+        var eventP = new CNEventPars(CNEventType.Translocation, 1, 0.1);
+        for (int i = 0; i < 200; i++)
+        {
+            var eventData = Sampling.GenerateCNEventData(_rnd, _kar, eventP) as PairEventData;
+            Assert.NotNull(eventData);
+            eventData!.ApplyEvent(_kar);
+            Assert.AreEqual(1, _kar.CountCentromeres(eventData.ContigIdA));
+            Assert.AreEqual(1, _kar.CountCentromeres(eventData.ContigIdB));
+        }
+    }
+
+    [Test]
+    public void TestInvalidTranslocationIsRejectedAtomically()
+    {
+        var centromereA = _kar.GetCentromeres(0).Single();
+        var centromereB = _kar.GetCentromeres(1).Single();
+        string before = _kar.ToString();
+
+        Assert.Throws<ArgumentException>(() =>
+            _kar.ApplyTranslocation(0, 1, centromereA.start, centromereB.end, false));
+        Assert.AreEqual(before, _kar.ToString());
+        Assert.AreEqual(1, _kar.CountCentromeres(0));
+        Assert.AreEqual(1, _kar.CountCentromeres(1));
+    }
+
     [Test]
     public void TestApplyCNEvent([Values] CNEventType eventType)
     {
@@ -764,7 +820,7 @@ public class TestKaryotype
         }
 
         // Fuse the donor onto fusedId; the donor is emptied and drops out of the active set.
-        _kar.ApplyTranslocation(fusedId, donorId, _kar.ContigLen(fusedId), 0, false);
+        FuseContigsForTest(fusedId, donorId);
         Assert.AreEqual(2, _kar.GetCentromeres(fusedId).Count);
         Assert.AreEqual(1, _kar.GetCentromeres(singleId).Count);
         CollectionAssert.AreEquivalent(new[] { fusedId, singleId }, _kar.ContigIds().ToList());

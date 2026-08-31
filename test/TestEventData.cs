@@ -128,13 +128,32 @@ public class TestEventData
     {
         const long lenA = 1_000_000;
         const long lenB = 10_000_000;
+        var armA = new TerminalArm(true, 400_000, 400_000);
+        var armB = new TerminalArm(false, 2_000_000, 2_000_000);
         var eventP = new CNEventPars(CNEventType.Translocation, 1, 0.1);
-        var eventData = new PairEventData(_rnd, eventP, 0, lenA, 1, lenB);
+        var eventData = new PairEventData(
+            _rnd, eventP, 0, lenA, armA, 1, lenB, armB);
         Assert.GreaterOrEqual(eventData.PosA, 0);
-        Assert.LessOrEqual(eventData.PosA, lenA);
-        Assert.GreaterOrEqual(eventData.PosB, 0);
-        Assert.LessOrEqual(eventData.PosB, lenB);
-        Assert.IsFalse(eventData.Inverted);
+        Assert.Less(eventData.PosA, armA.UsableLength);
+        Assert.Greater(eventData.PosB, 0);
+        Assert.LessOrEqual(eventData.PosB, armB.UsableLength);
+        Assert.IsTrue(eventData.Inverted);
+    }
+
+    [Test]
+    public void TestBFBEventDataPlacesFinalBreakBetweenCentromeres()
+    {
+        const long len = 10_000_000;
+        var arm = new TerminalArm(true, 4_000_000, 3_500_000);
+        var eventP = new CNEventPars(CNEventType.BreakageFusionBridge, 1, 0.1);
+        var eventData = new BFBEventData(_rnd, eventP, 0, len, arm);
+        long removedLength = eventData.Start;
+        long gapStart = len - arm.UsableLength;
+        long gapEnd = len + arm.UsableLength - 2 * removedLength;
+        Assert.GreaterOrEqual(removedLength, 1);
+        Assert.LessOrEqual(removedLength, arm.UsableLength);
+        Assert.GreaterOrEqual(eventData.FinalBreak, gapStart);
+        Assert.LessOrEqual(eventData.FinalBreak, gapEnd);
     }
 
     [Test]

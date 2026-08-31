@@ -504,11 +504,13 @@ Events have parameters from the following:
 Once an event type is chosen, the contig(s) it acts on are selected with a probability that depends on the event category:
 
 * **Terminal-arm events** (internal deletion/duplication/inversion, inverted duplication, tail deletion/duplication, telomere deletion/duplication) select one terminal arm across the whole karyotype with probability **proportional to arm length**, which makes both the contig and the end proportional to the sequence the event can actually occupy. Telomere events consider only ends carrying a complete telomere annotation.
-* **Other within-contig events** (breakage-fusion-bridge, chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
+* **Breakage-fusion-bridge** selects a monocentric contig with a non-empty terminal arm with probability **proportional to its length**, then selects one of its available ends uniformly.
+* **Other within-contig events** (chromothripsis, pyrgo, rigma, SNV) select a contig with probability **proportional to its length** — a longer contig is more likely to contain a given breakpoint.
 * **Arm and centromere-bound events** (arm deletion/duplication, centromere-bound deletion/duplication) select a contig with probability **proportional to its number of centromeres**. Contigs without a centromere are never selected; a fused contig carrying several centromeres is proportionally more likely.
 * **Contig events** (contig deletion/duplication) select any active contig **uniformly at random**.
 * **Chromosome events** (chromosome deletion/duplication) select **uniformly** among active contigs with exactly two intact terminal telomeres and at least one centromere.
-* **Multi-contig events** (translocation, templated insertions, chromoplexy) select contigs **uniformly at random**.
+* **Translocation** selects two monocentric contigs with non-empty terminal arms **uniformly at random**.
+* **Other multi-contig events** (templated insertions, chromoplexy) select contigs **uniformly at random**.
 
 If no contig is eligible for the chosen event — for example a chromosome event when no remaining
 contig has two intact terminal telomeres and a centromere, or a terminal-arm event when no
@@ -589,11 +591,19 @@ For a contig with at least one centromere, a segment is selected that extends fr
 For a contig with at least one centromere, a segment is selected that extends from within the centromere to a distance given by the `Frac` parameter. The breakpoint within the centromere is selected uniformly. This segment is then deleted.
 
 ### Translocation  (Prob, Frac)
-Two contigs are selected, from which a segment distributed along the `Frac` parameter is swapped. The position is selected individually for each contig. A coin flip decides if one of the segments is inverted before being pasted.
+Two monocentric contigs are selected. One terminal arm is chosen from each and a breakpoint is
+sampled uniformly outside its centromere. If the selected arms face opposite directions, the
+second contig is inverted before the reciprocal tail swap. The matched breakpoint sides guarantee
+that both derivative chromosomes retain exactly one centromere.
 
 ### BreakageFusionBridge (Prob, Frac)
 
-A contig and its tail is selected (see above). The tail is then removed, the rest is copied, the copy is reversed and the two copies are  connected on the breakage location.
+A monocentric contig and one of its terminal arms are selected. The first break removes a terminal
+segment whose exponential length uses the contig-wide `Frac` scale and is capped at the centromere.
+The retained chromosome is copied, the copy is reversed, and the broken sister ends are fused,
+forming a dicentric bridge. A final breakpoint is sampled uniformly between the two bridge
+centromeres; the daughter containing the original-orientation copy is retained. The completed event
+therefore has one centromere and one broken end.
 
 ### Chromothripsis (Prob, Frac)
 

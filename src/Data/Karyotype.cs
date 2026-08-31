@@ -150,12 +150,44 @@ public class Karyotype
         AddGenes(contig);
     }
 
-    public void ApplyBFB(int contigID, long start, bool direction)
+    public void ApplyBFB(int contigID, long start, bool direction, long finalBreak)
     {
         var contig = _contigs[contigID];
+        if (CountCentromeres(contigID) != 1)
+        {
+            throw new InvalidOperationException("BFB requires a monocentric input contig.");
+        }
+
+        // Fusion creates a symmetric dicentric bridge. The event is completed by cutting between
+        // its centromeres and retaining the daughter that contains the original (non-inverted)
+        // chromosome copy. Validate on a copy so an invalid event cannot partially mutate the
+        // karyotype or its cached gene counts.
+        var bridged = new Contig(contig);
+        bridged.Bridge(start, direction);
+        var bridgeCentromeres = bridged.GetCentromerePositions().OrderBy(c => c.start).ToList();
+        if (bridgeCentromeres.Count != 2)
+        {
+            throw new ArgumentException(
+                "The initial BFB break must leave the centromere on the retained chromosome arm.");
+        }
+        if (finalBreak < bridgeCentromeres[0].end ||
+            finalBreak > bridgeCentromeres[1].start)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(finalBreak), finalBreak,
+                "The final BFB break must lie between the bridge centromeres.");
+        }
+
+        (long breakStart, long breakEnd) = GetIndices(bridged, finalBreak, direction);
+        bridged.DeleteRange(breakStart, breakEnd);
+        if (bridged.Centromeres.Count != 1)
+        {
+            throw new InvalidOperationException("A completed BFB must retain exactly one centromere.");
+        }
+
         RemoveGenes(contig);
-        contig.Bridge(start, direction);
-        AddGenes(contig);
+        _contigs[contigID] = bridged;
+        AddGenes(bridged);
     }
 
     public void ApplyContigDeletion(int contigID)
@@ -205,13 +237,33 @@ public class Karyotype
         AddGenes(contig);
     }
 
-    // Translocation might invert based on the orientation of the holiday Junction https://en.wikipedia.org/wiki/Holliday_junction
+    // Translocation might invert based on the orientation of the Holliday junction.
     public void ApplyTranslocation(int contigA, int contigB, long posA, long posB, bool inverted)
     {
-        var refContig = _contigs[contigA];
-        RemoveGenes(refContig);
-        var altContig = _contigs[contigB];
-        RemoveGenes(altContig);
+        if (contigA == contigB)
+        {
+            throw new ArgumentException("Translocation requires two distinct contigs.");
+        }
+
+        var originalRef = _contigs[contigA];
+        var originalAlt = _contigs[contigB];
+        if (originalRef.Centromeres.Count != 1 || originalAlt.Centromeres.Count != 1)
+        {
+            throw new InvalidOperationException("Translocation requires two monocentric contigs.");
+        }
+        if (posA < 0 || posA > originalRef.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(posA));
+        }
+        if (posB < 0 || posB > originalAlt.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(posB));
+        }
+
+        // Assemble on copies first. PairEventData chooses breakpoints on matching centromere sides;
+        // the postcondition protects direct callers and keeps invalid events atomic.
+        var refContig = new Contig(originalRef);
+        var altContig = new Contig(originalAlt);
         if (inverted)
         {
             altContig.Revert();
@@ -220,8 +272,18 @@ public class Karyotype
         var splitRef = refContig.Split(posA, true);
         var splitAlt = altContig.Split(posB, true);
         refContig.Join(splitAlt);
-        AddGenes(refContig);
         altContig.Join(splitRef);
+        if (refContig.Centromeres.Count != 1 || altContig.Centromeres.Count != 1)
+        {
+            throw new ArgumentException(
+                "Translocation breakpoints must leave one centromere on each derivative.");
+        }
+
+        RemoveGenes(originalRef);
+        RemoveGenes(originalAlt);
+        _contigs[contigA] = refContig;
+        _contigs[contigB] = altContig;
+        AddGenes(refContig);
         AddGenes(altContig);
     }
 

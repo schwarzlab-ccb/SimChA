@@ -83,9 +83,6 @@ public record TailEventData : ContigEventData
             case CNEventType.ArmDuplication:
                 kar.ApplyDetachedTailDuplication(ContigId, Start, Direction);
                 break;
-            case CNEventType.BreakageFusionBridge:
-                kar.ApplyBFB(ContigId, Start, Direction);
-                break;
             default:
                 throw new Exception($"Invalid event type {EventType} for TailEventData");
         }

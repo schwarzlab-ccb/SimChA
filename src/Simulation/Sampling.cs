@@ -255,7 +255,10 @@ public static class Sampling
             case CNEventType.Chromoplexy:
                 return kar.ContigIds().Shuffle(rnd).Select(i => (i, kar.ContigLen(i))).ToList();
             case CNEventType.Translocation:
-                return kar.ContigIds().Shuffle(rnd).Take(2).Select(i => (i, kar.ContigLen(i))).ToList();
+                return kar.ContigIds()
+                    .Where(id => kar.CountCentromeres(id) == 1 &&
+                                 kar.GetTerminalArms(id, false).Count > 0)
+                    .Shuffle(rnd).Take(2).Select(i => (i, kar.ContigLen(i))).ToList();
 
             // Chromosome events: uniform among contigs with two intact terminal telomeres and at
             // least one centromere.
@@ -271,8 +274,15 @@ public static class Sampling
             case CNEventType.CentromereBoundDuplication:
                 return SampleContigWeighted(rnd, kar, id => kar.CountCentromeres(id)).ToList();
 
-            // Within-contig events: weighted by contig length
+            // BFB requires a monocentric contig with an arm available for the initial break.
             case CNEventType.BreakageFusionBridge:
+                return SampleContigWeighted(rnd, kar,
+                    id => kar.CountCentromeres(id) == 1 &&
+                          kar.GetTerminalArms(id, false).Count > 0
+                        ? kar.ContigLen(id)
+                        : 0).ToList();
+
+            // Other within-contig events: weighted by contig length
             case CNEventType.Chromothripsis:
             case CNEventType.Pyrgo:
             case CNEventType.Rigma:
@@ -314,9 +324,12 @@ public static class Sampling
             case CNEventType.WholeGenomeDoubling:
                 return new WGDEventData(cnEventPars);
             
-            // Tail-like events that are not sampled from a terminal chromosome arm.
             case CNEventType.BreakageFusionBridge:
-                return new TailEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
+            {
+                var arms = kar.GetTerminalArms(seq[0].id, false);
+                var arm = arms[rnd.Next(arms.Count)];
+                return new BFBEventData(rnd, cnEventPars, seq[0].id, seq[0].len, arm);
+            }
 
             case CNEventType.ArmDeletion:
             case CNEventType.ArmDuplication:
@@ -327,9 +340,20 @@ public static class Sampling
                 return new InternalEventData(rnd, cnEventPars, seq[0].id, kar.GetCentromeres(seq[0].id), seq[0].len);
 
             case CNEventType.Translocation:
-                return seq.Count > 1
-                    ? new PairEventData(rnd, cnEventPars, seq[0].id, seq[0].len, seq[1].id, seq[1].len)
-                    : null;
+            {
+                if (seq.Count < 2)
+                {
+                    return null;
+                }
+                var armsA = kar.GetTerminalArms(seq[0].id, false);
+                var armsB = kar.GetTerminalArms(seq[1].id, false);
+                var armA = armsA[rnd.Next(armsA.Count)];
+                var armB = armsB[rnd.Next(armsB.Count)];
+                return new PairEventData(
+                    rnd, cnEventPars,
+                    seq[0].id, seq[0].len, armA,
+                    seq[1].id, seq[1].len, armB);
+            }
 
             case CNEventType.Chromothripsis:
                 return new ChromothripsisEventData(rnd, cnEventPars, seq[0].id, seq[0].len);
