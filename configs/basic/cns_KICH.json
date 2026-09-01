@@ -1,7 +1,7 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 20.162417411339288,
+    "RateMean": 20.12096671847415,
     "RateShape": 0.717950185079614,
     "AutosomesOnly": true,
     "RateDist": "Gamma"

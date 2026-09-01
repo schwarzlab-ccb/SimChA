@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 111.18772347315907,
+    "RateMean": 110.95913936630153,
     "RateShape": 2.000062635781187,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 7.243063756299485,
-    "TsgOg": 743.4527388891865,
-    "Essentiality": 2378.1183418177166,
+    "Stress": 4.887492229763595,
+    "TsgOg": 232.80873714632708,
+    "Essentiality": 1333.1980247266683,
     "GeneSet": "tcga_UCEC"
   },
   "EvoParams": {
-    "Acceptance": 0.21400306123146784,
+    "Acceptance": 0.7568259315806962,
     "MaxTries": 100
   },
   "Signatures": [

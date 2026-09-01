@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 117.43188876998508,
+    "RateMean": 117.19046766185741,
     "RateShape": 2.3454530618159306,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 7.243063756299485,
-    "TsgOg": 743.4527388891865,
-    "Essentiality": 2378.1183418177166,
+    "Stress": 4.887492229763595,
+    "TsgOg": 232.80873714632708,
+    "Essentiality": 1333.1980247266683,
     "GeneSet": "tcga_SARC"
   },
   "EvoParams": {
-    "Acceptance": 0.21400306123146784,
+    "Acceptance": 0.7568259315806962,
     "MaxTries": 100
   },
   "Signatures": [

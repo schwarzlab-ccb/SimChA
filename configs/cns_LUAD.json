@@ -1,0 +1,60 @@
+{
+  "SimParams": {
+    "Seed": 0,
+    "RateMean": 81.8829149880815,
+    "RateShape": 2.2194545350160433,
+    "AutosomesOnly": true,
+    "RateDist": "Gamma",
+    "Assembly": "hg19"
+  },
+  "FitParams": {
+    "Stress": 6.086777575302705,
+    "TsgOg": 580.8640730296593,
+    "Essentiality": 1817.1062875902767,
+    "GeneSet": "cns_LUAD"
+  },
+  "EvoParams": {
+    "Acceptance": 0.22097530469305582,
+    "MaxTries": 100
+  },
+  "Signatures": [
+    {
+      "Name": "CNVs",
+      "Prob": 1,
+      "Events": [
+        {
+          "Type": "InternalDuplication",
+          "Prob": 0.4194311314857262,
+          "Frac": 0.06382713158276185
+        },
+        {
+          "Type": "InternalDeletion",
+          "Prob": 0.2395394873932069,
+          "Frac": 0.08475480652399567
+        },
+        {
+          "Type": "TelomereDuplication",
+          "Prob": 0.07702646384663471,
+          "Frac": 0.5110521473122736
+        },
+        {
+          "Type": "TelomereDeletion",
+          "Prob": 0.09866638883100647,
+          "Frac": 0.6320510708922928
+        },
+        {
+          "Type": "ChromDuplication",
+          "Prob": 0.036851427380704314
+        },
+        {
+          "Type": "ChromDeletion",
+          "Prob": 0.1284851010627214
+        },
+        {
+          "Type": "WholeGenomeDoubling",
+          "Prob": 0.009241508647634924
+        }
+      ]
+    }
+  ]
+}
