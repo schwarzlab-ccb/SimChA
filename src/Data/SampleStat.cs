@@ -71,7 +71,8 @@ public record SampleStat(
         var geneData = refGen.SexGeneLists[(int) kar.Sex];
         double tsg_raw = Fitness.TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG]) ;
         double og_raw = Fitness.TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG]);
-        double ess_raw = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.HaploExponent);
+        double ess_raw = Fitness.EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess],
+                                         refGen.SexGeneRefCNs[(int) kar.Sex][(int) GeneLT.Ess]);
         double fitnessVal = 1 + stress_raw * fParams.Stress + (og_raw - tsg_raw) * fParams.TsgOg + ess_raw * fParams.Essentiality;
         
         int nRejectedEvents = sample.Events.Sum(e => e.NumRejections);

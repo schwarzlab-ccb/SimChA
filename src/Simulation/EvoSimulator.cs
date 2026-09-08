@@ -27,6 +27,14 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
 
             var proposedKar = new Karyotype(currentKar);
             eventData.ApplyEvent(proposedKar);
+            // Before the fitness is even computed: an essential gene at zero copies is inviable, so
+            // the proposal is rejected outright rather than priced. See Fitness.AnyEssentialLost.
+            if (FitParams.ProhibitEssentialLoss &&
+                Fitness.AnyEssentialLost(RefGen.SexGeneLists[(int) proposedKar.Sex][(int) GeneLT.Ess],
+                                         proposedKar.GeneCounts[(int) GeneLT.Ess]))
+            {
+                continue;
+            }
             double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
             if (Fitness.AcceptProb(proposedFitness - currentKar.FitnessVal, EvoParams.Acceptance) > Rnd.NextDouble())
             {

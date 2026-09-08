@@ -16,7 +16,9 @@ public static class Fitness
         var geneData = refGen.SexGeneLists[(int)kar.Sex];
         double ogTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.OG], kar.GeneCounts[(int) GeneLT.OG]));
         double tsgTerm = CalcTerm(fParams.TsgOg, () => TsgOgTerm(geneData[(int) GeneLT.TSG], kar.GeneCounts[(int) GeneLT.TSG]));
-        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess], kar.GeneCounts[(int) GeneLT.Ess], fParams.HaploExponent));
+        var geneRefCNs = refGen.SexGeneRefCNs[(int) kar.Sex];
+        double essTerm = CalcTerm(fParams.Essentiality, () => EssTerm(geneData[(int) GeneLT.Ess],
+            kar.GeneCounts[(int) GeneLT.Ess], geneRefCNs[(int) GeneLT.Ess]));
         return 1 + stressTerm + ogTerm - tsgTerm + essTerm;
     }
     
@@ -39,39 +41,43 @@ public static class Fitness
         => genes.Sum(gene => geneCNs[gene.GeneId] == count ? 1 : 0);
     
     /// <summary>
-    /// Copy number a gene's dosage is measured against. Fixed at the diploid 2 rather than read off
-    /// the karyotype's current ploidy, which is the semantics of the CN==0 step this replaces: a
-    /// WGD sample still has to lose all four copies before it is fully penalised. Making the
-    /// reference ploidy-relative is a separate modelling decision, not part of this one.
-    /// </summary>
-    private const double DIPLOID = 2.0;
-
-    /// <summary>
-    /// The fraction of a gene's dosage that is missing, shaped by <paramref name="haploExponent"/>.
-    /// CN >= 2 gives 0, CN == 1 gives 0.5^k and CN == 0 gives 1, so k alone sets what losing one of
-    /// two copies costs relative to losing both:
-    ///   k &lt; 1  one copy costs more than half of both -- strong haploinsufficiency
-    ///   k == 1  linear in copies lost, one copy costs exactly half
-    ///   k == 2  one copy costs a quarter (the default)
-    ///   k -> inf  one copy costs nothing, recovering the CN==0-only step this replaces
-    /// The last limit is what makes the change testable without touching code: a large exponent
-    /// reproduces the previous model to within floating point.
-    /// </summary>
-    public static double DosageLoss(int geneCN, double haploExponent)
-    {
-        double lost = (DIPLOID - geneCN) / DIPLOID;
-        return lost <= 0 ? 0.0 : Math.Pow(lost, haploExponent);
-    }
-
-    /// <summary>
-    /// Essentiality penalty: negative, zero for a gene at its full diploid dosage.
+    /// Whether a karyotype has lost an essential gene outright.
     ///
-    /// The step function this replaces (`min(CN-1, 0) * score`) was zero for every CN >= 1, so it
-    /// only ever fired on outright homozygous deletion -- inactive in 89% of simulated samples,
-    /// which is why Essentiality has been the least determined parameter of the fit in every run.
+    /// EvoSimulator rejects such a proposal rather than pricing it (see
+    /// <see cref="IO.FitParams.ProhibitEssentialLoss"/>): losing both copies of a gene the cell
+    /// cannot do without is inviability, not unfitness, and the empirical cohort shows it happening
+    /// at a rate no penalty was reproducing -- 95 of 5.07 million sample-gene pairs across the 5958
+    /// spice samples, 0.0019%, against 2.7x that in the best simulated cohort. Prohibiting it makes
+    /// Essentiality mean one thing (the cost of haploinsufficiency) instead of setting the balance
+    /// between two states at once.
+    ///
+    /// Short-circuits on the first hit; the scan is over the ~900 essential genes, whose counts
+    /// Karyotype maintains incrementally.
     /// </summary>
-    public static double EssTerm(Gene[] genes, int[] geneCNs, double haploExponent)
-        => -genes.Select(gene => DosageLoss(geneCNs[gene.GeneId], haploExponent) * gene.Score).Sum();
+    public static bool AnyEssentialLost(Gene[] genes, int[] geneCNs)
+        => genes.Any(gene => geneCNs[gene.GeneId] == 0);
+
+    /// <summary>
+    /// Essentiality penalty: negative, and the score of every essential gene below diploid dosage.
+    ///
+    /// With <see cref="AnyEssentialLost"/> enforced this is a haploinsufficiency term -- CN == 0
+    /// cannot arise, so the penalty is the scored count of genes down to a single copy, and
+    /// FitParams.Essentiality is the price of exactly that. It replaces a graded
+    /// `DosageLoss(CN)^k * score`, whose exponent set the CN==1 cost *relative to* CN==0; with
+    /// CN==0 unreachable that ratio has no referent and k was exactly degenerate with Essentiality,
+    /// so only their product was determined. Before that it was `min(CN-1, 0) * score`, which fired
+    /// only on homozygous deletion and was inactive in 89% of simulated samples.
+    ///
+    /// CN == 0 is priced the same as CN == 1 rather than skipped, so the penalty stays monotone in
+    /// copies lost for the modes that do not enforce the prohibition (MonteCarlo, FitnessMatching).
+    /// Skipping it would make losing both copies cheaper than losing one.
+    ///
+    /// `refCNs` is the reference copy number per gene, parallel to `genes` -- two on the autosomes,
+    /// one for a male's X and Y (see RefGen.SexGeneRefCNs). Scoring against a flat 2 charged every
+    /// male for his own baseline on X.
+    /// </summary>
+    public static double EssTerm(Gene[] genes, int[] geneCNs, int[] refCNs)
+        => -genes.Where((gene, idx) => geneCNs[gene.GeneId] < refCNs[idx]).Sum(gene => gene.Score);
 
     /// <summary>
     /// Probability of accepting a proposed event, given the fitness it gains or loses and the

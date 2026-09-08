@@ -20,6 +20,16 @@ public class RefGen
     public int AutosomesCount => SexChromNames[(int)SexType.Any].Count;
     private List<Dictionary<string, List<Gene>>> GeneChromMap { get; }
     public List<List<Gene[]>> SexGeneLists { get; }
+    /// <summary>
+    /// Copy number the reference genome carries for each gene in <see cref="SexGeneLists"/>, same
+    /// shape and order. Two everywhere except a male's X and Y, which the reference has once.
+    /// Fitness.EssTerm scores dosage loss against this rather than against a flat diploid 2: a male
+    /// is not haploinsufficient for being hemizygous on X, that is his baseline. The constant offset
+    /// cancels in the fitness *difference* an event is judged by, so this does not change the
+    /// evolution dynamics -- it changes the reported fitness, and it stops an X-linked essential
+    /// gene from being charged for its normal state.
+    /// </summary>
+    public List<List<int[]>> SexGeneRefCNs { get; }
     private Dictionary<string, StringBuilder>? GenContentsDict { get; }
 
     public RefGen(
@@ -59,7 +69,16 @@ public class RefGen
                         => CreateGeneList(chrs, map).ToArray())
                     .ToList())
             .ToList();
+        SexGeneRefCNs = Enum.GetValues(typeof(SexType)).Cast<SexType>().Select(sex
+                => SexGeneLists[(int) sex].Select(genes
+                        => genes.Select(gene => ReferenceCN(sex, gene.Chrom)).ToArray())
+                    .ToList())
+            .ToList();
     }
+
+    /// <summary>How many copies of a gene's chromosome the reference genome of one sex carries.</summary>
+    private int ReferenceCN(SexType sex, string chrom)
+        => sex == SexType.Male && (chrom == XChrName || chrom == YChrName) ? 1 : 2;
 
     private static IEnumerable<Gene> CreateGeneList(List<string> chrs, Dictionary<string, List<Gene>> geneChromMap)
         => chrs.SelectMany(chrom => geneChromMap[chrom]).OrderBy(g => g.GeneId);

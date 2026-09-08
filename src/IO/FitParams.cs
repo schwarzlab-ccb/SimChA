@@ -9,10 +9,12 @@ public record FitParams
     double Stress = 0,
     double TsgOg = 0,
     double Essentiality = 0,
-    // Shapes the essentiality penalty across copy number: what losing one of two copies costs
-    // relative to losing both. See Fitness.DosageLoss -- 1 is linear, 2 charges a quarter for a
-    // single copy, and a large value reproduces the CN==0-only step used before this was a
-    // parameter. Configs written before it existed deserialise to this default.
-    double HaploExponent = 2.0,
+    // Reject any event that would leave an essential gene at zero copies, instead of pricing the
+    // loss. Losing both copies is inviability rather than unfitness, and it lets Essentiality mean
+    // one thing -- the cost of haploinsufficiency -- rather than setting the balance between two
+    // states. Only EvoSimulator enforces it; MonteCarlo has no acceptance step to reject at and
+    // FitnessMatching optimises a different target. Set false to price the loss instead, which is
+    // what every fit before this did. Configs predating the field deserialise to this default.
+    bool ProhibitEssentialLoss = true,
     string GeneSet = "Empty"
 );
