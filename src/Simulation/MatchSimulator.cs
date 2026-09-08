@@ -119,7 +119,10 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
             string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
             double newFit = childKar.FitnessVal;
             double dFit = newFit - currentKar.FitnessVal;
-            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries, signature,
+            // Named from Signature onward: CNEventDesc gained the slot-outcome fields between
+            // NumRejections and Signature, and this mode does not break its tries down that way.
+            var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries,
+                Signature: signature,
                 RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
             childEvs.Add(newEv);
             currentKar = childKar;
