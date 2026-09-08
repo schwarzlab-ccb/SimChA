@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 66.81320769408848,
-    "RateShape": 2.4052898347954104,
+    "RateMean": 77.6109120000853,
+    "RateShape": 2.4275662993909974,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 5.10382225532495,
-    "TsgOg": 365.0930475679861,
-    "Essentiality": 2426.661104423577,
+    "Stress": 5.0786238042616745,
+    "TsgOg": 335.86132167743835,
+    "Essentiality": 2081.7507676390096,
     "GeneSet": "spice_LUAD"
   },
   "EvoParams": {
-    "Acceptance": 0.7821798164835334,
+    "Acceptance": 0.3769488196992139,
     "MaxTries": 100
   },
   "Signatures": [
@@ -24,35 +24,35 @@
       "Events": [
         {
           "Type": "InternalDuplication",
-          "Prob": 0.38961354613951227,
-          "Frac": 0.06929216463834115
+          "Prob": 0.378338898163606,
+          "Frac": 0.11009184808054658
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.22984687677225957,
-          "Frac": 0.1029496855888263
+          "Prob": 0.2417918753478019,
+          "Frac": 0.17866555087904704
         },
         {
           "Type": "TelomereDuplication",
-          "Prob": 0.07550838531961436,
-          "Frac": 0.5273564382934607
+          "Prob": 0.0859070673344463,
+          "Frac": 0.6433167615299639
         },
         {
           "Type": "TelomereDeletion",
-          "Prob": 0.12128331848011019,
-          "Frac": 0.6391221341244091
+          "Prob": 0.13619922092376183,
+          "Frac": 0.7240887818101331
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 0.027789030219557646
+          "Prob": 0.02385920979410128
         },
         {
           "Type": "ChromDeletion",
-          "Prob": 0.15595884306894597
+          "Prob": 0.1339037284362827
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.010289232763509681
+          "Prob": 0.008834168057874237
         }
       ]
     }

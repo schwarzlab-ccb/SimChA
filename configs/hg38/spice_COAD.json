@@ -1,20 +1,20 @@
 {
   "SimParams": {
     "Seed": 0,
-    "RateMean": 43.99271126556425,
-    "RateShape": 2.304274635900801,
+    "RateMean": 48.75297467068261,
+    "RateShape": 2.515682413418067,
     "AutosomesOnly": true,
     "RateDist": "Gamma",
     "Assembly": "hg38"
   },
   "FitParams": {
-    "Stress": 5.10382225532495,
-    "TsgOg": 365.0930475679861,
-    "Essentiality": 2426.661104423577,
+    "Stress": 5.0786238042616745,
+    "TsgOg": 335.86132167743835,
+    "Essentiality": 2081.7507676390096,
     "GeneSet": "spice_COAD"
   },
   "EvoParams": {
-    "Acceptance": 0.7821798164835334,
+    "Acceptance": 0.3769488196992139,
     "MaxTries": 100
   },
   "Signatures": [
@@ -24,35 +24,35 @@
       "Events": [
         {
           "Type": "InternalDuplication",
-          "Prob": 0.1752408280385325,
-          "Frac": 0.07744383295717103
+          "Prob": 0.18280760007378713,
+          "Frac": 0.12703203015862663
         },
         {
           "Type": "InternalDeletion",
-          "Prob": 0.3632916581266653,
-          "Frac": 0.0470894074959916
+          "Prob": 0.34809075816270063,
+          "Frac": 0.0740797753178038
         },
         {
           "Type": "TelomereDuplication",
-          "Prob": 0.06691945070711211,
-          "Frac": 0.5659432220713534
+          "Prob": 0.09287954251983029,
+          "Frac": 0.7185312055735787
         },
         {
           "Type": "TelomereDeletion",
-          "Prob": 0.10268497642959623,
-          "Frac": 0.6176168992596743
+          "Prob": 0.11353993728094447,
+          "Frac": 0.6887507173502792
         },
         {
           "Type": "ChromDuplication",
-          "Prob": 0.07757737241237958
+          "Prob": 0.06982106622394392
         },
         {
           "Type": "ChromDeletion",
-          "Prob": 0.21428571428571427
+          "Prob": 0.1928610957387936
         },
         {
           "Type": "WholeGenomeDoubling",
-          "Prob": 0.013937282229965155
+          "Prob": 0.012543811104962183
         }
       ]
     }
