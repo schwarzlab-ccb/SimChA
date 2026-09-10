@@ -14,7 +14,6 @@
     "GeneSet": "cns_pancancer"
   },
   "EvoParams": {
-    "Acceptance": 0.22097530469305582,
     "MaxTries": 100
   },
   "Signatures": [

@@ -31,7 +31,7 @@ public class TestSimulators
     {
         simParams ??= new SimParams();
         fitParams ??= new FitParams(1, 1, 1);
-        saParams ??= new EvoParams(1, 10);
+        saParams ??= new EvoParams(MaxTries: 10);
         return type switch
         {
             not null when type == typeof(Simulator) => new Simulator(_rnd, _refGen, simParams, fitParams),

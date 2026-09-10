@@ -13,7 +13,6 @@
     "GeneSet": "tcga_BRCA"
   },
   "EvoParams": {
-    "Acceptance": 1,
     "MaxTries": 100
   },
   "Signatures": [

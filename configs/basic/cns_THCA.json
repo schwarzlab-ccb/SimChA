@@ -13,7 +13,6 @@
     "GeneSet": "cns_THCA"
   },
   "EvoParams": {
-    "Acceptance": 1,
     "MaxTries": 100
   },
   "Signatures": [

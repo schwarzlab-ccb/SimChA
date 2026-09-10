@@ -14,7 +14,6 @@
     "GeneSet": "tcga_PRAD"
   },
   "EvoParams": {
-    "Acceptance": 0.7568259315806962,
     "MaxTries": 100
   },
   "Signatures": [

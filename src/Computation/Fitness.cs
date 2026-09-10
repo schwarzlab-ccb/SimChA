@@ -80,18 +80,32 @@ public static class Fitness
         => -genes.Where((gene, idx) => geneCNs[gene.GeneId] < refCNs[idx]).Sum(gene => gene.Score);
 
     /// <summary>
-    /// Probability of accepting a proposed event, given the fitness it gains or loses and the
-    /// acceptance offset delta. Glauber (Fermi) rather than the Metropolis `min(1, exp(dF - delta))`
-    /// it replaces: the two agree wherever the proposal is clearly deleterious, but Metropolis
-    /// clips to exactly 1 for every dF >= delta, and in that region the derivative with respect to
-    /// delta -- and to every fitness parameter -- is exactly zero. At the September 2026 spice
-    /// optimum (delta = 0.107) a third of accepted events sat in that clipped region, so a third of
-    /// the run carried no information about the parameters being fitted. This form is strictly
-    /// monotone in dF everywhere, so no event is ever selection-free.
+    /// Probability of accepting a proposed event, given the fitness it gains or loses. Glauber
+    /// (Fermi) rather than the Metropolis `min(1, exp(dF))` it replaces: the two agree wherever the
+    /// proposal is clearly deleterious, but Metropolis clips to exactly 1 for every dF >= 0, and in
+    /// that region the derivative with respect to every fitness parameter is exactly zero. At the
+    /// September 2026 spice optimum a third of accepted events sat in that clipped region, so a
+    /// third of the run carried no information about the parameters being fitted. This form is
+    /// strictly monotone in dF everywhere, so no event is ever selection-free -- measured over the
+    /// 2026-09-10 spice cohort, 99.3% of accepted events fall in the graded band
+    /// 0.02 &lt; p &lt; 0.98 and only 0.6% saturate.
     ///
-    /// delta keeps its meaning as the fitness gain at which a proposal is accepted half the time,
-    /// and the deleterious tail is unchanged: for dF - delta &lt;&lt; 0 both rules give exp(dF - delta).
+    /// There is no acceptance offset. `EvoParams.Acceptance` (delta) used to shift the midpoint and
+    /// was removed because nothing could identify it. Two reasons, either sufficient: Stress, TsgOg
+    /// and Essentiality enter dF linearly (see <see cref="Calculate"/>) and so already set the
+    /// *scale* of the logistic, which leaves delta only a shift against three free scales; and with
+    /// MaxTries at 100 a rejected proposal simply retries, so the acceptance rate reaches no
+    /// observable at all -- the event count comes from the Gamma RateMean draw, not from how many
+    /// proposals were refused. Measured over that cohort: 1.12 retries per accepted event on
+    /// average, 17 at most, no slot anywhere near exhausting its budget, and moving delta from 0 to
+    /// its last fitted value of 0.107 shifted mean acceptance 0.541 -> 0.517, a 4.5% uniform change
+    /// with no differential signature. It had fitted with a CV of 0.37 and no correlate: a flat
+    /// direction. Restoring it needs an observable first -- lowering MaxTries so that a refused
+    /// proposal becomes a skip makes the realized event count depend on the acceptance rate, which
+    /// is measurable.
+    ///
+    /// dF == 0 is therefore accepted exactly half the time: plain Glauber, the symmetric point.
     /// </summary>
-    public static double AcceptProb(double deltaFitness, double acceptance)
-        => 1.0 / (1.0 + Math.Exp(acceptance - deltaFitness));
+    public static double AcceptProb(double deltaFitness)
+        => 1.0 / (1.0 + Math.Exp(-deltaFitness));
 }

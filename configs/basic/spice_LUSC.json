@@ -13,7 +13,6 @@
     "GeneSet": "spice_LUSC"
   },
   "EvoParams": {
-    "Acceptance": 1,
     "MaxTries": 100
   },
   "Signatures": [

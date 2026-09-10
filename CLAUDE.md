@@ -54,12 +54,15 @@ MathNet's `Gamma.Sample`) stay prefix.
 **Simulator hierarchy** (`src/Simulation/`):
 - `Simulator` — base class; MonteCarlo/basic mode: picks events uniformly at random, applies them without checking fitness.
 - `EvoSimulator` — overrides `SampleEvents`; accepts a proposal with the Glauber (Fermi) probability
-  `1 / (1 + exp(Acceptance − ΔFitness))` (`Fitness.AcceptProb`). This replaced a Metropolis
-  `min(1, exp(ΔFitness − Acceptance))`, which clipped to exactly 1 for every `ΔFitness ≥ Acceptance`
-  and so had a zero derivative — with respect to `Acceptance` and to every fitness weight — over a
-  third of all accepted events at the fitted optimum. The two agree in the deleterious tail; the new
-  form is strictly monotone in `ΔFitness` everywhere, and `Acceptance` keeps its meaning as the
-  fitness gain accepted half the time.
+  `1 / (1 + exp(−ΔFitness))` (`Fitness.AcceptProb`). This replaced a Metropolis
+  `min(1, exp(ΔFitness))`, which clipped to exactly 1 for every `ΔFitness ≥ 0` and so had a zero
+  derivative — with respect to every fitness weight — over a third of all accepted events at the
+  fitted optimum. The two agree in the deleterious tail; the new form is strictly monotone in
+  `ΔFitness` everywhere, so no event is selection-free (99.3% of accepted events land in the graded
+  band `0.02 < p < 0.98` on the 2026-09-10 spice cohort). **There is no acceptance offset**: the
+  rule is symmetric, a neutral proposal accepted half the time. `EvoParams.Acceptance` (delta) used
+  to shift that midpoint and was removed — see `Fitness.AcceptProb` for why nothing could identify
+  it, and what would have to change to make it fittable again.
 - `MatchSimulator` — overrides `SampleEvents`; minimizes distance to a per-node target fitness, with a `Decay` parameter that tightens acceptance as events progress.
 
 `Factory.GetSimulator()` returns the right subclass based on `SelectionMode` (`MonteCarlo` / `Evolution` / `FitnessMatching`).
@@ -91,12 +94,19 @@ A config's `Signatures` list is flattened into a single `List<CNEventPars>` by `
 `Fitness.Calculate()` (`src/Computation/Fitness.cs`) combines three weighted terms:
 - **Stress**: penalizes genome length above diploid reference.
 - **TsgOg**: log-scaled contribution of oncogenes (positive) and tumor suppressors (negative).
-- **Essentiality**: penalizes loss of essential-gene dosage, graded by `FitParams.HaploExponent` (k).
-  A gene at one of two copies is charged `0.5^k` of its score and one at zero is charged all of it
-  (`Fitness.DosageLoss`): k=1 is linear in copies lost, k=2 (the default) charges a quarter for a
-  single copy, and a large k reproduces the homozygous-loss-only step this replaced. That step was
-  inactive in ~89% of simulated samples, which made `Essentiality` the least determined parameter of
-  every fit; at k=2 the term acts on roughly four times as many.
+- **Essentiality**: the price of **haploinsufficiency**, and only that — the summed score of every
+  essential gene sitting below its reference copy number (`Fitness.EssTerm`). Outright loss is not
+  priced here at all: `FitParams.ProhibitEssentialLoss` (default true) makes `EvoSimulator` reject
+  any proposal that would leave an essential gene at zero copies, before the fitness is computed
+  (`Fitness.AnyEssentialLost`), because that is inviability rather than unfitness. The reference is
+  sex-aware (`RefGen.SexGeneRefCNs`): two on the autosomes, one for a male's X and Y, so a male is
+  not charged for being hemizygous on X.
+
+  This replaced a graded `DosageLoss(CN)^k * score` whose exponent `HaploExponent` (k) set the CN==1
+  cost *relative to* CN==0. With CN==0 unreachable that ratio has no referent — k was exactly
+  degenerate with `Essentiality`, so only their product was determined — and it was retired. Before
+  that the term was `min(CN-1, 0) * score`, a homozygous-loss-only step that was inactive in ~89% of
+  simulated samples, which had made `Essentiality` the least determined parameter of every fit.
 
 Gene counts are maintained incrementally in `Karyotype.GeneCounts` rather than recomputed from scratch.
 
@@ -110,8 +120,8 @@ Gene counts are maintained incrementally in `Karyotype.GeneCounts` rather than r
 
 `SimChAConfig` (JSON) has four sections plus two optional top-level fields:
 - `SimParams` — seed, assembly, sex, mutation rate distribution, mixture type, `MaxWGD`, `MaxWgdTries` (re-simulations at a fixed event count before the count is redrawn; default 100).
-- `FitParams` — weights for stress/TsgOg/essentiality, `HaploExponent` (shape of the essentiality penalty across copy number; configs predating it deserialise to the record default), gene set folder name.
-- `EvoParams` — acceptance threshold, max tries, decay (required for evolution/matching modes).
+- `FitParams` — weights for stress/TsgOg/essentiality, `ProhibitEssentialLoss` (reject an event that would zero an essential gene rather than pricing it; default true, and configs predating the field deserialise to that), gene set folder name. The retired `HaploExponent` is ignored if a config still carries it.
+- `EvoParams` — max tries, decay (required for evolution/matching modes). Configs still carrying the removed `Acceptance` key deserialise fine; it is ignored.
 - `Signatures` — array of named signature objects, each with a `Prob` and `Events` array.
 - `Root` (top level, optional) — base directory for resolving relative paths.
 - `Version` (top level) — ignored on input; stamped with the running version on output.

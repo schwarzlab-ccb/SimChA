@@ -72,7 +72,7 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
                 continue;
             }
             double proposedFitness = proposedKar.UpdateFitness(RefGen, FitParams);
-            if (Fitness.AcceptProb(proposedFitness - currentKar.FitnessVal, EvoParams.Acceptance) > Rnd.NextDouble())
+            if (Fitness.AcceptProb(proposedFitness - currentKar.FitnessVal) > Rnd.NextDouble())
             {
                 return new SlotResult(proposedKar, eventData, rejected, impossible, inviable,
                                       OutcomeAccepted, attemptedType, cnEventP.Signature);

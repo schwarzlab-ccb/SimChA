@@ -13,7 +13,6 @@
     "GeneSet": "tcga_SARC"
   },
   "EvoParams": {
-    "Acceptance": 1,
     "MaxTries": 100
   },
   "Signatures": [

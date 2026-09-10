@@ -14,7 +14,6 @@
     "GeneSet": "spice_READ"
   },
   "EvoParams": {
-    "Acceptance": 0.3769488196992139,
     "MaxTries": 100
   },
   "Signatures": [

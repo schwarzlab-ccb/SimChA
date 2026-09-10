@@ -13,7 +13,6 @@
     "GeneSet": "spice_SKCM"
   },
   "EvoParams": {
-    "Acceptance": 1,
     "MaxTries": 100
   },
   "Signatures": [

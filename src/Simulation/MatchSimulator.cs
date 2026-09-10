@@ -62,8 +62,8 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
 
             double distImprovement = currentDist - proposedDist;
             double explorationWeight = GetExplorationWeight(tryNo, totalAttempts, decay);
-            // TODO: carry the Glauber change over from EvoSimulator -- Fitness.AcceptProb(distImprovement,
-            // decay) in place of this Metropolis clip. Same defect: min(1, ...) returns exactly 1 for every
+            // TODO: carry the Glauber change over from EvoSimulator -- Fitness.AcceptProb(distImprovement
+            // - decay) in place of this Metropolis clip. Same defect: min(1, ...) returns exactly 1 for every
             // proposal that improves on the target by more than `decay`, so those proposals are
             // indistinguishable to the rule and its derivative there is zero. Not a like-for-like swap, which
             // is why it is left as a note rather than done alongside the evolution-mode change: acceptanceProb
