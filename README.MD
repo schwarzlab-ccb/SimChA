@@ -730,6 +730,11 @@ Information about the individual events in the simulation. The columns are:
 | sample_0 | InternalDuplication | 13 | contig:18;length:59128983;start:49287088;end:50048544 | 0.0000 | 11.5378 | 12 | CNA | [H1:chr19[49287088:50048544)] | [] |
 | sample_0 | InternalDeletion | 14 | contig:12;length:115169878;start:2802803;end:7456363 | 0.0000 | 11.5378 | 2 | CNA | [] | [H1:chr13[2802803:7456363)] |
 
+`contig_slots_before` and `contig_slots_after` are always appended to event rows. They count
+allocated IDs, including empty contigs. An event growing the count from B to A creates IDs
+`[B,A)`; for WGD, parent `i` is copied to `B+i`. These counts preserve original identities
+when filtering events. Event descriptions and the existing columns keep their formats.
+
 The `regions_gained`/`regions_lost` columns report the exact copy-number change caused by the event, obtained by
 comparing the copy number at each reference position before and after the event. Each entry is
 `H<hap>:<chrom>[<start>:<end>)` and appears once per copy gained or lost on that haplotype, with multiple entries
@@ -889,19 +894,62 @@ To target the test project explicitly:
 dotnet test test
 ```
 
-## Ducking-event detector
+## Hidden-event reduction
 
-The reusable command-line detector and filter for historical events hidden by
-later copy-number events live in `scripts/ducking_detector.py`. The input events table must be generated with SimChA's `-d` or `--delta` option.
+`scripts/hidden_events.py` identifies hidden original events using backward contig-version
+dependencies. Generate `events.tsv` with `--delta` and `copynumbers.tsv` with `--segments`.
 
-Run the tool from the SimChA repository root:
+```bash
+python scripts/hidden_events.py --events out/events.tsv --copynumbers out/copynumbers.tsv --out out/hidden_events
+python scripts/hidden_events.py --events out/events.tsv --copynumbers out/copynumbers.tsv --out out/hidden_events --verify-only
+python -m unittest discover -s scripts/tests -p 'test_hidden_events.py'
+```
 
-    python ./scripts/ducking_detector.py detect -I events.tsv -O ducking_events.tsv
+The active algorithm is `backward-contig-dependencies-v4`. Copies depend on the source
+version they read. Whole-contig deletion produces an empty version without reading prior
+material. Backward demand preserves final germline/WGD-root states and surviving optional
+contigs, plus creation and eventual cleanup of any contig used as a template. Undemanded
+edits and extinct optional branches disappear. Translocations depend on both inputs;
+partial erasure remains conservative. The graph takes O(V + L) time and space.
 
-    python ./scripts/ducking_detector.py filter -I events.tsv -O events_filtered.tsv
+The earlier certified whole-event cancellation candidate is also calculated, preserving
+joint and cross-WGD cancellations that contig-state demand can miss. The candidate with
+fewer retained events wins per sample, with backward tracking winning ties. Their removed
+sets are never combined. Replay does not select candidates or repair failures.
 
-The filter command detects ducking events internally and writes only the
-filtered event table.
+Two appended log columns, `contig_slots_before` and `contig_slots_after`, preserve numeric
+IDs after omitted births and through WGD. Slots include empty contigs. Missing births
+reserve absent slots without creating DNA; those slots cannot be read by later commands.
+The filter derives these counts for complete legacy histories lacking the columns.
+
+Skip rows are removed by default; `--keep-skip` retains them. WGD always stays at its
+original depth and is excluded from the hidden-event denominator.
+
+Outputs include annotations and dependency/version IDs (`hidden_events.tsv`), retained
+source commands (`events_filtered.tsv`), flow diagnostics (`reduced_signals.tsv`,
+`cn_contributions.tsv`), per-sample exact replay results (`verification.tsv`), and counts,
+proportions, input hashes and runtime (`summary.json`, `summary_by_event_type.tsv`).
+`retention_method` identifies which candidate won. Cancellation groups certify removals
+only for cancellation-selected samples. `effective_cn_intervals` is diagnostic metadata
+containing full original contributions; it is never substituted for a source command.
+
+The sole replay check executes retained original operations from diploid phased germline.
+Whole deletion clears its current target, independent of the old length printed in its
+description. Coordinates and stable contig IDs retain SimChA's operation semantics.
+Only final material coverage is compared against CN; intermediate logged gained/lost
+regions are ignored. Verification reports `filtered_original_operations_v3` and
+`filtered_replay_pass` / `filtered_replay_fail`. Fresh outputs are published only after
+all samples pass; `--verify-only` updates saved results even on failure.
+
+All 12,000 regenerated pipeline benchmark histories pass. Selection removes
+27,903 / 430,373 non-WGD rows (6.48%); neutral removes 37,395 / 421,481 (8.87%), including
+66 Skip rows. Neutral's CN-changing fraction is 37,329 / 421,415 (8.86%). All 45 regression
+tests pass, including 50 independently simulated histories and the archived Sample_650
+and Sample_4479 examples. The latter retains the deletions needed for its visible CN steps.
+
+Inputs must be complete independent lineages from diploid phased germline, one event
+per depth, with contiguous sample groups and complete 1-based CN segments. Expand
+shared-ancestor tree tables into complete lineages first. Unsupported operations fail.
 
 ## Contact
 Email questions, feature requests and bug reports to Adam Streck, `adam.streck@iccb-cologne.org`.

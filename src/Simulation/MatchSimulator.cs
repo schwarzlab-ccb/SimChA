@@ -123,7 +123,8 @@ public class MatchSimulator(Random rnd, RefGen refGen, SimParams simParams, FitP
             // NumRejections and Signature, and this mode does not break its tries down that way.
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, dFit, newFit, numTries,
                 Signature: signature,
-                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
+                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr,
+                ContigSlotsBefore: currentKar.ContigSlotCount, ContigSlotsAfter: childKar.ContigSlotCount);
             childEvs.Add(newEv);
             currentKar = childKar;
         }

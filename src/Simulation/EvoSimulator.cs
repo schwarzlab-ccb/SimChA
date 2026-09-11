@@ -104,7 +104,8 @@ public class EvoSimulator(Random rnd, RefGen refGen, SimParams simParams, FitPar
             var newEv = new CNEventDesc(slot.EventData, mutDepth + evNo, dFit, newFit,
                 slot.NumRejections, slot.NumImpossible, slot.NumInviable, slot.Outcome,
                 slot.AttemptedType, slot.Signature,
-                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
+                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr,
+                ContigSlotsBefore: currentKar.ContigSlotCount, ContigSlotsAfter: childKar.ContigSlotCount);
             childEvs.Add(newEv);
             currentKar = childKar;
         }

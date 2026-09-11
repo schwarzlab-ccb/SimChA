@@ -154,7 +154,8 @@ public class Simulator(Random rnd, RefGen refGen, SimParams simParams, FitParams
             (string gainedStr, string lostStr) = CalcKaryotypeDiff(currentKar, childKar);
             string karStr = CNEventDesc.PrintKaryotype ? childKar.ToString() : "";
             var newEv = new CNEventDesc(eventData, mutDepth + evNo, Signature: eventP.Signature,
-                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr);
+                RegionsGained: gainedStr, RegionsLost: lostStr, Karyotype: karStr,
+                ContigSlotsBefore: currentKar.ContigSlotCount, ContigSlotsAfter: childKar.ContigSlotCount);
             childEvs.Add(newEv);
             currentKar = childKar;
         } 

@@ -43,6 +43,8 @@ public class Karyotype
         }
     }
     
+    public int ContigSlotCount => _contigs.Count;
+
     public int CountContigs()
         => _contigs.Count(c => c.Any());
 

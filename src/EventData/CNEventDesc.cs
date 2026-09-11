@@ -23,7 +23,9 @@ public record CNEventDesc(
     string Signature = "", 
     string RegionsGained = "",
     string RegionsLost = "", 
-    string Karyotype = "")
+    string Karyotype = "",
+    int? ContigSlotsBefore = null,
+    int? ContigSlotsAfter = null)
 {
     public static bool PrintDelta { get; set; }
     public static bool PrintKaryotype  { get; set; }
@@ -41,7 +43,8 @@ public record CNEventDesc(
            "\tattempted_type" +
            "\tsignature" + 
             (PrintDelta ? "\tregions_gained\tregions_lost" : "") +
-            (PrintKaryotype ? "\tkaryotype" : "");
+            (PrintKaryotype ? "\tkaryotype" : "") +
+            "\tcontig_slots_before\tcontig_slots_after";
 
     public string ToTSV() =>
         $"{EventData.EventType}" +
@@ -56,5 +59,6 @@ public record CNEventDesc(
         $"\t{AttemptedType}" +
         $"\t{Signature}" +
         (PrintDelta ? $"\t{RegionsGained}\t{RegionsLost}" : "") +
-        (PrintKaryotype ? $"\t{Karyotype}" : "");
+        (PrintKaryotype ? $"\t{Karyotype}" : "") +
+        $"\t{ContigSlotsBefore}\t{ContigSlotsAfter}";
 }
