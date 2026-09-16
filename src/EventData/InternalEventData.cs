@@ -10,9 +10,10 @@ public record InternalEventData : ContigEventData
     public long End { get; }
 
     // Constructor used after a terminal chromosome arm has been selected. Interior event lengths
-    // follow a Pareto (shape 0.5) fit to the empirical proportion distribution, drawn against the
-    // fitted arm scale and then bounded by the arm proper. The start is uniform over every
-    // placement that keeps the event inside that arm, so it never reaches the centromere.
+    // follow a bounded Pareto fit to the empirical proportion distribution -- Frac sets its mean and
+    // Shape its spread, defaulting to Sampling.FixedParetoShape -- drawn against the arm and then
+    // bounded by it. The start is uniform over every placement that keeps the event inside that
+    // arm, so it never reaches the centromere.
     public InternalEventData(
         Random rnd,
         CNEventPars CNEventPars,
@@ -21,7 +22,8 @@ public record InternalEventData : ContigEventData
         TerminalArm arm) : base(CNEventPars, contigId, contigLen)
     {
         long segLen = Math.Min(
-            Sampling.GetParetoSeg(rnd, arm.ArmLength, CNEventPars.Frac), arm.UsableLength);
+            Sampling.GetParetoSeg(rnd, arm.ArmLength, CNEventPars.Frac, CNEventPars.Shape),
+            arm.UsableLength);
         long armStart = arm.Direction ? 0 : contigLen - arm.UsableLength;
         Start = rnd.NextInt64(armStart, armStart + arm.UsableLength - segLen + 1);
         End = Start + segLen;

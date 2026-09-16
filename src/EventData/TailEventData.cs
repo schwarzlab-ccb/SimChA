@@ -15,9 +15,10 @@ public record TailEventData : ContigEventData
     { }
 
     // Constructor used after a terminal chromosome arm has been selected. Telomere-bound lengths
-    // follow the fitted Beta, the remaining terminal events stay exponential; both are drawn
-    // against the fitted arm scale and then bounded by the arm proper, so a draw longer than the
-    // arm becomes a whole-arm event rather than one reaching into the centromere.
+    // follow the fitted Beta -- Frac sets its mean and Shape its alpha, defaulting to
+    // Sampling.FixedBetaAlpha -- while the remaining terminal events stay exponential; both are
+    // drawn against the arm and then bounded by it, so a draw longer than the arm becomes a
+    // whole-arm event rather than one reaching into the centromere.
     public TailEventData(
         Random rnd,
         CNEventPars CNEventPars,
@@ -27,7 +28,7 @@ public record TailEventData : ContigEventData
         : base(CNEventPars, contigId, contigLen)
     {
         long drawnLen = CNEventPars.Type is CNEventType.TelomereDeletion or CNEventType.TelomereDuplication
-            ? Sampling.GetBetaSeg(rnd, arm.ArmLength, CNEventPars.Frac)
+            ? Sampling.GetBetaSeg(rnd, arm.ArmLength, CNEventPars.Frac, CNEventPars.Shape)
             : Sampling.GetExpSeg(rnd, arm.ArmLength, CNEventPars.Frac);
         long segLen = Math.Min(drawnLen, arm.UsableLength);
         Direction = arm.Direction;

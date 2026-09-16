@@ -496,7 +496,8 @@ can therefore enter or cross a centromere.
 Events have parameters from the following:
 * `Type: string` - The type of the event, one from the list above.
 * `Prob: double` - The probability of the event being selected.
-* `Frac: double` - The mean size of the event as a fraction of the region enclosing it: the terminal arm for internal, tail and telomere events, and the contig for centromere-bound events and breakage-fusion-bridge. Lengths follow a Pareto (shape 0.5) for internal events, a Beta with alpha fixed at 0.6 for telomere events, and an exponential everywhere else.
+* `Frac: double` - The mean size of the event as a fraction of the region enclosing it: the terminal arm for internal, tail and telomere events, and the contig for centromere-bound events and breakage-fusion-bridge. Lengths follow a bounded Pareto for internal events, a Beta for telomere events, and an exponential everywhere else. `Frac` fixes the mean of that distribution exactly, whatever its shape.
+* `Shape: double?` - The second parameter of that length distribution: the shape of the bounded Pareto for internal events, the alpha of the Beta for telomere events. Ignored by the exponential families. Omit it to get the defaults, `Sampling.FixedParetoShape` (0.5) and `Sampling.FixedBetaAlpha` (0.6), which is what every config written before the field existed does. Lowering it makes the distribution more dispersed at the same mean - heavier tail and shorter body for the Pareto, more mass at both ends for the Beta. A mean and a shape together determine the distribution, so fitting the shape is what lets the simulated length *distribution* match rather than only its average.
 * `Frag: double` - Some complex events cause fragmentation, this is the mean number of fragments.
 
 #### Contig selection

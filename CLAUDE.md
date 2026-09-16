@@ -80,10 +80,52 @@ Internal, tail and telomere events take a separate path: `SampleTerminalArmWeigh
 constructor then draws the event against that arm. `TerminalArm.ArmLength` runs to the **middle** of
 the nearest centromere, because that is the arm definition the empirical proportions are fitted
 against upstream (`project-simcha/src_empirical_dist/lib_create_config.py`, `FIXED_BETA_ALPHA` and
-`beta_shape_for_mean` mirror `Sampling.FixedBetaAlpha` / `Sampling.GetBetaShape`); `UsableLength`
+`beta_shape_for_mean` mirror `Sampling.FixedBetaAlpha` / `Sampling.GetBetaShape`, which are the
+*defaults* a config without a `Shape` gets); `UsableLength`
 stops at the near edge of the centromere and bounds the event, so an over-long draw collapses onto a
 whole-arm event instead of entering the centromere. Keep the two sides in step: changing the arm
 denominator here invalidates every `Frac` in `configs/`.
+
+### Event lengths
+
+`Frac` sets the **mean** of an event's length distribution and `Shape` its dispersion; together they
+determine it. Internal events use a bounded Pareto on [0,1], telomere-bound ones a Beta, everything
+else an exponential that ignores `Shape`. A config without `Shape` gets `FixedParetoShape` (0.5) and
+`FixedBetaAlpha` (0.6), so nothing written before the field existed changes behaviour.
+
+The Beta side was always exact: `beta = alpha*(1-mean)/mean` gives `Beta(alpha, beta)` the requested
+mean for any alpha, so alpha only ever moved the spread. The Pareto side was not, and the repair is
+worth recording because two separate things were wrong.
+
+`GetParetoScale` used to be `1/2*(-1 + sqrt(1 + 4*mean^2))`, which **contains no shape term** — it is
+not the inverse of any mean, and at the configured 0.5 it left the realized proportion 10-13% below
+the configured `Frac` (told 0.1058 it delivered 0.0948). Worse, the error was shape-dependent enough
+to compress the classes together: interior gain and loss, configured 24% apart at 0.1058 and 0.1312,
+both came out at 0.110 in a real cohort, so the per-class mean was not being controlled at all.
+`GetParetoScale` now bisects `BoundedParetoMean` — which has a closed form — for the scale that
+actually delivers the requested mean, cached per `(mean, shape)` because the pair is fixed for a run.
+
+`SampleParetoLim` used to draw from the *unbounded* Pareto and reject anything above 1, with a
+fallback after a thousand tries. That is the same distribution, but it costs 1.2 draws per sample at
+shape 0.5 and 2.0 at 0.12, and it needs a fallback that silently piles mass at exactly 1. The bounded
+Pareto has a closed-form quantile, `L*(1 - u*(1 - (L/(L+1))^a))^(-1/a) - L`, so one draw always
+suffices and no fallback is needed.
+
+Two numerical traps live in `BoundedParetoMean`, both of which produced wrong answers rather than
+exceptions, and both of which have regression tests:
+
+- **Do not use `double.LogP1` / `double.ExpM1`.** .NET's are the naive `Math.Log(1 + x)` and
+  `Math.Exp(x) - 1`; at x = 1e-12 they are already wrong in the fifth digit, which made the mean
+  return 1.9e9 for a quantity bounded by one half. `Sampling` carries Kahan's formulations instead.
+- **The integral needs two branches.** Above scale 1, `(L+1)^(1-a)` and `L^(1-a)` agree to many
+  digits and their difference cancels to noise (828 at L = 1e9), so the `expm1` identity is used;
+  below 1 that identity would overflow, since `log((L+1)/L)` reaches 691 at the smallest scale
+  searched, so the direct form is used — with `L^a` distributed into the bracket, because evaluating
+  the two powers separately gives `0 * infinity` at 1e-300 once the shape passes one.
+
+The bounded Pareto tends to uniform on [0,1] as its scale grows, so **no shape can reach a mean of
+one half**; `GetParetoScale` throws rather than approximate. `GetParetoSeg` saturates at `Frac >= 1`
+to the whole arm, mirroring `GetBetaSeg` and matching what the rejection loop did by exhaustion.
 
 ### Signatures and mixing
 
