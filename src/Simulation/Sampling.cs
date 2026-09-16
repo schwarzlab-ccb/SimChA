@@ -1,4 +1,5 @@
-﻿using SimChA.Computation;
+﻿using System.Collections.Concurrent;
+using SimChA.Computation;
 using SimChA.EventData;
 using MathNet.Numerics.Distributions;
 using SimChA.Data;
@@ -8,6 +9,17 @@ namespace SimChA.Simulation;
 public static class Sampling
 {
     public const double FixedBetaAlpha = 0.6;
+    public const double FixedParetoShape = 0.5;
+
+    // The bounded Pareto flattens toward uniform on [0,1] as its scale grows, whatever the shape,
+    // so no shape can reach a mean of one half. Scales are searched over this bracket, which spans
+    // means from far below anything a config carries up to 0.49999.
+    private const double ParetoScaleMin = 1e-300;
+    private const double ParetoScaleMax = 1e4;
+
+    // Solving for the scale costs a bisection, and the (mean, shape) pair is fixed per event type
+    // for a whole run, so it is solved once rather than per event.
+    private static readonly ConcurrentDictionary<(double Mean, double Shape), double> ParetoScaleCache = new();
 
     public static long GetNormSeg(Random rnd, long contigLen, double meanFrac) 
         => (long) Math.Clamp(Math.Round(contigLen * Normal.Sample(rnd, meanFrac, meanFrac / 3)), 1, contigLen);
@@ -18,10 +30,28 @@ public static class Sampling
     public static long GetExpSeg(Random rnd, long contigLen, double meanFrac)
         => (long) Math.Clamp(Math.Round(contigLen * meanFrac * Exponential.Sample(rnd, 1)), 1, contigLen);
 
-    public static long GetParetoSeg(Random rnd, long contigLen, double meanFrac)
-        => (long) Math.Clamp(Math.Round(contigLen * SampleParetoLim(rnd, meanFrac)), 1, contigLen);
+    public static long GetParetoSeg(Random rnd, long armLength, double meanFrac, double? shape = null)
+    {
+        // The same saturating guards GetBetaSeg applies. A mean at or above the whole arm asks for
+        // the longest event available, which is what the rejection loop this replaced effectively
+        // returned: at a scale that large every one of its thousand tries exceeded the arm and it
+        // fell through to a full-length draw. A mean between one half and one is a different case
+        // and is rejected below, because no bounded Pareto has a mean there.
+        if (meanFrac >= 1)
+        {
+            return armLength;
+        }
+        if (meanFrac <= 0)
+        {
+            return 1;
+        }
+        return (long) Math.Clamp(
+            Math.Round(armLength * SampleParetoLim(rnd, meanFrac, shape)),
+            1,
+            armLength);
+    }
 
-    public static long GetBetaSeg(Random rnd, long armLength, double meanFrac)
+    public static long GetBetaSeg(Random rnd, long armLength, double meanFrac, double? alpha = null)
     {
         if (meanFrac >= 1)
         {
@@ -32,7 +62,7 @@ public static class Sampling
             return 1;
         }
         return (long) Math.Clamp(
-            Math.Round(armLength * SampleBeta(rnd, meanFrac)),
+            Math.Round(armLength * SampleBeta(rnd, meanFrac, alpha)),
             1,
             armLength);
     }
@@ -123,30 +153,120 @@ public static class Sampling
     private static int ToCount(this double sample)
         => (int) Math.Max(1, Math.Round(sample));
 
-    private static double GetParetoScale(double mean) 
-        => 1.0/2.0*(-1.0 + Math.Sqrt(1.0 + 4.0*mean*mean));
-
-    public static double SampleParetoLim(Random rnd, double mean)
+    // log(1 + x) and exp(x) - 1, accurate for a small argument. .NET's double.LogP1 and
+    // double.ExpM1 are the naive Math.Log(1 + x) / Math.Exp(x) - 1 and lose most of their
+    // significance below about 1e-9 -- at 1e-12 they are wrong in the fifth digit, which is enough
+    // to make BoundedParetoMean return 1.9e9 for a quantity bounded by one half.
+    private static double Log1P(double x)
     {
-        double shape = 0.5;
-        double scale = GetParetoScale(mean);
-        for (int i = 0; i < 1000; i++) {
-            // MathNet's Pareto has support [scale, inf); shift by -scale so the
-            // proportion support starts at 0, matching the shifted Pareto fit
-            // (scipy loc=-xm, scale=xm) used to derive the config in lib_create_config.py.
-            double sample = Pareto.Sample(rnd, scale, shape) - scale;
-            if (sample <= 1)
-            {
-                return sample;
-            }
-        }
-        return 1;
+        double sum = 1.0 + x;
+        return sum == 1.0 ? x : Math.Log(sum) * x / (sum - 1.0);
     }
 
-    // For Beta(alpha, beta), mean = alpha / (alpha + beta). The configuration stores only that
-    // mean; alpha stays fixed at the notebook value and beta is recovered here at runtime.
+    private static double ExpM1(double x)
+    {
+        double exp = Math.Exp(x);
+        if (exp == 1.0)
+        {
+            return x;
+        }
+        return exp - 1.0 == -1.0 ? -1.0 : (exp - 1.0) * x / Math.Log(exp);
+    }
+
+    // Mean of the bounded shifted Pareto on [0,1]: E[X - L | X <= L + 1] for X ~ Pareto(L, a).
+    public static double BoundedParetoMean(double scale, double shape)
+    {
+        double logRatio = Log1P(1.0 / scale);
+        // 1 - (L/(L+1))^a, formed directly rather than by subtracting a near-one quantity from one.
+        double below = -ExpM1(-shape * logRatio);
+        double integral;
+        if (Math.Abs(shape - 1) < 1e-9)
+        {
+            integral = scale * logRatio;
+        }
+        else if (scale > 1)
+        {
+            // Above one, (L+1)^(1-a) and L^(1-a) agree to many digits, so the direct difference
+            // cancels to noise -- it returns means above 300 at L = 1e9. The identity
+            // L^a*((L+1)^(1-a) - L^(1-a)) == L*expm1((1-a)*log((L+1)/L)) avoids the subtraction.
+            integral = scale * ExpM1((1 - shape) * logRatio) / (1 - shape);
+        }
+        else
+        {
+            // Below one the two powers are far apart and the direct form is exact, while the
+            // expm1 form would overflow: log((L+1)/L) grows without bound as the scale shrinks,
+            // reaching 691 at the smallest scale searched. L^a is distributed into the bracket
+            // because L^a*L^(1-a) is just L, whereas evaluating the two powers separately gives
+            // 0 * infinity at a scale of 1e-300 once the shape passes one.
+            integral = (Math.Pow(scale, shape) * Math.Pow(scale + 1, 1 - shape) - scale)
+                       / (1 - shape);
+        }
+        return (integral - (1 - below)) / below;
+    }
+
+    // The scale that makes the bounded distribution's mean equal the configured Frac, at this shape.
+    // The formula this replaced, 1/2*(-1 + sqrt(1 + 4*mean^2)), contained no shape at all: it was
+    // not the inverse of any mean, and left the realized proportion 10-13% below the configured one.
+    public static double GetParetoScale(double mean, double shape = FixedParetoShape)
+    {
+        if (shape <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(shape), shape, "Pareto shape must be positive.");
+        }
+        double lowest = BoundedParetoMean(ParetoScaleMin, shape);
+        double highest = BoundedParetoMean(ParetoScaleMax, shape);
+        if (mean <= lowest || mean >= highest)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(mean), mean,
+                $"At shape {shape:G6} the bounded Pareto mean must lie in "
+                + $"({lowest:G6}, {highest:G6}); it tends to uniform on [0,1] and so cannot reach "
+                + "one half.");
+        }
+        // BoundedParetoMean is strictly increasing in the scale, so plain bisection converges; in
+        // log space 200 halvings take the bracket far below double precision.
+        double lo = Math.Log(ParetoScaleMin), hi = Math.Log(ParetoScaleMax);
+        for (int i = 0; i < 200; i++)
+        {
+            double mid = 0.5 * (lo + hi);
+            if (BoundedParetoMean(Math.Exp(mid), shape) < mean)
+            {
+                lo = mid;
+            }
+            else
+            {
+                hi = mid;
+            }
+        }
+        return Math.Exp(0.5 * (lo + hi));
+    }
+
+    // Bounded shifted Pareto on [0,1], drawn by inverse CDF. The previous version sampled the
+    // unbounded distribution and rejected anything above 1, which is the same distribution but
+    // costs 1.2 draws per sample at shape 0.5 and 2.0 at shape 0.12, and needed a fallback for the
+    // case where every try was rejected. The quantile is exact, so one draw always suffices.
+    public static double SampleParetoLim(Random rnd, double mean, double? shape = null)
+    {
+        double paretoShape = shape ?? FixedParetoShape;
+        double scale = ParetoScaleCache.GetOrAdd(
+            (mean, paretoShape), key => GetParetoScale(key.Mean, key.Shape));
+        double below = -ExpM1(-paretoShape * Log1P(1.0 / scale));   // 1 - (L/(L+1))^a
+        double sample = scale * Math.Pow(1 - rnd.NextDouble() * below, -1.0 / paretoShape) - scale;
+        // NextDouble draws from [0,1), so the quantile lands in [0,1); the clamp only guards the
+        // rounding at the top end, where 1 - u*below can underflow at an extreme shape.
+        return Math.Clamp(sample, 0, 1);
+    }
+
+    // For Beta(alpha, beta), mean = alpha / (alpha + beta). The configuration stores the mean and
+    // optionally the alpha; beta is recovered here at runtime so the mean comes out exactly.
     public static double GetBetaShape(double mean, double alpha = FixedBetaAlpha)
     {
+        if (alpha <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(alpha), alpha, "Beta alpha must be positive.");
+        }
         if (mean is <= 0 or >= 1)
         {
             throw new ArgumentOutOfRangeException(
@@ -155,8 +275,11 @@ public static class Sampling
         return alpha * (1 - mean) / mean;
     }
 
-    public static double SampleBeta(Random rnd, double mean)
-        => Beta.Sample(rnd, FixedBetaAlpha, GetBetaShape(mean));
+    public static double SampleBeta(Random rnd, double mean, double? alpha = null)
+    {
+        double betaAlpha = alpha ?? FixedBetaAlpha;
+        return Beta.Sample(rnd, betaAlpha, GetBetaShape(mean, betaAlpha));
+    }
     
     public static SexType GetSex(Random rnd, SexType sexType)
         => sexType switch
